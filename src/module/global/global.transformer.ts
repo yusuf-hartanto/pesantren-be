@@ -26,18 +26,6 @@ export default class Transformer {
         full_name: item?.full_name,
         image_foto: item?.image_foto,
       },
-      komunitas: {
-        id: item?.komunitas_id,
-        komunitas_name: item?.k_komunitas_name,
-        type: item?.k_type,
-        icon_image: item?.k_icon_image,
-      },
-      tema: {
-        id: item?.tema_id,
-        tema_name: item?.t_tema_name,
-        type: item?.t_type,
-        icon_image: item?.t_icon_image,
-      },
     }));
   }
 }

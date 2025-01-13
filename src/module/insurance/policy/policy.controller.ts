@@ -29,11 +29,7 @@ export default class Controller {
         keyword: keyword,
       });
       if (rows?.length < 1) return response.failed('Data not found', 404, res);
-      return response.success(
-        'Data menu',
-        { total: count, values: rows },
-        res
-      );
+      return response.success('Data menu', { total: count, values: rows }, res);
     } catch (err: any) {
       return helper.catchError(`menu index: ${err?.message}`, 500, res);
     }
@@ -62,7 +58,8 @@ export default class Controller {
   public async update(req: Request, res: Response) {
     try {
       const id: string = req.params.id || '';
-      if (!helper.isValidUUID(id)) return response.failed(`id ${id} is not valid`, 400, res);
+      if (!helper.isValidUUID(id))
+        return response.failed(`id ${id} is not valid`, 400, res);
 
       const check = await repository.detail({ menu_id: id });
       if (!check) return response.failed('Data not found', 404, res);
@@ -84,7 +81,8 @@ export default class Controller {
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req.params.id || '';
-      if (!helper.isValidUUID(id)) return response.failed(`id ${id} is not valid`, 400, res);
+      if (!helper.isValidUUID(id))
+        return response.failed(`id ${id} is not valid`, 400, res);
 
       const date: string = helper.date();
       const check = await repository.detail({ menu_id: id });

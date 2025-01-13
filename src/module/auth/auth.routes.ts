@@ -7,11 +7,7 @@ import { auth as controller } from './auth.controller';
 
 const router = express.Router();
 
-router.post(
-  '/register',
-  validation.register,
-  controller.register
-);
+router.post('/register', validation.register, controller.register);
 router.get('/verify', controller.verify);
 router.post('/login', auth.checkVerify, controller.login);
 router.post('/logout', auth.checkBearerToken, controller.logout);

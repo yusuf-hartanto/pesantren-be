@@ -1,6 +1,6 @@
 'use strict';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
 import conn from '../../config/database';
 import Province from './provinces.model';
@@ -27,7 +27,9 @@ const Model = conn.sequelize.define(
   }
 );
 
-Model.beforeCreate((area_provinces: { id: string; }) => area_provinces.id = uuid());
+Model.beforeCreate(
+  (area_regencies: { id: string }) => (area_regencies.id = uuidv4())
+);
 
 Model.belongsTo(Province, {
   as: 'province',

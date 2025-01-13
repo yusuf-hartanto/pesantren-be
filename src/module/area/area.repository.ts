@@ -9,6 +9,12 @@ export default class Respository {
     return Province.findAll();
   }
 
+  public provinceDetail(condition: any) {
+    return Province.findOne({
+      where: condition,
+    });
+  }
+
   public indexRegency(data: any) {
     let query: Object = {
       offset: data?.offset,
@@ -25,6 +31,12 @@ export default class Respository {
 
   public regency(condition: any) {
     return Regency.findAll({
+      where: condition,
+    });
+  }
+
+  public regencyDetail(condition: any) {
+    return Regency.findOne({
       where: condition,
     });
   }

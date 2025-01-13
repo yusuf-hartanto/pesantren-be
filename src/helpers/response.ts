@@ -3,7 +3,12 @@
 import { Response } from 'express';
 
 export default class DataResponse {
-  public success(message: string, data: any, res: Response, status: boolean = true) {
+  public success(
+    message: string,
+    data: any,
+    res: Response,
+    status: boolean = true
+  ) {
     res.json({
       status: status,
       message: message,

@@ -2,16 +2,14 @@
 
 import fs from 'fs';
 import path from 'path';
-import axios from 'axios';
 import sharp from 'sharp';
 import moment from 'moment';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
-import FormData from 'form-data';
 import nodemailer from 'nodemailer';
 import conn from '../config/database';
 import { Op, QueryTypes } from 'sequelize';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { response } from '../helpers/response';
 import Telegram, { Telegram_ParseModes } from 'tele-sender';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
@@ -173,7 +171,7 @@ export default class Helper {
   }
 
   public async catchError(message: string, code: number, res: Response) {
-    const msg: string = `poc - ${message}`
+    const msg: string = `poc - ${message}`;
     await this.sendNotif(msg);
     return response.failed(msg, code, res);
   }
@@ -245,12 +243,12 @@ export default class Helper {
       condition = {
         area_province_id: data?.province_id,
         area_regencies_id: data?.regency_id,
-        role_id: {[Op.not]:1},
+        role_id: { [Op.not]: 1 },
       };
     } else if (data?.role_name == 'admin provinsi')
       condition = {
         area_province_id: data?.province_id,
-        role_id: {[Op.not]:1},
+        role_id: { [Op.not]: 1 },
       };
     return condition;
   }

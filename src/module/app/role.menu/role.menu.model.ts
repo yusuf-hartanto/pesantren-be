@@ -1,6 +1,6 @@
 'use strict';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
 import conn from '../../../config/database';
 import Menu from '../menu/menu.model';
@@ -55,7 +55,10 @@ const Model = conn.sequelize.define(
   }
 );
 
-Model.beforeCreate((app_role_menu: { role_menu_id: string; }) => app_role_menu.role_menu_id = uuid());
+Model.beforeCreate(
+  (app_role_menu: { role_menu_id: string }) =>
+    (app_role_menu.role_menu_id = uuidv4())
+);
 Model.belongsTo(Menu, { as: 'menu', foreignKey: 'menu_id' });
 
 export default Model;

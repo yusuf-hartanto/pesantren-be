@@ -25,11 +25,7 @@ const nestedChildren = (data: any, parent: string = '') => {
 
 export default class Controller {
   public index(req: Request, res: Response) {
-    return response.success(
-      'Hello from the Bawaslu RESTful API  !!!!!',
-      null,
-      res
-    );
+    return response.success('Hello from the POC RESTful API  !!!!!', null, res);
   }
 
   public async navigation(req: Request, res: Response) {

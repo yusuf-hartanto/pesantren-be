@@ -2,30 +2,37 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
-import conn from '../../../config/database';
+import conn from '../../config/database';
 
 const Model = conn.sequelize.define(
-  'policy_detail',
+  'survey_event',
   {
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
       unique: true,
     },
-    policy_id: {
+    form_id: {
       type: DataTypes.STRING,
     },
-    unit_link: {
+    event: {
+      type: DataTypes.STRING,
+    },
+    desc: {
+      type: DataTypes.STRING,
+    },
+    start_period: {
+      type: DataTypes.DATE,
+    },
+    end_period: {
+      type: DataTypes.DATE,
+    },
+    is_active: {
       type: DataTypes.TINYINT,
+      defaultValue: 1,
     },
-    fund: {
-      type: DataTypes.STRING,
-    },
-    cash_value: {
-      type: DataTypes.DECIMAL,
-    },
-    benefit: {
-      type: DataTypes.STRING,
+    is_random: {
+      type: DataTypes.TINYINT,
     },
     created_by: {
       type: DataTypes.STRING,
@@ -49,7 +56,7 @@ const Model = conn.sequelize.define(
 );
 
 Model.beforeCreate(
-  (policy_detail: { id: string }) => (policy_detail.id = uuidv4())
+  (survey_event: { id: string }) => (survey_event.id = uuidv4())
 );
 
 export default Model;

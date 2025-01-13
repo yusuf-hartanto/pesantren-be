@@ -1,0 +1,39 @@
+'use strict';
+
+import { v4 as uuidv4 } from 'uuid';
+import { dataarea } from '../config/data/area';
+import { QueryInterface, Sequelize } from 'sequelize';
+import ModelRegency from '../src/module/area/regencies.model';
+import ModelProvince from '../src/module/area/provinces.model';
+
+type Migration = (
+  queryInterface: QueryInterface,
+  sequelize: Sequelize
+) => Promise<void>;
+export const up: Migration = async () => {
+  const provinces = dataarea.provinces();
+  const regencies = dataarea.regencies();
+
+  for (let i in provinces) {
+    const province = await ModelProvince.create({
+      id: uuidv4(),
+      name: provinces[i]?.name,
+      created_by: '00000000-0000-0000-0000-000000000000',
+    });
+
+    const regency = regencies
+      ?.filter((r) => r?.province_id == provinces[i]?.id)
+      ?.map((r) => ({
+        id: uuidv4(),
+        area_province_id: province?.dataValues?.id,
+        name: r?.name,
+        created_by: '00000000-0000-0000-0000-000000000000',
+      }));
+    await ModelRegency.bulkCreate(regency);
+  }
+};
+
+export const down: Migration = async () => {
+  await ModelProvince.destroy({ where: {}, truncate: true });
+  await ModelRegency.destroy({ where: {}, truncate: true });
+};

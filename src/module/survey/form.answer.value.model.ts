@@ -2,29 +2,32 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
-import conn from '../../../config/database';
+import conn from '../../config/database';
 
 const Model = conn.sequelize.define(
-  'policy_detail',
+  'survey_form_answer_value',
   {
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
       unique: true,
     },
-    policy_id: {
+    client_id: {
       type: DataTypes.STRING,
     },
-    unit_link: {
-      type: DataTypes.TINYINT,
-    },
-    fund: {
+    event_id: {
       type: DataTypes.STRING,
     },
-    cash_value: {
-      type: DataTypes.DECIMAL,
+    form_id: {
+      type: DataTypes.STRING,
     },
-    benefit: {
+    question_id: {
+      type: DataTypes.STRING,
+    },
+    question: {
+      type: DataTypes.STRING,
+    },
+    text_answer: {
       type: DataTypes.STRING,
     },
     created_by: {
@@ -49,7 +52,8 @@ const Model = conn.sequelize.define(
 );
 
 Model.beforeCreate(
-  (policy_detail: { id: string }) => (policy_detail.id = uuidv4())
+  (survey_form_answer_value: { id: string }) =>
+    (survey_form_answer_value.id = uuidv4())
 );
 
 export default Model;

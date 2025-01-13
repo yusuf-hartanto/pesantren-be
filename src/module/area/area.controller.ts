@@ -41,7 +41,8 @@ export default class Controller {
   public async regency(req: Request, res: Response) {
     try {
       const id: string = req.params.id || '';
-      if (!helper.isValidUUID(id)) return response.failed(`id ${id} is not valid`, 400, res);
+      if (!helper.isValidUUID(id))
+        return response.failed(`id ${id} is not valid`, 400, res);
 
       const result = await repository.regency({
         area_province_id: id,

@@ -1,10 +1,10 @@
 'use strict';
 
-import { variable } from './role.variable';
+import { variable } from './survey.variable';
 import { Request, Response } from 'express';
-import { repository } from './role.respository';
-import { helper } from '../../../helpers/helper';
-import { response } from '../../../helpers/response';
+import { helper } from '../../helpers/helper';
+import { repository } from './survey.respository';
+import { response } from '../../helpers/response';
 
 const date: string = helper.date();
 
@@ -43,7 +43,7 @@ export default class Controller {
         role_name: req?.body?.role_name,
       });
       if (check) return response.failed('Data already exists', 400, res);
-      const data: Object = helper.only(variable.fillable(), req?.body);
+      const data: Object = helper.only(variable.event(), req?.body);
       await repository.create({
         payload: { ...data, created_by: req?.user?.id },
       });
@@ -61,7 +61,7 @@ export default class Controller {
 
       const check = await repository.detail({ role_id: id });
       if (!check) return response.failed('Data not found', 404, res);
-      const data: Object = helper.only(variable.fillable(), req?.body, true);
+      const data: Object = helper.only(variable.event(), req?.body, true);
       await repository.update({
         payload: { ...data, modified_by: req?.user?.id },
         condition: { role_id: id },

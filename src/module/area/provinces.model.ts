@@ -1,6 +1,6 @@
 'use strict';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
 import conn from '../../config/database';
 
@@ -23,6 +23,8 @@ const Model = conn.sequelize.define(
   }
 );
 
-Model.beforeCreate((area_provinces: { id: string; }) => area_provinces.id = uuid());
+Model.beforeCreate(
+  (area_provinces: { id: string }) => (area_provinces.id = uuidv4())
+);
 
 export default Model;

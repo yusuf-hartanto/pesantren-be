@@ -1,6 +1,6 @@
 'use strict';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
 import Role from '../role/role.model';
 import conn from '../../../config/database';
@@ -51,9 +51,6 @@ const Model = conn.sequelize.define(
       type: DataTypes.STRING(3),
       defaultValue: 'NV',
     },
-    komunitas_id: {
-      type: DataTypes.INTEGER,
-    },
     total_login: {
       type: DataTypes.INTEGER,
     },
@@ -90,7 +87,10 @@ const Model = conn.sequelize.define(
   }
 );
 
-Model.beforeCreate((app_resource: { resource_id: string; }) => app_resource.resource_id = uuid());
+Model.beforeCreate(
+  (app_resource: { resource_id: string }) =>
+    (app_resource.resource_id = uuidv4())
+);
 
 Model.belongsTo(Role, { as: 'role', foreignKey: 'role_id' });
 Model.belongsTo(Province, {

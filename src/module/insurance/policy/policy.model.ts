@@ -1,6 +1,6 @@
 'use strict';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
 import conn from '../../../config/database';
 
@@ -81,6 +81,9 @@ const Model = conn.sequelize.define(
   }
 );
 
-Model.beforeCreate((insurance_policy: { policy_id: string; }) => insurance_policy.policy_id = uuid());
+Model.beforeCreate(
+  (insurance_policy: { policy_id: string }) =>
+    (insurance_policy.policy_id = uuidv4())
+);
 
 export default Model;

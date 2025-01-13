@@ -10,7 +10,17 @@
     "lint:check": "eslint .",
     "lint:fix": "eslint --fix .",
     "format:check": "prettier --check .",
-    "format:write": "prettier --write ."
+    "format:write": "prettier --write .",
+    "migration:generate": "npx sequelize-cli migration:generate --name",
+    "db:migrate": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:migrate",
+    "db:migrate-undo": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:migrate:undo:all",
+    "seed:generate": "npx sequelize-cli seed:generate --name",
+    "db:seed": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:all",
+    "db:seed-undo": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:undo:all"
+  },
+  "sequelize": {
+    "config": "config/config.ts",
+    "seeders-path": "seeders"
   },
   "keywords": [],
   "author": "alpha cipta teknologi",
@@ -49,6 +59,7 @@
     "prettier": "^3.4.2",
     "querystring": "^0.2.1",
     "sequelize": "^6.37.5",
+    "sequelize-cli": "^6.6.2",
     "sharp": "^0.33.5",
     "tele-sender": "^1.0.2",
     "ts-node": "^10.9.2",

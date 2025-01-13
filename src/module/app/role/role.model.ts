@@ -1,6 +1,6 @@
 'use strict';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { DataTypes } from 'sequelize';
 import conn from '../../../config/database';
 import RoleMenu from '../role.menu/role.menu.model';
@@ -18,6 +18,11 @@ const Model = conn.sequelize.define(
     },
     status: {
       type: DataTypes.TINYINT,
+      defaultValue: 1,
+    },
+    restrict_level_area: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
     },
     created_by: {
       type: DataTypes.STRING,
@@ -40,7 +45,9 @@ const Model = conn.sequelize.define(
   }
 );
 
-Model.beforeCreate((app_role: { role_id: string; }) => app_role.role_id = uuid());
+Model.beforeCreate(
+  (app_role: { role_id: string }) => (app_role.role_id = uuidv4())
+);
 Model.hasMany(RoleMenu, { as: 'menu', foreignKey: 'role_id' });
 
 export default Model;
