@@ -12,12 +12,14 @@
 ## Migration and Seeder
     
     * setup db config/config.json
-    * run migration:
-        - npm run db:migrate (to create all tables)
-        - npm run db:migrate-undo (to drop all tables)
-    * run seeder:
-        - npm run db:seed (to insert data)
-        - npm run db:seed-undo (to drop data)
+    * migration:
+        - npm run make:migration -- {name} (create file migration and change extention file .js to .ts)
+        - npm run db:migrate (create all tables)
+        - npm run db:migrate-undo (drop all tables)
+    * seeder:
+        - npm run make:seed -- {name} (create file seeder and change extention file .js to .ts)
+        - npm run db:seed (insert data)
+        - npm run db:seed-undo (drop data)
 
 ## Endpoint
 

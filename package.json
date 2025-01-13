@@ -11,10 +11,10 @@
     "lint:fix": "eslint --fix .",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
-    "migration:generate": "npx sequelize-cli migration:generate --name",
+    "make:migration": "npx sequelize-cli migration:generate --name",
     "db:migrate": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:migrate",
     "db:migrate-undo": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:migrate:undo:all",
-    "seed:generate": "npx sequelize-cli seed:generate --name",
+    "make:seed": "npx sequelize-cli seed:generate --name",
     "db:seed": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:all",
     "db:seed-undo": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:undo:all"
   },
