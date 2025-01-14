@@ -8,7 +8,10 @@ import { repository as RepoMenu } from '../app/menu/menu.respository';
 
 dotenv.config();
 
-const nestedChildren = (data: any, parent: string = '') => {
+const nestedChildren = (
+  data: any,
+  parent: string = '00000000-0000-0000-0000-000000000000'
+) => {
   let result: Array<object> = [];
   data.forEach((item: any) => {
     const menu: any = item?.dataValues;
@@ -29,10 +32,15 @@ export default class Controller {
   }
 
   public async navigation(req: Request, res: Response) {
-    const result = await RepoMenu.list();
-    if (result?.length < 1) return response.failed('Data not found', 404, res);
-    const navigation = nestedChildren(result);
-    return response.success('Data navigation', navigation, res);
+    try {
+      const result = await RepoMenu.list();
+      if (result?.length < 1)
+        return response.failed('Data not found', 404, res);
+      const navigation = nestedChildren(result);
+      return response.success('Data navigation', navigation, res);
+    } catch (err: any) {
+      return helper.catchError(`sendmail: ${err?.message}`, 500, res);
+    }
   }
 
   public sendmail = async (req: Request, res: Response): Promise<void> => {

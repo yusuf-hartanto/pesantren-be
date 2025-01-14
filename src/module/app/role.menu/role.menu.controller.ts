@@ -1,6 +1,7 @@
 'use strict';
 
 import { Op } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 import { response } from '../../../helpers/response';
 import { helper } from '../../../helpers/helper';
@@ -65,6 +66,7 @@ export default class Controller {
 
         item?.menu.forEach((i) => {
           insert.push({
+            role_menu_id: uuidv4(),
             role_id: item?.role_id?.value,
             menu_id: i?.menu_id,
             create: i?.create,

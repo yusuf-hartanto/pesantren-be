@@ -19,7 +19,8 @@
     "db:seed-undo": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:undo:all"
   },
   "sequelize": {
-    "config": "config/config.ts",
+    "config": "config/config.json",
+    "migrations-path": "migrations",
     "seeders-path": "seeders"
   },
   "keywords": [],

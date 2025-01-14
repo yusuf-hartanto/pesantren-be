@@ -27,10 +27,16 @@ export default class Middleware {
       return response.failed('Auth Bearer is required', 422, res);
 
     try {
-      const user = await repository.detail({ token });
+      const auth = helperauth.decodeToken(token);
+      if (typeof auth == 'string')
+        return response.failed('Invalid token', 400, res);
+
+      const admin: string =
+        auth?.role_name == 'administrator' ? '' : 'administrator';
+      const user = await repository.detail({ token }, admin);
       if (!user) return response.failed('Unauthorized', 401, res);
 
-      req.user = helperauth.decodeToken(token);
+      req.user = auth;
       next();
       return;
     } catch (err: any) {
@@ -79,7 +85,7 @@ export default class Middleware {
       return response.failed('Auth Bearer is Required', 422, res);
 
     try {
-      const user = await repository.detail({ token });
+      const user = await repository.detail({ token }, '');
       if (!user) return response.failed('Unauthorized', 401, res);
 
       req.user = helperauth.decodeToken(token);
@@ -111,9 +117,12 @@ export default class Middleware {
       if (!username || !password)
         return response.failed('Username or password is required', 422, res);
 
-      const result = await repository.detail({
-        [Op.or]: [{ email: username }, { username: username }],
-      });
+      const result = await repository.detail(
+        {
+          [Op.or]: [{ email: username }, { username: username }],
+        },
+        ''
+      );
       if (!result) return response.failed('Data not found', 404, res);
 
       if (result?.getDataValue('status') === 'A') {

@@ -36,7 +36,7 @@ export const up: Migration = async () => {
       telepon: '085722800025',
       status: 'A',
       area_province_id: province?.getDataValue('id'),
-      area_regency_id: regency?.getDataValue('id'),
+      area_regencies_id: regency?.getDataValue('id'),
       created_by: '00000000-0000-0000-0000-000000000000',
     },
   ]);

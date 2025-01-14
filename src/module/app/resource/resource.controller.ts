@@ -78,6 +78,7 @@ export default class Controller {
   public async create(req: Request, res: Response) {
     let confirm_hash: string = '';
     let message: string = '';
+    let username: string = '';
 
     try {
       const checkEmail = await repository.check({
@@ -87,7 +88,7 @@ export default class Controller {
       if (!req?.body?.password)
         return response.failed('Password is required', 422, res);
 
-      let username: string = req?.body?.email.split('@')[0];
+      username = req?.body?.email.split('@')[0];
       const checkUsername = await repository.check({
         username: username,
       });
@@ -112,7 +113,7 @@ export default class Controller {
       const password: string = await helper.hashIt(req?.body?.password);
       const only: Object = helper.only(variable.fillable(), req?.body);
 
-      const resource = await repository.create({
+      await repository.create({
         payload: {
           ...only,
           username: username,
@@ -120,8 +121,8 @@ export default class Controller {
           confirm_hash: confirm_hash,
           image_foto: image_foto,
           role_id: role_id?.value || null,
-          province_id: province_id?.value || null,
-          regency_id: regency_id?.value || null,
+          area_province_id: province_id?.value || null,
+          area_regencies_id: regency_id?.value || null,
           created_by: req?.user?.id || null,
         },
       });
@@ -138,7 +139,8 @@ export default class Controller {
         content: `
           <h3>Hi ${req?.body?.full_name},</h3>
           <p>Congratulation to join as a member, below this link to activation your account:</p>
-          ${process.env.BASE_URL_FE}/account-verification?confirm_hash=${confirm_hash}
+          <a href="${process.env.BASE_URL_FE}/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
+          <p>This is your username account: <b>${username}</b></p>
         `,
       });
     } catch (err: any) {
@@ -218,7 +220,7 @@ export default class Controller {
 
       const admin: string =
         req?.user?.role_name == 'administrator' ? '' : 'administrator';
-      const check = await repository.detail({ resource_uuid: id }, admin);
+      const check = await repository.detail({ resource_id: id }, admin);
       if (!check) return response.failed('Data not found', 404, res);
       await repository.update({
         payload: {
@@ -226,7 +228,7 @@ export default class Controller {
           modified_by: req?.user?.id,
           modified_date: date,
         },
-        condition: { resource_uuid: id },
+        condition: { resource_id: id },
       });
       return response.success('Data success deleted', null, res);
     } catch (err: any) {

@@ -5,7 +5,7 @@ import { DataTypes } from 'sequelize';
 import conn from '../../../config/database';
 
 const Model = conn.sequelize.define(
-  'policy_detail',
+  'insurance_policy_detail',
   {
     id: {
       type: DataTypes.STRING,
@@ -49,7 +49,8 @@ const Model = conn.sequelize.define(
 );
 
 Model.beforeCreate(
-  (policy_detail: { id: string }) => (policy_detail.id = uuidv4())
+  (insurance_policy_detail: { id: string }) =>
+    (insurance_policy_detail.id = uuidv4())
 );
 
 export default Model;

@@ -20,7 +20,7 @@ const cfg: Config = {
   database: process.env.DB_NAME || 'dbpoc',
   username: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  debug: process.env.DB_DEBUG == 'false',
+  debug: process.env.DB_DEBUG == 'true',
 };
 
 const conn: any = {};

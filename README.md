@@ -10,7 +10,7 @@
     * production (npm run build => npm run start)
 
 ## Migration and Seeder
-    
+
     * setup db config/config.json
     * migration:
         - npm run make:migration -- {name} (create file migration and change extention file .js to .ts)

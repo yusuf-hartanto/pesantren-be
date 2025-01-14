@@ -60,9 +60,12 @@ export default class Controller {
   }
 
   public async refresh(req: Request, res: Response) {
-    const result = await repository.detail({
-      resource_id: req?.user?.id,
-    });
+    const result = await repository.detail(
+      {
+        resource_id: req?.user?.id,
+      },
+      ''
+    );
     if (!result) return response.failed('User not found', 404, res);
 
     const payload = {
@@ -89,6 +92,7 @@ export default class Controller {
   public async register(req: Request, res: Response) {
     let confirm_hash: string = '';
     let message: string = '';
+    let username: string = '';
 
     try {
       const checkEmail = await repository.check({
@@ -96,7 +100,7 @@ export default class Controller {
       });
       if (checkEmail) return response.failed('Data already exists', 400, res);
 
-      let username: string = req?.body?.email.split('@')[0];
+      username = req?.body?.email.split('@')[0];
       const checkUsername = await repository.check({
         username: username,
       });
@@ -110,7 +114,7 @@ export default class Controller {
         role_name: { [Op.like]: '%public%' },
       });
 
-      const { province_id, regency_id, tema_id } = req?.body;
+      const { province_id, regency_id } = req?.body;
       await repository.create({
         payload: {
           ...only,
@@ -120,7 +124,7 @@ export default class Controller {
           area_province_id: province_id?.value || null,
           area_regencies_id: regency_id?.value || null,
           role_id: role?.getDataValue('role_id') || null,
-          created_by: req?.user?.id || null,
+          created_by: req?.user?.id || '00000000-0000-0000-0000-000000000000',
         },
       });
 
@@ -136,7 +140,8 @@ export default class Controller {
         content: `
           <h3>Hi ${req?.body?.full_name},</h3>
           <p>Congratulation to join as a member, below this link to activation your account:</p>
-          ${process.env.BASE_URL_FE}/account-verification?confirm_hash=${confirm_hash}
+          <a href="${process.env.BASE_URL_FE}/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
+          <p>This is your username account: <b>${username}</b></p>
         `,
       });
     } catch (err: any) {
@@ -195,7 +200,7 @@ export default class Controller {
         content: `
           <h3>Hi ${result?.getDataValue('full_name')},</h3>
           <p>Below this link to reset password your account:</p>
-          ${process.env.BASE_URL_FE}/reset-password?confirm_hash=${confirm_hash}
+          <a href="${process.env.BASE_URL_FE}/reset-password?confirm_hash=${confirm_hash}" target="_blank">Reset Password</a>
         `,
       });
 
