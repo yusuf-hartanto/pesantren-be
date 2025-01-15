@@ -2,8 +2,8 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { QueryInterface, Sequelize } from 'sequelize';
-import Model from '../src/module/app/param.global/param.global.model';
-import { repository as repoResource } from '../src/module/app/resource/resource.repository';
+import Model from '../../module/app/param.global/param.global.model';
+import { repository as repoResource } from '../../module/app/resource/resource.repository';
 
 type Migration = (
   queryInterface: QueryInterface,

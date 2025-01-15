@@ -11,7 +11,6 @@
 
 ## Migration and Seeder
 
-    * setup db config/config.json
     * migration:
         - npm run make:migration -- {name} (create file migration and change extention file .js to .ts)
         - npm run db:migrate (create all tables)

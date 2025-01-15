@@ -3,9 +3,6 @@
 import { QueryInterface } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(
-    `DROP TABLE IF EXISTS app_param_global;`
-  );
   await queryInterface.sequelize.query(`  
     CREATE TABLE app_param_global (
       id varchar(50) NOT NULL,

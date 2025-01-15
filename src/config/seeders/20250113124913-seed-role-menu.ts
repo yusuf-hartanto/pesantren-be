@@ -2,10 +2,10 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { Op, QueryInterface, Sequelize } from 'sequelize';
-import Model from '../src/module/app/role.menu/role.menu.model';
-import { repository as repoRole } from '../src/module/app/role/role.respository';
-import { repository as repoMenu } from '../src/module/app/menu/menu.respository';
-import { repository as repoResource } from '../src/module/app/resource/resource.repository';
+import Model from '../../module/app/role.menu/role.menu.model';
+import { repository as repoRole } from '../../module/app/role/role.respository';
+import { repository as repoMenu } from '../../module/app/menu/menu.respository';
+import { repository as repoResource } from '../../module/app/resource/resource.repository';
 
 type Migration = (
   queryInterface: QueryInterface,

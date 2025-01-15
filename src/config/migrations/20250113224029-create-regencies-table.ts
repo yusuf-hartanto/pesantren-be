@@ -3,7 +3,6 @@
 import { QueryInterface } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`DROP TABLE IF EXISTS area_regencies;`);
   await queryInterface.sequelize.query(`
     CREATE TABLE area_regencies (
       id varchar(50) NOT NULL,

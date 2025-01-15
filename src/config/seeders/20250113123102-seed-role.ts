@@ -2,7 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { QueryInterface, Sequelize } from 'sequelize';
-import Model from '../src/module/app/role/role.model';
+import Model from '../../module/app/role/role.model';
 
 type Migration = (
   queryInterface: QueryInterface,

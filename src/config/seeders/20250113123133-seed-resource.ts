@@ -1,11 +1,11 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
-import { helper } from '../src/helpers/helper';
+import { helper } from '../../helpers/helper';
 import { Op, QueryInterface, Sequelize } from 'sequelize';
-import Model from '../src/module/app/resource/resource.model';
-import { repository as repoArea } from '../src/module/area/area.repository';
-import { repository as repoRole } from '../src/module/app/role/role.respository';
+import Model from '../../module/app/resource/resource.model';
+import { repository as repoArea } from '../../module/area/area.repository';
+import { repository as repoRole } from '../../module/app/role/role.respository';
 
 type Migration = (
   queryInterface: QueryInterface,

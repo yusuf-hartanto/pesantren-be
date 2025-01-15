@@ -1,10 +1,10 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
-import { dataarea } from '../config/data/area';
+import { dataarea } from '../data/area';
 import { QueryInterface, Sequelize } from 'sequelize';
-import ModelRegency from '../src/module/area/regencies.model';
-import ModelProvince from '../src/module/area/provinces.model';
+import ModelRegency from '../../module/area/regencies.model';
+import ModelProvince from '../../module/area/provinces.model';
 
 type Migration = (
   queryInterface: QueryInterface,

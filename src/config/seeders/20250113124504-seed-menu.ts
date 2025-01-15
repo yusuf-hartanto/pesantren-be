@@ -1,10 +1,10 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
-import { datamenu } from '../config/data/menu';
+import { datamenu } from '../data/menu';
 import { QueryInterface, Sequelize } from 'sequelize';
-import Model from '../src/module/app/menu/menu.model';
-import { repository as repoResource } from '../src/module/app/resource/resource.repository';
+import Model from '../../module/app/menu/menu.model';
+import { repository as repoResource } from '../../module/app/resource/resource.repository';
 
 type Migration = (
   queryInterface: QueryInterface,
