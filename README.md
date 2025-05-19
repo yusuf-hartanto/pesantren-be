@@ -1,6 +1,6 @@
 # Program
 
-    POC API
+    Skeleton Typescript API
 
 ## Configuration
 
