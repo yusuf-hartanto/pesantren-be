@@ -1,7 +1,6 @@
 'use strict';
 
 import cors from 'cors';
-import dotenv from 'dotenv';
 import moment from 'moment';
 import cron from 'node-cron';
 import bodyParser from 'body-parser';
@@ -10,57 +9,72 @@ import fileUpload from 'express-fileupload';
 import { xss } from 'express-xss-sanitizer';
 
 import routes from './routes';
-import conn from './config/database';
+import Config from './config/parameter';
 import { helper } from './helpers/helper';
 require('express-async-errors');
 
-const app: Express = express();
-const port: number = +(process.env.PORT || 5000);
-const day: string = moment().format('YYYY-MM-DD');
+import { initializeJWT } from './config/config.jwt';
+import { initializeApp } from './config/config.app';
+import { initializeMail } from './config/config.mail';
+import { initializeDatabase } from './database/connection';
+import { initializeTelegram } from './config/config.telegram';
+import { initializeModels } from './module/models/models.index';
 
-dotenv.config();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
-app.use(
-  fileUpload({
-    useTempFiles: true,
-    tempFileDir: `./tmp/${day}/`,
-  })
-);
-app.use(xss());
+async function bootstrap() {
+  const dataConfig = await Config.initialize();
 
-const options: cors.CorsOptions = {
-  allowedHeaders: [
-    'Origin',
-    'X-Requested-With',
-    'Content-Type',
-    'Accept',
-    'X-Access-Token',
-    'Authorization',
-  ],
-  credentials: true,
-  methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-  origin: '*',
-  preflightContinue: false,
-};
-app.use(cors(options));
-app.use(routes);
+  initializeApp(dataConfig);
+  initializeJWT(dataConfig?.jwt);
+  initializeMail(dataConfig?.mail);
+  initializeTelegram(dataConfig?.telegram);
 
-(async () => {
-  try {
-    await conn.sequelize.authenticate();
-    console.warn('Connection has been established successfully.');
-  } catch (err: any) {
-    await helper.sendNotif(err?.message);
-    console.warn('Unable to connect to the database:', err?.message);
-  }
-})();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
 
-cron.schedule('1 0 * * *', async () => {
-  await helper.updateUsia();
-});
+  const app: Express = express();
+  const day: string = moment().format('YYYY-MM-DD');
+  const options: cors.CorsOptions = {
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'X-Access-Token',
+      'Authorization',
+    ],
+    credentials: true,
+    methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
+    origin: '*',
+    preflightContinue: false,
+  };
 
-app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running on port: ${port}`);
-});
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.static('public'));
+  app.use(
+    fileUpload({
+      useTempFiles: true,
+      tempFileDir: `./tmp/${day}/`,
+    })
+  );
+  app.use(xss());
+  app.use(cors(options));
+  app.use(routes);
+
+  cron.schedule(
+    '1 0 * * *',
+    async () => {
+      await helper.updateUsia();
+    },
+    {
+      scheduled: true,
+      timezone: 'Asia/Jakarta',
+    }
+  );
+
+  app.listen(dataConfig?.port, () => {
+    console.log(`⚡️[server]: Server is running on port: ${dataConfig?.port}`);
+  });
+}
+
+bootstrap();

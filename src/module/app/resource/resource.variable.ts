@@ -19,4 +19,5 @@ export default class Variable {
     return field;
   }
 }
+
 export const variable = new Variable();

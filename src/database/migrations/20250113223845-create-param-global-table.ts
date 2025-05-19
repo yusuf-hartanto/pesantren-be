@@ -9,14 +9,14 @@ export const up = async (queryInterface: QueryInterface) => {
       param_key varchar(100) DEFAULT NULL,
       param_value varchar(255) DEFAULT NULL,
       param_desc varchar(255) DEFAULT NULL,
-      \`status\` int(1) unsigned DEFAULT NULL,
+      status int DEFAULT NULL,
       created_by varchar(50) DEFAULT NULL,
-      created_date datetime DEFAULT NULL,
+      created_date timestamp DEFAULT NULL,
       modified_by varchar(50) DEFAULT NULL,
-      modified_date datetime DEFAULT NULL,
+      modified_date timestamp DEFAULT NULL,
       PRIMARY KEY (id),
-      UNIQUE KEY unique_id (id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      UNIQUE (id)
+    );
   `);
 };
 

@@ -1,32 +1,33 @@
 'use strict';
 
 import { Op } from 'sequelize';
-import Model from './menu.model';
+import Model from './role.model';
 
-export default class Respository {
+export default class Repository {
   public list() {
     return Model.findAll({
-      where: { status: { [Op.ne]: 9 } },
-      order: [['seq_number', 'ASC']],
+      where: {
+        status: { [Op.ne]: 9 },
+      },
+      order: [['role_id', 'DESC']],
     });
   }
 
   public index(data: any) {
     let query: Object = {
-      where: { status: { [Op.ne]: 9 } },
-      order: [['seq_number', 'ASC']],
+      where: {
+        status: { [Op.ne]: 9 },
+      },
+      order: [['role_id', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
-    if (data?.keyword !== undefined && data?.keyword != null) {
+    if (data?.keyword && data?.keyword != undefined) {
       query = {
         ...query,
         where: {
           status: { [Op.ne]: 9 },
-          [Op.or]: [
-            { menu_name: { [Op.like]: `%${data?.keyword}%` } },
-            { module_name: { [Op.like]: `%${data?.keyword}%` } },
-          ],
+          [Op.or]: [{ role_name: { [Op.like]: `%${data?.keyword}%` } }],
         },
       };
     }
@@ -52,4 +53,5 @@ export default class Respository {
     });
   }
 }
-export const repository = new Respository();
+
+export const repository = new Repository();

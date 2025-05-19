@@ -1,64 +1,86 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
-import { DataTypes } from 'sequelize';
-import conn from '../../../config/database';
-import Menu from '../menu/menu.model';
+import AppMenu from '../menu/menu.model';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
-const Model = conn.sequelize.define(
-  'app_role_menu',
-  {
-    role_menu_id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      unique: true,
-    },
-    role_id: {
-      type: DataTypes.STRING,
-    },
-    menu_id: {
-      type: DataTypes.STRING,
-    },
-    create: {
-      type: DataTypes.TINYINT,
-    },
-    edit: {
-      type: DataTypes.TINYINT,
-    },
-    delete: {
-      type: DataTypes.TINYINT,
-    },
-    approve: {
-      type: DataTypes.TINYINT,
-    },
-    status: {
-      type: DataTypes.TINYINT,
-    },
-    created_by: {
-      type: DataTypes.STRING,
-    },
-    created_date: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    modified_by: {
-      type: DataTypes.STRING,
-    },
-    modified_date: {
-      type: DataTypes.DATE,
-    },
-  },
-  {
-    createdAt: false,
-    updatedAt: false,
-    freezeTableName: true,
-  }
-);
+export class AppRoleMenu extends Model {
+  public role_menu_id!: string;
+  public role_id!: string;
+  public menu_id!: string;
+  public create!: number;
+  public edit!: number;
+  public delete!: number;
+  public approve!: number;
+  public status!: number;
+  public created_by!: string;
+  public created_date!: Date;
+  public modified_by!: string;
+  public modified_date!: Date;
+}
 
-Model.beforeCreate(
-  (app_role_menu: { role_menu_id: string }) =>
-    (app_role_menu.role_menu_id = uuidv4())
-);
-Model.belongsTo(Menu, { as: 'menu', foreignKey: 'menu_id' });
+export function initAppRoleMenu(sequelize: Sequelize) {
+  AppRoleMenu.init(
+    {
+      role_menu_id: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        unique: true,
+      },
+      role_id: {
+        type: DataTypes.STRING,
+      },
+      menu_id: {
+        type: DataTypes.STRING,
+      },
+      view: {
+        type: DataTypes.TINYINT,
+      },
+      create: {
+        type: DataTypes.TINYINT,
+      },
+      edit: {
+        type: DataTypes.TINYINT,
+      },
+      delete: {
+        type: DataTypes.TINYINT,
+      },
+      approve: {
+        type: DataTypes.TINYINT,
+      },
+      status: {
+        type: DataTypes.TINYINT,
+      },
+      created_by: {
+        type: DataTypes.STRING,
+      },
+      created_date: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      modified_by: {
+        type: DataTypes.STRING,
+      },
+      modified_date: {
+        type: DataTypes.DATE,
+      },
+    },
+    {
+      sequelize,
+      modelName: 'AppRoleMenu',
+      tableName: 'app_role_menu',
+      timestamps: false,
+    }
+  );
 
-export default Model;
+  AppRoleMenu.beforeCreate((app_role_menu) => {
+    app_role_menu?.setDataValue('role_menu_id', uuidv4());
+  });
+  return AppRoleMenu;
+}
+
+export function associateAppRoleMenu() {
+  AppRoleMenu.belongsTo(AppMenu, { as: 'menu', foreignKey: 'menu_id' });
+}
+
+export default AppRoleMenu;

@@ -1,7 +1,7 @@
 {
-  "name": "poc-api",
+  "name": "skeleton-ts-api",
   "version": "1.0.0",
-  "description": "poc",
+  "description": "skeleton typescript api",
   "main": "server.js",
   "scripts": {
     "build": "npx tsc",
@@ -18,13 +18,8 @@
     "db:seed": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:all",
     "db:seed-undo": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:undo:all"
   },
-  "sequelize": {
-    "config": "config/config.json",
-    "migrations-path": "migrations",
-    "seeders-path": "seeders"
-  },
   "keywords": [],
-  "author": "alpha cipta teknologi",
+  "author": "Yusuf Hartanto",
   "license": "ISC",
   "devDependencies": {
     "@types/axios": "^0.14.4",
@@ -48,6 +43,7 @@
     "dotenv": "^16.4.7",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^9.1.0",
+    "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "express-async-errors": "^3.1.1",
     "express-fileupload": "^1.5.1",
@@ -57,18 +53,19 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.9",
+    "pg": "^8.16.0",
+    "pg-hstore": "^2.3.4",
     "prettier": "^3.4.2",
+    "puppeteer": "^24.8.2",
     "querystring": "^0.2.1",
     "sequelize": "^6.37.5",
     "sequelize-cli": "^6.6.2",
+    "sequelize-typescript": "^2.1.6",
     "sharp": "^0.33.5",
     "tele-sender": "^1.0.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "uuid": "^11.0.5",
     "uuidv4": "^6.2.13"
-  },
-  "dependencies": {
-    "sequelize-typescript": "^2.1.6"
   }
 }

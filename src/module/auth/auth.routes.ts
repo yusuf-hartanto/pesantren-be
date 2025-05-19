@@ -8,9 +8,9 @@ import { auth as controller } from './auth.controller';
 const router = express.Router();
 
 router.post('/register', validation.register, controller.register);
-router.get('/verify', controller.verify);
+router.post('/verify', controller.verify);
 router.post('/login', auth.checkVerify, controller.login);
-router.post('/logout', auth.checkBearerToken, controller.logout);
+router.post('/logout', auth.checkToken, controller.logout);
 router.post(
   '/refresh-token',
   auth.checkExpiredToken,
@@ -19,5 +19,7 @@ router.post(
 );
 router.post('/forgot-password', controller.forgot);
 router.post('/reset-password', controller.reset);
+
+router.post('/verify-otp', controller.verifyOtp);
 
 export default router;

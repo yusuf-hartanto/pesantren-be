@@ -3,7 +3,7 @@
 import { Op } from 'sequelize';
 import Model from './param.global.model';
 
-export default class Respository {
+export default class Repository {
   public list(data: any) {
     let query: Object = {
       order: [['id', 'DESC']],
@@ -26,7 +26,7 @@ export default class Respository {
       offset: data?.offset,
       limit: data?.limit,
     };
-    if (data?.keyword !== undefined && data?.keyword != null) {
+    if (data?.keyword && data?.keyword != undefined) {
       query = {
         ...query,
         where: {
@@ -61,4 +61,5 @@ export default class Respository {
     });
   }
 }
-export const repository = new Respository();
+
+export const repository = new Repository();

@@ -5,7 +5,16 @@ import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { variable } from './param.global.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './param.globalrespository';
+import { repository } from './param.global.repository';
+import {
+  ALREADY_EXIST,
+  INVALID,
+  NOT_FOUND,
+  SUCCESS_DELETED,
+  SUCCESS_RETRIEVED,
+  SUCCESS_SAVED,
+  SUCCESS_UPDATED,
+} from '../../../utils/constant';
 
 const date: string = helper.date();
 
@@ -16,8 +25,8 @@ export default class Controller {
         param_key: req?.query?.param_key || null,
       });
       if (result?.length < 1)
-        return response.failed('Data not found', 404, res);
-      return response.success('list data param global', result, res);
+        return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(`param global list: ${err?.message}`, 500, res);
     }
@@ -33,9 +42,10 @@ export default class Controller {
         offset: parseInt(limit) * (parseInt(offset) - 1),
         keyword: keyword,
       });
-      if (rows?.length < 1) return response.failed('Data not found', 404, res);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
       return response.success(
-        'Data param global',
+        SUCCESS_RETRIEVED,
         { total: count, values: rows },
         res
       );
@@ -47,11 +57,11 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const key = req.query.key || '';
-      const result: Object | any = await repository.detail({
-        param_key: { [Op.like]: `%${key}%` },
+      const result: Object | any = await repository.list({
+        param_key: key,
       });
-      if (!result) return response.failed('Data not found', 404, res);
-      return response.success('Data param global', result, res);
+      if (!result) return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
         `param global detail: ${err?.message}`,
@@ -66,12 +76,12 @@ export default class Controller {
       const check = await repository.detail({
         param_key: req?.body?.param_key,
       });
-      if (check) return response.failed('Data already exists', 400, res);
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
         payload: { ...data, created_by: req?.user?.id },
       });
-      return response.success('Data success saved', null, res);
+      return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       return helper.catchError(
         `param global create: ${err?.message}`,
@@ -85,16 +95,16 @@ export default class Controller {
     try {
       const id: string = req.params.id || '';
       if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} is not valid`, 400, res);
+        return response.failed(`id ${id} ${INVALID}`, 400, res);
 
       const check = await repository.detail({ id: id });
-      if (!check) return response.failed('Data not found', 404, res);
+      if (!check) return response.success(NOT_FOUND, null, res, false);
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: { ...data, modified_by: req?.user?.id },
         condition: { id: id },
       });
-      return response.success('Data success updated', null, res);
+      return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
         `param global update: ${err?.message}`,
@@ -108,10 +118,10 @@ export default class Controller {
     try {
       const id: string = req.params.id || '';
       if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} is not valid`, 400, res);
+        return response.failed(`id ${id} ${INVALID}`, 400, res);
 
       const check = await repository.detail({ id: id });
-      if (!check) return response.failed('Data not found', 404, res);
+      if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.update({
         payload: {
           status: 9,
@@ -120,7 +130,7 @@ export default class Controller {
         },
         condition: { id: id },
       });
-      return response.success('Data success deleted', null, res);
+      return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
         `param global delete: ${err?.message}`,
@@ -130,4 +140,5 @@ export default class Controller {
     }
   }
 }
+
 export const paramGlobal = new Controller();

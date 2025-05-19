@@ -5,7 +5,7 @@ import Model from './role.menu.model';
 import Role from '../role/role.model';
 import Menu from '../menu/menu.model';
 
-export default class Respository {
+export default class Repository {
   public list() {
     return Role.findAll({
       where: {
@@ -15,13 +15,13 @@ export default class Respository {
       include: [
         {
           model: Model,
-          as: 'menu',
+          as: 'role_menu',
           required: false,
           include: [
             {
               model: Menu,
               as: 'menu',
-              required: false,
+              required: true,
               where: {
                 status: { [Op.ne]: 9 },
               },
@@ -37,17 +37,17 @@ export default class Respository {
       order: [['role_id', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
-      group: 'app_role.role_id',
+      group: 'AppRole.role_id',
       include: [
         {
           model: Model,
-          as: 'menu',
+          as: 'role_menu',
           required: false,
           include: [
             {
               model: Menu,
               as: 'menu',
-              required: false,
+              required: true,
               where: {
                 status: { [Op.ne]: 9 },
               },
@@ -56,7 +56,7 @@ export default class Respository {
         },
       ],
     };
-    if (data?.keyword !== undefined && data?.keyword != null) {
+    if (data?.keyword && data?.keyword != undefined) {
       query = {
         ...query,
         where: {
@@ -86,13 +86,13 @@ export default class Respository {
       include: [
         {
           model: Model,
-          as: 'menu',
+          as: 'role_menu',
           required: false,
           include: [
             {
               model: Menu,
               as: 'menu',
-              required: false,
+              required: true,
               where: {
                 status: { [Op.ne]: 9 },
               },
@@ -114,4 +114,4 @@ export default class Respository {
   }
 }
 
-export const repository = new Respository();
+export const repository = new Repository();

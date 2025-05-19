@@ -8,7 +8,7 @@ export default class Transformer {
         role_id: item?.role_id,
         role_name: item?.role_name,
         role_menu_status: item?.status,
-        menu: item?.menu.map((m: any) => ({
+        menu: item?.role_menu.map((m: any) => ({
           menu_id: m?.menu?.menu_id,
           menu_name: m?.menu?.menu_name,
           menu_icon: m?.menu?.menu_icon,
@@ -18,6 +18,7 @@ export default class Transformer {
           parent_id: m?.menu?.parent_id,
           menu_status: m?.menu?.status,
           role_menu_status: m?.status,
+          role_menu_view: m?.view,
           role_menu_create: m?.create,
           role_menu_edit: m?.edit,
           role_menu_delete: m?.delete,

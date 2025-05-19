@@ -1,30 +1,46 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
-import { DataTypes } from 'sequelize';
-import conn from '../../config/database';
+import AreaRegency from './regencies.model';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
-const Model = conn.sequelize.define(
-  'area_provinces',
-  {
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      unique: true,
+export class AreaProvince extends Model {
+  public id!: string;
+  public area_province_id!: string;
+  public name!: string;
+}
+
+export function initAreaProvince(sequelize: Sequelize) {
+  AreaProvince.init(
+    {
+      id: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        unique: true,
+      },
+      name: {
+        type: DataTypes.STRING,
+      },
     },
-    name: {
-      type: DataTypes.STRING,
-    },
-  },
-  {
-    createdAt: false,
-    updatedAt: false,
-    freezeTableName: true,
-  }
-);
+    {
+      sequelize,
+      modelName: 'AreaProvince',
+      tableName: 'area_provinces',
+      timestamps: false,
+    }
+  );
 
-Model.beforeCreate(
-  (area_provinces: { id: string }) => (area_provinces.id = uuidv4())
-);
+  AreaProvince.beforeCreate((area_provinces) => {
+    area_provinces?.setDataValue('role_id', uuidv4());
+  });
+  return AreaProvince;
+}
 
-export default Model;
+export function associateAreaProvince() {
+  AreaProvince.hasMany(AreaRegency, {
+    as: 'regency',
+    foreignKey: 'area_province_id',
+  });
+}
+
+export default AreaProvince;

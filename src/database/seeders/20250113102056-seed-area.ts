@@ -2,15 +2,22 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { dataarea } from '../data/area';
+import Config from '../../config/parameter';
+import { initializeDatabase } from '../connection';
 import { QueryInterface, Sequelize } from 'sequelize';
 import ModelRegency from '../../module/area/regencies.model';
 import ModelProvince from '../../module/area/provinces.model';
+import { initializeModels } from '../../module/models/models.index';
 
 type Migration = (
   queryInterface: QueryInterface,
   sequelize: Sequelize
 ) => Promise<void>;
 export const up: Migration = async () => {
+  const dataConfig = await Config.initialize();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
+
   const provinces = dataarea.provinces();
   const regencies = dataarea.regencies();
 

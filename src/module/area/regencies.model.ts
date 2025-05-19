@@ -1,40 +1,50 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
-import { DataTypes } from 'sequelize';
-import conn from '../../config/database';
-import Province from './provinces.model';
+import AreaProvince from './provinces.model';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
-const Model = conn.sequelize.define(
-  'area_regencies',
-  {
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      unique: true,
+export class AreaRegency extends Model {
+  public id!: string;
+  public area_province_id!: string;
+  public name!: string;
+}
+
+export function initAreaRegency(sequelize: Sequelize) {
+  AreaRegency.init(
+    {
+      id: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        unique: true,
+      },
+      area_province_id: {
+        type: DataTypes.STRING,
+      },
+      name: {
+        type: DataTypes.STRING,
+      },
     },
-    area_province_id: {
-      type: DataTypes.STRING,
-    },
-    name: {
-      type: DataTypes.STRING,
-    },
-  },
-  {
-    createdAt: false,
-    updatedAt: false,
-    freezeTableName: true,
-  }
-);
+    {
+      sequelize,
+      modelName: 'AreaRegency',
+      tableName: 'area_regencies',
+      timestamps: false,
+    }
+  );
 
-Model.beforeCreate(
-  (area_regencies: { id: string }) => (area_regencies.id = uuidv4())
-);
+  AreaRegency.beforeCreate((area_regencies) => {
+    area_regencies?.setDataValue('id', uuidv4());
+  });
+  return AreaRegency;
+}
 
-Model.belongsTo(Province, {
-  as: 'province',
-  targetKey: 'id',
-  foreignKey: 'area_province_id',
-});
+export function associateAreaRegency() {
+  AreaRegency.belongsTo(AreaProvince, {
+    as: 'province',
+    targetKey: 'id',
+    foreignKey: 'area_province_id',
+  });
+}
 
-export default Model;
+export default AreaRegency;

@@ -1,6 +1,5 @@
 'use strict';
 
-import dotenv from 'dotenv';
 import { Op } from 'sequelize';
 import { Request, Response } from 'express';
 import { variable } from './resource.variable';
@@ -8,33 +7,58 @@ import { helper } from '../../../helpers/helper';
 import { repository } from './resource.repository';
 import { response } from '../../../helpers/response';
 import { transformer } from './resource.transformer';
+import { appConfig } from '../../../config/config.app';
+import {
+  ALREADY_EXIST,
+  INVALID,
+  NOT_FOUND,
+  REQUIRED,
+  ROLE_ADMIN,
+  ROLE_AGENT,
+  SUCCESS_DELETED,
+  SUCCESS_RETRIEVED,
+  SUCCESS_SAVED,
+  SUCCESS_UPDATED,
+} from '../../../utils/constant';
 
-dotenv.config();
 const date: string = helper.date();
 
 export default class Controller {
   public async index(req: Request, res: Response) {
     try {
+      const { role_name } = req?.user;
       const limit: any = req?.query?.perPage || 10;
       const offset: any = req?.query?.page || 1;
       const keyword: any = req?.query?.q;
-      const conditionArea: object = helper.conditionArea(req?.user);
-      const admin: string =
-        req?.user?.role_name == 'administrator' ? '' : 'administrator';
+      const role: any = req?.query?.role;
 
+      let conditionRole: Object = { role_name: { [Op.ne]: '' } };
+      if (role_name != ROLE_ADMIN) {
+        conditionRole = { role_name: { [Op.ne]: ROLE_ADMIN } };
+
+        if (role && role != undefined && !ROLE_ADMIN.includes(role)) {
+          conditionRole = { role_name: { [Op.like]: `%${role}%` } };
+        }
+      } else if (role && role != undefined) {
+        conditionRole = { role_name: { [Op.like]: `%${role}%` } };
+      }
+
+      let condition: any = {};
       const { count, rows } = await repository.index(
         {
           limit: parseInt(limit),
           offset: parseInt(limit) * (parseInt(offset) - 1),
           keyword: keyword,
         },
-        conditionArea,
-        admin
+        condition,
+        conditionRole
       );
-      if (rows?.length < 1) return response.failed('Data not found', 404, res);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
+      const users = await transformer.list(rows, false);
       return response.success(
-        'Data resource',
-        { total: count, values: rows },
+        SUCCESS_RETRIEVED,
+        { total: count, values: users },
         res
       );
     } catch (err: any) {
@@ -48,7 +72,8 @@ export default class Controller {
       const result: Object | any = await repository.detail({
         username: username,
       });
-      if (result) return response.success('Data already used', null, res);
+      if (result)
+        return response.success('Data already used', null, res, false);
       return response.success('Data can used', null, res);
     } catch (err: any) {
       return helper.catchError(`resource check: ${err?.message}`, 500, res);
@@ -57,19 +82,18 @@ export default class Controller {
 
   public async detail(req: Request, res: Response) {
     try {
+      const role: string = req?.user?.role_name;
       const id: string = req.params.id || '';
       if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} is not valid`, 400, res);
+        return response.failed(`id ${id} ${INVALID}`, 400, res);
 
-      const admin: string =
-        req?.user?.role_name == 'administrator' ? '' : 'administrator';
-      const result: Object | any = await repository.detail(
-        { resource_id: id },
-        admin
-      );
-      if (!result) return response.failed('Data not found', 404, res);
-      const getUser: Object = await transformer.detail(result);
-      return response.success('Data resource', getUser, res);
+      const admin: string = role == ROLE_ADMIN ? '' : ROLE_ADMIN;
+      let condition: any = { resource_id: id };
+
+      const result: Object | any = await repository.detail(condition, admin);
+      if (!result) return response.success(NOT_FOUND, null, res, false);
+      const getUser: Object = await transformer.detail(result, false);
+      return response.success(SUCCESS_RETRIEVED, getUser, res);
     } catch (err: any) {
       return helper.catchError(`resource detail: ${err?.message}`, 500, res);
     }
@@ -78,21 +102,23 @@ export default class Controller {
   public async create(req: Request, res: Response) {
     let confirm_hash: string = '';
     let message: string = '';
-    let username: string = '';
+    let username: string = req?.body?.username || '';
 
     try {
       const checkEmail = await repository.check({
         email: { [Op.like]: `%${req?.body?.email}%` },
       });
-      if (checkEmail) return response.failed('Data already exists', 400, res);
+      if (checkEmail) return response.failed(ALREADY_EXIST, 400, res);
       if (!req?.body?.password)
-        return response.failed('Password is required', 422, res);
+        return response.failed(`Password ${REQUIRED}`, 422, res);
 
-      username = req?.body?.email.split('@')[0];
-      const checkUsername = await repository.check({
-        username: username,
-      });
-      if (checkUsername) username = username + helper.random(100, 999);
+      if (!username || username == undefined) {
+        username = req?.body?.email.split('@')[0];
+        const checkUsername = await repository.check({
+          username: username,
+        });
+        if (checkUsername) username = username + helper.random(100, 999);
+      }
 
       let role_id: any = null;
       let image_foto: any = null;
@@ -103,10 +129,16 @@ export default class Controller {
       if (req?.body?.province_id)
         province_id = JSON.parse(req?.body?.province_id);
       if (req?.files && req?.files.image_foto) {
-        let checkFile = helper.checkExtention(req?.files?.image_foto);
+        const file = req?.files?.image_foto;
+        let checkFile = helper.checkExtention(file);
         if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
 
-        image_foto = await helper.upload(req?.files.image_foto, 'resource');
+        image_foto = await helper.upload(
+          file,
+          'resource',
+          req?.user?.username,
+          appConfig?.assetType
+        );
       }
 
       confirm_hash = await helper.hashIt(username, 6);
@@ -121,28 +153,33 @@ export default class Controller {
           confirm_hash: confirm_hash,
           image_foto: image_foto,
           role_id: role_id?.value || null,
+          status: 'A',
           area_province_id: province_id?.value || null,
           area_regencies_id: regency_id?.value || null,
           created_by: req?.user?.id || null,
         },
       });
 
-      message = 'Data success saved';
+      message = SUCCESS_SAVED;
     } catch (err: any) {
       return helper.catchError(`resource create: ${err?.message}`, 500, res);
     }
 
     try {
-      await helper.sendEmail({
-        to: req?.body?.email,
-        subject: 'Welcome to POC',
-        content: `
-          <h3>Hi ${req?.body?.full_name},</h3>
-          <p>Congratulation to join as a member, below this link to activation your account:</p>
-          <a href="${process.env.BASE_URL_FE}/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
-          <p>This is your username account: <b>${username}</b></p>
-        `,
-      });
+      // status already A
+      // await helper.sendEmail({
+      //   to: req?.body?.email,
+      //   subject: `Welcome to ${appConfig?.app}`,
+      //   content: `
+      //     <h3>Hi ${req?.body?.full_name},</h3>
+      //     <p>Congratulation to join as a member, below this link to activation your account:</p>
+      //     <a href="${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
+      //     <p>This is your username account: <b>${username}</b></p>
+      //   `,
+      // });
+      // await helper.sendNotif(
+      //   `Welcome to ${appConfig?.app}. Hi ${req?.body?.full_name}, Congratulation to join as a member, below this link to activation your account: ${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}. This is your username account: ${username}`
+      // );
     } catch (err: any) {
       message = `<br /> error send email: ${err?.message}`;
     }
@@ -154,12 +191,12 @@ export default class Controller {
     try {
       const id: string = req.params.id || '';
       if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} is not valid`, 400, res);
+        return response.failed(`id ${id} ${INVALID}`, 400, res);
 
       const admin: string =
-        req?.user?.role_name == 'administrator' ? '' : 'administrator';
+        req?.user?.role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const check = await repository.check({ resource_id: id }, admin);
-      if (!check) return response.failed('Data not found', 404, res);
+      if (!check) return response.success(NOT_FOUND, null, res, false);
 
       let role_id: any = null;
       let province_id: any = null;
@@ -170,10 +207,16 @@ export default class Controller {
         province_id = JSON.parse(req?.body?.province_id);
       if (req?.body?.regency_id) regency_id = JSON.parse(req?.body?.regency_id);
       if (req?.files && req?.files.image_foto) {
-        let checkFile = helper.checkExtention(req?.files?.image_foto);
+        const file = req?.files?.image_foto;
+        let checkFile = helper.checkExtention(file);
         if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
 
-        image_foto = await helper.upload(req?.files.image_foto, 'resource');
+        image_foto = await helper.upload(
+          file,
+          'resource',
+          req?.user?.username,
+          appConfig?.assetType
+        );
       }
 
       let password: any = null;
@@ -206,7 +249,7 @@ export default class Controller {
         condition: { resource_id: id },
       });
 
-      return response.success('Data success updated', null, res);
+      return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(`resource update: ${err?.message}`, 500, res);
     }
@@ -216,12 +259,12 @@ export default class Controller {
     try {
       const id: string = req.params.id || '';
       if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} is not valid`, 400, res);
+        return response.failed(`id ${id} ${INVALID}`, 400, res);
 
       const admin: string =
-        req?.user?.role_name == 'administrator' ? '' : 'administrator';
+        req?.user?.role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const check = await repository.detail({ resource_id: id }, admin);
-      if (!check) return response.failed('Data not found', 404, res);
+      if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.update({
         payload: {
           status: 'D',
@@ -230,10 +273,11 @@ export default class Controller {
         },
         condition: { resource_id: id },
       });
-      return response.success('Data success deleted', null, res);
+      return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(`resource delete: ${err?.message}`, 500, res);
     }
   }
 }
+
 export const resource = new Controller();

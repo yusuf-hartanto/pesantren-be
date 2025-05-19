@@ -1,7 +1,10 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
+import Config from '../../config/parameter';
+import { initializeDatabase } from '../connection';
 import { QueryInterface, Sequelize } from 'sequelize';
+import { initializeModels } from '../../module/models/models.index';
 import Model from '../../module/app/param.global/param.global.model';
 import { repository as repoResource } from '../../module/app/resource/resource.repository';
 
@@ -10,6 +13,10 @@ type Migration = (
   sequelize: Sequelize
 ) => Promise<void>;
 export const up: Migration = async () => {
+  const dataConfig = await Config.initialize();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
+
   const resource = await repoResource.detail({ username: 'adminuser' }, '');
   await Model.bulkCreate([
     {

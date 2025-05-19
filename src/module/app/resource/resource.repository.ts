@@ -2,29 +2,30 @@
 
 import { Op } from 'sequelize';
 import Model from './resource.model';
-import Role from '../role/role.model';
-import Regency from '../../area/regencies.model';
-import Province from '../../area/provinces.model';
+import AppRole from '../role/role.model';
+import AreaRegency from '../../area/regencies.model';
+import { ROLE_ADMIN } from '../../../utils/constant';
+import AreaProvince from '../../area/provinces.model';
 
-export default class Respository {
+export default class Repository {
   public list(data: any) {
     return Model.findAll({
       where: data?.condition,
-      order: [['resource_id', 'DESC']],
+      order: [['created_date', 'DESC']],
     });
   }
 
-  public index(data: any, condition: any, admin: string = 'administrator') {
+  public index(data: any, condition: any, conditionRole: Object = {}) {
     let query: Object = {
       where: {
         ...condition,
         status: { [Op.ne]: 'D' },
       },
-      order: [['resource_id', 'DESC']],
+      order: [['created_date', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
-    if (data?.keyword !== undefined && data?.keyword != null) {
+    if (data?.keyword && data?.keyword != undefined) {
       query = {
         ...query,
         where: {
@@ -46,22 +47,22 @@ export default class Respository {
       },
       include: [
         {
-          model: Role,
+          model: AppRole,
           attributes: ['role_id', 'role_name', 'status'],
           as: 'role',
           required: true,
           where: {
-            role_name: { [Op.ne]: admin },
+            ...conditionRole,
           },
         },
         {
-          model: Province,
+          model: AreaProvince,
           attributes: ['id', 'name'],
           as: 'province',
           required: false,
         },
         {
-          model: Regency,
+          model: AreaRegency,
           attributes: ['id', 'name', 'area_province_id'],
           as: 'regency',
           required: false,
@@ -70,7 +71,7 @@ export default class Respository {
     });
   }
 
-  public detail(condition: any, admin: string = 'administrator') {
+  public detail(condition: any, admin: string = ROLE_ADMIN) {
     return Model.findOne({
       where: {
         ...condition,
@@ -78,7 +79,7 @@ export default class Respository {
       },
       include: [
         {
-          model: Role,
+          model: AppRole,
           attributes: ['role_id', 'role_name', 'status'],
           as: 'role',
           required: true,
@@ -87,13 +88,13 @@ export default class Respository {
           },
         },
         {
-          model: Province,
+          model: AreaProvince,
           attributes: ['id', 'name'],
           as: 'province',
           required: false,
         },
         {
-          model: Regency,
+          model: AreaRegency,
           attributes: ['id', 'name', 'area_province_id'],
           as: 'regency',
           required: false,
@@ -102,7 +103,7 @@ export default class Respository {
     });
   }
 
-  public check(condition: any, admin: string = 'administrator') {
+  public check(condition: any, admin: string = ROLE_ADMIN) {
     return Model.findOne({
       where: {
         ...condition,
@@ -110,7 +111,7 @@ export default class Respository {
       },
       include: [
         {
-          model: Role,
+          model: AppRole,
           attributes: ['role_id', 'role_name', 'status'],
           as: 'role',
           required: true,
@@ -130,15 +131,12 @@ export default class Respository {
       },
       include: [
         {
-          model: Role,
+          model: AppRole,
           attributes: ['role_id', 'role_name', 'status'],
           as: 'role',
           required: true,
           where: {
-            [Op.or]: [
-              { role_name: 'administrator' },
-              { role_name: 'admin pusat' },
-            ],
+            role_name: ROLE_ADMIN,
           },
         },
       ],
@@ -156,4 +154,4 @@ export default class Respository {
   }
 }
 
-export const repository = new Respository();
+export const repository = new Repository();

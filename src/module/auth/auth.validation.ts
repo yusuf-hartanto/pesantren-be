@@ -1,5 +1,6 @@
 'use strict';
 
+import { REQUIRED } from '../../utils/constant';
 import { response } from '../../helpers/response';
 import { Request, Response, NextFunction } from 'express';
 
@@ -10,11 +11,11 @@ export default class Validation {
     );
 
     const { full_name, email, password, confirm_password } = req?.body;
-    if (!full_name) return response.failed('Full Name is required', 422, res);
-    if (!email) return response.failed('Email is required', 422, res);
+    if (!full_name) return response.failed(`Full Name ${REQUIRED}`, 422, res);
+    if (!email) return response.failed(`Email ${REQUIRED}`, 422, res);
     if (!regexp.test(email))
-      return response.failed('Email invalid format', 422, res);
-    if (!password) return response.failed('Password is required', 422, res);
+      return response.failed(`Email invalid format`, 422, res);
+    if (!password) return response.failed(`Password ${REQUIRED}`, 422, res);
     if (password != confirm_password)
       return response.failed(
         `Confirm password doesn't match password`,

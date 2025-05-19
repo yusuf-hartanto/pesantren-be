@@ -2,8 +2,11 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { datamenu } from '../data/menu';
-import { QueryInterface, Sequelize } from 'sequelize';
+import Config from '../../config/parameter';
+import { initializeDatabase } from '../connection';
 import Model from '../../module/app/menu/menu.model';
+import { QueryInterface, Sequelize } from 'sequelize';
+import { initializeModels } from '../../module/models/models.index';
 import { repository as repoResource } from '../../module/app/resource/resource.repository';
 
 type Migration = (
@@ -11,6 +14,10 @@ type Migration = (
   sequelize: Sequelize
 ) => Promise<void>;
 export const up: Migration = async () => {
+  const dataConfig = await Config.initialize();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
+
   const menus = datamenu.menu();
   const childmenu = datamenu.childmenu();
   const resource = await repoResource.detail({ username: 'adminuser' }, '');

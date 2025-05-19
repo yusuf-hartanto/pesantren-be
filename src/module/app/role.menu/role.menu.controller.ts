@@ -5,17 +5,23 @@ import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 import { response } from '../../../helpers/response';
 import { helper } from '../../../helpers/helper';
-import { repository } from './role.menu.respository';
+import { repository } from './role.menu.repository';
 import { transformer } from './role.menu.transformer';
+import {
+  NOT_FOUND,
+  REQUIRED,
+  SUCCESS_RETRIEVED,
+  SUCCESS_SAVED,
+} from '../../../utils/constant';
 
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const result = await repository.list();
       if (result?.length < 1)
-        return response.failed('Data not found', 404, res);
+        return response.success(NOT_FOUND, null, res, false);
       const roleMenu = transformer.list(result);
-      return response.success('list data role', roleMenu, res);
+      return response.success(SUCCESS_RETRIEVED, roleMenu, res);
     } catch (err: any) {
       return helper.catchError(`role menu all-data: ${err?.message}`, 500, res);
     }
@@ -31,11 +37,12 @@ export default class Controller {
         offset: parseInt(limit) * (parseInt(offset) - 1),
         keyword: keyword,
       });
-      if (rows?.length < 1) return response.failed('Data not found', 404, res);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
       const roleMenu = transformer.list(rows);
       const total: any = count;
       return response.success(
-        'Data role menu',
+        SUCCESS_RETRIEVED,
         { total: total?.length, values: roleMenu },
         res
       );
@@ -48,6 +55,7 @@ export default class Controller {
     try {
       interface Menu {
         menu_id: string;
+        view: number;
         create: number;
         edit: number;
         delete: number;
@@ -57,7 +65,7 @@ export default class Controller {
       const date: string = helper.date();
       const body: Array<{ role_id: any; menu: Array<Menu> }> = req?.body;
       if (body?.length === 0)
-        return response.failed('request body is required', 422, res);
+        return response.failed(`request body ${REQUIRED}`, 422, res);
 
       let insert: Array<object> = [];
       let role_id: Array<number> = [];
@@ -69,6 +77,7 @@ export default class Controller {
             role_menu_id: uuidv4(),
             role_id: item?.role_id?.value,
             menu_id: i?.menu_id,
+            view: i?.view,
             create: i?.create,
             edit: i?.edit,
             delete: i?.delete,
@@ -88,10 +97,11 @@ export default class Controller {
         });
       }
 
-      return response.success('Data success saved', null, res);
+      return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       return helper.catchError(`role menu create: ${err?.message}`, 500, res);
     }
   }
 }
+
 export const roleMenu = new Controller();

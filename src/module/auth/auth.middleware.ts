@@ -1,14 +1,16 @@
 'use strict';
 
-import dotenv from 'dotenv';
+import moment from 'moment';
 import { Op } from 'sequelize';
 import { helper } from '../../helpers/helper';
 import { response } from '../../helpers/response';
 import { helperauth } from '../../helpers/auth.helper';
 import { Request, Response, NextFunction } from 'express';
 import { repository } from '../app/resource/resource.repository';
+import { NOT_FOUND, REQUIRED, ROLE_ADMIN } from '../../utils/constant';
+import { repository as repoRoleMenu } from '../app/role.menu/role.menu.repository';
 
-dotenv.config();
+moment().locale('id');
 type RequestBody<T> = Request<{}, {}, T>;
 interface UserBody {
   username: string;
@@ -21,20 +23,37 @@ export default class Middleware {
     res: Response,
     next: NextFunction
   ) {
-    const authorization: string = req?.headers['authorization'] || '';
-    const token: string = await helperauth.decodeBearerToken(authorization);
-    if (token === '')
-      return response.failed('Auth Bearer is required', 422, res);
-
     try {
-      const auth = helperauth.decodeToken(token);
+      const authorization: string = req?.headers['authorization'] || '';
+      const token: string = await helperauth.decodeBearerToken(authorization);
+      if (token === '')
+        return response.failed(`Auth Bearer ${REQUIRED}`, 422, res);
+
+      const auth = helperauth.newDecodeToken(token);
       if (typeof auth == 'string')
         return response.failed('Invalid token', 400, res);
 
-      const admin: string =
-        auth?.role_name == 'administrator' ? '' : 'administrator';
+      const admin: string = auth?.role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const user = await repository.detail({ token }, admin);
       if (!user) return response.failed('Unauthorized', 401, res);
+
+      let checkExp = true;
+      if (user?.getDataValue('token_expired')) {
+        const expired = helper.dateDiff(
+          moment(user?.getDataValue('token_expired')),
+          'seconds'
+        );
+        if (expired < 3600) return response.failed('Unauthorized', 401, res);
+        if (expired > 475200) checkExp = false;
+      }
+      if (checkExp) {
+        await repository.update({
+          payload: {
+            token_expired: helper.dateAdd(7, 'days'),
+          },
+          condition: { resource_id: user?.getDataValue('resource_id') },
+        });
+      }
 
       req.user = auth;
       next();
@@ -58,7 +77,11 @@ export default class Middleware {
     next: NextFunction
   ) {
     try {
-      req.user = helperauth.decodeRefreshToken(req?.body?.refresh_token);
+      const auth = helperauth.newDecodeToken(req?.body?.refresh_token);
+      if (typeof auth == 'string')
+        return response.failed('Invalid token', 400, res);
+
+      req.user = auth;
       next();
       return;
     } catch (err: any) {
@@ -82,20 +105,22 @@ export default class Middleware {
     const authorization: string = req?.headers['authorization'] || '';
     const token: string = helperauth.decodeBearerToken(authorization);
     if (token === '')
-      return response.failed('Auth Bearer is Required', 422, res);
+      return response.failed(`Auth Bearer ${REQUIRED}`, 422, res);
 
     try {
       const user = await repository.detail({ token }, '');
       if (!user) return response.failed('Unauthorized', 401, res);
 
-      req.user = helperauth.decodeToken(token);
+      const auth = helperauth.newDecodeToken(token);
+      if (typeof auth == 'string')
+        return response.failed('Invalid token', 400, res);
+
+      req.user = auth;
       next();
       return;
     } catch (err: any) {
       if (err?.name === 'TokenExpiredError') {
-        req.user = helperauth.decodeExpiredToken(token);
-        next();
-        return;
+        return response.failed(err?.message, 401, res);
       } else {
         return helper.catchError(
           `check expired token invalid: ${err?.message}`,
@@ -115,7 +140,7 @@ export default class Middleware {
       const username: string = req?.body?.username;
       const password: string = req?.body?.password;
       if (!username || !password)
-        return response.failed('Username or password is required', 422, res);
+        return response.failed(`Username or password ${REQUIRED}`, 422, res);
 
       const result = await repository.detail(
         {
@@ -123,7 +148,7 @@ export default class Middleware {
         },
         ''
       );
-      if (!result) return response.failed('Data not found', 404, res);
+      if (!result) return response.success(NOT_FOUND, null, res, false);
 
       if (result?.getDataValue('status') === 'A') {
         req.user = result;
@@ -142,8 +167,10 @@ export default class Middleware {
     const token: string = await helperauth.decodeBearerToken(authorization);
 
     try {
-      const auth: any = helperauth.decodeToken(token);
-      req.user = auth;
+      const auth: any = helperauth.newDecodeToken(token);
+
+      if (typeof auth == 'string') req.user = null;
+      else req.user = auth;
 
       next();
       return;
@@ -151,6 +178,30 @@ export default class Middleware {
       req.user = null;
       next();
     }
+  }
+
+  public checkAccess(role: string) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { role_name } = req?.user;
+        const role_menu: any = await repoRoleMenu.detailRole({
+          role_name: { [Op.like]: `%${role_name}%` },
+        });
+        const ability = role_menu?.dataValues?.role_menu.find((rm: any) => {
+          let moduleName: string = rm?.menu?.module_name.toLowerCase();
+          if (moduleName.includes('user')) moduleName = 'resource';
+          return req?.originalUrl.split('?')[0].includes(moduleName);
+        });
+
+        if (!ability && role_name != ROLE_ADMIN)
+          return response.failed(`Sorry! You don't have access.`, 400, res);
+
+        next();
+        return;
+      } catch (err: any) {
+        return helper.catchError(`check access: ${err?.message}`, 400, res);
+      }
+    };
   }
 }
 

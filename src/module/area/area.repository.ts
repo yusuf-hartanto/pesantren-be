@@ -1,16 +1,16 @@
 'use strict';
 
 import { Op } from 'sequelize';
-import Province from './provinces.model';
-import Regency from './regencies.model';
+import AreaProvince from './provinces.model';
+import AreaRegency from './regencies.model';
 
-export default class Respository {
+export default class Repository {
   public province() {
-    return Province.findAll();
+    return AreaProvince.findAll();
   }
 
   public provinceDetail(condition: any) {
-    return Province.findOne({
+    return AreaProvince.findOne({
       where: condition,
     });
   }
@@ -20,26 +20,26 @@ export default class Respository {
       offset: data?.offset,
       limit: data?.limit,
     };
-    if (data?.keyword !== undefined && data?.keyword != null) {
+    if (data?.keyword && data?.keyword != undefined) {
       query = {
         ...query,
         where: { name: { [Op.like]: `%${data?.keyword}%` } },
       };
     }
-    return Regency.findAndCountAll(query);
+    return AreaRegency.findAndCountAll(query);
   }
 
   public regency(condition: any) {
-    return Regency.findAll({
+    return AreaRegency.findAll({
       where: condition,
     });
   }
 
   public regencyDetail(condition: any) {
-    return Regency.findOne({
+    return AreaRegency.findOne({
       where: condition,
     });
   }
 }
 
-export const repository = new Respository();
+export const repository = new Repository();
