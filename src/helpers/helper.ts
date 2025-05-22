@@ -5,10 +5,10 @@ import path from 'path';
 import sharp from 'sharp';
 import moment from 'moment';
 import bcrypt from 'bcryptjs';
-import { Response } from 'express';
 import nodemailer from 'nodemailer';
 import TelegramBot from 'tele-sender';
 import { QueryTypes } from 'sequelize';
+import { Request, Response } from 'express';
 import { response } from '../helpers/response';
 import { appConfig } from '../config/config.app';
 import { mailConfig } from '../config/config.mail';
@@ -310,6 +310,18 @@ export default class Helper {
       .toString()
       .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     return formattedAmount;
+  }
+
+  public fetchQueryRequest(req: Request) {
+    const limit: any = req?.query?.perPage || 10;
+    const offset: any = req?.query?.page || 1;
+    const keyword: any = req?.query?.q;
+
+    return {
+      limit: parseInt(limit),
+      offset: parseInt(limit) * (parseInt(offset) - 1),
+      keyword,
+    };
   }
 }
 

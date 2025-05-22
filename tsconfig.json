@@ -109,5 +109,9 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "exclude": ["src/config/data", "src/config/migrations", "src/config/seeders"]
+  "exclude": [
+    "src/database/data",
+    "src/database/migrations",
+    "src/database/seeders"
+  ]
 }

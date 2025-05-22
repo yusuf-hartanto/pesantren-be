@@ -29,14 +29,8 @@ export default class Controller {
 
   public async index(req: Request, res: Response) {
     try {
-      const limit: any = req?.query?.perPage || 10;
-      const offset: any = req?.query?.page || 1;
-      const keyword: any = req?.query?.q;
-      const { count, rows } = await repository.index({
-        limit: parseInt(limit),
-        offset: parseInt(limit) * (parseInt(offset) - 1),
-        keyword: keyword,
-      });
+      const query = helper.fetchQueryRequest(req);
+      const { count, rows } = await repository.index(query);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       const roleMenu = transformer.list(rows);

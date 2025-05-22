@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { helper } from '../../helpers/helper';
 import { repository } from './area.repository';
 import { response } from '../../helpers/response';
-import { INVALID, NOT_FOUND, SUCCESS_RETRIEVED } from '../../utils/constant';
+import { NOT_FOUND, SUCCESS_RETRIEVED } from '../../utils/constant';
 
 export default class Controller {
   public async province(req: Request, res: Response) {
@@ -20,14 +20,8 @@ export default class Controller {
 
   public async allRegency(req: Request, res: Response) {
     try {
-      const limit: any = req?.query?.perPage || 10;
-      const offset: any = req?.query?.page || 1;
-      const keyword: any = req?.query?.q;
-      const { count, rows } = await repository.indexRegency({
-        limit: parseInt(limit),
-        offset: parseInt(limit) * (parseInt(offset) - 1),
-        keyword: keyword,
-      });
+      const query = helper.fetchQueryRequest(req);
+      const { count, rows } = await repository.indexRegency(query);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(
@@ -42,10 +36,7 @@ export default class Controller {
 
   public async regency(req: Request, res: Response) {
     try {
-      const id: string = req.params.id || '';
-      if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} ${INVALID}`, 400, res);
-
+      const id: string = req?.params?.id || '';
       const result = await repository.regency({
         area_province_id: id,
       });

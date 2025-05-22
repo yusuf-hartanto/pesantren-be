@@ -10,11 +10,9 @@ import { transformer } from './resource.transformer';
 import { appConfig } from '../../../config/config.app';
 import {
   ALREADY_EXIST,
-  INVALID,
   NOT_FOUND,
   REQUIRED,
   ROLE_ADMIN,
-  ROLE_AGENT,
   SUCCESS_DELETED,
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
@@ -27,10 +25,8 @@ export default class Controller {
   public async index(req: Request, res: Response) {
     try {
       const { role_name } = req?.user;
-      const limit: any = req?.query?.perPage || 10;
-      const offset: any = req?.query?.page || 1;
-      const keyword: any = req?.query?.q;
       const role: any = req?.query?.role;
+      const query = helper.fetchQueryRequest(req);
 
       let conditionRole: Object = { role_name: { [Op.ne]: '' } };
       if (role_name != ROLE_ADMIN) {
@@ -43,16 +39,7 @@ export default class Controller {
         conditionRole = { role_name: { [Op.like]: `%${role}%` } };
       }
 
-      let condition: any = {};
-      const { count, rows } = await repository.index(
-        {
-          limit: parseInt(limit),
-          offset: parseInt(limit) * (parseInt(offset) - 1),
-          keyword: keyword,
-        },
-        condition,
-        conditionRole
-      );
+      const { count, rows } = await repository.index(query, {}, conditionRole);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       const users = await transformer.list(rows, false);
@@ -68,7 +55,7 @@ export default class Controller {
 
   public async check(req: Request, res: Response) {
     try {
-      const username: string = req.params.username;
+      const username: string = req?.params?.username;
       const result: Object | any = await repository.detail({
         username: username,
       });
@@ -82,15 +69,13 @@ export default class Controller {
 
   public async detail(req: Request, res: Response) {
     try {
-      const role: string = req?.user?.role_name;
-      const id: string = req.params.id || '';
-      if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} ${INVALID}`, 400, res);
-
-      const admin: string = role == ROLE_ADMIN ? '' : ROLE_ADMIN;
-      let condition: any = { resource_id: id };
-
-      const result: Object | any = await repository.detail(condition, admin);
+      const { role_name } = req?.user;
+      const id: string = req?.params?.id || '';
+      const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
+      const result: Object | any = await repository.detail(
+        { resource_id: id },
+        admin
+      );
       if (!result) return response.success(NOT_FOUND, null, res, false);
       const getUser: Object = await transformer.detail(result, false);
       return response.success(SUCCESS_RETRIEVED, getUser, res);
@@ -153,7 +138,7 @@ export default class Controller {
           confirm_hash: confirm_hash,
           image_foto: image_foto,
           role_id: role_id?.value || null,
-          status: 'A',
+          status: 'NV',
           area_province_id: province_id?.value || null,
           area_regencies_id: regency_id?.value || null,
           created_by: req?.user?.id || null,
@@ -166,20 +151,19 @@ export default class Controller {
     }
 
     try {
-      // status already A
-      // await helper.sendEmail({
-      //   to: req?.body?.email,
-      //   subject: `Welcome to ${appConfig?.app}`,
-      //   content: `
-      //     <h3>Hi ${req?.body?.full_name},</h3>
-      //     <p>Congratulation to join as a member, below this link to activation your account:</p>
-      //     <a href="${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
-      //     <p>This is your username account: <b>${username}</b></p>
-      //   `,
-      // });
-      // await helper.sendNotif(
-      //   `Welcome to ${appConfig?.app}. Hi ${req?.body?.full_name}, Congratulation to join as a member, below this link to activation your account: ${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}. This is your username account: ${username}`
-      // );
+      await helper.sendEmail({
+        to: req?.body?.email,
+        subject: `Welcome to ${appConfig?.app}`,
+        content: `
+          <h3>Hi ${req?.body?.full_name},</h3>
+          <p>Congratulation to join as a member, below this link to activation your account:</p>
+          <a href="${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
+          <p>This is your username account: <b>${username}</b></p>
+        `,
+      });
+      await helper.sendNotif(
+        `Welcome to ${appConfig?.app}. Hi ${req?.body?.full_name}, Congratulation to join as a member, below this link to activation your account: ${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}. This is your username account: ${username}`
+      );
     } catch (err: any) {
       message = `<br /> error send email: ${err?.message}`;
     }
@@ -189,12 +173,9 @@ export default class Controller {
 
   public async update(req: Request, res: Response) {
     try {
-      const id: string = req.params.id || '';
-      if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} ${INVALID}`, 400, res);
-
-      const admin: string =
-        req?.user?.role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
+      const { role_name } = req?.user;
+      const id: string = req?.params?.id || '';
+      const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const check = await repository.check({ resource_id: id }, admin);
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
@@ -257,12 +238,9 @@ export default class Controller {
 
   public async delete(req: Request, res: Response) {
     try {
-      const id: string = req.params.id || '';
-      if (!helper.isValidUUID(id))
-        return response.failed(`id ${id} ${INVALID}`, 400, res);
-
-      const admin: string =
-        req?.user?.role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
+      const { role_name } = req?.user;
+      const id: string = req?.params?.id || '';
+      const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const check = await repository.detail({ resource_id: id }, admin);
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.update({
