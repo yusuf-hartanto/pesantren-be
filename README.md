@@ -1,6 +1,6 @@
 # Program
 
-    Skeleton Typescript API
+    Pesantren API
 
 ## Configuration
 
