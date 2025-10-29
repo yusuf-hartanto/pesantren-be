@@ -1,7 +1,7 @@
 {
-  "name": "skeleton-ts-api",
+  "name": "pesantren-api",
   "version": "1.0.0",
-  "description": "skeleton typescript api",
+  "description": "pesantren api",
   "main": "server.js",
   "scripts": {
     "build": "npx tsc",
@@ -19,7 +19,7 @@
     "db:seed-undo": "ts-node ./node_modules/sequelize-cli/lib/sequelize db:seed:undo:all"
   },
   "keywords": [],
-  "author": "Yusuf Hartanto",
+  "author": "YH",
   "license": "ISC",
   "devDependencies": {
     "@types/axios": "^0.14.4",
