@@ -18,6 +18,8 @@ import {
   initAppResourceModel,
   associateAppResource,
 } from '../app/resource/resource.model';
+import { initTahunAngkatan } from '../app/tahun.angkatan/tahun.angkatan.model';
+import { initTingkat } from '../app/tingkat/tingkat.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -29,6 +31,8 @@ export function initializeModels(sequelize: Sequelize) {
   initAreaRegency(sequelize);
   initAreaProvince(sequelize);
   initAppResourceModel(sequelize);
+  initTahunAngkatan(sequelize);
+  initTingkat(sequelize);
 
   // associate
   associateAppRole();

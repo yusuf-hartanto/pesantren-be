@@ -7,6 +7,8 @@ import { auth } from '../auth/auth.middleware';
 import { resource } from './resource/resource.controller';
 import { roleMenu } from './role.menu/role.menu.controller';
 import { paramGlobal } from './param.global/param.global.controller';
+import { tahunAngkatan } from './tahun.angkatan/tahun.angkatan.controller';
+import { tingkat } from './tingkat/tingkat.controller';
 
 const router: Router = Router();
 
@@ -41,5 +43,19 @@ router.get('/resource/:id', auth.checkBearerToken, resource.detail);
 router.post('/resource', auth.checkBearerToken, resource.create);
 router.put('/resource/:id', auth.checkBearerToken, resource.update);
 router.delete('/resource/:id', auth.checkBearerToken, resource.delete);
+
+router.get('/tahun-angkatan/all-data', auth.checkBearerToken, tahunAngkatan.list);
+router.get('/tahun-angkatan', auth.checkBearerToken, tahunAngkatan.index);
+router.get('/tahun-angkatan/:id', auth.checkBearerToken, tahunAngkatan.detail);
+router.post('/tahun-angkatan', auth.checkBearerToken, tahunAngkatan.create);
+router.put('/tahun-angkatan/:id', auth.checkBearerToken, tahunAngkatan.update);
+router.delete('/tahun-angkatan/:id', auth.checkBearerToken, tahunAngkatan.delete);
+
+router.get('/tingkat/all-data', auth.checkBearerToken, tingkat.list);
+router.get('/tingkat', auth.checkBearerToken, tingkat.index);
+router.get('/tingkat/:id', auth.checkBearerToken, tingkat.detail);
+router.post('/tingkat', auth.checkBearerToken, tingkat.create);
+router.put('/tingkat/:id', auth.checkBearerToken, tingkat.update);
+router.delete('/tingkat/:id', auth.checkBearerToken, tingkat.delete);
 
 export default router;
