@@ -21,6 +21,15 @@ export default class DataMenu {
         parent_id: '00000000-0000-0000-0000-000000000000',
         status: 1,
       },
+      {
+        id: 3,
+        menu_name: 'Master',
+        menu_icon: 'Circle',
+        module_name: '#',
+        seq_number: 3,
+        parent_id: '00000000-0000-0000-0000-000000000000',
+        status: 1,
+      }
     ];
   }
 
@@ -64,6 +73,38 @@ export default class DataMenu {
         menu_icon: 'Circle',
         module_name: 'global_param',
         seq_number: 7,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Tahun Angkatan',
+        menu_icon: 'Circle',
+        module_name: 'tahun_angkatan',
+        seq_number: 8,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Tingkat',
+        menu_icon: 'Circle',
+        module_name: 'tingkat',
+        seq_number: 9,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Tahun Ajaran',
+        menu_icon: 'Circle',
+        module_name: 'tahun_ajaran',
+        seq_number: 10,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Semester',
+        menu_icon: 'Circle',
+        module_name: 'semester',
+        seq_number: 11,
         status: 1,
       },
     ];

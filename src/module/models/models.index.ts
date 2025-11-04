@@ -20,6 +20,8 @@ import {
 } from '../app/resource/resource.model';
 import { initTahunAngkatan } from '../app/tahun.angkatan/tahun.angkatan.model';
 import { initTingkat } from '../app/tingkat/tingkat.model';
+import { associateTahunAjaran, initTahunAjaran } from '../app/tahun.ajaran/tahun.ajaran.model';
+import { associateSemester, initSemester } from '../app/semester/semester.ajaran.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -33,6 +35,8 @@ export function initializeModels(sequelize: Sequelize) {
   initAppResourceModel(sequelize);
   initTahunAngkatan(sequelize);
   initTingkat(sequelize);
+  initTahunAjaran(sequelize);
+  initSemester(sequelize);
 
   // associate
   associateAppRole();
@@ -40,4 +44,6 @@ export function initializeModels(sequelize: Sequelize) {
   associateAppResource();
   associateAreaRegency();
   associateAreaProvince();
+  associateTahunAjaran();
+  associateSemester();
 }

@@ -9,6 +9,8 @@ import { roleMenu } from './role.menu/role.menu.controller';
 import { paramGlobal } from './param.global/param.global.controller';
 import { tahunAngkatan } from './tahun.angkatan/tahun.angkatan.controller';
 import { tingkat } from './tingkat/tingkat.controller';
+import { tahunAjaran } from './tahun.ajaran/tahun.ajaran.controller';
+import { semester } from './semester/semester.controller';
 
 const router: Router = Router();
 
@@ -57,5 +59,19 @@ router.get('/tingkat/:id', auth.checkBearerToken, tingkat.detail);
 router.post('/tingkat', auth.checkBearerToken, tingkat.create);
 router.put('/tingkat/:id', auth.checkBearerToken, tingkat.update);
 router.delete('/tingkat/:id', auth.checkBearerToken, tingkat.delete);
+
+router.get('/tahun-ajaran/all-data', auth.checkBearerToken, tahunAjaran.list);
+router.get('/tahun-ajaran', auth.checkBearerToken, tahunAjaran.index);
+router.get('/tahun-ajaran/:id', auth.checkBearerToken, tahunAjaran.detail);
+router.post('/tahun-ajaran', auth.checkBearerToken, tahunAjaran.create);
+router.put('/tahun-ajaran/:id', auth.checkBearerToken, tahunAjaran.update);
+router.delete('/tahun-ajaran/:id', auth.checkBearerToken, tahunAjaran.delete);
+
+router.get('/semester/all-data', auth.checkBearerToken, semester.list);
+router.get('/semester', auth.checkBearerToken, semester.index);
+router.get('/semester/:id', auth.checkBearerToken, semester.detail);
+router.post('/semester', auth.checkBearerToken, semester.create);
+router.put('/semester/:id', auth.checkBearerToken, semester.update);
+router.delete('/semester/:id', auth.checkBearerToken, semester.delete);
 
 export default router;
