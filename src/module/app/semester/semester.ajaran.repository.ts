@@ -5,6 +5,7 @@ import Model from './semester.ajaran.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export default class Repository {
+  
   public list(data: any) {
     let query: Object = {
       order: [['id_semester', 'DESC']],
@@ -43,10 +44,14 @@ export default class Repository {
           [Op.or]: [
             { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col("nomor_urut"), "TEXT"),
+              Sequelize.cast(Sequelize.col("Semester.nomor_urut"), "TEXT"),
               { [Op.like]: `%${data?.keyword}%` }
             ),
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+            Sequelize.where(
+              Sequelize.col("tahun_ajaran.tahun_ajaran"),
+              { [Op.like]: `%${data?.keyword}%` }
+            ),
           ],
         },
       };
@@ -57,7 +62,7 @@ export default class Repository {
         {
           model: TahunAjaran,
           as: 'tahun_ajaran',
-          required: true,
+          required: false,
           attributes: ['tahun_ajaran'],
         },
       ],
