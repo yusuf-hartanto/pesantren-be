@@ -11,6 +11,8 @@ import { tahunAngkatan } from './tahun.angkatan/tahun.angkatan.controller';
 import { tingkat } from './tingkat/tingkat.controller';
 import { tahunAjaran } from './tahun.ajaran/tahun.ajaran.controller';
 import { semester } from './semester/semester.controller';
+import { statusAwalSantri } from './status.awal.santri/status.awal.santri.controller';
+import { beasiswaSantri } from './beasiswa.santri/beasiswa.santri.controller';
 
 const router: Router = Router();
 
@@ -73,5 +75,19 @@ router.get('/semester/:id', auth.checkBearerToken, semester.detail);
 router.post('/semester', auth.checkBearerToken, semester.create);
 router.put('/semester/:id', auth.checkBearerToken, semester.update);
 router.delete('/semester/:id', auth.checkBearerToken, semester.delete);
+
+router.get('/status-awal-santri/all-data', auth.checkBearerToken, statusAwalSantri.list);
+router.get('/status-awal-santri', auth.checkBearerToken, statusAwalSantri.index);
+router.get('/status-awal-santri/:id', auth.checkBearerToken, statusAwalSantri.detail);
+router.post('/status-awal-santri', auth.checkBearerToken, statusAwalSantri.create);
+router.put('/status-awal-santri/:id', auth.checkBearerToken, statusAwalSantri.update);
+router.delete('/status-awal-santri/:id', auth.checkBearerToken, statusAwalSantri.delete);
+
+router.get('/beasiswa-santri/all-data', auth.checkBearerToken, beasiswaSantri.list);
+router.get('/beasiswa-santri', auth.checkBearerToken, beasiswaSantri.index);
+router.get('/beasiswa-santri/:id', auth.checkBearerToken, beasiswaSantri.detail);
+router.post('/beasiswa-santri', auth.checkBearerToken, beasiswaSantri.create);
+router.put('/beasiswa-santri/:id', auth.checkBearerToken, beasiswaSantri.update);
+router.delete('/beasiswa-santri/:id', auth.checkBearerToken, beasiswaSantri.delete);
 
 export default router;

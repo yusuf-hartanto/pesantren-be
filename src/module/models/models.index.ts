@@ -22,6 +22,8 @@ import { initTahunAngkatan } from '../app/tahun.angkatan/tahun.angkatan.model';
 import { initTingkat } from '../app/tingkat/tingkat.model';
 import { associateTahunAjaran, initTahunAjaran } from '../app/tahun.ajaran/tahun.ajaran.model';
 import { associateSemester, initSemester } from '../app/semester/semester.ajaran.model';
+import { initStatusAwalSantri } from '../app/status.awal.santri/status.awal.santri.model';
+import { initBeasiswaSantri } from '../app/beasiswa.santri/beasiswa.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -37,6 +39,8 @@ export function initializeModels(sequelize: Sequelize) {
   initTingkat(sequelize);
   initTahunAjaran(sequelize);
   initSemester(sequelize);
+  initStatusAwalSantri(sequelize);
+  initBeasiswaSantri(sequelize);
 
   // associate
   associateAppRole();
