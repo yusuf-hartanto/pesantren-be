@@ -107,6 +107,22 @@ export default class DataMenu {
         seq_number: 11,
         status: 1,
       },
+      {
+        parent_id: 3,
+        menu_name: 'Status Awal Santri',
+        menu_icon: 'Circle',
+        module_name: 'status_awal_santri',
+        seq_number: 12,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Beasiswa Santri',
+        menu_icon: 'Circle',
+        module_name: 'beasiswa_santri',
+        seq_number: 13,
+        status: 1,
+      },
     ];
   }
 }
