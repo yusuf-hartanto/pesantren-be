@@ -36,17 +36,29 @@ export const up: Migration = async () => {
         menu_id: uuidv4(),
         created_by: resource?.getDataValue('resource_id'),
       });
-      const builkInsert = childmenu
-        ?.filter((r) => r?.parent_id == menus[i]?.id)
-        ?.map((r) => {
-          return {
-            ...r,
-            menu_id: uuidv4(),
-            parent_id: menu?.dataValues?.menu_id,
-            created_by: resource?.getDataValue('resource_id'),
-          };
-        });
-      await Model.bulkCreate(builkInsert);
+    }
+  }
+
+  for (let i in childmenu) {
+    const check = await Model.findOne({
+      where: {
+        menu_name: childmenu[i]?.menu_name,
+      },
+    });
+    if (check) {
+      console.log(`⚠️ Child Menu ${childmenu[i]?.menu_name} already assign, skipping...`);
+    } else {
+      const parent = await Model.findOne({
+        where: {
+          menu_name: menus.find(m => m.id == childmenu[i]?.parent_id)?.menu_name,
+        },
+      });
+      await Model.create({
+        ...childmenu[i],
+        menu_id: uuidv4(),
+        parent_id: parent?.dataValues?.menu_id,
+        created_by: resource?.getDataValue('resource_id'),
+      });
     }
   }
 };
