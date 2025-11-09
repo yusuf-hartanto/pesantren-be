@@ -1,38 +1,104 @@
 'use strict';
 
-import { QueryInterface } from 'sequelize';
+import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`
-    CREATE TABLE app_resource (
-      resource_id varchar(50) NOT NULL,
-      role_id varchar(50) DEFAULT NULL,
-      username varchar(100) DEFAULT NULL,
-      email varchar(255) DEFAULT NULL,
-      password varchar(255) DEFAULT NULL,
-      full_name varchar(255) DEFAULT NULL,
-      place_of_birth varchar(255) DEFAULT NULL,
-      date_of_birth date DEFAULT NULL,
-      usia int DEFAULT 0,
-      telepon varchar(100) DEFAULT NULL,
-      image_foto varchar(255) DEFAULT NULL,
-      status varchar(3) DEFAULT NULL,
-      total_login int DEFAULT 0,
-      area_province_id varchar(50) DEFAULT NULL,
-      area_regencies_id varchar(50) DEFAULT NULL,
-      confirm_hash varchar(255) DEFAULT NULL,
-      token text DEFAULT NULL,
-      token_expired timestamp DEFAULT NULL,
-      created_by varchar(50) DEFAULT NULL,
-      created_date timestamp DEFAULT NULL,
-      modified_by varchar(50) DEFAULT NULL,
-      modified_date timestamp DEFAULT NULL,
-      PRIMARY KEY (resource_id),
-      UNIQUE (resource_id,username,email)
-    );
-  `);
+  await queryInterface.createTable('app_resource', {
+    resource_id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false,
+      unique: true,
+    },
+    role_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    username: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    email: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    full_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    password: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    telepon: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    area_province_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    area_regencies_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    place_of_birth: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    date_of_birth: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+    usia: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    image_foto: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    total_login: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.STRING(5),
+      allowNull: true,
+    },
+    confirm_hash: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    token: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    token_expired: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    created_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    created_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    modified_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    modified_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  });
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`DROP TABLE IF EXISTS app_resource;`);
+  await queryInterface.dropTable('app_resource');
 };

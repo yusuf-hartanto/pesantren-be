@@ -1,23 +1,45 @@
 'use strict';
 
-import { QueryInterface } from 'sequelize';
+import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`
-    CREATE TABLE app_otp (
-      id varchar(50) NOT NULL,
-      email varchar(50) DEFAULT NULL,
-      code int DEFAULT NULL,
-      status int NOT NULL DEFAULT '0',
-      expired timestamp DEFAULT NULL,
-      created_date timestamp DEFAULT NULL,
-      modified_date timestamp DEFAULT NULL,
-      PRIMARY KEY (id),
-      UNIQUE (id, email)
-    );
-  `);
+  await queryInterface.createTable('app_otp', {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false,
+      unique: true,
+    },
+    email: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      unique: true,
+    },
+    code: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    expired: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    created_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    modified_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  });
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`DROP TABLE IF EXISTS app_otp;`);
+  await queryInterface.dropTable('app_otp');
 };
+

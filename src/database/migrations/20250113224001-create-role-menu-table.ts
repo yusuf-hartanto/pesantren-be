@@ -1,47 +1,79 @@
 'use strict';
 
-import dotenv from 'dotenv';
-import { QueryInterface } from 'sequelize';
-import { MYSQL, POSTGRES } from '../../utils/constant';
-
-dotenv.config();
+import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  let column = '';
-  if (process.env.DB_DIALECT == POSTGRES) {
-    column = `
-      "view" int DEFAULT NULL,
-      "create" int DEFAULT NULL,
-      "edit" int DEFAULT NULL,
-      "delete" int DEFAULT NULL,
-    `;
-  }
-  if (process.env.DB_DIALECT == MYSQL) {
-    column = `
-      \`view\` int DEFAULT NULL,
-      \`create\` int DEFAULT NULL,
-      \`edit\` int DEFAULT NULL,
-      \`delete\` int DEFAULT NULL,
-    `;
-  }
-  await queryInterface.sequelize.query(`
-    CREATE TABLE app_role_menu (
-      role_menu_id varchar(50) NOT NULL,
-      role_id varchar(50) NOT NULL,
-      menu_id varchar(50) NOT NULL,
-      ${column}
-      approve int DEFAULT NULL,
-      status int DEFAULT NULL,
-      created_by varchar(50) DEFAULT NULL,
-      created_date timestamp DEFAULT NULL,
-      modified_by varchar(50) DEFAULT NULL,
-      modified_date timestamp DEFAULT NULL,
-      PRIMARY KEY (role_menu_id),
-      UNIQUE (role_id,menu_id)
-    );
-  `);
+  await queryInterface.createTable('app_role_menu', {
+    role_menu_id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false,
+      unique: true,
+    },
+    role_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      references: {
+        model: 'app_role',
+        key: 'role_id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+    },
+    menu_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      references: {
+        model: 'app_menu',
+        key: 'menu_id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+    },
+    view: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    create: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    edit: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    delete: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    approve: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    created_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    created_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    modified_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    modified_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  });
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`DROP TABLE IF EXISTS app_role_menu;`);
+  await queryInterface.dropTable('app_role_menu');
 };

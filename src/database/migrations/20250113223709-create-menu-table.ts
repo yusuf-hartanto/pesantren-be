@@ -1,28 +1,65 @@
 'use strict';
 
-import { QueryInterface } from 'sequelize';
+import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`
-    CREATE TABLE app_menu (
-      menu_id varchar(50) NOT NULL,
-      menu_name varchar(255) DEFAULT NULL,
-      menu_icon varchar(255) DEFAULT NULL,
-      module_name text DEFAULT NULL,
-      type_menu varchar(1) DEFAULT NULL,
-      seq_number int DEFAULT NULL,
-      parent_id varchar(50) DEFAULT NULL,
-      status int DEFAULT NULL,
-      created_by varchar(50) DEFAULT NULL,
-      created_date timestamp DEFAULT NULL,
-      modified_by varchar(50) DEFAULT NULL,
-      modified_date timestamp DEFAULT NULL,
-      PRIMARY KEY (menu_id),
-      UNIQUE (menu_id)
-    );
-  `);
+  await queryInterface.createTable('app_menu', {
+    menu_id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false,
+      unique: true,
+    },
+    menu_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      unique: true,
+    },
+    menu_icon: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    module_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    type_menu: {
+      type: DataTypes.STRING(1),
+      allowNull: true,
+    },
+    seq_number: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    parent_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    created_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    created_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    modified_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    modified_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  });
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`DROP TABLE IF EXISTS app_menu;`);
+  await queryInterface.dropTable('app_menu');
 };
+

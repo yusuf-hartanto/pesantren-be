@@ -1,19 +1,27 @@
 'use strict';
 
-import { QueryInterface } from 'sequelize';
+import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`
-    CREATE TABLE area_regencies (
-      id varchar(50) NOT NULL,
-      area_province_id varchar(50) DEFAULT NULL,
-      name varchar(255) DEFAULT NULL,
-      PRIMARY KEY (id),
-      UNIQUE (id)
-    );
-  `);
+  await queryInterface.createTable('area_regencies', {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false,
+      unique: true,
+    },
+    area_province_id: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+  });
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`DROP TABLE IF EXISTS area_regencies;`);
+  await queryInterface.dropTable('area_regencies');
 };
+

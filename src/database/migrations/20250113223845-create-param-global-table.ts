@@ -1,27 +1,56 @@
 'use strict';
 
-import { QueryInterface } from 'sequelize';
+import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(`  
-    CREATE TABLE app_param_global (
-      id varchar(50) NOT NULL,
-      param_key varchar(100) DEFAULT NULL,
-      param_value varchar(255) DEFAULT NULL,
-      param_desc varchar(255) DEFAULT NULL,
-      status int DEFAULT NULL,
-      created_by varchar(50) DEFAULT NULL,
-      created_date timestamp DEFAULT NULL,
-      modified_by varchar(50) DEFAULT NULL,
-      modified_date timestamp DEFAULT NULL,
-      PRIMARY KEY (id),
-      UNIQUE (id)
-    );
-  `);
+  await queryInterface.createTable('app_param_global', {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false,
+      unique: true,
+    },
+    param_key: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    param_value: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    param_desc: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    type_menu: {
+      type: DataTypes.STRING(1),
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    created_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    created_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    modified_by: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    modified_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  });
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.sequelize.query(
-    `DROP TABLE IF EXISTS app_param_global;`
-  );
+  await queryInterface.dropTable('app_param_global');
 };
+
