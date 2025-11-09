@@ -2,25 +2,24 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import Semester from '../semester/semester.ajaran.model';
 
-export class TahunAjaran extends Model {
-  public id_tahunajaran!: string;
-  public tahun_ajaran!: string;
+export class JenisGuru extends Model {
+  public id_jenisguru!: string;
+  public nama_jenis_guru!: string;
   public nomor_urut!: number;
   public keterangan!: string;
   public status!: string;
 }
 
-export function initTahunAjaran(sequelize: Sequelize) {
-  TahunAjaran.init(
+export function initJenisGuru(sequelize: Sequelize) {
+  JenisGuru.init(
     {
-      id_tahunajaran: {
+      id_jenisguru: {
         type: DataTypes.STRING,
         primaryKey: true,
         unique: true,
       },
-      tahun_ajaran: {
+      nama_jenis_guru: {
         type: DataTypes.STRING(255),
         unique: true,
       },
@@ -33,28 +32,24 @@ export function initTahunAjaran(sequelize: Sequelize) {
       },
       status: {
         type: DataTypes.STRING(255),
+        defaultValue: 'A',
       },
     },
     {
       sequelize,
-      modelName: 'TahunAjaran',
-      tableName: 'tahun_ajaran',
+      modelName: 'JenisGuru',
+      tableName: 'jenis_guru',
       timestamps: false,
     }
   );
 
-  TahunAjaran.beforeCreate((tahun_ajaran) => {
-    tahun_ajaran?.setDataValue('id_tahunajaran', uuidv4());
+  JenisGuru.beforeCreate((jenis_guru) => {
+    jenis_guru?.setDataValue('id_jenisguru', uuidv4());
   });
 
-  return TahunAjaran;
+  return JenisGuru;
 }
 
-export function associateTahunAjaran() {
-  TahunAjaran.hasMany(Semester, {
-    as: 'semesters',
-    foreignKey: 'id_tahunajaran',
-  });
-}
+export function associateJenisGuru() {}
 
-export default TahunAjaran;
+export default JenisGuru;

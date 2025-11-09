@@ -3,26 +3,17 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.createTable('semester', {
-    id_semester: {
+  await queryInterface.createTable('kelompok_pelajaran', {
+    id_kelpelajaran: {
       type: DataTypes.STRING,
       primaryKey: true,
       allowNull: false,
       unique: true,
     },
-    id_tahunajaran: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      references: {
-        model: 'tahun_ajaran',
-        key: 'id_tahunajaran',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-    },
-    nama_semester: {
+    nama_kelpelajaran: {
       type: DataTypes.STRING(255),
       allowNull: true,
+      unique: true,
     },
     nomor_urut: {
       type: DataTypes.INTEGER,
@@ -41,5 +32,5 @@ export const up = async (queryInterface: QueryInterface) => {
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.dropTable('semester');
+  await queryInterface.dropTable('kelompok_pelajaran');
 };

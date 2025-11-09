@@ -24,7 +24,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`status awal santri list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `status awal santri list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -40,18 +44,28 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`status awal santri index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `status awal santri index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({ id_statawalsantri: id });
+      const result: Object | any = await repository.detail({
+        id_statawalsantri: id,
+      });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`status awal santri detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `status awal santri detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 

@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './beasiswa.santri.variable';
+import { variable } from './jenis.guru.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './beasiswa.santri.repository';
+import { repository } from './jenis.guru.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -24,11 +24,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(
-        `beasiswa santri list: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`jenis guru list: ${err?.message}`, 500, res);
     }
   }
 
@@ -44,11 +40,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(
-        `beasiswa santri index: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`jenis guru index: ${err?.message}`, 500, res);
     }
   }
 
@@ -56,72 +48,59 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
       const result: Object | any = await repository.detail({
-        id_beasiswasantri: id,
+        id_jenisguru: id,
       });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(
-        `beasiswa santri detail: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`jenis guru detail: ${err?.message}`, 500, res);
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
+      const { nama_jenis_guru } = req?.body;
+      const check = await repository.detail({ nama_jenis_guru });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
         payload: { ...data },
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `beasiswa santri create: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`jenis guru create: ${err?.message}`, 500, res);
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_jenisguru: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: { ...data },
-        condition: { id_beasiswasantri: id },
+        condition: { id_jenisguru: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `beasiswa santri update: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`jenis guru update: ${err?.message}`, 500, res);
     }
   }
 
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_jenisguru: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_beasiswasantri: id },
+        condition: { id_jenisguru: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `beasiswa santri delete: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`jenis guru delete: ${err?.message}`, 500, res);
     }
   }
 }
 
-export const beasiswaSantri = new Controller();
+export const jenisGuru = new Controller();

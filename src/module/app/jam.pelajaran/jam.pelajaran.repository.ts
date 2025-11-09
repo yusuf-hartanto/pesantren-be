@@ -1,19 +1,19 @@
 'use strict';
 
 import { Op, Sequelize } from 'sequelize';
-import Model from './semester.ajaran.model';
-import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import Model from './jam.pelajaran.model';
+import JenisJamPelajaran from '../jenis.jampel/jenis.jampel.model';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_semester', 'DESC']],
+      order: [['nomor_urut', 'DESC']],
     };
-    if (data?.nama_semester !== undefined && data?.nama_semester != null) {
+    if (data?.nama_jampel !== undefined && data?.nama_jampel != null) {
       query = {
         ...query,
         where: {
-          nama_semester: { [Op.like]: `%${data?.nama_semester}%` },
+          nama_jampel: { [Op.like]: `%${data?.nama_jampel}%` },
         },
       };
     }
@@ -21,10 +21,10 @@ export default class Repository {
       ...query,
       include: [
         {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
-          required: true,
-          attributes: ['tahun_ajaran'],
+          model: JenisJamPelajaran,
+          as: 'jenis_jam_pelajaran',
+          required: false,
+          attributes: ['nama_jenis_jam', 'keterangan'],
         },
       ],
     });
@@ -32,7 +32,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_semester', 'DESC']],
+      order: [['nomor_urut', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
@@ -41,15 +41,16 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
+            { nama_jampel: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT'),
+              Sequelize.cast(Sequelize.col('JamPelajaran.nomor_urut'), 'TEXT'),
               { [Op.like]: `%${data?.keyword}%` }
             ),
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
+            Sequelize.where(
+              Sequelize.col('jenis_jam_pelajaran.nama_jenis_jam'),
+              { [Op.like]: `%${data?.keyword}%` }
+            ),
           ],
         },
       };
@@ -58,10 +59,10 @@ export default class Repository {
       ...query,
       include: [
         {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
+          model: JenisJamPelajaran,
+          as: 'jenis_jam_pelajaran',
           required: false,
-          attributes: ['tahun_ajaran'],
+          attributes: ['nama_jenis_jam', 'keterangan'],
         },
       ],
     });
@@ -74,10 +75,10 @@ export default class Repository {
       },
       include: [
         {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
-          required: true,
-          attributes: ['tahun_ajaran'],
+          model: JenisJamPelajaran,
+          as: 'jenis_jam_pelajaran',
+          required: false,
+          attributes: ['nama_jenis_jam', 'keterangan'],
         },
       ],
     });

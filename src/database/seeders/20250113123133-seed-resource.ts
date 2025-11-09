@@ -30,8 +30,14 @@ export const up: Migration = async () => {
   const regency = await repoArea.regencyDetail({
     name: { [Op.like]: '%KABUPATEN BANDUNG%' },
   });
-  await Model.bulkCreate([
-    {
+
+  const check = await Model.findOne({
+    where: { username: 'adminuser' },
+  });
+  if (check) {
+    console.log(`⚠️ User adminuser already exists, skipping...`);
+  } else {
+    await Model.create({
       resource_id: uuidv4(),
       role_id: role?.getDataValue('role_id'),
       username: 'adminuser',
@@ -46,10 +52,13 @@ export const up: Migration = async () => {
       area_province_id: province?.getDataValue('id'),
       area_regencies_id: regency?.getDataValue('id'),
       created_by: '00000000-0000-0000-0000-000000000000',
-    },
-  ]);
+    });
+  }
 };
 
 export const down: Migration = async () => {
+  const dataConfig = await Config.initialize();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
   await Model.destroy({ where: {}, truncate: true });
 };

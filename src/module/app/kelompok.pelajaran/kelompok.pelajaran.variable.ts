@@ -2,7 +2,12 @@
 
 export default class Variable {
   public fillable() {
-    const field: Array<string> = ['tingkat', 'nomor_urut', 'keterangan'];
+    const field: Array<string> = [
+      'nama_kelpelajaran',
+      'nomor_urut',
+      'keterangan',
+      'status',
+    ];
     return field;
   }
 }

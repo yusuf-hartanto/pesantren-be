@@ -28,22 +28,37 @@ export const up: Migration = async () => {
 
   let bulkInsert = [];
   for (let i in menus) {
-    bulkInsert.push({
-      role_menu_id: uuidv4(),
-      role_id: role?.getDataValue('role_id'),
-      menu_id: menus[i]?.menu_id,
-      view: 1,
-      create: 1,
-      edit: 1,
-      delete: 1,
-      approve: 1,
-      status: 1,
-      created_by: resource?.getDataValue('resource_id'),
+    const check = await Model.findOne({
+      where: {
+        role_id: role?.getDataValue('role_id'),
+        menu_id: menus[i]?.menu_id,
+      },
     });
+    if (check) {
+      console.log(
+        `⚠️ Role ${role?.getDataValue('role_name')} and Menu ${menus[i]?.getDataValue('menu_name')} already assign, skipping...`
+      );
+    } else {
+      bulkInsert.push({
+        role_menu_id: uuidv4(),
+        role_id: role?.getDataValue('role_id'),
+        menu_id: menus[i]?.menu_id,
+        view: 1,
+        create: 1,
+        edit: 1,
+        delete: 1,
+        approve: 1,
+        status: 1,
+        created_by: resource?.getDataValue('resource_id'),
+      });
+    }
   }
   await Model.bulkCreate(bulkInsert);
 };
 
 export const down: Migration = async () => {
+  const dataConfig = await Config.initialize();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
   await Model.destroy({ where: {}, truncate: true });
 };

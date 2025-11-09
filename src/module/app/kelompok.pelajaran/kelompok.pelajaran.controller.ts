@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './beasiswa.santri.variable';
+import { variable } from './kelompok.pelajaran.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './beasiswa.santri.repository';
+import { repository } from './kelompok.pelajaran.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -25,7 +25,7 @@ export default class Controller {
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri list: ${err?.message}`,
+        `kelompok pelajaran list: ${err?.message}`,
         500,
         res
       );
@@ -45,7 +45,7 @@ export default class Controller {
       );
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri index: ${err?.message}`,
+        `kelompok pelajaran index: ${err?.message}`,
         500,
         res
       );
@@ -56,13 +56,13 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
       const result: Object | any = await repository.detail({
-        id_beasiswasantri: id,
+        id_kelpelajaran: id,
       });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri detail: ${err?.message}`,
+        `kelompok pelajaran detail: ${err?.message}`,
         500,
         res
       );
@@ -71,6 +71,9 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
+      const { nama_kelpelajaran } = req?.body;
+      const check = await repository.detail({ nama_kelpelajaran });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
         payload: { ...data },
@@ -78,7 +81,7 @@ export default class Controller {
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri create: ${err?.message}`,
+        `kelompok pelajaran create: ${err?.message}`,
         500,
         res
       );
@@ -88,17 +91,17 @@ export default class Controller {
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_kelpelajaran: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: { ...data },
-        condition: { id_beasiswasantri: id },
+        condition: { id_kelpelajaran: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri update: ${err?.message}`,
+        `kelompok pelajaran update: ${err?.message}`,
         500,
         res
       );
@@ -108,15 +111,15 @@ export default class Controller {
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_kelpelajaran: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_beasiswasantri: id },
+        condition: { id_kelpelajaran: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri delete: ${err?.message}`,
+        `kelompok pelajaran delete: ${err?.message}`,
         500,
         res
       );
@@ -124,4 +127,4 @@ export default class Controller {
   }
 }
 
-export const beasiswaSantri = new Controller();
+export const kelompokPejaran = new Controller();

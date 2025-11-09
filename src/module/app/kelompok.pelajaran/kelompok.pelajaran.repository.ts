@@ -1,18 +1,21 @@
 'use strict';
 
 import { Op, Sequelize } from 'sequelize';
-import Model from './tahun.ajaran.model';
+import Model from './kelompok.pelajaran.model';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_tahunajaran', 'DESC']],
+      order: [['nomor_urut', 'DESC']],
     };
-    if (data?.tahun_ajaran !== undefined && data?.tahun_ajaran != null) {
+    if (
+      data?.nama_kelpelajaran !== undefined &&
+      data?.nama_kelpelajaran != null
+    ) {
       query = {
         ...query,
         where: {
-          tahun_ajaran: { [Op.like]: `%${data?.tahun_ajaran}%` },
+          nama_kelpelajaran: { [Op.like]: `%${data?.nama_kelpelajaran}%` },
         },
       };
     }
@@ -21,7 +24,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_tahunajaran', 'DESC']],
+      order: [['nomor_urut', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
@@ -30,7 +33,7 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { tahun_ajaran: { [Op.like]: `%${data?.keyword}%` } },
+            { nama_kelpelajaran: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
               Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
               { [Op.like]: `%${data?.keyword}%` }

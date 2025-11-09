@@ -47,11 +47,17 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({ id_tahunajaran: id });
+      const result: Object | any = await repository.detail({
+        id_tahunajaran: id,
+      });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`tahun ajaran detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `tahun ajaran detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 

@@ -29,7 +29,7 @@ export default class DataMenu {
         seq_number: 3,
         parent_id: '00000000-0000-0000-0000-000000000000',
         status: 1,
-      }
+      },
     ];
   }
 
@@ -80,7 +80,7 @@ export default class DataMenu {
         menu_name: 'Tahun Angkatan',
         menu_icon: 'Circle',
         module_name: 'tahun_angkatan',
-        seq_number: 8,
+        seq_number: 1,
         status: 1,
       },
       {
@@ -88,7 +88,7 @@ export default class DataMenu {
         menu_name: 'Tingkat',
         menu_icon: 'Circle',
         module_name: 'tingkat',
-        seq_number: 9,
+        seq_number: 2,
         status: 1,
       },
       {
@@ -96,7 +96,7 @@ export default class DataMenu {
         menu_name: 'Tahun Ajaran',
         menu_icon: 'Circle',
         module_name: 'tahun_ajaran',
-        seq_number: 10,
+        seq_number: 3,
         status: 1,
       },
       {
@@ -104,7 +104,7 @@ export default class DataMenu {
         menu_name: 'Semester',
         menu_icon: 'Circle',
         module_name: 'semester',
-        seq_number: 11,
+        seq_number: 4,
         status: 1,
       },
       {
@@ -112,7 +112,7 @@ export default class DataMenu {
         menu_name: 'Status Awal Santri',
         menu_icon: 'Circle',
         module_name: 'status_awal_santri',
-        seq_number: 12,
+        seq_number: 5,
         status: 1,
       },
       {
@@ -120,7 +120,47 @@ export default class DataMenu {
         menu_name: 'Beasiswa Santri',
         menu_icon: 'Circle',
         module_name: 'beasiswa_santri',
-        seq_number: 13,
+        seq_number: 6,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Jenis Guru',
+        menu_icon: 'Circle',
+        module_name: 'jenis_guru',
+        seq_number: 7,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Kelompok Pelajaran',
+        menu_icon: 'Circle',
+        module_name: 'kelpel',
+        seq_number: 8,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Mata Pelajaran',
+        menu_icon: 'Circle',
+        module_name: 'mapel',
+        seq_number: 9,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Jenis Jam Pelajaran',
+        menu_icon: 'Circle',
+        module_name: 'jenis_jampel',
+        seq_number: 10,
+        status: 1,
+      },
+      {
+        parent_id: 3,
+        menu_name: 'Jam Pelajaran',
+        menu_icon: 'Circle',
+        module_name: 'jampel',
+        seq_number: 11,
         status: 1,
       },
     ];

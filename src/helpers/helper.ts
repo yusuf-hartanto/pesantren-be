@@ -323,6 +323,20 @@ export default class Helper {
       keyword,
     };
   }
+
+  public calDurationTime(start: string, end: string): number {
+    if (!start || !end) return 0;
+
+    const [h1, m1, s1] = start.split(':').map(Number);
+    const [h2, m2, s2] = end.split(':').map(Number);
+
+    const totalStart = h1 * 3600 + m1 * 60 + s1;
+    const totalEnd = h2 * 3600 + m2 * 60 + s2;
+
+    let duration = (totalEnd - totalStart) / 3600;
+    if (duration < 0) duration += 24;
+    return duration;
+  }
 }
 
 export const helper = new Helper();

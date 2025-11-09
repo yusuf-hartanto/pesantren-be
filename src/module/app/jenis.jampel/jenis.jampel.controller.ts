@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './beasiswa.santri.variable';
+import { variable } from './jenis.jampel.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './beasiswa.santri.repository';
+import { repository } from './jenis.jampel.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -25,7 +25,7 @@ export default class Controller {
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri list: ${err?.message}`,
+        `jenis jam pelajaran list: ${err?.message}`,
         500,
         res
       );
@@ -45,7 +45,7 @@ export default class Controller {
       );
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri index: ${err?.message}`,
+        `jenis jam pelajaran index: ${err?.message}`,
         500,
         res
       );
@@ -55,14 +55,12 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({
-        id_beasiswasantri: id,
-      });
+      const result: Object | any = await repository.detail({ id_jenisjam: id });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri detail: ${err?.message}`,
+        `jenis jam pelajaran detail: ${err?.message}`,
         500,
         res
       );
@@ -71,6 +69,9 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
+      const { nama_jenis_jam } = req?.body;
+      const check = await repository.detail({ nama_jenis_jam });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
         payload: { ...data },
@@ -78,7 +79,7 @@ export default class Controller {
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri create: ${err?.message}`,
+        `jenis jam pelajaran create: ${err?.message}`,
         500,
         res
       );
@@ -88,17 +89,17 @@ export default class Controller {
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_jenisjam: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: { ...data },
-        condition: { id_beasiswasantri: id },
+        condition: { id_jenisjam: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri update: ${err?.message}`,
+        `jenis jam pelajaran update: ${err?.message}`,
         500,
         res
       );
@@ -108,15 +109,15 @@ export default class Controller {
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_jenisjam: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_beasiswasantri: id },
+        condition: { id_jenisjam: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri delete: ${err?.message}`,
+        `jenis jam pelajaran delete: ${err?.message}`,
         500,
         res
       );
@@ -124,4 +125,4 @@ export default class Controller {
   }
 }
 
-export const beasiswaSantri = new Controller();
+export const jenisJamPelajaran = new Controller();

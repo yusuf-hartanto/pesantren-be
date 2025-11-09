@@ -24,7 +24,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`tahun angkatan list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `tahun angkatan list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -40,7 +44,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`tahun angkatan index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `tahun angkatan index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -51,7 +59,11 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`tahun angkatan detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `tahun angkatan detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 

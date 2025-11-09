@@ -8,12 +8,12 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       primaryKey: true,
       allowNull: false,
-      unique: true
+      unique: true,
     },
     kode_beasiswa: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      unique: true
+      unique: true,
     },
     nama_beasiswa: {
       type: DataTypes.STRING(255),
@@ -22,15 +22,15 @@ export const up = async (queryInterface: QueryInterface) => {
     nomor_urut: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      unique: true
+      unique: true,
     },
     keterangan: {
       type: DataTypes.STRING(255),
-      allowNull: true
+      allowNull: true,
     },
     status: {
       type: DataTypes.STRING(255),
-      allowNull: true
+      allowNull: true,
     },
   });
 };

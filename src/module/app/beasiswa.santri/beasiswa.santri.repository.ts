@@ -33,7 +33,7 @@ export default class Repository {
             { kode_beasiswa: { [Op.like]: `%${data?.keyword}%` } },
             { nama_beasiswa: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col("nomor_urut"), "TEXT"),
+              Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
               { [Op.like]: `%${data?.keyword}%` }
             ),
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },

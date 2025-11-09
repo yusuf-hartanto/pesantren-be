@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './beasiswa.santri.variable';
+import { variable } from './jam.pelajaran.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './beasiswa.santri.repository';
+import { repository } from './jam.pelajaran.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -24,11 +24,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(
-        `beasiswa santri list: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`jam pelajaran list: ${err?.message}`, 500, res);
     }
   }
 
@@ -45,7 +41,7 @@ export default class Controller {
       );
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri index: ${err?.message}`,
+        `jam pelajaran index: ${err?.message}`,
         500,
         res
       );
@@ -55,14 +51,12 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({
-        id_beasiswasantri: id,
-      });
+      const result: Object | any = await repository.detail({ id_jampel: id });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri detail: ${err?.message}`,
+        `jam pelajaran detail: ${err?.message}`,
         500,
         res
       );
@@ -71,14 +65,24 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
+      const { id_jenisjam, id_lembaga, nama_jampel, mulai, selesai } =
+        req?.body;
+      const check = await repository.detail({ nama_jampel });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
+      const jumlah_jampel: number = helper.calDurationTime(mulai, selesai);
       await repository.create({
-        payload: { ...data },
+        payload: {
+          ...data,
+          jumlah_jampel,
+          id_jenisjam: id_jenisjam?.value || null,
+          id_lembaga: id_lembaga?.value || null,
+        },
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri create: ${err?.message}`,
+        `jam pelajaran create: ${err?.message}`,
         500,
         res
       );
@@ -88,17 +92,25 @@ export default class Controller {
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_jampel: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
+
+      const { id_jenisjam, id_lembaga, mulai, selesai } = req?.body;
       const data: Object = helper.only(variable.fillable(), req?.body, true);
+      const jumlah_jampel: number = helper.calDurationTime(mulai, selesai);
       await repository.update({
-        payload: { ...data },
-        condition: { id_beasiswasantri: id },
+        payload: {
+          ...data,
+          jumlah_jampel,
+          id_jenisjam: id_jenisjam?.value || check?.getDataValue('id_jenisjam'),
+          id_lembaga: id_lembaga?.value || check?.getDataValue('id_lembaga'),
+        },
+        condition: { id_jampel: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri update: ${err?.message}`,
+        `jam pelajaran update: ${err?.message}`,
         500,
         res
       );
@@ -108,15 +120,15 @@ export default class Controller {
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_beasiswasantri: id });
+      const check = await repository.detail({ id_jampel: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_beasiswasantri: id },
+        condition: { id_jampel: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `beasiswa santri delete: ${err?.message}`,
+        `jam pelajaran delete: ${err?.message}`,
         500,
         res
       );
@@ -124,4 +136,4 @@ export default class Controller {
   }
 }
 
-export const beasiswaSantri = new Controller();
+export const jamPelajaran = new Controller();

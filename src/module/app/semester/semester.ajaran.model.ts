@@ -54,7 +54,10 @@ export function initSemester(sequelize: Sequelize) {
 }
 
 export function associateSemester() {
-  Semester.belongsTo(TahunAjaran, { as: 'tahun_ajaran', foreignKey: 'id_tahunajaran' });
+  Semester.belongsTo(TahunAjaran, {
+    as: 'tahun_ajaran',
+    foreignKey: 'id_tahunajaran',
+  });
 }
 
 export default Semester;

@@ -58,7 +58,6 @@ export default class Controller {
   public async create(req: Request, res: Response) {
     try {
       let id_tahunajaran: any = null;
-      console.log(req?.body)
       if (req?.body?.id_tahunajaran) id_tahunajaran = req?.body?.id_tahunajaran;
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
@@ -66,11 +65,7 @@ export default class Controller {
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `semester create: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`semester create: ${err?.message}`, 500, res);
     }
   }
 
@@ -83,16 +78,16 @@ export default class Controller {
       if (req?.body?.id_tahunajaran) id_tahunajaran = req?.body?.id_tahunajaran;
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
-        payload: { ...data, id_tahunajaran: id_tahunajaran?.value || check?.getDataValue('id_tahunajaran') },
+        payload: {
+          ...data,
+          id_tahunajaran:
+            id_tahunajaran?.value || check?.getDataValue('id_tahunajaran'),
+        },
         condition: { id_semester: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `semester update: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`semester update: ${err?.message}`, 500, res);
     }
   }
 
@@ -106,11 +101,7 @@ export default class Controller {
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `semester delete: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`semester delete: ${err?.message}`, 500, res);
     }
   }
 }

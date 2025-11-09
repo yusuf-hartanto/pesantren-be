@@ -63,11 +63,7 @@ export default class Controller {
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `tingkat create: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`tingkat create: ${err?.message}`, 500, res);
     }
   }
 
@@ -83,11 +79,7 @@ export default class Controller {
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `tingkat update: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`tingkat update: ${err?.message}`, 500, res);
     }
   }
 
@@ -101,11 +93,7 @@ export default class Controller {
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `tingkat delete: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`tingkat delete: ${err?.message}`, 500, res);
     }
   }
 }

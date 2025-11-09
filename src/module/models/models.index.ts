@@ -20,10 +20,27 @@ import {
 } from '../app/resource/resource.model';
 import { initTahunAngkatan } from '../app/tahun.angkatan/tahun.angkatan.model';
 import { initTingkat } from '../app/tingkat/tingkat.model';
-import { associateTahunAjaran, initTahunAjaran } from '../app/tahun.ajaran/tahun.ajaran.model';
-import { associateSemester, initSemester } from '../app/semester/semester.ajaran.model';
+import {
+  associateTahunAjaran,
+  initTahunAjaran,
+} from '../app/tahun.ajaran/tahun.ajaran.model';
+import {
+  associateSemester,
+  initSemester,
+} from '../app/semester/semester.ajaran.model';
 import { initStatusAwalSantri } from '../app/status.awal.santri/status.awal.santri.model';
 import { initBeasiswaSantri } from '../app/beasiswa.santri/beasiswa.santri.model';
+import { initKelompokPelajaran } from '../app/kelompok.pelajaran/kelompok.pelajaran.model';
+import { initJenisJamPelajaran } from '../app/jenis.jampel/jenis.jampel.model';
+import { initJenisGuru } from '../app/jenis.guru/jenis.guru.model';
+import {
+  initMataPelajaran,
+  associateMataPelajaran,
+} from '../app/mata.pelajaran/mata.pelajaran.model';
+import {
+  initJamPelajaran,
+  associateJamPelajaran,
+} from '../app/jam.pelajaran/jam.pelajaran.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -41,6 +58,11 @@ export function initializeModels(sequelize: Sequelize) {
   initSemester(sequelize);
   initStatusAwalSantri(sequelize);
   initBeasiswaSantri(sequelize);
+  initKelompokPelajaran(sequelize);
+  initJenisJamPelajaran(sequelize);
+  initJenisGuru(sequelize);
+  initMataPelajaran(sequelize);
+  initJamPelajaran(sequelize);
 
   // associate
   associateAppRole();
@@ -50,4 +72,6 @@ export function initializeModels(sequelize: Sequelize) {
   associateAreaProvince();
   associateTahunAjaran();
   associateSemester();
+  associateMataPelajaran();
+  associateJamPelajaran();
 }

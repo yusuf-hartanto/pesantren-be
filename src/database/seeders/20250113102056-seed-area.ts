@@ -22,25 +22,37 @@ export const up: Migration = async () => {
   const regencies = dataarea.regencies();
 
   for (let i in provinces) {
-    const province = await ModelProvince.create({
-      id: uuidv4(),
-      name: provinces[i]?.name,
-      created_by: '00000000-0000-0000-0000-000000000000',
+    const check = await ModelProvince.findOne({
+      where: { name: provinces[i]?.name },
     });
-
-    const regency = regencies
-      ?.filter((r) => r?.province_id == provinces[i]?.id)
-      ?.map((r) => ({
+    if (check) {
+      console.log(
+        `⚠️ Province ${provinces[i]?.name} already exists, skipping...`
+      );
+    } else {
+      const province = await ModelProvince.create({
         id: uuidv4(),
-        area_province_id: province?.dataValues?.id,
-        name: r?.name,
+        name: provinces[i]?.name,
         created_by: '00000000-0000-0000-0000-000000000000',
-      }));
-    await ModelRegency.bulkCreate(regency);
+      });
+
+      const regency = regencies
+        ?.filter((r) => r?.province_id == provinces[i]?.id)
+        ?.map((r) => ({
+          id: uuidv4(),
+          area_province_id: province?.dataValues?.id,
+          name: r?.name,
+          created_by: '00000000-0000-0000-0000-000000000000',
+        }));
+      await ModelRegency.bulkCreate(regency);
+    }
   }
 };
 
 export const down: Migration = async () => {
+  const dataConfig = await Config.initialize();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
   await ModelProvince.destroy({ where: {}, truncate: true });
   await ModelRegency.destroy({ where: {}, truncate: true });
 };

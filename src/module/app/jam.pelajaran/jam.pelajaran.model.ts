@@ -1,0 +1,83 @@
+'use strict';
+
+import { v4 as uuidv4 } from 'uuid';
+import { DataTypes, Model, Sequelize } from 'sequelize';
+import JenisJamPelajaran from '../jenis.jampel/jenis.jampel.model';
+
+export class JamPelajaran extends Model {
+  public id_jampel!: string;
+  public id_jenisjam!: string;
+  public id_lembaga!: string;
+  public nama_jampel!: string;
+  public mulai!: string;
+  public selesai!: string;
+  public jumlah_jampel!: number;
+  public nomor_urut!: number;
+  public keterangan!: string;
+  public status!: string;
+}
+
+export function initJamPelajaran(sequelize: Sequelize) {
+  JamPelajaran.init(
+    {
+      id_jampel: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        unique: true,
+      },
+      id_jenisjam: {
+        type: DataTypes.STRING,
+      },
+      id_lembaga: {
+        type: DataTypes.STRING,
+      },
+      nama_jampel: {
+        type: DataTypes.STRING(255),
+      },
+      mulai: {
+        type: DataTypes.TIME,
+      },
+      selesai: {
+        type: DataTypes.TIME,
+      },
+      jumlah_jampel: {
+        type: DataTypes.DECIMAL(19, 1),
+        get() {
+          const rawValue = this.getDataValue('jumlah_jampel');
+          return rawValue === null ? null : parseFloat(rawValue);
+        },
+      },
+      nomor_urut: {
+        type: DataTypes.INTEGER,
+        unique: true,
+      },
+      keterangan: {
+        type: DataTypes.STRING(255),
+      },
+      status: {
+        type: DataTypes.STRING(255),
+      },
+    },
+    {
+      sequelize,
+      modelName: 'JamPelajaran',
+      tableName: 'jam_pelajaran',
+      timestamps: false,
+    }
+  );
+
+  JamPelajaran.beforeCreate((jam_pelajaran) => {
+    jam_pelajaran?.setDataValue('id_jampel', uuidv4());
+  });
+
+  return JamPelajaran;
+}
+
+export function associateJamPelajaran() {
+  JamPelajaran.belongsTo(JenisJamPelajaran, {
+    as: 'jenis_jam_pelajaran',
+    foreignKey: 'id_jenisjam',
+  });
+}
+
+export default JamPelajaran;

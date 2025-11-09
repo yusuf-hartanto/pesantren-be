@@ -18,7 +18,7 @@ export const up: Migration = async () => {
   initializeModels(sequelize);
 
   const resource = await repoResource.detail({ username: 'adminuser' }, '');
-  await Model.bulkCreate([
+  const globalParam = [
     {
       id: uuidv4(),
       param_key: 'PAR_RELATION',
@@ -123,9 +123,23 @@ export const up: Migration = async () => {
       status: 1,
       created_by: resource?.getDataValue('resource_id'),
     },
-  ]);
+  ];
+
+  for (let i in globalParam) {
+    const check = await Model.findOne({
+      where: { param_value: globalParam[i]?.param_value },
+    });
+    if (check) {
+      console.log(
+        `⚠️ Global Param ${globalParam[i]?.param_value} already exists, skipping...`
+      );
+    } else await Model.create(globalParam[i]);
+  }
 };
 
 export const down: Migration = async () => {
+  const dataConfig = await Config.initialize();
+  const sequelize = await initializeDatabase(dataConfig?.database);
+  initializeModels(sequelize);
   await Model.destroy({ where: {}, truncate: true });
 };
