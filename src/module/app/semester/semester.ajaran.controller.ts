@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './semester.ajaran.variable';
+import { variable } from './semester.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './semester.ajaran.repository';
+import { repository } from './semester.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,

@@ -46,7 +46,9 @@ export function initJenisJamPelajaran(sequelize: Sequelize) {
       sequelize,
       modelName: 'JenisJamPelajaran',
       tableName: 'jenis_jam_pelajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 

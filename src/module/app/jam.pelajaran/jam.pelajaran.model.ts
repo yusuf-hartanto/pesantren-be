@@ -69,7 +69,9 @@ export function initJamPelajaran(sequelize: Sequelize) {
       sequelize,
       modelName: 'JamPelajaran',
       tableName: 'jam_pelajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 

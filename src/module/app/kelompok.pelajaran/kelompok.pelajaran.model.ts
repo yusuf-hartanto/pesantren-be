@@ -47,7 +47,9 @@ export function initKelompokPelajaran(sequelize: Sequelize) {
       sequelize,
       modelName: 'KelompokPelajaran',
       tableName: 'kelompok_pelajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 

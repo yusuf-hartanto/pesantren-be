@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './jam.pelajaran.variable';
+import { variable } from './program.pesantren.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './jam.pelajaran.repository';
+import { repository } from './program.pesantren.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -24,7 +24,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`jam pelajaran list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `program pesantren list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -41,7 +45,7 @@ export default class Controller {
       );
     } catch (err: any) {
       return helper.catchError(
-        `jam pelajaran index: ${err?.message}`,
+        `program pesantren index: ${err?.message}`,
         500,
         res
       );
@@ -51,12 +55,14 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({ id_jampel: id });
+      const result: Object | any = await repository.detail({
+        id_program: id,
+      });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
-        `jam pelajaran detail: ${err?.message}`,
+        `program pesantren detail: ${err?.message}`,
         500,
         res
       );
@@ -65,24 +71,17 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const { id_jenisjam, id_lembaga, nama_jampel, mulai, selesai } =
-        req?.body;
-      const check = await repository.detail({ nama_jampel });
+      const { nama_program } = req?.body;
+      const check = await repository.detail({ nama_program });
       if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
-      const jumlah_jampel: number = helper.calDurationTime(mulai, selesai);
       await repository.create({
-        payload: {
-          ...data,
-          jumlah_jampel,
-          id_jenisjam: id_jenisjam?.value || null,
-          id_lembaga: id_lembaga?.value || null,
-        },
+        payload: { ...data },
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `jam pelajaran create: ${err?.message}`,
+        `program pesantren create: ${err?.message}`,
         500,
         res
       );
@@ -92,25 +91,17 @@ export default class Controller {
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_jampel: id });
+      const check = await repository.detail({ id_program: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-
-      const { id_jenisjam, id_lembaga, mulai, selesai } = req?.body;
       const data: Object = helper.only(variable.fillable(), req?.body, true);
-      const jumlah_jampel: number = helper.calDurationTime(mulai, selesai);
       await repository.update({
-        payload: {
-          ...data,
-          jumlah_jampel,
-          id_jenisjam: id_jenisjam?.value || check?.getDataValue('id_jenisjam'),
-          id_lembaga: id_lembaga?.value || check?.getDataValue('id_lembaga'),
-        },
-        condition: { id_jampel: id },
+        payload: { ...data },
+        condition: { id_program: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `jam pelajaran update: ${err?.message}`,
+        `program pesantren update: ${err?.message}`,
         500,
         res
       );
@@ -120,15 +111,15 @@ export default class Controller {
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_jampel: id });
+      const check = await repository.detail({ id_program: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_jampel: id },
+        condition: { id_program: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `jam pelajaran delete: ${err?.message}`,
+        `program pesantren delete: ${err?.message}`,
         500,
         res
       );
@@ -136,4 +127,4 @@ export default class Controller {
   }
 }
 
-export const jamPelajaran = new Controller();
+export const programPesantren = new Controller();

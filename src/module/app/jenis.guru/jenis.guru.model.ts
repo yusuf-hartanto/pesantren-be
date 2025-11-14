@@ -46,7 +46,9 @@ export function initJenisGuru(sequelize: Sequelize) {
       sequelize,
       modelName: 'JenisGuru',
       tableName: 'jenis_guru',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 

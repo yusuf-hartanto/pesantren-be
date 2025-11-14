@@ -81,7 +81,6 @@ export default class Controller {
       await repository.update({
         payload: {
           ...data,
-          updated_at: helper.date(),
         },
         condition: { id_jenisguru: id },
       });

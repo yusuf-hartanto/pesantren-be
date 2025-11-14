@@ -18,6 +18,10 @@ import { jenisJamPelajaran } from './jenis.jampel/jenis.jampel.controller';
 import { jenisGuru } from './jenis.guru/jenis.guru.controller';
 import { mataPelajaran } from './mata.pelajaran/mata.pelajaran.controller';
 import { jamPelajaran } from './jam.pelajaran/jam.pelajaran.controller';
+import { kegiatanAkademik } from './kegiatan.akademik/kegiatan.akademik.controller';
+import { programPesantren } from './program.pesantren/program.pesantren.controller';
+import { santriProgram } from './santri.program/santri.program.controller';
+import { orangTuaWali } from './orang.tua.wali/orang.tua.wali.controller';
 
 const router: Router = Router();
 
@@ -213,5 +217,89 @@ router.get('/jampel/:id', auth.checkBearerToken, jamPelajaran.detail);
 router.post('/jampel', auth.checkBearerToken, jamPelajaran.create);
 router.put('/jampel/:id', auth.checkBearerToken, jamPelajaran.update);
 router.delete('/jampel/:id', auth.checkBearerToken, jamPelajaran.delete);
+
+router.get(
+  '/kegiatan-akademik/all-data',
+  auth.checkBearerToken,
+  kegiatanAkademik.list
+);
+router.get('/kegiatan-akademik', auth.checkBearerToken, kegiatanAkademik.index);
+router.get(
+  '/kegiatan-akademik/:id',
+  auth.checkBearerToken,
+  kegiatanAkademik.detail
+);
+router.post(
+  '/kegiatan-akademik',
+  auth.checkBearerToken,
+  kegiatanAkademik.create
+);
+router.put(
+  '/kegiatan-akademik/:id',
+  auth.checkBearerToken,
+  kegiatanAkademik.update
+);
+router.delete(
+  '/kegiatan-akademik/:id',
+  auth.checkBearerToken,
+  kegiatanAkademik.delete
+);
+
+router.get(
+  '/program-pesantren/all-data',
+  auth.checkBearerToken,
+  programPesantren.list
+);
+router.get('/program-pesantren', auth.checkBearerToken, programPesantren.index);
+router.get(
+  '/program-pesantren/:id',
+  auth.checkBearerToken,
+  programPesantren.detail
+);
+router.post(
+  '/program-pesantren',
+  auth.checkBearerToken,
+  programPesantren.create
+);
+router.put(
+  '/program-pesantren/:id',
+  auth.checkBearerToken,
+  programPesantren.update
+);
+router.delete(
+  '/program-pesantren/:id',
+  auth.checkBearerToken,
+  programPesantren.delete
+);
+
+router.get(
+  '/santri-program/all-data',
+  auth.checkBearerToken,
+  santriProgram.list
+);
+router.get('/santri-program', auth.checkBearerToken, santriProgram.index);
+router.get('/santri-program/:id', auth.checkBearerToken, santriProgram.detail);
+router.post('/santri-program', auth.checkBearerToken, santriProgram.create);
+router.put('/santri-program/:id', auth.checkBearerToken, santriProgram.update);
+router.delete(
+  '/santri-program/:id',
+  auth.checkBearerToken,
+  santriProgram.delete
+);
+
+router.get(
+  '/orang-tua-wali/all-data',
+  auth.checkBearerToken,
+  orangTuaWali.list
+);
+router.get('/orang-tua-wali', auth.checkBearerToken, orangTuaWali.index);
+router.get('/orang-tua-wali/:id', auth.checkBearerToken, orangTuaWali.detail);
+router.post('/orang-tua-wali', auth.checkBearerToken, orangTuaWali.create);
+router.put('/orang-tua-wali/:id', auth.checkBearerToken, orangTuaWali.update);
+router.delete(
+  '/orang-tua-wali/:id',
+  auth.checkBearerToken,
+  orangTuaWali.delete
+);
 
 export default router;

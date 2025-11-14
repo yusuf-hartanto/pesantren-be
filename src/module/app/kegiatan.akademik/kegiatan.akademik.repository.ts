@@ -1,19 +1,20 @@
 'use strict';
 
 import { Op, Sequelize } from 'sequelize';
-import Model from './semester.ajaran.model';
+import Model from './kegiatan.akademik.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import Semester from '../semester/semester.model';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_semester', 'DESC']],
+      order: [['created_at', 'DESC']],
     };
-    if (data?.nama_semester !== undefined && data?.nama_semester != null) {
+    if (data?.nama_kegiatan !== undefined && data?.nama_kegiatan != null) {
       query = {
         ...query,
         where: {
-          nama_semester: { [Op.like]: `%${data?.nama_semester}%` },
+          nama_kegiatan: { [Op.like]: `%${data?.nama_kegiatan}%` },
         },
       };
     }
@@ -26,13 +27,19 @@ export default class Repository {
           required: true,
           attributes: ['tahun_ajaran'],
         },
+        {
+          model: Semester,
+          as: 'semester',
+          required: true,
+          attributes: ['nama_semester'],
+        },
       ],
     });
   }
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_semester', 'DESC']],
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
@@ -41,13 +48,12 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
+            { nama_kegiatan: { [Op.like]: `%${data?.keyword}%` } },
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
+              [Op.like]: `%${data?.keyword}%`,
+            }),
+            Sequelize.where(Sequelize.col('semester.nama_semester'), {
               [Op.like]: `%${data?.keyword}%`,
             }),
           ],
@@ -62,6 +68,12 @@ export default class Repository {
           as: 'tahun_ajaran',
           required: false,
           attributes: ['tahun_ajaran'],
+        },
+        {
+          model: Semester,
+          as: 'semester',
+          required: false,
+          attributes: ['nama_semester'],
         },
       ],
     });
@@ -78,6 +90,12 @@ export default class Repository {
           as: 'tahun_ajaran',
           required: true,
           attributes: ['tahun_ajaran'],
+        },
+        {
+          model: Semester,
+          as: 'semester',
+          required: true,
+          attributes: ['nama_semester'],
         },
       ],
     });

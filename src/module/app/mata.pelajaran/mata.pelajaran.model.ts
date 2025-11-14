@@ -65,7 +65,9 @@ export function initMataPelajaran(sequelize: Sequelize) {
       sequelize,
       modelName: 'MataPelajaran',
       tableName: 'mata_pelajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
