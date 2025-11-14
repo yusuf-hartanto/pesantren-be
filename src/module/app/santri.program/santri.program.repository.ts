@@ -1,30 +1,23 @@
 'use strict';
 
 import { Op, Sequelize } from 'sequelize';
-import Model from './semester.ajaran.model';
-import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import Model from './santri.program.model';
+import ProgramPesantren from '../program.pesantren/program.pesantren.model';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_semester', 'DESC']],
+      order: [['id', 'DESC']],
     };
-    if (data?.nama_semester !== undefined && data?.nama_semester != null) {
-      query = {
-        ...query,
-        where: {
-          nama_semester: { [Op.like]: `%${data?.nama_semester}%` },
-        },
-      };
-    }
+
     return Model.findAll({
       ...query,
       include: [
         {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
+          model: ProgramPesantren,
+          as: 'program_pesantren',
           required: true,
-          attributes: ['tahun_ajaran'],
+          attributes: ['nama_program'],
         },
       ],
     });
@@ -32,7 +25,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_semester', 'DESC']],
+      order: [['id', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
@@ -41,13 +34,7 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
+            Sequelize.where(Sequelize.col('program_pesantren.nama_program'), {
               [Op.like]: `%${data?.keyword}%`,
             }),
           ],
@@ -58,10 +45,10 @@ export default class Repository {
       ...query,
       include: [
         {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
+          model: ProgramPesantren,
+          as: 'program_pesantren',
           required: false,
-          attributes: ['tahun_ajaran'],
+          attributes: ['nama_program'],
         },
       ],
     });
@@ -74,10 +61,10 @@ export default class Repository {
       },
       include: [
         {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
+          model: ProgramPesantren,
+          as: 'program_pesantren',
           required: true,
-          attributes: ['tahun_ajaran'],
+          attributes: ['nama_program'],
         },
       ],
     });

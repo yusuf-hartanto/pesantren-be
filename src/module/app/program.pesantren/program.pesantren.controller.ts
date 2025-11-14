@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './semester.variable';
+import { variable } from './program.pesantren.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './semester.repository';
+import { repository } from './program.pesantren.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -24,7 +24,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`semester list: ${err?.message}`, 500, res);
+      return helper.catchError(`program pesantren list: ${err?.message}`, 500, res);
     }
   }
 
@@ -40,70 +40,83 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`semester index: ${err?.message}`, 500, res);
+      return helper.catchError(`program pesantren index: ${err?.message}`, 500, res);
     }
   }
 
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({ id_semester: id });
+      const result: Object | any = await repository.detail({
+        id_program: id,
+      });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`semester detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `program pesantren detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
-      let id_tahunajaran: any = null;
-      if (req?.body?.id_tahunajaran) id_tahunajaran = req?.body?.id_tahunajaran;
+      const { nama_program } = req?.body;
+      const check = await repository.detail({ nama_program });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
-        payload: { ...data, id_tahunajaran: id_tahunajaran?.value },
+        payload: { ...data },
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(`semester create: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `program pesantren create: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_semester: id });
+      const check = await repository.detail({ id_program: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      let id_tahunajaran: any = null;
-      if (req?.body?.id_tahunajaran) id_tahunajaran = req?.body?.id_tahunajaran;
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
-        payload: {
-          ...data,
-          id_tahunajaran:
-            id_tahunajaran?.value || check?.getDataValue('id_tahunajaran'),
-        },
-        condition: { id_semester: id },
+        payload: { ...data },
+        condition: { id_program: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(`semester update: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `program pesantren update: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_semester: id });
+      const check = await repository.detail({ id_program: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_semester: id },
+        condition: { id_program: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`semester delete: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `program pesantren delete: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 }
 
-export const semester = new Controller();
+export const programPesantren = new Controller();

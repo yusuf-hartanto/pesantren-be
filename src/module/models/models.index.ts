@@ -27,7 +27,7 @@ import {
 import {
   associateSemester,
   initSemester,
-} from '../app/semester/semester.ajaran.model';
+} from '../app/semester/semester.model';
 import { initStatusAwalSantri } from '../app/status.awal.santri/status.awal.santri.model';
 import { initBeasiswaSantri } from '../app/beasiswa.santri/beasiswa.santri.model';
 import { initKelompokPelajaran } from '../app/kelompok.pelajaran/kelompok.pelajaran.model';
@@ -41,6 +41,10 @@ import {
   initJamPelajaran,
   associateJamPelajaran,
 } from '../app/jam.pelajaran/jam.pelajaran.model';
+import { initKegiatanAkademik, associateKegiatanAkademik } from '../app/kegiatan.akademik/kegiatan.akademik.model';
+import { initProgramPesantren } from '../app/program.pesantren/program.pesantren.model';
+import { initSantriProgram, associateSantriProgram } from '../app/santri.program/santri.program.model';
+import { initOrangTuaWali, associateOrangTuaWali } from '../app/orang.tua.wali/orang.tua.wali.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -63,6 +67,10 @@ export function initializeModels(sequelize: Sequelize) {
   initJenisGuru(sequelize);
   initMataPelajaran(sequelize);
   initJamPelajaran(sequelize);
+  initKegiatanAkademik(sequelize);
+  initProgramPesantren(sequelize);
+  initSantriProgram(sequelize);
+  initOrangTuaWali(sequelize);
 
   // associate
   associateAppRole();
@@ -74,4 +82,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateSemester();
   associateMataPelajaran();
   associateJamPelajaran();
+  associateKegiatanAkademik();
+  associateSantriProgram();
+  associateOrangTuaWali();
 }
