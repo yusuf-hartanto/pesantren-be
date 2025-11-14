@@ -41,6 +41,12 @@ import {
   initJamPelajaran,
   associateJamPelajaran,
 } from '../app/jam.pelajaran/jam.pelajaran.model';
+import { initCabang } from '../app/cabang/cabang.model';
+import { associateLembagaPendidikan, initLembagaPendidikan } from '../app/lembaga.pendidikan/lembaga.pendidikan.model';
+import { associateOrganitationUnit, initOrganitationUnit } from '../app/organitation.unit/organitation.unit.model';
+import { associateJabatan, initJabatan } from '../app/jabatan/jabatan.model';
+import { initJenisPenilaian } from '../app/jenis.penilaian/jenis.penilaian.model';
+import { associateAsrama, initAsrama } from '../app/asrama/asrama.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -63,6 +69,12 @@ export function initializeModels(sequelize: Sequelize) {
   initJenisGuru(sequelize);
   initMataPelajaran(sequelize);
   initJamPelajaran(sequelize);
+  initCabang(sequelize);
+  initLembagaPendidikan(sequelize);
+  initOrganitationUnit(sequelize);
+  initJabatan(sequelize);
+  initJenisPenilaian(sequelize);
+  initAsrama(sequelize);
 
   // associate
   associateAppRole();
@@ -74,4 +86,8 @@ export function initializeModels(sequelize: Sequelize) {
   associateSemester();
   associateMataPelajaran();
   associateJamPelajaran();
+  associateLembagaPendidikan();
+  associateOrganitationUnit();
+  associateJabatan();
+  associateAsrama();
 }

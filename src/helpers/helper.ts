@@ -61,12 +61,13 @@ export default class Helper {
     if (isUpdate) {
       result = {
         ...result,
-        modified_date: date,
+        updated_at: date,
       };
     } else {
       result = {
         ...result,
-        created_date: date,
+        created_at: date,
+        updated_at: date
       };
     }
     return result;
