@@ -104,6 +104,7 @@ export default class Controller {
           id_kelpelajaran:
             id_kelpelajaran?.value || check?.getDataValue('id_kelpelajaran'),
           id_lembaga: id_lembaga?.value || check?.getDataValue('id_lembaga'),
+          updated_at: helper.date(),
         },
         condition: { id_mapel: id },
       });

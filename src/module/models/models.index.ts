@@ -1,6 +1,8 @@
 'use strict';
 
-import { Sequelize } from 'sequelize';
+import {  } from 'sequelize';
+import { Sequelize, Model } from 'sequelize';
+import { helper } from '../../helpers/helper';
 import { initAppOtp } from '../auth/otp.model';
 import { initAppMenu } from '../app/menu/menu.model';
 import { initAreaProvince } from '../area/provinces.model';
@@ -82,4 +84,15 @@ export function initializeModels(sequelize: Sequelize) {
   associateJamPelajaran();
   associateAreaDistrict();
   associateAreaSubDistrict();
+}
+
+Model.prototype.toJSON = function () {
+  const values = Object.assign({}, this.get());
+  if (values?.created_at) {
+    values.created_at = helper.dateFormat(values?.created_at);
+  }
+  if (values?.updated_at) {
+    values.updated_at = helper.dateFormat(values?.updated_at);
+  }
+  return values;
 }

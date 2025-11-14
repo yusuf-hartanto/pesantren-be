@@ -34,6 +34,13 @@ export function initKelompokPelajaran(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         defaultValue: 'A',
       },
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,

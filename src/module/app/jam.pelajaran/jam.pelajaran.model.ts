@@ -57,6 +57,13 @@ export function initJamPelajaran(sequelize: Sequelize) {
       status: {
         type: DataTypes.STRING(255),
       },
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
