@@ -39,7 +39,16 @@ export const up = async (queryInterface: QueryInterface) => {
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.removeConstraint('app_resource', 'fk_app_resource_role_id');
-  await queryInterface.removeConstraint('app_resource', 'fk_app_resource_area_province_id');
-  await queryInterface.removeConstraint('app_resource', 'fk_app_resource_area_regencies_id');
+  await queryInterface.removeConstraint(
+    'app_resource',
+    'fk_app_resource_role_id'
+  );
+  await queryInterface.removeConstraint(
+    'app_resource',
+    'fk_app_resource_area_province_id'
+  );
+  await queryInterface.removeConstraint(
+    'app_resource',
+    'fk_app_resource_area_regencies_id'
+  );
 };

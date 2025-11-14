@@ -60,5 +60,5 @@ export const down: Migration = async () => {
   const dataConfig = await Config.initialize();
   const sequelize = await initializeDatabase(dataConfig?.database);
   initializeModels(sequelize);
-  await Model.destroy({ where: {}, truncate: true });
+  await Model.sequelize?.query(`TRUNCATE "app_role_menu" CASCADE`);
 };

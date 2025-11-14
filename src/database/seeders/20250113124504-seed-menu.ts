@@ -46,11 +46,14 @@ export const up: Migration = async () => {
       },
     });
     if (check) {
-      console.log(`⚠️ Child Menu ${childmenu[i]?.menu_name} already assign, skipping...`);
+      console.log(
+        `⚠️ Child Menu ${childmenu[i]?.menu_name} already assign, skipping...`
+      );
     } else {
       const parent = await Model.findOne({
         where: {
-          menu_name: menus.find(m => m.id == childmenu[i]?.parent_id)?.menu_name,
+          menu_name: menus.find((m) => m.id == childmenu[i]?.parent_id)
+            ?.menu_name,
         },
       });
       await Model.create({
@@ -67,5 +70,5 @@ export const down: Migration = async () => {
   const dataConfig = await Config.initialize();
   const sequelize = await initializeDatabase(dataConfig?.database);
   initializeModels(sequelize);
-  await Model.destroy({ where: {}, truncate: true });
+  await Model.sequelize?.query(`TRUNCATE "app_menu" CASCADE`);
 };

@@ -1,6 +1,5 @@
 'use strict';
 
-import { v4 as uuidv4 } from 'uuid';
 import AreaProvince from './provinces.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
@@ -32,10 +31,6 @@ export function initAreaRegency(sequelize: Sequelize) {
       timestamps: false,
     }
   );
-
-  AreaRegency.beforeCreate((area_regencies) => {
-    area_regencies?.setDataValue('id', uuidv4());
-  });
   return AreaRegency;
 }
 

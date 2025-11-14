@@ -3,13 +3,18 @@
 import { Sequelize } from 'sequelize';
 import { initAppOtp } from '../auth/otp.model';
 import { initAppMenu } from '../app/menu/menu.model';
+import { initAreaProvince } from '../area/provinces.model';
 import { initAppRole, associateAppRole } from '../app/role/role.model';
 import { initParamGlobal } from '../app/param.global/param.global.model';
 import { initAreaRegency, associateAreaRegency } from '../area/regencies.model';
 import {
-  initAreaProvince,
-  associateAreaProvince,
-} from '../area/provinces.model';
+  initAreaDistrict,
+  associateAreaDistrict,
+} from '../area/districts.model';
+import {
+  initAreaSubDistrict,
+  associateAreaSubDistrict,
+} from '../area/subdistricts.model';
 import {
   initAppRoleMenu,
   associateAppRoleMenu,
@@ -63,15 +68,18 @@ export function initializeModels(sequelize: Sequelize) {
   initJenisGuru(sequelize);
   initMataPelajaran(sequelize);
   initJamPelajaran(sequelize);
+  initAreaDistrict(sequelize);
+  initAreaSubDistrict(sequelize);
 
   // associate
   associateAppRole();
   associateAppRoleMenu();
   associateAppResource();
   associateAreaRegency();
-  associateAreaProvince();
   associateTahunAjaran();
   associateSemester();
   associateMataPelajaran();
   associateJamPelajaran();
+  associateAreaDistrict();
+  associateAreaSubDistrict();
 }
