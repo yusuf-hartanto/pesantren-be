@@ -33,32 +33,32 @@ export const up = async (queryInterface: QueryInterface) => {
     id_lembaga_formal: {
       type: DataTypes.STRING,
       allowNull: true,
-      references: {
-        model: 'lembaga_formal',
-        key: 'id_lembaga_formal',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
+      // references: {
+      //   model: 'lembaga_formal',
+      //   key: 'id_lembaga_formal',
+      // },
+      // onUpdate: 'CASCADE',
+      // onDelete: 'SET NULL',
     },
     id_lembaga_pesantren: {
       type: DataTypes.STRING,
       allowNull: true,
-      references: {
-        model: 'lembaga_kepesantrenan',
-        key: 'id_lembaga',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
+      // references: {
+      //   model: 'lembaga_kepesantrenan',
+      //   key: 'id_lembaga',
+      // },
+      // onUpdate: 'CASCADE',
+      // onDelete: 'SET NULL',
     },
     id_cabang: {
       type: DataTypes.STRING,
       allowNull: true,
-      references: {
-        model: 'cabang',
-        key: 'id_cabang',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
+      // references: {
+      //   model: 'cabang',
+      //   key: 'id_cabang',
+      // },
+      // onUpdate: 'CASCADE',
+      // onDelete: 'SET NULL',
     },
     nama_kegiatan: {
       type: DataTypes.STRING(255),

@@ -13,12 +13,12 @@ export const up = async (queryInterface: QueryInterface) => {
     id_santri: {
       type: DataTypes.STRING,
       allowNull: true,
-      references: {
-        model: 'santri',
-        key: 'id_santri',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
+      // references: {
+      //   model: 'santri',
+      //   key: 'id_santri',
+      // },
+      // onUpdate: 'CASCADE',
+      // onDelete: 'SET NULL',
     },
     id_program: {
       type: DataTypes.STRING,
