@@ -2,6 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
+import ActivityLog from '../../global/activity.log.model';
 
 export class KelompokPelajaran extends Model {
   public id_kelpelajaran!: string;
@@ -50,8 +51,8 @@ export function initKelompokPelajaran(sequelize: Sequelize) {
     }
   );
 
-  KelompokPelajaran.beforeCreate((kelompok_pelajaran) => {
-    kelompok_pelajaran?.setDataValue('id_kelpelajaran', uuidv4());
+  KelompokPelajaran.beforeCreate((row) => {
+    row?.setDataValue('id_kelpelajaran', uuidv4());
   });
 
   return KelompokPelajaran;

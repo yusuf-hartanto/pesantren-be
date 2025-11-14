@@ -50,8 +50,8 @@ export function initJenisJamPelajaran(sequelize: Sequelize) {
     }
   );
 
-  JenisJamPelajaran.beforeCreate((jenis_jam_pelajaran) => {
-    jenis_jam_pelajaran?.setDataValue('id_jenisjam', uuidv4());
+  JenisJamPelajaran.beforeCreate((row) => {
+    row?.setDataValue('id_jenisjam', uuidv4());
   });
 
   return JenisJamPelajaran;

@@ -1,6 +1,5 @@
 'use strict';
 
-import {  } from 'sequelize';
 import { Sequelize, Model } from 'sequelize';
 import { helper } from '../../helpers/helper';
 import { initAppOtp } from '../auth/otp.model';
@@ -48,6 +47,11 @@ import {
   initJamPelajaran,
   associateJamPelajaran,
 } from '../app/jam.pelajaran/jam.pelajaran.model';
+import ActivityLog, {
+  initActivityLog,
+  associateActivityLog,
+} from '../global/activity.log.model';
+import { getUserLogin } from '../../context/userContext';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -72,6 +76,7 @@ export function initializeModels(sequelize: Sequelize) {
   initJamPelajaran(sequelize);
   initAreaDistrict(sequelize);
   initAreaSubDistrict(sequelize);
+  initActivityLog(sequelize);
 
   // associate
   associateAppRole();
@@ -84,6 +89,9 @@ export function initializeModels(sequelize: Sequelize) {
   associateJamPelajaran();
   associateAreaDistrict();
   associateAreaSubDistrict();
+  associateActivityLog();
+
+  addGlobalActivityHooks(sequelize);
 }
 
 Model.prototype.toJSON = function () {
@@ -95,4 +103,62 @@ Model.prototype.toJSON = function () {
     values.updated_at = helper.dateFormat(values?.updated_at);
   }
   return values;
+};
+
+function addGlobalActivityHooks(sequelize: Sequelize) {
+  sequelize.addHook('beforeUpdate', (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    instance._previousDataValuesSnapshot = { ...instance?._previousDataValues };
+  });
+
+  sequelize.addHook('afterUpdate', async (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    await ActivityLog.create({
+      table_name: instance?.constructor.tableName,
+      record_id: getPrimaryKey(instance),
+      action: 'UPDATE',
+      username: getUserLogin(),
+      before_data: instance?._previousDataValuesSnapshot,
+      after_data: instance?.get(),
+    });
+  });
+
+  sequelize.addHook('afterCreate', async (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    await ActivityLog.create({
+      table_name: instance?.constructor.tableName,
+      record_id: getPrimaryKey(instance),
+      action: 'CREATE',
+      username: getUserLogin(),
+      before_data: null,
+      after_data: instance?.get(),
+    });
+  });
+
+  sequelize.addHook('afterDestroy', async (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    await ActivityLog.create({
+      table_name: instance?.constructor.tableName,
+      record_id: getPrimaryKey(instance),
+      action: 'DELETE',
+      username: getUserLogin(),
+      before_data: instance?.get(),
+      after_data: null,
+    });
+  });
+}
+
+function getPrimaryKey(instance: any) {
+  const pkFields: string[] = instance.constructor.primaryKeyAttributes || [];
+
+  if (pkFields.length === 0) return null;
+
+  if (pkFields.length === 1) {
+    return instance.get(pkFields[0]);
+  }
+
+  return pkFields.reduce((acc: any, key: string) => {
+    acc[key] = instance.get(key);
+    return acc;
+  }, {});
 }

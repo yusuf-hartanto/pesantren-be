@@ -73,8 +73,8 @@ export function initJamPelajaran(sequelize: Sequelize) {
     }
   );
 
-  JamPelajaran.beforeCreate((jam_pelajaran) => {
-    jam_pelajaran?.setDataValue('id_jampel', uuidv4());
+  JamPelajaran.beforeCreate((row) => {
+    row?.setDataValue('id_jampel', uuidv4());
   });
 
   return JamPelajaran;

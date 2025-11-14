@@ -69,8 +69,8 @@ export function initMataPelajaran(sequelize: Sequelize) {
     }
   );
 
-  MataPelajaran.beforeCreate((mata_pelajaran) => {
-    mata_pelajaran?.setDataValue('id_mapel', uuidv4());
+  MataPelajaran.beforeCreate((row) => {
+    row?.setDataValue('id_mapel', uuidv4());
   });
 
   return MataPelajaran;

@@ -73,8 +73,8 @@ export function initAppRoleMenu(sequelize: Sequelize) {
     }
   );
 
-  AppRoleMenu.beforeCreate((app_role_menu) => {
-    app_role_menu?.setDataValue('role_menu_id', uuidv4());
+  AppRoleMenu.beforeCreate((row) => {
+    row?.setDataValue('role_menu_id', uuidv4());
   });
   return AppRoleMenu;
 }

@@ -46,8 +46,8 @@ export function initSemester(sequelize: Sequelize) {
     }
   );
 
-  Semester.beforeCreate((semester) => {
-    semester?.setDataValue('id_semester', uuidv4());
+  Semester.beforeCreate((row) => {
+    row?.setDataValue('id_semester', uuidv4());
   });
 
   return Semester;

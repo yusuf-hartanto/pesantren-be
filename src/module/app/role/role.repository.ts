@@ -50,6 +50,7 @@ export default class Repository {
   public update(data: any) {
     return Model.update(data?.payload, {
       where: data?.condition,
+      individualHooks: true,
     });
   }
 }

@@ -38,8 +38,8 @@ export function initTingkat(sequelize: Sequelize) {
     }
   );
 
-  Tingkat.beforeCreate((tingkat) => {
-    tingkat?.setDataValue('id_tingkat', uuidv4());
+  Tingkat.beforeCreate((row) => {
+    row?.setDataValue('id_tingkat', uuidv4());
   });
 
   return Tingkat;

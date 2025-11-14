@@ -95,10 +95,10 @@ export default class Controller {
       if (!check) return response.success(NOT_FOUND, null, res, false);
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
-        payload: { 
+        payload: {
           ...data,
           updated_at: helper.date(),
-         },
+        },
         condition: { id_kelpelajaran: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);

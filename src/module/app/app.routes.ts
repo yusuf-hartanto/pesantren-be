@@ -10,7 +10,7 @@ import { paramGlobal } from './param.global/param.global.controller';
 import { tahunAngkatan } from './tahun.angkatan/tahun.angkatan.controller';
 import { tingkat } from './tingkat/tingkat.controller';
 import { tahunAjaran } from './tahun.ajaran/tahun.ajaran.controller';
-import { semester } from './semester/semester.controller';
+import { semester } from './semester/semester.ajaran.controller';
 import { statusAwalSantri } from './status.awal.santri/status.awal.santri.controller';
 import { beasiswaSantri } from './beasiswa.santri/beasiswa.santri.controller';
 import { kelompokPejaran } from './kelompok.pelajaran/kelompok.pelajaran.controller';

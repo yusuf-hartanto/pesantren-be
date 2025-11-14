@@ -46,8 +46,8 @@ export function initStatusAwalSantri(sequelize: Sequelize) {
     }
   );
 
-  StatusAwalSantri.beforeCreate((status_awal_santri) => {
-    status_awal_santri?.setDataValue('id_statawalsantri', uuidv4());
+  StatusAwalSantri.beforeCreate((row) => {
+    row?.setDataValue('id_statawalsantri', uuidv4());
   });
 
   return StatusAwalSantri;

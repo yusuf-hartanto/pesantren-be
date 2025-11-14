@@ -110,6 +110,7 @@ export default class Repository {
   public delete(data: any) {
     return Model.destroy({
       where: data?.condition,
+      individualHooks: true,
     });
   }
 }

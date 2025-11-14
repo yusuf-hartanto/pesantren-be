@@ -43,8 +43,8 @@ export function initTahunAjaran(sequelize: Sequelize) {
     }
   );
 
-  TahunAjaran.beforeCreate((tahun_ajaran) => {
-    tahun_ajaran?.setDataValue('id_tahunajaran', uuidv4());
+  TahunAjaran.beforeCreate((row) => {
+    row?.setDataValue('id_tahunajaran', uuidv4());
   });
 
   return TahunAjaran;

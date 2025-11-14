@@ -50,8 +50,8 @@ export function initJenisGuru(sequelize: Sequelize) {
     }
   );
 
-  JenisGuru.beforeCreate((jenis_guru) => {
-    jenis_guru?.setDataValue('id_jenisguru', uuidv4());
+  JenisGuru.beforeCreate((row) => {
+    row?.setDataValue('id_jenisguru', uuidv4());
   });
 
   return JenisGuru;

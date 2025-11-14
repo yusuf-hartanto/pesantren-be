@@ -57,8 +57,8 @@ export function initAppRole(sequelize: Sequelize) {
     }
   );
 
-  AppRole.beforeCreate((app_role) => {
-    app_role?.setDataValue('role_id', uuidv4());
+  AppRole.beforeCreate((row) => {
+    row?.setDataValue('role_id', uuidv4());
   });
   return AppRole;
 }
