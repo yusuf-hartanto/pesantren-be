@@ -1,15 +1,22 @@
 'use strict';
 
-import { Sequelize } from 'sequelize';
+import {  } from 'sequelize';
+import { Sequelize, Model } from 'sequelize';
+import { helper } from '../../helpers/helper';
 import { initAppOtp } from '../auth/otp.model';
 import { initAppMenu } from '../app/menu/menu.model';
+import { initAreaProvince } from '../area/provinces.model';
 import { initAppRole, associateAppRole } from '../app/role/role.model';
 import { initParamGlobal } from '../app/param.global/param.global.model';
 import { initAreaRegency, associateAreaRegency } from '../area/regencies.model';
 import {
-  initAreaProvince,
-  associateAreaProvince,
-} from '../area/provinces.model';
+  initAreaDistrict,
+  associateAreaDistrict,
+} from '../area/districts.model';
+import {
+  initAreaSubDistrict,
+  associateAreaSubDistrict,
+} from '../area/subdistricts.model';
 import {
   initAppRoleMenu,
   associateAppRoleMenu,
@@ -71,13 +78,14 @@ export function initializeModels(sequelize: Sequelize) {
   initProgramPesantren(sequelize);
   initSantriProgram(sequelize);
   initOrangTuaWali(sequelize);
+  initAreaDistrict(sequelize);
+  initAreaSubDistrict(sequelize);
 
   // associate
   associateAppRole();
   associateAppRoleMenu();
   associateAppResource();
   associateAreaRegency();
-  associateAreaProvince();
   associateTahunAjaran();
   associateSemester();
   associateMataPelajaran();
@@ -85,4 +93,17 @@ export function initializeModels(sequelize: Sequelize) {
   associateKegiatanAkademik();
   associateSantriProgram();
   associateOrangTuaWali();
+  associateAreaDistrict();
+  associateAreaSubDistrict();
+}
+
+Model.prototype.toJSON = function () {
+  const values = Object.assign({}, this.get());
+  if (values?.created_at) {
+    values.created_at = helper.dateFormat(values?.created_at);
+  }
+  if (values?.updated_at) {
+    values.updated_at = helper.dateFormat(values?.updated_at);
+  }
+  return values;
 }

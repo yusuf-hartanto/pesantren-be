@@ -24,4 +24,3 @@ export const up = async (queryInterface: QueryInterface) => {
 export const down = async (queryInterface: QueryInterface) => {
   await queryInterface.dropTable('area_regencies');
 };
-

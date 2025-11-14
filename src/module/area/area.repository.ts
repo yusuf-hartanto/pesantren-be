@@ -3,6 +3,8 @@
 import { Op } from 'sequelize';
 import AreaProvince from './provinces.model';
 import AreaRegency from './regencies.model';
+import AreaDistrict from './districts.model';
+import AreaSubDistrict from './subdistricts.model';
 
 export default class Repository {
   public province() {
@@ -37,6 +39,58 @@ export default class Repository {
 
   public regencyDetail(condition: any) {
     return AreaRegency.findOne({
+      where: condition,
+    });
+  }
+
+  public indexDistrict(data: any) {
+    let query: Object = {
+      offset: data?.offset,
+      limit: data?.limit,
+    };
+    if (data?.keyword && data?.keyword != undefined) {
+      query = {
+        ...query,
+        where: { name: { [Op.like]: `%${data?.keyword}%` } },
+      };
+    }
+    return AreaDistrict.findAndCountAll(query);
+  }
+
+  public district(condition: any) {
+    return AreaDistrict.findAll({
+      where: condition,
+    });
+  }
+
+  public districtDetail(condition: any) {
+    return AreaDistrict.findOne({
+      where: condition,
+    });
+  }
+
+  public indexSubDistrict(data: any) {
+    let query: Object = {
+      offset: data?.offset,
+      limit: data?.limit,
+    };
+    if (data?.keyword && data?.keyword != undefined) {
+      query = {
+        ...query,
+        where: { name: { [Op.like]: `%${data?.keyword}%` } },
+      };
+    }
+    return AreaSubDistrict.findAndCountAll(query);
+  }
+
+  public subdistrict(condition: any) {
+    return AreaSubDistrict.findAll({
+      where: condition,
+    });
+  }
+
+  public subdistrictDetail(condition: any) {
+    return AreaSubDistrict.findOne({
       where: condition,
     });
   }

@@ -104,6 +104,7 @@ export default class Controller {
           jumlah_jampel,
           id_jenisjam: id_jenisjam?.value || check?.getDataValue('id_jenisjam'),
           id_lembaga: id_lembaga?.value || check?.getDataValue('id_lembaga'),
+          updated_at: helper.date(),
         },
         condition: { id_jampel: id },
       });
