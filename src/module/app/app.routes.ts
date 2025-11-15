@@ -22,6 +22,7 @@ import { kegiatanAkademik } from './kegiatan.akademik/kegiatan.akademik.controll
 import { programPesantren } from './program.pesantren/program.pesantren.controller';
 import { santriProgram } from './santri.program/santri.program.controller';
 import { orangTuaWali } from './orang.tua.wali/orang.tua.wali.controller';
+import { asrama } from './asrama/asrama.controller';
 
 const router: Router = Router();
 
@@ -300,6 +301,21 @@ router.delete(
   '/orang-tua-wali/:id',
   auth.checkBearerToken,
   orangTuaWali.delete
+);
+
+router.get(
+  '/asrama/all-data',
+  auth.checkBearerToken,
+  orangTuaWali.list
+);
+router.get('/asrama', auth.checkBearerToken, asrama.index);
+router.get('/asrama/:id', auth.checkBearerToken, asrama.detail);
+router.post('/asrama', auth.checkBearerToken, asrama.create);
+router.put('/asrama/:id', auth.checkBearerToken, asrama.update);
+router.delete(
+  '/asrama/:id',
+  auth.checkBearerToken,
+  asrama.delete
 );
 
 export default router;

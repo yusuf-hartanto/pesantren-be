@@ -65,6 +65,7 @@ import ActivityLog, {
   associateActivityLog,
 } from '../global/activity.log.model';
 import { getUserLogin } from '../../context/userContext';
+import { initAsrama, associateAsrama } from '../app/asrama/asrama.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -94,6 +95,7 @@ export function initializeModels(sequelize: Sequelize) {
   initAreaDistrict(sequelize);
   initAreaSubDistrict(sequelize);
   initActivityLog(sequelize);
+  initAsrama(sequelize);
 
   // associate
   associateAppRole();
@@ -110,6 +112,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateAreaDistrict();
   associateAreaSubDistrict();
   associateActivityLog();
+  associateAsrama();
 
   addGlobalActivityHooks(sequelize);
 }
