@@ -17,6 +17,9 @@ export async function initializeDatabase(config: any): Promise<Sequelize> {
       port: config?.port,
       dialect: config?.dialect,
       timezone: '+07:00',
+      dialectOptions: {
+        useUTC: false,
+      },
       retry: {
         match: [/Deadlock/i],
         max: 3,

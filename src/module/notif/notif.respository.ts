@@ -42,10 +42,9 @@ export default class Repository {
         where: {
           [Op.or]: [
             { message: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.col('resource.full_name'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
+            Sequelize.where(Sequelize.col('resource.full_name'), {
+              [Op.like]: `%${data?.keyword}%`,
+            }),
           ],
         },
       };

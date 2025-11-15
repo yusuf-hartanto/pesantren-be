@@ -1,15 +1,21 @@
 'use strict';
 
-import { Sequelize } from 'sequelize';
+import { Sequelize, Model } from 'sequelize';
+import { helper } from '../../helpers/helper';
 import { initAppOtp } from '../auth/otp.model';
 import { initAppMenu } from '../app/menu/menu.model';
+import { initAreaProvince } from '../area/provinces.model';
 import { initAppRole, associateAppRole } from '../app/role/role.model';
 import { initParamGlobal } from '../app/param.global/param.global.model';
 import { initAreaRegency, associateAreaRegency } from '../area/regencies.model';
 import {
-  initAreaProvince,
-  associateAreaProvince,
-} from '../area/provinces.model';
+  initAreaDistrict,
+  associateAreaDistrict,
+} from '../area/districts.model';
+import {
+  initAreaSubDistrict,
+  associateAreaSubDistrict,
+} from '../area/subdistricts.model';
 import {
   initAppRoleMenu,
   associateAppRoleMenu,
@@ -27,7 +33,7 @@ import {
 import {
   associateSemester,
   initSemester,
-} from '../app/semester/semester.ajaran.model';
+} from '../app/semester/semester.model';
 import { initStatusAwalSantri } from '../app/status.awal.santri/status.awal.santri.model';
 import { initBeasiswaSantri } from '../app/beasiswa.santri/beasiswa.santri.model';
 import { initKelompokPelajaran } from '../app/kelompok.pelajaran/kelompok.pelajaran.model';
@@ -47,6 +53,24 @@ import { associateOrganitationUnit, initOrganitationUnit } from '../app/organita
 import { associateJabatan, initJabatan } from '../app/jabatan/jabatan.model';
 import { initJenisPenilaian } from '../app/jenis.penilaian/jenis.penilaian.model';
 import { associateAsrama, initAsrama } from '../app/asrama/asrama.model';
+import {
+  initKegiatanAkademik,
+  associateKegiatanAkademik,
+} from '../app/kegiatan.akademik/kegiatan.akademik.model';
+import { initProgramPesantren } from '../app/program.pesantren/program.pesantren.model';
+import {
+  initSantriProgram,
+  associateSantriProgram,
+} from '../app/santri.program/santri.program.model';
+import {
+  initOrangTuaWali,
+  associateOrangTuaWali,
+} from '../app/orang.tua.wali/orang.tua.wali.model';
+import ActivityLog, {
+  initActivityLog,
+  associateActivityLog,
+} from '../global/activity.log.model';
+import { getUserLogin } from '../../context/userContext';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -75,13 +99,19 @@ export function initializeModels(sequelize: Sequelize) {
   initJabatan(sequelize);
   initJenisPenilaian(sequelize);
   initAsrama(sequelize);
+  initKegiatanAkademik(sequelize);
+  initProgramPesantren(sequelize);
+  initSantriProgram(sequelize);
+  initOrangTuaWali(sequelize);
+  initAreaDistrict(sequelize);
+  initAreaSubDistrict(sequelize);
+  initActivityLog(sequelize);
 
   // associate
   associateAppRole();
   associateAppRoleMenu();
   associateAppResource();
   associateAreaRegency();
-  associateAreaProvince();
   associateTahunAjaran();
   associateSemester();
   associateMataPelajaran();
@@ -90,4 +120,81 @@ export function initializeModels(sequelize: Sequelize) {
   associateOrganitationUnit();
   associateJabatan();
   associateAsrama();
+  associateKegiatanAkademik();
+  associateSantriProgram();
+  associateOrangTuaWali();
+  associateAreaDistrict();
+  associateAreaSubDistrict();
+  associateActivityLog();
+
+  addGlobalActivityHooks(sequelize);
+}
+
+Model.prototype.toJSON = function () {
+  const values = Object.assign({}, this.get());
+  if (values?.created_at) {
+    values.created_at = helper.dateFormat(values?.created_at);
+  }
+  if (values?.updated_at) {
+    values.updated_at = helper.dateFormat(values?.updated_at);
+  }
+  return values;
+};
+
+function addGlobalActivityHooks(sequelize: Sequelize) {
+  sequelize.addHook('beforeUpdate', (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    instance._previousDataValuesSnapshot = { ...instance?._previousDataValues };
+  });
+
+  sequelize.addHook('afterUpdate', async (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    await ActivityLog.create({
+      table_name: instance?.constructor.tableName,
+      record_id: getPrimaryKey(instance),
+      action: 'UPDATE',
+      username: getUserLogin(),
+      before_data: instance?._previousDataValuesSnapshot,
+      after_data: instance?.get(),
+    });
+  });
+
+  sequelize.addHook('afterCreate', async (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    await ActivityLog.create({
+      table_name: instance?.constructor.tableName,
+      record_id: getPrimaryKey(instance),
+      action: 'CREATE',
+      username: getUserLogin(),
+      before_data: null,
+      after_data: instance?.get(),
+    });
+  });
+
+  sequelize.addHook('afterDestroy', async (instance: any) => {
+    if (instance?.constructor.tableName === 'activity_logs') return;
+    await ActivityLog.create({
+      table_name: instance?.constructor.tableName,
+      record_id: getPrimaryKey(instance),
+      action: 'DELETE',
+      username: getUserLogin(),
+      before_data: instance?.get(),
+      after_data: null,
+    });
+  });
+}
+
+function getPrimaryKey(instance: any) {
+  const pkFields: string[] = instance.constructor.primaryKeyAttributes || [];
+
+  if (pkFields.length === 0) return null;
+
+  if (pkFields.length === 1) {
+    return instance.get(pkFields[0]);
+  }
+
+  return pkFields.reduce((acc: any, key: string) => {
+    acc[key] = instance.get(key);
+    return acc;
+  }, {});
 }

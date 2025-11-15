@@ -34,17 +34,26 @@ export function initJenisGuru(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         defaultValue: 'A',
       },
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
       modelName: 'JenisGuru',
       tableName: 'jenis_guru',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
-  JenisGuru.beforeCreate((jenis_guru) => {
-    jenis_guru?.setDataValue('id_jenisguru', uuidv4());
+  JenisGuru.beforeCreate((row) => {
+    row?.setDataValue('id_jenisguru', uuidv4());
   });
 
   return JenisGuru;

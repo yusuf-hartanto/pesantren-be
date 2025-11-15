@@ -38,8 +38,8 @@ export function initTahunAngkatan(sequelize: Sequelize) {
     }
   );
 
-  TahunAngkatan.beforeCreate((tahun_angkatan) => {
-    tahun_angkatan?.setDataValue('id_angkatan', uuidv4());
+  TahunAngkatan.beforeCreate((row) => {
+    row?.setDataValue('id_angkatan', uuidv4());
   });
 
   return TahunAngkatan;

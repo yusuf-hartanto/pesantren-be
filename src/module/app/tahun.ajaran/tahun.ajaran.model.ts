@@ -2,7 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import Semester from '../semester/semester.ajaran.model';
+import Semester from '../semester/semester.model';
 
 export class TahunAjaran extends Model {
   public id_tahunajaran!: string;
@@ -43,8 +43,8 @@ export function initTahunAjaran(sequelize: Sequelize) {
     }
   );
 
-  TahunAjaran.beforeCreate((tahun_ajaran) => {
-    tahun_ajaran?.setDataValue('id_tahunajaran', uuidv4());
+  TahunAjaran.beforeCreate((row) => {
+    row?.setDataValue('id_tahunajaran', uuidv4());
   });
 
   return TahunAjaran;

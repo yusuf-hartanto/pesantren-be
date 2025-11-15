@@ -34,17 +34,26 @@ export function initJenisJamPelajaran(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         defaultValue: 'A',
       },
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
       modelName: 'JenisJamPelajaran',
       tableName: 'jenis_jam_pelajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
-  JenisJamPelajaran.beforeCreate((jenis_jam_pelajaran) => {
-    jenis_jam_pelajaran?.setDataValue('id_jenisjam', uuidv4());
+  JenisJamPelajaran.beforeCreate((row) => {
+    row?.setDataValue('id_jenisjam', uuidv4());
   });
 
   return JenisJamPelajaran;

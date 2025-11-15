@@ -8,5 +8,9 @@ const router: Router = Router();
 router.get('/province', area.province);
 router.get('/regency', area.allRegency);
 router.get('/regency/:id', area.regency);
+router.get('/district', area.allDistrict);
+router.get('/district/:id', area.district);
+router.get('/subdistrict', area.allSubDistrict);
+router.get('/subdistrict/:id', area.subdistrict);
 
 export default router;

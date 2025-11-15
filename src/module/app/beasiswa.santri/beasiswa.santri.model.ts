@@ -46,8 +46,8 @@ export function initBeasiswaSantri(sequelize: Sequelize) {
     }
   );
 
-  BeasiswaSantri.beforeCreate((beasiswa_santri) => {
-    beasiswa_santri?.setDataValue('id_beasiswasantri', uuidv4());
+  BeasiswaSantri.beforeCreate((row) => {
+    row?.setDataValue('id_beasiswasantri', uuidv4());
   });
 
   return BeasiswaSantri;

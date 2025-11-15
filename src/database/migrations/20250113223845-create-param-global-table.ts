@@ -53,4 +53,3 @@ export const up = async (queryInterface: QueryInterface) => {
 export const down = async (queryInterface: QueryInterface) => {
   await queryInterface.dropTable('app_param_global');
 };
-

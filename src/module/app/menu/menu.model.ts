@@ -69,8 +69,8 @@ export function initAppMenu(sequelize: Sequelize) {
     }
   );
 
-  AppMenu.beforeCreate((app_menu) => {
-    app_menu?.setDataValue('menu_id', uuidv4());
+  AppMenu.beforeCreate((row) => {
+    row?.setDataValue('menu_id', uuidv4());
   });
   return AppMenu;
 }

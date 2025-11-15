@@ -53,17 +53,26 @@ export function initMataPelajaran(sequelize: Sequelize) {
       status: {
         type: DataTypes.STRING(255),
       },
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
       modelName: 'MataPelajaran',
       tableName: 'mata_pelajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
-  MataPelajaran.beforeCreate((mata_pelajaran) => {
-    mata_pelajaran?.setDataValue('id_mapel', uuidv4());
+  MataPelajaran.beforeCreate((row) => {
+    row?.setDataValue('id_mapel', uuidv4());
   });
 
   return MataPelajaran;

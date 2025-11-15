@@ -13,6 +13,7 @@ import Config from './config/parameter';
 import { helper } from './helpers/helper';
 require('express-async-errors');
 
+import { runWithUser } from './context/userContext';
 import { initializeJWT } from './config/config.jwt';
 import { initializeApp } from './config/config.app';
 import { initializeMail } from './config/config.mail';
@@ -59,6 +60,9 @@ async function bootstrap() {
   );
   app.use(xss());
   app.use(cors(options));
+  app.use((req, res, next) => {
+    runWithUser(null, next);
+  });
   app.use(routes);
 
   cron.schedule(

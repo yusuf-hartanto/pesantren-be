@@ -57,17 +57,26 @@ export function initJamPelajaran(sequelize: Sequelize) {
       status: {
         type: DataTypes.STRING(255),
       },
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
       modelName: 'JamPelajaran',
       tableName: 'jam_pelajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
-  JamPelajaran.beforeCreate((jam_pelajaran) => {
-    jam_pelajaran?.setDataValue('id_jampel', uuidv4());
+  JamPelajaran.beforeCreate((row) => {
+    row?.setDataValue('id_jampel', uuidv4());
   });
 
   return JamPelajaran;

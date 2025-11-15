@@ -115,8 +115,8 @@ export function initAppResourceModel(sequelize: Sequelize) {
     }
   );
 
-  AppResource.beforeCreate((app_resource) => {
-    app_resource?.setDataValue('resource_id', uuidv4());
+  AppResource.beforeCreate((row) => {
+    row?.setDataValue('resource_id', uuidv4());
   });
   return AppResource;
 }

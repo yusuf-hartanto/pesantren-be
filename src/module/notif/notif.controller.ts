@@ -4,7 +4,11 @@ import { Request, Response } from 'express';
 import { helper } from '../../helpers/helper';
 import { repository } from './notif.respository';
 import { response } from '../../helpers/response';
-import { NOT_FOUND, SUCCESS_RETRIEVED, SUCCESS_UPDATED } from '../../utils/constant';
+import {
+  NOT_FOUND,
+  SUCCESS_RETRIEVED,
+  SUCCESS_UPDATED,
+} from '../../utils/constant';
 
 export default class Controller {
   public async index(req: Request, res: Response) {
@@ -17,17 +21,13 @@ export default class Controller {
       // }
       // const { count, rows } = await repository.index({ ...query, ...condition });
       // if (rows?.length < 1)
-        // return response.success(NOT_FOUND, null, res, false);
-      return response.success(
-        SUCCESS_RETRIEVED,
-        { total: 0, values: [] },
-        res
-      );
+      // return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, { total: 0, values: [] }, res);
     } catch (err: any) {
       return helper.catchError(`notif index: ${err?.message}`, 500, res);
     }
   }
-  
+
   public async read(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';

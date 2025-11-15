@@ -5,6 +5,7 @@ import { Op } from 'sequelize';
 import { helper } from '../../helpers/helper';
 import { response } from '../../helpers/response';
 import { helperauth } from '../../helpers/auth.helper';
+import { setUserLogin } from '../../context/userContext';
 import { Request, Response, NextFunction } from 'express';
 import { repository } from '../app/resource/resource.repository';
 import { INVALID, NOT_FOUND, REQUIRED, ROLE_ADMIN } from '../../utils/constant';
@@ -66,6 +67,7 @@ export default class Middleware {
         });
       }
 
+      setUserLogin(auth?.username || 'sistem');
       req.user = auth;
       next();
       return;
@@ -92,6 +94,7 @@ export default class Middleware {
       if (typeof auth == 'string')
         return response.failed('Invalid token', 400, res);
 
+      setUserLogin(auth?.username || 'sistem');
       req.user = auth;
       next();
       return;
@@ -126,6 +129,7 @@ export default class Middleware {
       if (typeof auth == 'string')
         return response.failed('Invalid token', 400, res);
 
+      setUserLogin(auth?.username || 'sistem');
       req.user = auth;
       next();
       return;
@@ -162,6 +166,7 @@ export default class Middleware {
       if (!result) return response.success(NOT_FOUND, null, res, false);
 
       if (result?.getDataValue('status') === 'A') {
+        setUserLogin(result?.username || 'sistem');
         req.user = result;
         next();
         return;
@@ -183,6 +188,7 @@ export default class Middleware {
       if (typeof auth == 'string') req.user = null;
       else req.user = auth;
 
+      setUserLogin(auth?.username || 'sistem');
       next();
       return;
     } catch (err) {

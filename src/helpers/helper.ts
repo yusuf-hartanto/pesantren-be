@@ -24,6 +24,10 @@ export default class Helper {
     return moment().locale('id').format('YYYY-MM-DD HH:mm:ss');
   }
 
+  public dateFormat(date: string) {
+    return moment(date).locale('id').format('YYYY-MM-DD HH:mm:ss');
+  }
+
   public dateForNumber() {
     return moment().locale('id').format('DDMMYYYY');
   }
