@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class StatusAwalSantri extends Model {
-  public id_statawalsantri!: string;
-  public kode_statawal!: string;
-  public nama_statawal!: string;
+  public id_status_awal_santri!: string;
+  public kode_status_awal!: string;
+  public nama_status_awal!: string;
   public nomor_urut!: number;
   public keterangan!: string;
   public status!: string;
@@ -15,16 +15,16 @@ export class StatusAwalSantri extends Model {
 export function initStatusAwalSantri(sequelize: Sequelize) {
   StatusAwalSantri.init(
     {
-      id_statawalsantri: {
+      id_status_awal_santri: {
         type: DataTypes.STRING,
         primaryKey: true,
         unique: true,
       },
-      kode_statawal: {
+      kode_status_awal: {
         type: DataTypes.STRING(255),
         unique: true,
       },
-      nama_statawal: {
+      nama_status_awal: {
         type: DataTypes.STRING(255),
       },
       nomor_urut: {
@@ -32,22 +32,24 @@ export function initStatusAwalSantri(sequelize: Sequelize) {
         unique: true,
       },
       keterangan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
       },
       status: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.ENUM('Aktif', 'Nonaktif'),
       },
     },
     {
       sequelize,
       modelName: 'StatusAwalSantri',
       tableName: 'status_awal_santri',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
   StatusAwalSantri.beforeCreate((row) => {
-    row?.setDataValue('id_statawalsantri', uuidv4());
+    row?.setDataValue('id_status_awal_santri', uuidv4());
   });
 
   return StatusAwalSantri;

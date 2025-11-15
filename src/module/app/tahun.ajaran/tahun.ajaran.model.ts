@@ -29,17 +29,19 @@ export function initTahunAjaran(sequelize: Sequelize) {
         unique: true,
       },
       keterangan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
       },
       status: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.ENUM('Aktif', 'Nonaktif', 'Arsip'),
       },
     },
     {
       sequelize,
       modelName: 'TahunAjaran',
       tableName: 'tahun_ajaran',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 

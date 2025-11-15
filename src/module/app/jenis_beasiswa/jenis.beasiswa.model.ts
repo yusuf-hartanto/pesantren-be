@@ -3,8 +3,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
-export class BeasiswaSantri extends Model {
-  public id_beasiswasantri!: string;
+export class JenisBeasiswa extends Model {
+  public id_beasiswa!: string;
   public kode_beasiswa!: string;
   public nama_beasiswa!: string;
   public nomor_urut!: number;
@@ -12,10 +12,10 @@ export class BeasiswaSantri extends Model {
   public status!: string;
 }
 
-export function initBeasiswaSantri(sequelize: Sequelize) {
-  BeasiswaSantri.init(
+export function initJenisBeasiswa(sequelize: Sequelize) {
+  JenisBeasiswa.init(
     {
-      id_beasiswasantri: {
+      id_beasiswa: {
         type: DataTypes.STRING,
         primaryKey: true,
         unique: true,
@@ -32,25 +32,27 @@ export function initBeasiswaSantri(sequelize: Sequelize) {
         unique: true,
       },
       keterangan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
       },
       status: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.ENUM('Aktif', 'Nonaktif'),
       },
     },
     {
       sequelize,
-      modelName: 'BeasiswaSantri',
-      tableName: 'beasiswa_santri',
-      timestamps: false,
+      modelName: 'JenisBeasiswa',
+      tableName: 'jenis_beasiswa',
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
-  BeasiswaSantri.beforeCreate((row) => {
-    row?.setDataValue('id_beasiswasantri', uuidv4());
+  JenisBeasiswa.beforeCreate((row) => {
+    row?.setDataValue('id_beasiswa', uuidv4());
   });
 
-  return BeasiswaSantri;
+  return JenisBeasiswa;
 }
 
-export default BeasiswaSantri;
+export default JenisBeasiswa;

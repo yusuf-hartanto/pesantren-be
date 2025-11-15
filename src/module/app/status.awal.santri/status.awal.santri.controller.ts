@@ -56,7 +56,7 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
       const result: Object | any = await repository.detail({
-        id_statawalsantri: id,
+        id_status_awal_santri: id,
       });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
@@ -71,6 +71,9 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
+      const { kode_status_awal } = req?.body;
+      const check = await repository.detail({ kode_status_awal });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
         payload: { ...data },
@@ -88,12 +91,12 @@ export default class Controller {
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_statawalsantri: id });
+      const check = await repository.detail({ id_status_awal_santri: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: { ...data },
-        condition: { id_statawalsantri: id },
+        condition: { id_status_awal_santri: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
@@ -108,10 +111,10 @@ export default class Controller {
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_statawalsantri: id });
+      const check = await repository.detail({ id_status_awal_santri: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_statawalsantri: id },
+        condition: { id_status_awal_santri: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {

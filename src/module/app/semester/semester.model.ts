@@ -32,17 +32,19 @@ export function initSemester(sequelize: Sequelize) {
         unique: true,
       },
       keterangan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
       },
       status: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.ENUM('Aktif', 'Nonaktif', 'Arsip'),
       },
     },
     {
       sequelize,
       modelName: 'Semester',
       tableName: 'semester',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 

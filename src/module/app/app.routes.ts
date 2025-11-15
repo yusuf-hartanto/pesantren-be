@@ -12,7 +12,7 @@ import { tingkat } from './tingkat/tingkat.controller';
 import { tahunAjaran } from './tahun.ajaran/tahun.ajaran.controller';
 import { semester } from './semester/semester.ajaran.controller';
 import { statusAwalSantri } from './status.awal.santri/status.awal.santri.controller';
-import { beasiswaSantri } from './beasiswa.santri/beasiswa.santri.controller';
+import { jenisBeasiswa } from './jenis_beasiswa/jenis.beasiswa.controller';
 import { kelompokPejaran } from './kelompok.pelajaran/kelompok.pelajaran.controller';
 import { jenisJamPelajaran } from './jenis.jampel/jenis.jampel.controller';
 import { jenisGuru } from './jenis.guru/jenis.guru.controller';
@@ -126,26 +126,26 @@ router.delete(
 );
 
 router.get(
-  '/beasiswa-santri/all-data',
+  '/jenis-beasiswa/all-data',
   auth.checkBearerToken,
-  beasiswaSantri.list
+  jenisBeasiswa.list
 );
-router.get('/beasiswa-santri', auth.checkBearerToken, beasiswaSantri.index);
+router.get('/jenis-beasiswa', auth.checkBearerToken, jenisBeasiswa.index);
 router.get(
-  '/beasiswa-santri/:id',
+  '/jenis-beasiswa/:id',
   auth.checkBearerToken,
-  beasiswaSantri.detail
+  jenisBeasiswa.detail
 );
-router.post('/beasiswa-santri', auth.checkBearerToken, beasiswaSantri.create);
+router.post('/jenis-beasiswa', auth.checkBearerToken, jenisBeasiswa.create);
 router.put(
-  '/beasiswa-santri/:id',
+  '/jenis-beasiswa/:id',
   auth.checkBearerToken,
-  beasiswaSantri.update
+  jenisBeasiswa.update
 );
 router.delete(
-  '/beasiswa-santri/:id',
+  '/jenis-beasiswa/:id',
   auth.checkBearerToken,
-  beasiswaSantri.delete
+  jenisBeasiswa.delete
 );
 
 router.get(

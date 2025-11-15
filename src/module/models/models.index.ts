@@ -35,7 +35,7 @@ import {
   initSemester,
 } from '../app/semester/semester.model';
 import { initStatusAwalSantri } from '../app/status.awal.santri/status.awal.santri.model';
-import { initBeasiswaSantri } from '../app/beasiswa.santri/beasiswa.santri.model';
+import { initJenisBeasiswa } from '../app/jenis_beasiswa/jenis.beasiswa.model';
 import { initKelompokPelajaran } from '../app/kelompok.pelajaran/kelompok.pelajaran.model';
 import { initJenisJamPelajaran } from '../app/jenis.jampel/jenis.jampel.model';
 import { initJenisGuru } from '../app/jenis.guru/jenis.guru.model';
@@ -82,7 +82,7 @@ export function initializeModels(sequelize: Sequelize) {
   initTahunAjaran(sequelize);
   initSemester(sequelize);
   initStatusAwalSantri(sequelize);
-  initBeasiswaSantri(sequelize);
+  initJenisBeasiswa(sequelize);
   initKelompokPelajaran(sequelize);
   initJenisJamPelajaran(sequelize);
   initJenisGuru(sequelize);
