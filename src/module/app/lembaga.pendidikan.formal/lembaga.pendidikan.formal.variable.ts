@@ -3,14 +3,12 @@
 export default class Variable {
   public fillable() {
     const field: Array<string> = [
-      'nama_orgunit',
-      'parent_id',
-      'level_orgunit',
+      'nama_lembaga',
       'id_cabang',
-      'id_lembaga',
-      'jenis_orgunit',
       'keterangan',
-      'lembaga_type'
+      'jenis_lembaga',
+      'status_akreditasi',
+      'nomor_npsn'
     ];
     return field;
   }

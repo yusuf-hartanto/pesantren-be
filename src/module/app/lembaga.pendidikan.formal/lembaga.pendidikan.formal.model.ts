@@ -5,12 +5,13 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
 
-export class LembagaPendidikan extends Model {
+export class LembagaPendidikanFormal extends Model {
   public id_lembaga!: string;
   public nama_lembaga!: string;
-  public nomor_urut!: number;
   public keterangan!: string;
-  public alamat!: string;
+  public jenis_lembaga!: string;
+  public status_akreditasi!: string;
+  public nomor_nspn!: string;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -18,8 +19,8 @@ export class LembagaPendidikan extends Model {
   public cabang?: Cabang[];
 }
 
-export function initLembagaPendidikan(sequelize: Sequelize) {
-  LembagaPendidikan.init(
+export function initLembagaPendidikanFormal(sequelize: Sequelize) {
+  LembagaPendidikanFormal.init(
     {
       id_lembaga: {
         type: DataTypes.STRING,
@@ -31,31 +32,30 @@ export function initLembagaPendidikan(sequelize: Sequelize) {
         allowNull: false,
         unique: true,
       },
-      nomor_urut: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        unique: true,
-      },
       id_cabang: {
         type: DataTypes.STRING,
         allowNull: true
-      },
-      jenis_pendidikan: {
-        type: DataTypes.STRING(50),
-        allowNull: true,
       },
       keterangan: {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
-      alamat: {
-        type: DataTypes.STRING(255),
+      jenis_lembaga: {
+        type: DataTypes.ENUM('SD','MI','SMP','MTs','SMA','MA','SMK','Diniyah','Perguruan Tinggi'),
+        allowNull: true,
+      },
+      status_akreditasi: {
+        type: DataTypes.ENUM('A','B','C','Belum Terakreditasi'),
+        allowNull: true,
+      },
+      nomor_npsn: {
+        type: DataTypes.STRING(20),
         allowNull: true,
       },
       created_at: {
         type: DataTypes.DATE,
         get() {
-          const value = this.getDataValue('created_at');
+          const value: string = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
@@ -81,28 +81,28 @@ export function initLembagaPendidikan(sequelize: Sequelize) {
     },
     {
       sequelize,
-      modelName: 'LembagaPendidikan',
-      tableName: 'lembaga_pendidikan',
+      modelName: 'LembagaPendidikanFormal',
+      tableName: 'lembaga_pendidikan_formal',
       timestamps: false,
     }
   );
 
   // UUID Otomatis sebelum create
-  LembagaPendidikan.beforeCreate((lembaga) => {
+  LembagaPendidikanFormal.beforeCreate((lembaga) => {
     lembaga?.setDataValue('id_lembaga', uuidv4());
   });
 
-  LembagaPendidikan.beforeBulkCreate((lembagaInstances) => {
+  LembagaPendidikanFormal.beforeBulkCreate((lembagaInstances) => {
     lembagaInstances.forEach((lembaga) => {
       lembaga.setDataValue('id_lembaga', uuidv4());
     });
   });
 
-  return LembagaPendidikan;
+  return LembagaPendidikanFormal;
 }
 
-export function associateLembagaPendidikan() {
-  LembagaPendidikan.belongsTo(Cabang, {
+export function associateLembagaPendidikanFormal() {
+  LembagaPendidikanFormal.belongsTo(Cabang, {
     foreignKey: 'id_cabang',
     as: 'cabang',
     onUpdate: 'CASCADE',
@@ -110,4 +110,4 @@ export function associateLembagaPendidikan() {
   });
 }
 
-export default LembagaPendidikan;
+export default LembagaPendidikanFormal;

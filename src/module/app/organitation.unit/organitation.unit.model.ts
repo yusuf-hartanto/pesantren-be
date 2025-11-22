@@ -4,7 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
-import LembagaPendidikan from '../lembaga.pendidikan/lembaga.pendidikan.model';
+import LembagaPendidikan, { LembagaPendidikanKepesantrenan } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
 export class OrganitationUnit extends Model {
   public id_orgunit!: string;
@@ -15,6 +16,7 @@ export class OrganitationUnit extends Model {
   public id_lembaga!: string;
   public jenis_orgunit!: string;
   public keterangan!: string;
+  public lembaga_type!: string;
   public created_at!: Date;
   public updated_at!: Date;
 
@@ -22,7 +24,6 @@ export class OrganitationUnit extends Model {
   public cabang?: Cabang;
   public parent?: OrganitationUnit;
   public children?: OrganitationUnit;
-  public lembagaPendidikan?: LembagaPendidikan;
 }
 
 export function initOrganitationUnit(sequelize: Sequelize) {
@@ -54,8 +55,12 @@ export function initOrganitationUnit(sequelize: Sequelize) {
         allowNull: true
       },
       jenis_orgunit: {
-        type: DataTypes.STRING(50),
+        type: DataTypes.ENUM("Biro", "Bagian", "Lembaga", "Sub-Unit", "Umum"),
         allowNull: true,
+      },
+      lembaga_type: {
+        type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
+        allowNull: true
       },
       keterangan: {
         type: DataTypes.STRING(255),
@@ -132,9 +137,16 @@ export function associateOrganitationUnit() {
     onDelete: 'SET NULL',
   });
 
-  OrganitationUnit.belongsTo(LembagaPendidikan, {
+  OrganitationUnit.belongsTo(LembagaPendidikanFormal, {
     foreignKey: 'id_lembaga',
-    as: 'lembaga_pendidikan',
+    as: 'lembagaPendidikanFormal',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  OrganitationUnit.belongsTo(LembagaPendidikanKepesantrenan, {
+    foreignKey: 'id_lembaga',
+    as: 'lembagaPendidikanKepesantrenan',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });

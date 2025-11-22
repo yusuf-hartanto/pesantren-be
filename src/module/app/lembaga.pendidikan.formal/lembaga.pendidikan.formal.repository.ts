@@ -1,7 +1,7 @@
 'use strict';
 
 import { Op, Sequelize } from 'sequelize';
-import Model from './lembaga.pendidikan.model';
+import Model from './lembaga.pendidikan.formal.model';
 import Cabang from '../cabang/cabang.model';
 
 export default class Repository {
@@ -58,12 +58,10 @@ export default class Repository {
 					[Op.or]: [
 						{ id_lembaga: { [Op.like]: keyword } },
 						{ nama_lembaga: { [Op.like]: keyword } },
-						Sequelize.where(Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'), {
-							[Op.like]: keyword,
-						}),
-						{ jenis_pendidikan: { [Op.like]: keyword } },
 						{ keterangan: { [Op.like]: keyword } },
-						{ alamat: { [Op.like]: keyword } },
+						{ jenis_pendidikan: { [Op.like]: keyword } },
+						{ status_akreditasi: { [Op.like]: keyword } },
+						{ nomor_npsn: { [Op.like]: keyword } },
 						{ '$cabang.nama_cabang$': { [Op.like]: keyword } }
 					]
 				}

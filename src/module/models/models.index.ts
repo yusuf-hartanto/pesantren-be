@@ -47,8 +47,8 @@ import {
   initJamPelajaran,
   associateJamPelajaran,
 } from '../app/jam.pelajaran/jam.pelajaran.model';
-import { initCabang } from '../app/cabang/cabang.model';
-import { associateLembagaPendidikan, initLembagaPendidikan } from '../app/lembaga.pendidikan/lembaga.pendidikan.model';
+import { associateCabang, initCabang } from '../app/cabang/cabang.model';
+import { associateLembagaPendidikanKepesantrenan, initLembagaPendidikanKepesantrenan } from '../app/lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 import { associateOrganitationUnit, initOrganitationUnit } from '../app/organitation.unit/organitation.unit.model';
 import { associateJabatan, initJabatan } from '../app/jabatan/jabatan.model';
 import { initJenisPenilaian } from '../app/jenis.penilaian/jenis.penilaian.model';
@@ -71,6 +71,8 @@ import ActivityLog, {
   associateActivityLog,
 } from '../global/activity.log.model';
 import { getUserLogin } from '../../context/userContext';
+import { associateLembagaPendidikanFormal, initLembagaPendidikanFormal } from '../app/lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import { initPegawai, associatePegawai } from '../app/pegawai/pegawai.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -94,7 +96,8 @@ export function initializeModels(sequelize: Sequelize) {
   initMataPelajaran(sequelize);
   initJamPelajaran(sequelize);
   initCabang(sequelize);
-  initLembagaPendidikan(sequelize);
+  initLembagaPendidikanKepesantrenan(sequelize);
+  initLembagaPendidikanFormal(sequelize);
   initOrganitationUnit(sequelize);
   initJabatan(sequelize);
   initJenisPenilaian(sequelize);
@@ -106,6 +109,7 @@ export function initializeModels(sequelize: Sequelize) {
   initAreaDistrict(sequelize);
   initAreaSubDistrict(sequelize);
   initActivityLog(sequelize);
+  initPegawai(sequelize);
 
   // associate
   associateAppRole();
@@ -116,7 +120,9 @@ export function initializeModels(sequelize: Sequelize) {
   associateSemester();
   associateMataPelajaran();
   associateJamPelajaran();
-  associateLembagaPendidikan();
+  associateCabang();
+  associateLembagaPendidikanKepesantrenan();
+  associateLembagaPendidikanFormal();
   associateOrganitationUnit();
   associateJabatan();
   associateAsrama();
@@ -126,6 +132,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateAreaDistrict();
   associateAreaSubDistrict();
   associateActivityLog();
+  associatePegawai();
 
   addGlobalActivityHooks(sequelize);
 }

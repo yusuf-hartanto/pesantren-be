@@ -13,10 +13,10 @@ export const up = async (queryInterface: QueryInterface) => {
     username: {
       type: DataTypes.STRING(50),
       allowNull: true,
-      references: {
-        model: 'app_resource',
-        key: 'username',
-      },
+      // references: {
+      //   model: 'app_resource',
+      //   key: 'username',
+      // },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },

@@ -6,41 +6,58 @@ export const up = async (queryInterface: QueryInterface) => {
   await queryInterface.createTable('pegawai', {
     id_pegawai: {
       type: DataTypes.STRING,
-      allowNull: false,
       primaryKey: true,
+      unique: true,
+    },
+    nik: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      unique: true,
+    },
+    nip: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
       unique: true
     },
     nama_lengkap: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(150),
       allowNull: false,
     },
-    nik: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
+    email: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    no_hp: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+    },
+    jenis_kelamin: {
+      type: DataTypes.ENUM("Laki-laki", "Perempuan"),
+      allowNull: true,
     },
     tempat_lahir: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
     tanggal_lahir: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
+      allowNull: true
     },
     umur: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true
     },
-    jenis_kelamin: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
+    alamat: {
+      type: DataTypes.TEXT,
+      allowNull: true
     },
-    nip: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
+    pendidikan: {
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
-    no_hp: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
+    bidang_ilmu: {
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
     id_orgunit: {
       type: DataTypes.STRING,
@@ -62,26 +79,23 @@ export const up = async (queryInterface: QueryInterface) => {
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },
+    status_pegawai: {
+      type: DataTypes.ENUM("Aktif", "Tidak Aktif", "Pensiun"),
+      allowNull: true
+    },
     tmt: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
+      allowNull: true
     },
-    alamat: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-    pendidikan: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-    bidang_ilmu: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
+    foto: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   });
 
+  // Tambahkan kolom created_at & updated_at via raw SQL
   await queryInterface.sequelize.query(`
-    ALTER TABLE pegawai 
+    ALTER TABLE pegawai
     ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
   `);

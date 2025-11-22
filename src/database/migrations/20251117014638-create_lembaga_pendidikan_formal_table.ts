@@ -3,7 +3,7 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.createTable('lembaga_pendidikan', {
+  await queryInterface.createTable('lembaga_pendidikan_formal', {
     id_lembaga: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -11,12 +11,8 @@ export const up = async (queryInterface: QueryInterface) => {
       unique: true
     },
     nama_lembaga: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(150),
       allowNull: false,
-    },
-    nomor_urut: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
     },
     id_cabang: {
       type: DataTypes.STRING,
@@ -28,28 +24,32 @@ export const up = async (queryInterface: QueryInterface) => {
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
     },
-    jenis_pendidikan: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
-    },
     keterangan: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT,
       allowNull: true,
     },
-    alamat: {
-      type: DataTypes.STRING(255),
+    jenis_lembaga: {
+      type: DataTypes.ENUM('SD','MI','SMP','MTs','SMA','MA','SMK','Diniyah','Perguruan Tinggi'),
+      allowNull: true,
+    },
+    status_akreditasi: {
+      type: DataTypes.ENUM('A','B','C','Belum Terakreditasi'),
+      allowNull: true,
+    },
+    nomor_npsn: {
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
   });
 
   // Tambahkan kolom created_at & updated_at via raw SQL
   await queryInterface.sequelize.query(`
-    ALTER TABLE lembaga_pendidikan
+    ALTER TABLE lembaga_pendidikan_formal
     ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
   `);
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.dropTable('lembaga_pendidikan');
+  await queryInterface.dropTable('lembaga_pendidikan_formal');
 };

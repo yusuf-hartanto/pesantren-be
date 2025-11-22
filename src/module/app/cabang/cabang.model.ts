@@ -3,6 +3,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
+import AreaProvince from '../../area/provinces.model';
+import AreaRegency from '../../area/regencies.model';
+import AreaDistrict from '../../area/districts.model';
+import AreaSubDistrict from '../../area/subdistricts.model';
 
 export class Cabang extends Model {
   public id_cabang!: string;
@@ -26,9 +30,27 @@ export function initCabang(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         unique: true,
       },
-      nomor_urut: {
-        type: DataTypes.INTEGER,
-        unique: true,
+      province_id: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      city_id: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      district_id: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      sub_district_id: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      contact: {
+        type: DataTypes.STRING,
+      },
+      email: {
+        type: DataTypes.STRING,
       },
       keterangan: {
         type: DataTypes.STRING(255),
@@ -78,6 +100,36 @@ export function initCabang(sequelize: Sequelize) {
   });
   
   return Cabang;
+}
+
+export function associateCabang() {
+  Cabang.belongsTo(AreaProvince, {
+    foreignKey: 'province_id',
+    as: 'province',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  Cabang.belongsTo(AreaRegency, {
+    foreignKey: 'city_id',
+    as: 'city',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  Cabang.belongsTo(AreaDistrict, {
+    foreignKey: 'district_id',
+    as: 'district',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  Cabang.belongsTo(AreaSubDistrict, {
+    foreignKey: 'sub_district_id',
+    as: 'subDistrict',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
 }
 
 export default Cabang;

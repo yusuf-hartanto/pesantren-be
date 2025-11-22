@@ -4,7 +4,12 @@ export default class Variable {
   public fillable() {
     const field: Array<string> = [
       'nama_cabang',
-      'nomor_urut',
+      'province_id',
+      'city_id',
+      'district_id',
+      'sub_district_id',
+      'contact',
+      'email',
       'keterangan',
       'alamat'
     ];

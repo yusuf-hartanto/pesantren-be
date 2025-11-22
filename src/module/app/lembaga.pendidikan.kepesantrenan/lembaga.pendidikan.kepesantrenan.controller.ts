@@ -2,9 +2,9 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './lembaga.pendidikan.variable';
+import { variable } from './lembaga.pendidikan.kepesantrenan.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './lembaga.pendidikan.repository';
+import { repository } from './lembaga.pendidikan.kepesantrenan.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -24,7 +24,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`lembaga pendidikan list: ${err?.message}`, 500, res);
+      return helper.catchError(`LP kepesantrenan list: ${err?.message}`, 500, res);
     }
   }
 
@@ -40,7 +40,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`tingkat index: ${err?.message}`, 500, res);
+      return helper.catchError(`LP kepesantrenan index: ${err?.message}`, 500, res);
     }
   }
 
@@ -51,7 +51,7 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`tingkat detail: ${err?.message}`, 500, res);
+      return helper.catchError(`LP Kepesantrenan detail: ${err?.message}`, 500, res);
     }
   }
 
@@ -75,7 +75,7 @@ export default class Controller {
     } catch (err: any) {
       console.log(err)
       return helper.catchError(
-        `lembaga pendidikan create: ${err?.message}`,
+        `LP kepesantrenan create: ${err?.message}`,
         500,
         res
       );
@@ -95,7 +95,7 @@ export default class Controller {
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `tingkat update: ${err?.message}`,
+        `LP kepesantrenan update: ${err?.message}`,
         500,
         res
       );
@@ -113,7 +113,7 @@ export default class Controller {
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `tingkat delete: ${err?.message}`,
+        `LP kepesantrenan delete: ${err?.message}`,
         500,
         res
       );
@@ -121,4 +121,4 @@ export default class Controller {
   }
 }
 
-export const LembagaPendidikan = new Controller();
+export const LembagaPendidikanKepesantrenan = new Controller();
