@@ -27,14 +27,16 @@ export function initTingkat(sequelize: Sequelize) {
         unique: true,
       },
       keterangan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
       },
     },
     {
       sequelize,
       modelName: 'Tingkat',
       tableName: 'tingkat',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 

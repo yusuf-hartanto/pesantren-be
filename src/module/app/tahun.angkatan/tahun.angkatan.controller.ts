@@ -69,6 +69,9 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
+      const { tahun_angkatan } = req?.body;
+      const check = await repository.detail({ tahun_angkatan });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
         payload: { ...data },

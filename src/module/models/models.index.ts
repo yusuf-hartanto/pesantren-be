@@ -35,7 +35,7 @@ import {
   initSemester,
 } from '../app/semester/semester.model';
 import { initStatusAwalSantri } from '../app/status.awal.santri/status.awal.santri.model';
-import { initBeasiswaSantri } from '../app/beasiswa.santri/beasiswa.santri.model';
+import { initJenisBeasiswa } from '../app/jenis_beasiswa/jenis.beasiswa.model';
 import { initKelompokPelajaran } from '../app/kelompok.pelajaran/kelompok.pelajaran.model';
 import { initJenisJamPelajaran } from '../app/jenis.jampel/jenis.jampel.model';
 import { initJenisGuru } from '../app/jenis.guru/jenis.guru.model';
@@ -71,8 +71,12 @@ import ActivityLog, {
   associateActivityLog,
 } from '../global/activity.log.model';
 import { getUserLogin } from '../../context/userContext';
+<<<<<<< HEAD
 import { associateLembagaPendidikanFormal, initLembagaPendidikanFormal } from '../app/lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 import { initPegawai, associatePegawai } from '../app/pegawai/pegawai.model';
+=======
+import { initAsrama, associateAsrama } from '../app/asrama/asrama.model';
+>>>>>>> f678277f662cc0bf7884cdd2629f6becbe83601b
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -89,7 +93,7 @@ export function initializeModels(sequelize: Sequelize) {
   initTahunAjaran(sequelize);
   initSemester(sequelize);
   initStatusAwalSantri(sequelize);
-  initBeasiswaSantri(sequelize);
+  initJenisBeasiswa(sequelize);
   initKelompokPelajaran(sequelize);
   initJenisJamPelajaran(sequelize);
   initJenisGuru(sequelize);
@@ -132,7 +136,11 @@ export function initializeModels(sequelize: Sequelize) {
   associateAreaDistrict();
   associateAreaSubDistrict();
   associateActivityLog();
+<<<<<<< HEAD
   associatePegawai();
+=======
+  associateAsrama();
+>>>>>>> f678277f662cc0bf7884cdd2629f6becbe83601b
 
   addGlobalActivityHooks(sequelize);
 }

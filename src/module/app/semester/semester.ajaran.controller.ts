@@ -57,11 +57,12 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      let id_tahunajaran: any = null;
-      if (req?.body?.id_tahunajaran) id_tahunajaran = req?.body?.id_tahunajaran;
+      const { nama_semester, id_tahunajaran } = req?.body;
+      const check = await repository.detail({ nama_semester });
+      if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
-        payload: { ...data, id_tahunajaran: id_tahunajaran?.value },
+        payload: { ...data, id_tahunajaran: id_tahunajaran?.value || null },
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
@@ -74,8 +75,7 @@ export default class Controller {
       const id: string = req?.params?.id || '';
       const check = await repository.detail({ id_semester: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      let id_tahunajaran: any = null;
-      if (req?.body?.id_tahunajaran) id_tahunajaran = req?.body?.id_tahunajaran;
+       const { nama_semester, id_tahunajaran } = req?.body;
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: {

@@ -6,13 +6,13 @@ import Model from './status.awal.santri.model';
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_statawalsantri', 'DESC']],
+      order: [['created_at', 'DESC']],
     };
-    if (data?.kode_statawal !== undefined && data?.kode_statawal != null) {
+    if (data?.kode_status_awal !== undefined && data?.kode_status_awal != null) {
       query = {
         ...query,
         where: {
-          kode_statawal: { [Op.like]: `%${data?.kode_statawal}%` },
+          kode_status_awal: { [Op.like]: `%${data?.kode_status_awal}%` },
         },
       };
     }
@@ -21,7 +21,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_statawalsantri', 'DESC']],
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
@@ -30,8 +30,8 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { kode_statawal: { [Op.like]: `%${data?.keyword}%` } },
-            { nama_statawal: { [Op.like]: `%${data?.keyword}%` } },
+            { kode_status_awal: { [Op.like]: `%${data?.keyword}%` } },
+            { nama_status_awal: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
               Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
               { [Op.like]: `%${data?.keyword}%` }

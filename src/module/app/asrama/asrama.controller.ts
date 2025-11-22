@@ -40,7 +40,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`tingkat index: ${err?.message}`, 500, res);
+      return helper.catchError(`asrama index: ${err?.message}`, 500, res);
     }
   }
 
@@ -51,7 +51,7 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`tingkat detail: ${err?.message}`, 500, res);
+      return helper.catchError(`asrama detail: ${err?.message}`, 500, res);
     }
   }
 
@@ -95,7 +95,7 @@ export default class Controller {
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `tingkat update: ${err?.message}`,
+        `asrama update: ${err?.message}`,
         500,
         res
       );
@@ -113,7 +113,7 @@ export default class Controller {
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `tingkat delete: ${err?.message}`,
+        `asrama delete: ${err?.message}`,
         500,
         res
       );

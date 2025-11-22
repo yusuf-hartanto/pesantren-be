@@ -6,7 +6,7 @@ import Model from './tingkat.model';
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_tingkat', 'DESC']],
+      order: [['created_at', 'DESC']],
     };
     if (data?.tingkat !== undefined && data?.tingkat != null) {
       query = {
@@ -21,7 +21,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_tingkat', 'DESC']],
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };

@@ -1,12 +1,12 @@
 'use strict';
 
 import { Op, Sequelize } from 'sequelize';
-import Model from './beasiswa.santri.model';
+import Model from './jenis.beasiswa.model';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_beasiswasantri', 'DESC']],
+      order: [['created_at', 'DESC']],
     };
     if (data?.kode_beasiswa !== undefined && data?.kode_beasiswa != null) {
       query = {
@@ -21,7 +21,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_beasiswasantri', 'DESC']],
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };

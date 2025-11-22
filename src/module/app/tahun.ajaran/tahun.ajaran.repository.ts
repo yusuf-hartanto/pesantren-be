@@ -6,7 +6,7 @@ import Model from './tahun.ajaran.model';
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_tahunajaran', 'DESC']],
+      order: [['created_at', 'DESC']],
     };
     if (data?.tahun_ajaran !== undefined && data?.tahun_ajaran != null) {
       query = {
@@ -21,7 +21,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['id_tahunajaran', 'DESC']],
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };

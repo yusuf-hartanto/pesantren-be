@@ -27,14 +27,16 @@ export function initTahunAngkatan(sequelize: Sequelize) {
         unique: true,
       },
       keterangan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
       },
     },
     {
       sequelize,
       modelName: 'TahunAngkatan',
       tableName: 'tahun_angkatan',
-      timestamps: false,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     }
   );
 
