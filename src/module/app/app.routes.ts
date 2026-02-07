@@ -735,5 +735,15 @@ router.post(
   auth.checkBearerToken,
   kelasFormal.export
 );
+router.post(
+  '/kelas-formal/import',
+  auth.checkBearerToken,
+  kelasFormal.import
+);
+router.post(
+  '/kelas-formal/insert',
+  auth.checkBearerToken,
+  kelasFormal.insert
+);
 
 export default router;
