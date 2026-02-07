@@ -846,5 +846,15 @@ router.put(
 );
 router.delete('/kelas-formal/:id', auth.checkBearerToken, kelasFormal.delete);
 router.post('/kelas-formal/export', auth.checkBearerToken, kelasFormal.export);
+router.post(
+  '/kelas-formal/import',
+  auth.checkBearerToken,
+  kelasFormal.import
+);
+router.post(
+  '/kelas-formal/insert',
+  auth.checkBearerToken,
+  kelasFormal.insert
+);
 
 export default router;

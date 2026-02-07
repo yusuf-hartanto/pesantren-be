@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const status = ['Aktif', 'Nonaktif']
+export const status = ['Aktif', 'Nonaktif', 'Arsip']
 export const kelasFormalSchema = z.object({
   nama_kelas: z.string().nonempty('Nama Kelas wajib diisi'),
   id_lembaga: z.any(),
