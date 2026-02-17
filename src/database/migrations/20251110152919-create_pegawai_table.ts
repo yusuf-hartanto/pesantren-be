@@ -61,7 +61,7 @@ export const up = async (queryInterface: QueryInterface) => {
     },
     id_orgunit: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'orgunit',
         key: 'id_orgunit',
@@ -71,7 +71,7 @@ export const up = async (queryInterface: QueryInterface) => {
     },
     id_jabatan: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'jabatan',
         key: 'id_jabatan',
@@ -96,8 +96,8 @@ export const up = async (queryInterface: QueryInterface) => {
   // Tambahkan kolom created_at & updated_at via raw SQL
   await queryInterface.sequelize.query(`
     ALTER TABLE pegawai
-    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
   `);
 };
 

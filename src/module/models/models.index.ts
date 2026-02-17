@@ -110,6 +110,7 @@ import {
   initKelasFormal,
   associateKelasFormal,
 } from '../app/kelas.formal/kelas.formal.model';
+import { associateLokasi, initLokasi } from '../app/location/location.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -154,6 +155,7 @@ export function initializeModels(sequelize: Sequelize) {
   initJenisPenilaianBobot(sequelize);
   initKelasMda(sequelize);
   initKelasFormal(sequelize);
+  initLokasi(sequelize);
 
   // associate
   associateAppRole();
@@ -186,6 +188,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateKelasMda();
   associateKelasFormal();
   associateJenisGuru();
+  associateLokasi();
 
   addGlobalActivityHooks(sequelize);
 }

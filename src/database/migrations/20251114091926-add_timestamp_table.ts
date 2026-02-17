@@ -3,74 +3,55 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await Promise.all([
-    queryInterface.addColumn('kelompok_pelajaran', 'created_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: DataTypes.NOW,
-    }),
-    queryInterface.addColumn('kelompok_pelajaran', 'updated_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-    }),
+  const tables = [
+    'kelompok_pelajaran',
+    'mata_pelajaran',
+    'jenis_jam_pelajaran',
+    'jam_pelajaran',
+    'jenis_guru'
+  ];
 
-    queryInterface.addColumn('mata_pelajaran', 'created_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: DataTypes.NOW,
-    }),
-    queryInterface.addColumn('mata_pelajaran', 'updated_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-    }),
+  for (const table of tables) {
+    try {
+      const tableDefinition = await queryInterface.describeTable(table);
 
-    queryInterface.addColumn('jenis_jam_pelajaran', 'created_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: DataTypes.NOW,
-    }),
-    queryInterface.addColumn('jenis_jam_pelajaran', 'updated_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-    }),
+      if (!tableDefinition.created_at) {
+        await queryInterface.addColumn(table, 'created_at', {
+          type: DataTypes.DATE,
+          allowNull: true,
+          defaultValue: DataTypes.NOW,
+        });
+      }
 
-    queryInterface.addColumn('jam_pelajaran', 'created_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: DataTypes.NOW,
-    }),
-    queryInterface.addColumn('jam_pelajaran', 'updated_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-    }),
-
-    queryInterface.addColumn('jenis_guru', 'created_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: DataTypes.NOW,
-    }),
-    queryInterface.addColumn('jenis_guru', 'updated_at', {
-      type: DataTypes.DATE,
-      allowNull: true,
-    }),
-  ]);
+      if (!tableDefinition.updated_at) {
+        await queryInterface.addColumn(table, 'updated_at', {
+          type: DataTypes.DATE,
+          allowNull: true,
+        });
+      }
+    } catch (error: any) {
+      console.error(`Gagal memproses tabel ${table}:`, error.message);
+      // Lanjutkan ke tabel berikutnya jika satu tabel bermasalah
+    }
+  }
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await Promise.all([
-    queryInterface.removeColumn('kelompok_pelajaran', 'created_at'),
-    queryInterface.removeColumn('kelompok_pelajaran', 'updated_at'),
+  const tables = [
+    'kelompok_pelajaran',
+    'mata_pelajaran',
+    'jenis_jam_pelajaran',
+    'jam_pelajaran',
+    'jenis_guru'
+  ];
 
-    queryInterface.removeColumn('mata_pelajaran', 'created_at'),
-    queryInterface.removeColumn('mata_pelajaran', 'updated_at'),
-
-    queryInterface.removeColumn('jenis_jam_pelajaran', 'created_at'),
-    queryInterface.removeColumn('jenis_jam_pelajaran', 'updated_at'),
-
-    queryInterface.removeColumn('jam_pelajaran', 'created_at'),
-    queryInterface.removeColumn('jam_pelajaran', 'updated_at'),
-
-    queryInterface.removeColumn('jenis_guru', 'created_at'),
-    queryInterface.removeColumn('jenis_guru', 'updated_at'),
-  ]);
+  for (const table of tables) {
+    try {
+      const tableDefinition = await queryInterface.describeTable(table);
+      if (tableDefinition.created_at) await queryInterface.removeColumn(table, 'created_at');
+      if (tableDefinition.updated_at) await queryInterface.removeColumn(table, 'updated_at');
+    } catch (error: any) {
+      console.error(`Gagal menghapus kolom di tabel ${table}:`, error.message);
+    }
+  }
 };

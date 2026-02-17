@@ -112,10 +112,10 @@ export default class Middleware {
         return response.failed('Invalid token', 400, res);
 
       const id: string = req?.params?.id || '';
-      if (id && id != undefined) {
-        if (!helper.isValidUUID(id))
-          return response.failed(`id: ${id} ${INVALID}`, 400, res);
-      }
+      // if (id && id != undefined) {
+      //   if (!helper.isValidUUID(id))
+      //     return response.failed(`id: ${id} ${INVALID}`, 400, res);
+      // }
 
       const admin: string = auth?.role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const user = await repository.detail({ token }, admin);

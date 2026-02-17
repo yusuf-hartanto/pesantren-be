@@ -47,6 +47,7 @@ import { kelasMda } from './kelas.mda/kelas.mda.controller';
 import { kelasMdaSchema } from './kelas.mda/kelas.mda.schema';
 import { kelasFormal } from './kelas.formal/kelas.formal.controller';
 import { kelasFormalSchema } from './kelas.formal/kelas.formal.schema';
+import { Location } from './location/location.controller';
 
 const router: Router = Router();
 
@@ -836,5 +837,12 @@ router.put(
 );
 router.delete('/kelas-formal/:id', auth.checkBearerToken, kelasFormal.delete);
 router.post('/kelas-formal/export', auth.checkBearerToken, kelasFormal.export);
+
+router.get('/location/all-data', auth.checkBearerToken, Location.list);
+router.get('/location', auth.checkBearerToken, Location.index);
+router.get('/location/:id', auth.checkBearerToken, Location.detail);
+router.post('/location', auth.checkBearerToken, Location.create);
+router.put('/location/:id', auth.checkBearerToken, Location.update);
+router.delete('/location/:id', auth.checkBearerToken, Location.delete);
 
 export default router;
