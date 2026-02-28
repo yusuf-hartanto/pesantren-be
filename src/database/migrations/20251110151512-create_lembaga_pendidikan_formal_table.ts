@@ -50,14 +50,29 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING(20),
       allowNull: true,
     },
+    // Kolom Otomatis:
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW, // Menangani default CURRENT_TIMESTAMP
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true, // Harus allow null agar data aktif tetap tampil
+    },
   });
 
   // Tambahkan kolom created_at & updated_at via raw SQL
-  await queryInterface.sequelize.query(`
-    ALTER TABLE lembaga_pendidikan_formal
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-  `);
+  // await queryInterface.sequelize.query(`
+  //   ALTER TABLE lembaga_pendidikan_formal
+  //   ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  //   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+  // `);
 };
 
 export const down = async (queryInterface: QueryInterface) => {

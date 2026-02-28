@@ -3,7 +3,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
-import OrganitationUnit from '../organitation.unit/organitation.unit.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Jabatan from '../jabatan/jabatan.model';
 
 export class Pegawai extends Model {
@@ -29,7 +29,7 @@ export class Pegawai extends Model {
   public updated_at!: Date;
 
   // Relasi
-  public orgunit?: OrganitationUnit[];
+  public orgunit?: OrganizationUnit[];
   public jabatan?: Jabatan[];
 }
 
@@ -179,9 +179,9 @@ export function initPegawai(sequelize: Sequelize) {
 }
 
 export function associatePegawai() {
-  Pegawai.belongsTo(OrganitationUnit, {
+  Pegawai.belongsTo(OrganizationUnit, {
     foreignKey: 'id_orgunit',
-    as: 'organitationUnit',
+    as: 'organizationUnit',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });

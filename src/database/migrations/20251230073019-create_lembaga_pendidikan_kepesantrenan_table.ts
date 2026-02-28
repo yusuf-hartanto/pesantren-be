@@ -18,7 +18,7 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: 'cabang',
+        model: 'cabang', // Pastikan nama tabel cabang di DB sudah sesuai
         key: 'id_cabang',
       },
       onUpdate: 'CASCADE',
@@ -28,14 +28,22 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    // Kolom Otomatis:
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW, // Menangani default CURRENT_TIMESTAMP
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true, // Harus allow null agar data aktif tetap tampil
+    },
   });
-
-  // Tambahkan kolom created_at & updated_at via raw SQL
-  await queryInterface.sequelize.query(`
-    ALTER TABLE lembaga_pendidikan_kepesantrenan
-    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-  `);
 };
 
 export const down = async (queryInterface: QueryInterface) => {

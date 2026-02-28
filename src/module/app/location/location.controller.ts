@@ -59,6 +59,7 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
+      console.log(req.body)
       const payload = Array.isArray(req.body) 
         ? z.array(locationSchema).parse(req.body) 
         : [locationSchema.parse(req.body)];
@@ -87,8 +88,20 @@ export default class Controller {
       await repository.create({ payload: finalData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      const message = err instanceof z.ZodError ? err.issues[0]?.message : err.message;
-      return helper.catchError(`Lokasi create: ${message}`, 400, res);
+      console.error('Error detail:', err);
+
+      let errorMessage = err.message;
+      let errorCode = 500;
+
+      // Jika error berasal dari Zod (Validasi Field)
+      if (err instanceof z.ZodError) {
+        const firstIssue = err.issues[0];
+        const fieldName = firstIssue.path.join('.'); 
+        errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
+        errorCode = 400;
+      }
+
+      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
     }
   }
 
@@ -134,8 +147,20 @@ export default class Controller {
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      const message = err instanceof z.ZodError ? err.issues[0]?.message : err.message;
-      return helper.catchError(`Lokasi update: ${message}`, 400, res);
+      console.error('Error detail:', err);
+
+      let errorMessage = err.message;
+      let errorCode = 500;
+
+      // Jika error berasal dari Zod (Validasi Field)
+      if (err instanceof z.ZodError) {
+        const firstIssue = err.issues[0];
+        const fieldName = firstIssue.path.join('.'); 
+        errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
+        errorCode = 400;
+      }
+
+      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
     }
   }
 

@@ -32,6 +32,10 @@ export default class Repository {
     return Model.findAll(query);
   }
 
+  public async checkCabangExists(id_cabang: string) {
+    return await Cabang.findByPk(id_cabang);
+  }
+
   public async index(data: any) {
     let query: Object = {
       order: [['id_lembaga', 'DESC']],

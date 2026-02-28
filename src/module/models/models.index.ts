@@ -56,9 +56,9 @@ import {
   initLembagaPendidikanKepesantrenan,
 } from '../app/lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 import {
-  associateOrganitationUnit,
-  initOrganitationUnit,
-} from '../app/organitation.unit/organitation.unit.model';
+  associateOrganizationUnit,
+  initOrganizationUnit,
+} from '../app/organization.unit/organization.unit.model';
 import { associateJabatan, initJabatan } from '../app/jabatan/jabatan.model';
 import { initJenisPenilaian } from '../app/jenis.penilaian/jenis.penilaian.model';
 import { associateAsrama, initAsrama } from '../app/asrama/asrama.model';
@@ -136,7 +136,7 @@ export function initializeModels(sequelize: Sequelize) {
   initCabang(sequelize);
   initLembagaPendidikanKepesantrenan(sequelize);
   initLembagaPendidikanFormal(sequelize);
-  initOrganitationUnit(sequelize);
+  initOrganizationUnit(sequelize);
   initJabatan(sequelize);
   initJenisPenilaian(sequelize);
   initAsrama(sequelize);
@@ -170,7 +170,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateCabang();
   associateLembagaPendidikanKepesantrenan();
   associateLembagaPendidikanFormal();
-  associateOrganitationUnit();
+  associateOrganizationUnit();
   associateJabatan();
   associateAsrama();
   associateKegiatanAkademik();

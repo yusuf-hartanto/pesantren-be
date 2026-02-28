@@ -3,7 +3,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
-import OrganitationUnit from '../organitation.unit/organitation.unit.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
 
 export class Jabatan extends Model {
   public id_jabatan!: string;
@@ -17,7 +17,7 @@ export class Jabatan extends Model {
   public updated_at!: Date;
 
   // Relasi
-  public orgunit?: OrganitationUnit;
+  public orgunit?: OrganizationUnit;
 }
 
 export function initJabatan(sequelize: Sequelize) {
@@ -102,7 +102,7 @@ export function initJabatan(sequelize: Sequelize) {
 }
 
 export function associateJabatan() {
-  Jabatan.belongsTo(OrganitationUnit, {
+  Jabatan.belongsTo(OrganizationUnit, {
     foreignKey: 'id_orgunit',
     as: 'orgunit',
     onUpdate: 'CASCADE',

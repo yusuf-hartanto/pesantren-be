@@ -75,7 +75,7 @@ export default class Controller {
     } catch (err: any) {
       console.log(err);
       return helper.catchError(
-        `organitation unit create: ${err?.message}`,
+        `organization unit create: ${err?.message}`,
         500,
         res
       );
@@ -95,7 +95,7 @@ export default class Controller {
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `organitation unit update: ${err?.message}`,
+        `organization unit update: ${err?.message}`,
         500,
         res
       );

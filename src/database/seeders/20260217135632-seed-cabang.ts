@@ -1,13 +1,18 @@
 'use strict';
 
 import { QueryInterface, Sequelize } from "sequelize";
+import { v4 as uuidv4 } from 'uuid';
+
+// Simpan UUID di luar agar bisa dipakai di up dan down
+const ID_PUSAT = uuidv4();
+const ID_BANDUNG = uuidv4();
 
 /** @type {import('sequelize-cli').Migration} */
 export default {
   up: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
     const branches = [
       {
-        id_cabang: 'CBG-JKT-001', // ID Statis untuk relasi
+        id_cabang: ID_PUSAT, 
         nama_cabang: 'Kantor Pusat Jakarta',
         province_id: '34', 
         city_id: '34.04',
@@ -19,7 +24,7 @@ export default {
         updated_at: new Date(),
       },
       {
-        id_cabang: 'CBG-BDG-001', // ID Statis
+        id_cabang: ID_BANDUNG,
         nama_cabang: 'Cabang Bandung',
         province_id: '34',
         city_id: '34.04',
@@ -36,8 +41,9 @@ export default {
   },
 
   down: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
+    // Menghapus berdasarkan UUID yang digenerate tadi
     return queryInterface.bulkDelete('cabang', {
-      id_cabang: ['CBG-JKT-001', 'CBG-BDG-001']
+      id_cabang: [ID_PUSAT, ID_BANDUNG]
     });
   }
 };

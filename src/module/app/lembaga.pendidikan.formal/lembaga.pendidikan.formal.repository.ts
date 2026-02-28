@@ -1,13 +1,13 @@
 'use strict';
 
-import { Op, Sequelize } from 'sequelize';
+import { Op } from 'sequelize';
 import Model from './lembaga.pendidikan.formal.model';
 import Cabang from '../cabang/cabang.model';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
-      order: [['id_lembaga', 'DESC']],
+    let query: any = {
+      order: [['created_at', 'DESC']],
       include: [
         {
           model: Cabang,
@@ -19,13 +19,9 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword}%` : null;
-
     if (keyword) {
-      query = {
-        ...query,
-        where: {
-          nama_lembaga: { [Op.like]: keyword },
-        },
+      query.where = {
+        nama_lembaga: { [Op.like]: keyword },
       };
     }
 
@@ -33,8 +29,8 @@ export default class Repository {
   }
 
   public async index(data: any) {
-    let query: Object = {
-      order: [['id_lembaga', 'DESC']],
+    let query: any = {
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
       distinct: true,
@@ -52,22 +48,15 @@ export default class Repository {
     const keyword = data?.keyword ? `%${data.keyword}%` : null;
 
     if (keyword) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { id_lembaga: { [Op.like]: keyword } },
-            { nama_lembaga: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { jenis_pendidikan: { [Op.like]: keyword } },
-            { status_akreditasi: { [Op.like]: keyword } },
-            { nomor_npsn: { [Op.like]: keyword } },
-            { '$cabang.nama_cabang$': { [Op.like]: keyword } },
-          ],
-        },
+      query.where = {
+        [Op.or]: [
+          { nama_lembaga: { [Op.like]: keyword } },
+          { keterangan: { [Op.like]: keyword } },
+          { jenis_lembaga: { [Op.like]: keyword } },
+          { nomor_npsn: { [Op.like]: keyword } },
+          { '$cabang.nama_cabang$': { [Op.like]: keyword } },
+        ],
       };
-
-      return await Model.findAndCountAll(query);
     }
 
     return Model.findAndCountAll(query);
@@ -83,10 +72,13 @@ export default class Repository {
           required: false,
         },
       ],
-      where: {
-        ...condition,
-      },
+      where: condition,
     });
+  }
+
+  public async checkCabangExists(id_cabang: string) {
+    const count = await Cabang.count({ where: { id_cabang } });
+    return count > 0;
   }
 
   public async create(data: any) {
@@ -96,6 +88,7 @@ export default class Repository {
   public update(data: any) {
     return Model.update(data?.payload, {
       where: data?.condition,
+      individualHooks: true // Penting jika ada hook beforeUpdate
     });
   }
 

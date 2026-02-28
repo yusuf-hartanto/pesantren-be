@@ -9,32 +9,33 @@ import LembagaPendidikan, {
 } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
-export class OrganitationUnit extends Model {
+export class OrganizationUnit extends Model {
   public id_orgunit!: string;
   public nama_orgunit!: string;
-  public parent_id!: string;
-  public level_orgunit!: string;
+  public parent_id!: string | null;
+  public level_orgunit!: number;
   public id_cabang!: string;
-  public id_lembaga!: string;
-  public jenis_orgunit!: string;
+  public id_lembaga!: string | null;
+  public jenis_orgunit!: 'Biro' | 'Bagian' | 'Lembaga' | 'Sub-Unit' | 'Umum';
+  public lembaga_type!: 'FORMAL' | 'PESANTREN' | null;
   public keterangan!: string;
-  public lembaga_type!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+
+  public readonly created_at!: Date;
+  public readonly updated_at!: Date;
+  public readonly deleted_at!: Date | null;
 
   // Relasi
   public cabang?: Cabang;
-  public parent?: OrganitationUnit;
-  public children?: OrganitationUnit;
+  public parent?: OrganizationUnit;
+  public children?: OrganizationUnit;
 }
 
-export function initOrganitationUnit(sequelize: Sequelize) {
-  OrganitationUnit.init(
+export function initOrganizationUnit(sequelize: Sequelize) {
+  OrganizationUnit.init(
     {
       id_orgunit: {
         type: DataTypes.STRING,
         primaryKey: true,
-        unique: true,
       },
       nama_orgunit: {
         type: DataTypes.STRING(255),
@@ -43,14 +44,15 @@ export function initOrganitationUnit(sequelize: Sequelize) {
       parent_id: {
         type: DataTypes.STRING,
         allowNull: true,
+        references: { model: 'orgunit', key: 'id_orgunit' }
       },
       level_orgunit: {
         type: DataTypes.INTEGER,
-        allowNull: true,
+        defaultValue: 0,
       },
       id_cabang: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       id_lembaga: {
         type: DataTypes.STRING,
@@ -58,7 +60,7 @@ export function initOrganitationUnit(sequelize: Sequelize) {
       },
       jenis_orgunit: {
         type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
-        allowNull: true,
+        defaultValue: 'Umum',
       },
       lembaga_type: {
         type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
@@ -68,85 +70,64 @@ export function initOrganitationUnit(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
-      created_at: {
-        type: DataTypes.DATE,
-        get() {
-          const value = this.getDataValue('created_at');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('created_at', formattedValue);
-        },
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        get() {
-          const value = this.getDataValue('updated_at');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('updated_at', formattedValue);
-        },
-      },
     },
     {
       sequelize,
-      modelName: 'OrganitationUnit',
+      modelName: 'OrganizationUnit',
       tableName: 'orgunit',
-      timestamps: false,
+      underscored: true, // Otomatis mengubah createdAt jadi created_at
+      timestamps: true,
+      paranoid: true,    // Aktifkan Soft Delete
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      deletedAt: 'deleted_at',
     }
   );
 
   // UUID Otomatis sebelum create
-  OrganitationUnit.beforeCreate((organitation) => {
-    organitation?.setDataValue('id_orgunit', uuidv4());
+  OrganizationUnit.beforeCreate((organization) => {
+    organization?.setDataValue('id_orgunit', uuidv4());
   });
 
-  OrganitationUnit.beforeBulkCreate((organitationInstances) => {
-    organitationInstances.forEach((organitation) => {
-      organitation.setDataValue('id_orgunit', uuidv4());
+  OrganizationUnit.beforeBulkCreate((organizationInstances) => {
+    organizationInstances.forEach((organization) => {
+      organization.setDataValue('id_orgunit', uuidv4());
     });
   });
 
-  return OrganitationUnit;
+  return OrganizationUnit;
 }
 
-export function associateOrganitationUnit() {
-  OrganitationUnit.belongsTo(OrganitationUnit, {
+export function associateOrganizationUnit() {
+  OrganizationUnit.belongsTo(OrganizationUnit, {
     foreignKey: 'parent_id',
     as: 'parent',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });
 
-  OrganitationUnit.hasMany(OrganitationUnit, {
+  OrganizationUnit.hasMany(OrganizationUnit, {
     foreignKey: 'parent_id',
     as: 'children',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });
 
-  OrganitationUnit.belongsTo(Cabang, {
+  OrganizationUnit.belongsTo(Cabang, {
     foreignKey: 'id_cabang',
     as: 'cabang',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });
 
-  OrganitationUnit.belongsTo(LembagaPendidikanFormal, {
+  OrganizationUnit.belongsTo(LembagaPendidikanFormal, {
     foreignKey: 'id_lembaga',
     as: 'lembagaPendidikanFormal',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });
 
-  OrganitationUnit.belongsTo(LembagaPendidikanKepesantrenan, {
+  OrganizationUnit.belongsTo(LembagaPendidikanKepesantrenan, {
     foreignKey: 'id_lembaga',
     as: 'lembagaPendidikanKepesantrenan',
     onUpdate: 'CASCADE',
@@ -154,4 +135,4 @@ export function associateOrganitationUnit() {
   });
 }
 
-export default OrganitationUnit;
+export default OrganizationUnit;

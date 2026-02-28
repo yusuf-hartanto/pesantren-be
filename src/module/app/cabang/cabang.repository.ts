@@ -56,6 +56,32 @@ export default class Repository {
       order: [['id_cabang', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      include: [
+        {
+          model: AreaProvince,
+          as: 'province',
+          attributes: ['id', 'name'],
+          required: false,
+        },
+        {
+          model: AreaRegency,
+          as: 'city',
+          attributes: ['id', 'name'],
+          required: false,
+        },
+        {
+          model: AreaDistrict,
+          as: 'district',
+          attributes: ['id', 'name'],
+          required: false,
+        },
+        {
+          model: AreaSubDistrict,
+          as: 'subDistrict',
+          attributes: ['id', 'name'],
+          required: false,
+        },
+      ],
     };
 
     if (data?.keyword && data?.keyword != undefined) {

@@ -6,15 +6,15 @@ import { variable } from './lembaga.pendidikan.kepesantrenan.variable';
 import { response } from '../../../helpers/response';
 import { repository } from './lembaga.pendidikan.kepesantrenan.repository';
 import {
-  ALREADY_EXIST,
   NOT_FOUND,
   SUCCESS_DELETED,
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
-
-const date: string = helper.date();
+import { Op } from 'sequelize';
+import { lembagaSchema } from './lembaga.pendidikan.kepesantrenan.schema';
+import z from 'zod';
 
 export default class Controller {
   public async list(req: Request, res: Response) {
@@ -24,11 +24,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(
-        `LP kepesantrenan list: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`LP Kepesantrenan list: ${err?.message}`, 500, res);
     }
   }
 
@@ -44,91 +40,132 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(
-        `LP kepesantrenan index: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`LP Kepesantrenan index: ${err?.message}`, 500, res);
     }
   }
 
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({ id_lembaga: id });
+      const result: any = await repository.detail({ id_lembaga: id });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(
-        `LP Kepesantrenan detail: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`LP Kepesantrenan detail: ${err?.message}`, 500, res);
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
-      let data = req?.body;
+      // 1. Validasi Schema menggunakan Zod (mendukung Array/Bulk atau Single Object)
+      const payload = Array.isArray(req.body) 
+        ? z.array(lembagaSchema).parse(req.body) 
+        : [lembagaSchema.parse(req.body)];
 
-      if (Array.isArray(data)) {
-        data = data.map((item) => helper.only(variable.fillable(), item));
-        await repository.create({
-          payload: data,
+      const finalData = [];
+
+      for (const item of payload) {
+        // 2. Validasi ID Cabang (Referensial)
+        const cabangExist = await repository.checkCabangExists(item.id_cabang);
+        if (!cabangExist) throw new Error(`Cabang dengan ID tersebut tidak ditemukan.`);
+
+        // 3. Cek Duplikasi (Kombinasi id_cabang + nama_lembaga)
+        const isDuplicate = await repository.detail({
+          id_cabang: item.id_cabang,
+          nama_lembaga: item.nama_lembaga,
         });
-      } else {
-        data = helper.only(variable.fillable(), data);
-        await repository.create({
-          payload: [data],
-        });
+
+        if (isDuplicate) throw new Error(`Lembaga "${item.nama_lembaga}" sudah terdaftar di cabang ini.`);
+        
+        finalData.push(item);
       }
-
+        
+      await repository.create({ payload: finalData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      console.log(err);
-      return helper.catchError(
-        `LP kepesantrenan create: ${err?.message}`,
-        500,
-        res
-      );
+      let errorMessage = err.message;
+      let errorCode = 500;
+
+      if (err instanceof z.ZodError) {
+        const firstIssue = err.issues[0];
+        const fieldName = firstIssue.path.join('.'); 
+        errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
+        errorCode = 400;
+      }
+
+      return helper.catchError(`LP Kepesantrenan create: ${errorMessage}`, errorCode, res);
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_lembaga: id });
-      if (!check) return response.success(NOT_FOUND, null, res, false);
-      const data: Object = helper.only(variable.fillable(), req?.body, true);
+
+      // 1. Ambil data lama
+      const existingData: any = await repository.detail({ id_lembaga: id });
+      if (!existingData) return response.success(NOT_FOUND, null, res, false);
+
+      // 2. Validasi input (menggunakan schema yang sama atau partial)
+      const validatedData = lembagaSchema.parse(req.body);
+
+      // 3. Gabungkan data untuk pengecekan logika bisnis
+      const mergedData = { ...existingData.get({ plain: true }), ...validatedData };
+
+      // 4. Validasi ID Cabang jika diubah
+      if (validatedData?.id_cabang) {
+        const cabangExist = await repository.checkCabangExists(validatedData?.id_cabang);
+        if (!cabangExist) throw new Error(`Cabang tidak ditemukan.`);
+      }
+
+      // 5. Check duplicate (Kombinasi nama + cabang, kecuali dirinya sendiri)
+      const isDuplicate = await repository.detail({
+        id_cabang: mergedData.id_cabang,
+        nama_lembaga: mergedData.nama_lembaga,
+        id_lembaga: { [Op.ne]: id }
+      });
+
+      if (isDuplicate) {
+        throw new Error(`Nama lembaga "${mergedData.nama_lembaga}" sudah digunakan di cabang ini.`);
+      }
+
+      // 6. Eksekusi Update
       await repository.update({
-        payload: { ...data },
+        payload: helper.only(variable.fillable(), mergedData, true), 
         condition: { id_lembaga: id },
       });
+
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `LP kepesantrenan update: ${err?.message}`,
-        500,
-        res
-      );
+      let errorMessage = err.message;
+      let errorCode = 500;
+
+      if (err instanceof z.ZodError) {
+        const firstIssue = err.issues[0];
+        const fieldName = firstIssue.path.join('.'); 
+        errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
+        errorCode = 400;
+      }
+
+      return helper.catchError(`LP Kepesantrenan update: ${errorMessage}`, errorCode, res);
     }
   }
 
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
+
+      // 1. Cek eksistensi
       const check = await repository.detail({ id_lembaga: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
+
+      // 2. Eksekusi penghapusan (Soft Delete otomatis karena model paranoid)
       await repository.delete({
         condition: { id_lembaga: id },
       });
+
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(
-        `LP kepesantrenan delete: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`LP Kepesantrenan delete: ${err?.message}`, 500, res);
     }
   }
 }

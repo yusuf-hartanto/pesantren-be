@@ -11,12 +11,13 @@ export class LembagaPendidikanFormal extends Model {
   public keterangan!: string;
   public jenis_lembaga!: string;
   public status_akreditasi!: string;
-  public nomor_nspn!: string;
+  public nomor_npsn!: string;
   public created_at!: Date;
   public updated_at!: Date;
+  public deleted_at!: Date | null; // Tambahkan properti deleted_at
 
   // Relasi
-  public cabang?: Cabang[];
+  public cabang?: Cabang;
 }
 
 export function initLembagaPendidikanFormal(sequelize: Sequelize) {
@@ -65,46 +66,52 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
       created_at: {
         type: DataTypes.DATE,
         get() {
-          const value: string = this.getDataValue('created_at');
+          const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('created_at', formattedValue);
-        },
+        }
       },
       updated_at: {
         type: DataTypes.DATE,
         get() {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('updated_at', formattedValue);
-        },
+        }
+      },
+      // 1. Tambahkan kolom deleted_at
+      deleted_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        get() {
+          const value = this.getDataValue('deleted_at');
+          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+        }
       },
     },
     {
       sequelize,
       modelName: 'LembagaPendidikanFormal',
       tableName: 'lembaga_pendidikan_formal',
-      timestamps: false,
+      // 2. Aktifkan timestamps dan paranoid
+      timestamps: true, 
+      paranoid: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      deletedAt: 'deleted_at',
     }
   );
 
-  // UUID Otomatis sebelum create
+  // UUID Otomatis
   LembagaPendidikanFormal.beforeCreate((lembaga) => {
-    lembaga?.setDataValue('id_lembaga', uuidv4());
+    if (!lembaga.id_lembaga) {
+      lembaga.setDataValue('id_lembaga', uuidv4());
+    }
   });
 
   LembagaPendidikanFormal.beforeBulkCreate((lembagaInstances) => {
     lembagaInstances.forEach((lembaga) => {
-      lembaga.setDataValue('id_lembaga', uuidv4());
+      if (!lembaga.id_lembaga) {
+        lembaga.setDataValue('id_lembaga', uuidv4());
+      }
     });
   });
 

@@ -18,7 +18,7 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: 'orgunit', // self-referential (parent-child)
+        model: 'orgunit', 
         key: 'id_orgunit',
       },
       onUpdate: 'CASCADE',
@@ -27,10 +27,11 @@ export const up = async (queryInterface: QueryInterface) => {
     level_orgunit: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      defaultValue: 0
     },
     id_cabang: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true, // Diubah ke true agar fleksibel jika ada unit lintas cabang
       references: {
         model: 'cabang',
         key: 'id_cabang',
@@ -40,30 +41,49 @@ export const up = async (queryInterface: QueryInterface) => {
     },
     id_lembaga: {
       type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: 'lembaga_pendidikan_formal',
-        key: 'id_lembaga',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
+      allowNull: true, // Diubah ke true karena tidak semua unit organisasi terikat ke lembaga sekolah
     },
     jenis_orgunit: {
-      type: DataTypes.STRING(255),
+      // Menggunakan ENUM agar sinkron dengan model
+      type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
       allowNull: false,
+      defaultValue: 'Umum'
+    },
+    lembaga_type: {
+      type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
+      allowNull: true,
     },
     keterangan: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: new Date(),
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: new Date(),
+    },
+    // Penambahan kolom soft delete
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   });
 
-  // Tambahkan kolom created_at dan updated_at via raw SQL
-  await queryInterface.sequelize.query(`
-    ALTER TABLE orgunit
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-  `);
+  // Opsional: Jika ingin memastikan index pada pencarian hierarki
+  await queryInterface.addIndex('orgunit', ['parent_id']);
+  await queryInterface.addIndex('orgunit', ['id_cabang']);
+
+  // // Tambahkan kolom created_at dan updated_at via raw SQL
+  // await queryInterface.sequelize.query(`
+  //   ALTER TABLE orgunit
+  //   ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  //   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+  // `);
 };
 
 export const down = async (queryInterface: QueryInterface) => {

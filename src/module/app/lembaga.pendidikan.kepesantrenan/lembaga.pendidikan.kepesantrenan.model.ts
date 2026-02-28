@@ -8,12 +8,16 @@ import Cabang from '../cabang/cabang.model';
 export class LembagaPendidikanKepesantrenan extends Model {
   public id_lembaga!: string;
   public nama_lembaga!: string;
-  public keterangan!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  public id_cabang!: string | null;
+  public keterangan!: string | null;
+
+  // Timestamps otomatis
+  public readonly created_at!: Date;
+  public readonly updated_at!: Date;
+  public readonly deleted_at!: Date | null;
 
   // Relasi
-  public cabang?: Cabang[];
+  public cabang?: Cabang;
 }
 
 export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
@@ -22,7 +26,6 @@ export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
       id_lembaga: {
         type: DataTypes.STRING,
         primaryKey: true,
-        unique: true,
       },
       nama_lembaga: {
         type: DataTypes.STRING(255),
@@ -37,17 +40,13 @@ export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
+      // Kita tetap gunakan Getters untuk format tampilan di API, 
+      // tapi biarkan Sequelize yang mengelola datanya secara otomatis.
       created_at: {
         type: DataTypes.DATE,
         get() {
           const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('created_at', formattedValue);
         },
       },
       updated_at: {
@@ -56,25 +55,36 @@ export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('updated_at', formattedValue);
+      },
+      deleted_at: {
+        type: DataTypes.DATE,
+        get() {
+          const value = this.getDataValue('deleted_at');
+          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
       },
     },
     {
       sequelize,
-      modelName: 'LembagaPendidikanKepesantrenan',
       tableName: 'lembaga_pendidikan_kepesantrenan',
-      timestamps: false,
+
+      // KONFIGURASI OTOMATIS:
+      timestamps: true,   // Mengaktifkan created_at & updated_at otomatis
+      paranoid: true,     // Mengaktifkan deleted_at otomatis (Soft Delete)
+      underscored: true,  // Memastikan format snake_case di database
+
+      // Mapping nama kolom database ke properti model
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      deletedAt: 'deleted_at',
     }
   );
 
-  // UUID Otomatis sebelum create
+  // Hook untuk UUID tetap diperlukan jika ID dikelola oleh Aplikasi (bukan Database)
   LembagaPendidikanKepesantrenan.beforeCreate((lembaga) => {
-    lembaga?.setDataValue('id_lembaga', uuidv4());
+    if (!lembaga.id_lembaga) {
+      lembaga.setDataValue('id_lembaga', uuidv4());
+    }
   });
 
   LembagaPendidikanKepesantrenan.beforeBulkCreate((lembagaInstances) => {

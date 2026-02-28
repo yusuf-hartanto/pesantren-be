@@ -39,7 +39,7 @@ const LOKASI_TYPE = [
 ] as const;
 
 export const locationSchema = z.object({
-    id_lokasi: z.string().nonempty('ID Lokasi wajib diisi'),
+    // id_lokasi: z.string().nonempty('ID Lokasi wajib diisi'),
     nama_lokasi: z.string().max(150).nonempty('Nama Lokasi wajib diisi'),
     jenis_lokasi: z.enum(LOKASI_TYPE).describe('Jenis lokasi wajib dipilih'),
     parent_id: z.string().nullable().optional(),

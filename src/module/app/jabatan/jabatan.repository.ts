@@ -2,7 +2,7 @@
 
 import { Op, Sequelize } from 'sequelize';
 import Model from './jabatan.model';
-import OrganitationUnit from '../organitation.unit/organitation.unit.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
 
 export default class Repository {
   public list(data: any) {
@@ -10,7 +10,7 @@ export default class Repository {
       order: [['id_jabatan', 'DESC']],
       include: [
         {
-          model: OrganitationUnit,
+          model: OrganizationUnit,
           as: 'orgunit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
@@ -41,7 +41,7 @@ export default class Repository {
       subQuery: false,
       include: [
         {
-          model: OrganitationUnit,
+          model: OrganizationUnit,
           as: 'orgunit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
@@ -76,7 +76,7 @@ export default class Repository {
     return Model.findOne({
       include: [
         {
-          model: OrganitationUnit,
+          model: OrganizationUnit,
           as: 'orgunit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
