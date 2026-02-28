@@ -742,6 +742,16 @@ router.post(
   auth.checkBearerToken,
   orangTuaWali.export
 );
+router.post(
+  '/orang-tua-wali/import',
+  auth.checkBearerToken,
+  orangTuaWali.import
+);
+router.post(
+  '/orang-tua-wali/insert',
+  auth.checkBearerToken,
+  orangTuaWali.insert
+);
 
 router.get(
   '/inventaris-umum/all-data',

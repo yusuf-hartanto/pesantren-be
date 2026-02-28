@@ -15,6 +15,11 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import moment from 'moment';
+import { orangTuaWaliSchema } from './orang.tua.wali.schema';
+import { sequelize } from '../../../database/connection';
+import fs from 'fs/promises';
+import { repository as areaRepository } from '../../area/area.repository';
+import OrangTuaWali from './orang.tua.wali.model';
 
 const date: string = helper.date();
 
@@ -72,6 +77,36 @@ const generateDataExcel = (sheet: any, details: any) => {
   }
 
   return sheet;
+};
+
+const normalizeRow = (row: any) => ({
+  nama_wali: String(row['Nama Wali'] || '').trim(),
+  hubungan: String(row['Hubungan'] || '').trim(),
+  nik: String(row['Tahun Nik'] || '').trim(),
+  pendidikan: String(row['Pendidikan'] || '').trim(),
+  pekerjaan: String(row['Pekerjaan'] || '').trim(),
+  penghasilan: String(row['Penghasilan'] || '').trim(),
+  no_hp: String(row['No Hp'] || '').trim(),
+  alamat: String(row['Alamat'] || '').trim(),
+  provinsi: String(row['Provinsi'] || '').trim(),
+  kabupaten: String(row['Kabupaten'] || '').trim(),
+  kecamatan: String(row['Kecamatan'] || '').trim(),
+  kelurahan: String(row['Kelurahan'] || '').trim(),
+  keterangan: String(row['Keterangan'] || '').trim(),
+  __row: row.__row,
+});
+
+const validateRow = (row: any) => {
+  const errors: string[] = [];
+  const valid = orangTuaWaliSchema.safeParse(row);
+
+  if (!valid.success) {
+    for (const e of valid.error.issues) {
+      errors.push(e.message);
+    }
+  }
+
+  return errors;
 };
 
 export default class Controller {
@@ -138,10 +173,6 @@ export default class Controller {
         district_id,
         sub_district_id,
       } = req?.body;
-      if (nik) {
-        const check = await repository.detail({ nik });
-        if (check) return response.failed(ALREADY_EXIST, 400, res);
-      }
 
       const data: Object = helper.only(variable.fillable(), req?.body);
 
@@ -178,13 +209,7 @@ export default class Controller {
         district_id,
         sub_district_id,
       } = req?.body;
-      if (nik && nik !== check.nik) {
-        const duplicate = await repository.detail({ nik });
 
-        if (duplicate) {
-          return response.failed(ALREADY_EXIST, 400, res);
-        }
-      }
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: {
@@ -261,6 +286,192 @@ export default class Controller {
         500,
         res
       );
+    }
+  }
+
+  public async import(req: Request, res: Response) {
+    const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
+    const uploaded = req.files?.file_import;
+
+    if (!uploaded) {
+      return response.success('File tidak valid', null, res, false);
+    }
+
+    const trx = mode === 'commit' ? await sequelize.transaction() : null;
+
+    try {
+      let buffer: Buffer;
+      const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
+      if (file.tempFilePath) {
+        buffer = await fs.readFile(file.tempFilePath);
+      } else if (file.data) {
+        buffer = file.data;
+      } else {
+        return response.success(
+          'File kosong atau gagal dibaca',
+          null,
+          res,
+          false
+        );
+      }
+
+      const results: any[] = [];
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
+
+      let data = null;
+      for (const raw of rows) {
+        const row = normalizeRow(raw);
+        const errors = validateRow(row);
+
+        const nama_wali = row.nama_wali;
+        const provinsi = row.provinsi;
+        const city = row.kabupaten;
+        const district = row.kecamatan;
+        const subdistrict = row.kelurahan;
+
+        const provinsiExist = await areaRepository.provinceDetail({ name: provinsi });
+        if (!provinsiExist) {
+          errors.push(`Provinsi ${provinsi} tidak ditemukan`);
+        }
+
+        const cityExist = await areaRepository.provinceDetail({ name: city });
+        if (!cityExist) {
+          errors.push(`Kota/Kabupaten ${city} tidak ditemukan`);
+        }
+
+        const districtExist = await areaRepository.provinceDetail({ name: district });
+        if (!districtExist) {
+          errors.push(`Kecamatan ${district} tidak ditemukan`);
+        }
+
+        const subdistrictExist = await areaRepository.provinceDetail({ name: subdistrict });
+        if (!subdistrictExist) {
+          errors.push(`Kelurahan ${subdistrict} tidak ditemukan`);
+        }
+
+        const valid = errors.length === 0;
+
+        const payload = {
+          nama_wali: row.nama_wali,
+          hubungan: row.hubungan,
+          nik: row.nik,
+          pendidikan: row.pendidikan,
+          pekerjaan: row.pekerjaan,
+          penghasilan: row.penghasilan,
+          no_hp: row.no_hp,
+          alamat: row.alamat,
+          province_id: provinsiExist?.id,
+          provinsi: provinsiExist?.name,
+          city_id: cityExist?.id,
+          kabupaten: cityExist?.name,
+          district_id: districtExist?.id,
+          kecamatan: districtExist?.name,
+          sub_district_id: subdistrictExist?.id,
+          kelurahan: subdistrictExist?.name,
+          keterangan: row.keterangan ?? null,
+        };
+
+        results.push({
+          row: row.__row,
+          valid,
+          error: errors.length ? errors.join(', ') : null,
+          payload: {
+            ...payload,
+          },
+        });
+
+        if (mode === 'preview' || !valid) continue;
+
+        const existing = await repository.detail({ nama_wali });
+
+        if (existing) {
+          await existing.update({
+            ...payload,
+          }, { transaction: trx! });
+        } else {
+          let newCreate = await OrangTuaWali.create({
+            ...payload,
+          }, { transaction: trx! });
+        }
+      }
+
+      let dataRes = {
+        mode,
+        total: results.length,
+        valid: results.filter((r) => r.valid).length,
+        invalid: results.filter((r) => !r.valid).length,
+      };
+
+      if (trx) {
+
+        await trx.commit();
+        
+        return response.success(
+          'import orang tua wali berhasil',
+          dataRes,
+          res
+        );
+      }
+
+      return response.success(
+        'preview import orang tua wali',
+        {
+          ...dataRes,
+          data: results,
+        },
+        res
+      );
+    } catch (err: any) {
+      if (trx) await trx.rollback();
+
+      //console.error(err);
+      return helper.catchError(
+        `import excel orang tua wali: ${err?.message}`,
+        500,
+        res
+      );
+    }
+  }
+
+  public async insert(req: Request, res: Response) {
+    const payloads = req.body?.data as any[];
+
+    if (!Array.isArray(payloads) || payloads.length === 0) {
+      return response.success('Data import kosong', null, res, false);
+    }
+
+    const trx = await sequelize.transaction();
+    try {
+      let data = null;
+      for (const payload of payloads) {
+        const existing = await repository.detail({
+          nama_wali: payload.nama_wali
+        });
+
+        if (existing) {
+          await existing.update({
+            ...payload,
+          }, { transaction: trx });
+        } else {
+          let newCreate = await OrangTuaWali.create({
+            ...payload,
+          }, { transaction: trx });
+        }
+      }
+
+      await trx.commit();
+
+      return response.success(
+        'Import batch orang tua wali berhasil',
+        { total: payloads.length },
+        res
+      );
+    } catch (err: any) {
+      await trx.rollback();
+      return helper.catchError(`Import batch gagal: ${err.message}`, 500, res);
     }
   }
 }
