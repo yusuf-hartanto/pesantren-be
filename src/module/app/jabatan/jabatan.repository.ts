@@ -2,7 +2,8 @@
 
 import { Op, Sequelize } from 'sequelize';
 import Model from './jabatan.model';
-import OrganitationUnit from '../organitation.unit/organitation.unit.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
+import Pegawai from '../pegawai/pegawai.model';
 
 export default class Repository {
   public list(data: any) {
@@ -10,7 +11,7 @@ export default class Repository {
       order: [['id_jabatan', 'DESC']],
       include: [
         {
-          model: OrganitationUnit,
+          model: OrganizationUnit,
           as: 'orgunit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
@@ -41,7 +42,7 @@ export default class Repository {
       subQuery: false,
       include: [
         {
-          model: OrganitationUnit,
+          model: OrganizationUnit,
           as: 'orgunit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
@@ -76,7 +77,7 @@ export default class Repository {
     return Model.findOne({
       include: [
         {
-          model: OrganitationUnit,
+          model: OrganizationUnit,
           as: 'orgunit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
@@ -86,6 +87,25 @@ export default class Repository {
         ...condition,
       },
     });
+  }
+
+  public async checkUniqueInOrgunit(id_orgunit: string, field: 'nama_jabatan' | 'kode_jabatan', value: string, excludeId?: string) {
+    const condition: any = { 
+      id_orgunit, 
+      [field]: value,
+      deleted_at: null
+    };
+
+    if (excludeId) {
+      condition.id_jabatan = { [Op.ne]: excludeId };
+    }
+
+    return await Model.findOne({ where: condition });
+  }
+
+  public async checkHasPegawai(id_jabatan: string) {
+    const count = await Pegawai.count({ where: { id_jabatan } });
+    return count > 0;
   }
 
   public async create(data: any) {

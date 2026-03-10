@@ -27,7 +27,7 @@ import { mataPelajaran } from './mata.pelajaran/mata.pelajaran.controller';
 import { jamPelajaran } from './jam.pelajaran/jam.pelajaran.controller';
 import { cabang } from './cabang/cabang.controller';
 import { LembagaPendidikanKepesantrenan } from './lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.controller';
-import { OrganitationUnit } from './organitation.unit/organitation.unit.controller';
+import { OrganizationUnit } from './organization.unit/organization.unit.controller';
 import { Jabatan } from './jabatan/jabatan.controller';
 import { JenisPenilaian } from './jenis.penilaian/jenis.penilaian.controller';
 import { Asrama } from './asrama/asrama.controller';
@@ -47,6 +47,7 @@ import { kelasMda } from './kelas.mda/kelas.mda.controller';
 import { kelasMdaSchema } from './kelas.mda/kelas.mda.schema';
 import { kelasFormal } from './kelas.formal/kelas.formal.controller';
 import { kelasFormalSchema } from './kelas.formal/kelas.formal.schema';
+import { Location } from './location/location.controller';
 
 const router: Router = Router();
 
@@ -503,30 +504,30 @@ router.delete(
 );
 
 router.get(
-  '/organitation-unit/all-data',
+  '/organization-unit/all-data',
   auth.checkBearerToken,
-  OrganitationUnit.list
+  OrganizationUnit.list
 );
-router.get('/organitation-unit', auth.checkBearerToken, OrganitationUnit.index);
+router.get('/organization-unit', auth.checkBearerToken, OrganizationUnit.index);
 router.get(
-  '/organitation-unit/:id',
+  '/organization-unit/:id',
   auth.checkBearerToken,
-  OrganitationUnit.detail
+  OrganizationUnit.detail
 );
 router.post(
-  '/organitation-unit',
+  '/organization-unit',
   auth.checkBearerToken,
-  OrganitationUnit.create
+  OrganizationUnit.create
 );
 router.put(
-  '/organitation-unit/:id',
+  '/organization-unit/:id',
   auth.checkBearerToken,
-  OrganitationUnit.update
+  OrganizationUnit.update
 );
 router.delete(
-  '/organitation-unit/:id',
+  '/organization-unit/:id',
   auth.checkBearerToken,
-  OrganitationUnit.delete
+  OrganizationUnit.delete
 );
 
 router.get('/jabatan/all-data', auth.checkBearerToken, Jabatan.list);
@@ -866,5 +867,12 @@ router.post(
   auth.checkBearerToken,
   kelasFormal.insert
 );
+
+router.get('/location/all-data', auth.checkBearerToken, Location.list);
+router.get('/location', auth.checkBearerToken, Location.index);
+router.get('/location/:id', auth.checkBearerToken, Location.detail);
+router.post('/location', auth.checkBearerToken, Location.create);
+router.put('/location/:id', auth.checkBearerToken, Location.update);
+router.delete('/location/:id', auth.checkBearerToken, Location.delete);
 
 export default router;

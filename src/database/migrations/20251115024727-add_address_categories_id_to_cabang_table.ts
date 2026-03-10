@@ -1,84 +1,73 @@
+'use strict';
+
 import { QueryInterface, DataTypes } from 'sequelize';
 
 export default {
   async up(queryInterface: QueryInterface): Promise<void> {
-    await Promise.all([
-      // alamat
-      queryInterface.addColumn('cabang', 'province_id', {
+    const tableDefinition = await queryInterface.describeTable('cabang');
+
+    // 1. Tambah kolom baru jika belum ada
+    const newColumns = {
+      province_id: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-          model: 'area_provinces',
-          key: 'id',
-        },
+        references: { model: 'area_provinces', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL',
-      }),
-
-      queryInterface.addColumn('cabang', 'city_id', {
+      },
+      city_id: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-          model: 'area_regencies',
-          key: 'id',
-        },
+        references: { model: 'area_regencies', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL',
-      }),
-
-      queryInterface.addColumn('cabang', 'district_id', {
+      },
+      district_id: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-          model: 'area_districts',
-          key: 'id',
-        },
+        references: { model: 'area_districts', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL',
-      }),
-
-      queryInterface.addColumn('cabang', 'sub_district_id', {
+      },
+      sub_district_id: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-          model: 'area_sub_districts',
-          key: 'id',
-        },
+        references: { model: 'area_sub_districts', key: 'id' },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL',
-      }),
+      },
+      contact: { type: DataTypes.STRING, allowNull: true },
+      email: { type: DataTypes.STRING, allowNull: true },
+    };
 
-      // kontak
-      queryInterface.addColumn('cabang', 'contact', {
-        type: DataTypes.STRING,
-        allowNull: true,
-      }),
+    for (const [colName, config] of Object.entries(newColumns)) {
+      if (!tableDefinition[colName]) {
+        await queryInterface.addColumn('cabang', colName, config);
+      }
+    }
 
-      queryInterface.addColumn('cabang', 'email', {
-        type: DataTypes.STRING,
-        allowNull: true,
-      }),
-
-      // hapus kolom existing
-      queryInterface.removeColumn('cabang', 'nomor_urut'),
-    ]);
+    // 2. Hapus kolom jika masih ada
+    if (tableDefinition['nomor_urut']) {
+      await queryInterface.removeColumn('cabang', 'nomor_urut');
+    }
   },
 
   async down(queryInterface: QueryInterface): Promise<void> {
-    await Promise.all([
-      // revert alamat + kontak
-      queryInterface.removeColumn('cabang', 'province_id'),
-      queryInterface.removeColumn('cabang', 'city_id'),
-      queryInterface.removeColumn('cabang', 'district_id'),
-      queryInterface.removeColumn('cabang', 'sub_district_id'),
-      queryInterface.removeColumn('cabang', 'contact'),
-      queryInterface.removeColumn('cabang', 'email'),
+    const tableDefinition = await queryInterface.describeTable('cabang');
+    
+    const columnsToRemove = ['province_id', 'city_id', 'district_id', 'sub_district_id', 'contact', 'email'];
 
-      // re-add nomor_urut
-      queryInterface.addColumn('cabang', 'nomor_urut', {
+    for (const colName of columnsToRemove) {
+      if (tableDefinition[colName]) {
+        await queryInterface.removeColumn('cabang', colName);
+      }
+    }
+
+    if (!tableDefinition['nomor_urut']) {
+      await queryInterface.addColumn('cabang', 'nomor_urut', {
         type: DataTypes.INTEGER,
         allowNull: true,
-      }),
-    ]);
+      });
+    }
   },
 };

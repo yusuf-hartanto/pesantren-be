@@ -3,8 +3,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
-import OrganitationUnit from '../organitation.unit/organitation.unit.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Jabatan from '../jabatan/jabatan.model';
+import AreaProvince from '../../area/provinces.model';
+import AreaRegency from '../../area/regencies.model';
+import AreaDistrict from '../../area/districts.model';
+import AreaSubDistrict from '../../area/subdistricts.model';
 
 export class Pegawai extends Model {
   public id_pegawai!: string;
@@ -18,6 +22,12 @@ export class Pegawai extends Model {
   public tanggal_lahir!: Date;
   public umur!: number;
   public alamat!: string;
+  // Tambahan Wilayah
+  public province_id!: string;
+  public city_id!: string;
+  public district_id!: string;
+  public sub_district_id!: string;
+  
   public pendidikan!: string;
   public bidang_ilmu!: string;
   public id_orgunit!: string;
@@ -28,9 +38,9 @@ export class Pegawai extends Model {
   public created_at!: Date;
   public updated_at!: Date;
 
-  // Relasi
-  public orgunit?: OrganitationUnit[];
-  public jabatan?: Jabatan[];
+  // Relasi (Disesuaikan menjadi objek tunggal karena belongsTo)
+  public organizationUnit?: OrganizationUnit;
+  public jabatan?: Jabatan;
 }
 
 export function initPegawai(sequelize: Sequelize) {
@@ -92,6 +102,23 @@ export function initPegawai(sequelize: Sequelize) {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      // Kolom Wilayah Baru
+      province_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      city_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      district_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      sub_district_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       pendidikan: {
         type: DataTypes.STRING(100),
         allowNull: true,
@@ -134,44 +161,49 @@ export function initPegawai(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('created_at', formattedValue);
-        },
+        }
+        // set(value) {
+        //   const formattedValue = value
+        //     ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+        //     : null;
+        //   this.setDataValue('created_at', formattedValue);
+        // },
       },
       updated_at: {
         type: DataTypes.DATE,
         get() {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('updated_at', formattedValue);
-        },
+        }
+        // set(value) {
+        //   const formattedValue = value
+        //     ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+        //     : null;
+        //   this.setDataValue('updated_at', formattedValue);
+        // },
       },
     },
     {
       sequelize,
       modelName: 'Pegawai',
       tableName: 'pegawai',
-      timestamps: false,
+      underscored: true, // Otomatis mengubah createdAt jadi created_at
+      timestamps: true,
+      paranoid: true,    // Aktifkan Soft Delete
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      deletedAt: 'deleted_at',
     }
   );
 
   // UUID Otomatis sebelum create
-  Pegawai.beforeCreate((lembaga) => {
-    lembaga?.setDataValue('id_pegawai', uuidv4());
+  Pegawai.beforeCreate((pegawai) => {
+    pegawai?.setDataValue('id_pegawai', uuidv4());
   });
 
-  Pegawai.beforeBulkCreate((lembagaInstances) => {
-    lembagaInstances.forEach((lembaga) => {
-      lembaga.setDataValue('id_pegawai', uuidv4());
+  Pegawai.beforeBulkCreate((pegawaiInstances) => {
+    pegawaiInstances.forEach((pegawai) => {
+      pegawai.setDataValue('id_pegawai', uuidv4());
     });
   });
 
@@ -179,9 +211,9 @@ export function initPegawai(sequelize: Sequelize) {
 }
 
 export function associatePegawai() {
-  Pegawai.belongsTo(OrganitationUnit, {
+  Pegawai.belongsTo(OrganizationUnit, {
     foreignKey: 'id_orgunit',
-    as: 'organitationUnit',
+    as: 'organizationUnit',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });
@@ -189,6 +221,35 @@ export function associatePegawai() {
   Pegawai.belongsTo(Jabatan, {
     foreignKey: 'id_jabatan',
     as: 'jabatan',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  // Relasi Wilayah (Geo-Location)
+  Pegawai.belongsTo(AreaProvince, {
+    foreignKey: 'province_id',
+    as: 'province',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  Pegawai.belongsTo(AreaRegency, {
+    foreignKey: 'city_id',
+    as: 'city',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  Pegawai.belongsTo(AreaDistrict, {
+    foreignKey: 'district_id',
+    as: 'district',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  Pegawai.belongsTo(AreaSubDistrict, {
+    foreignKey: 'sub_district_id',
+    as: 'subDistrict',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });

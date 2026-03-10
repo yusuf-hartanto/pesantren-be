@@ -1,8 +1,8 @@
 'use strict';
 
-import { Op, Sequelize } from 'sequelize';
+import { Op } from 'sequelize';
 import Model from './pegawai.model';
-import OrganitationUnit from '../organitation.unit/organitation.unit.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Jabatan from '../jabatan/jabatan.model';
 
 export default class Repository {
@@ -11,8 +11,8 @@ export default class Repository {
       order: [['id_pegawai', 'DESC']],
       include: [
         {
-          model: OrganitationUnit,
-          as: 'organitationUnit',
+          model: OrganizationUnit,
+          as: 'organitazionUnit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
         },
@@ -38,18 +38,28 @@ export default class Repository {
 
     return Model.findAll(query);
   }
+  /**
+   * Cek duplikasi field tertentu (NIK/NIP/Email)
+   */
+  public async checkDuplicate(field: string, value: string, excludeId?: string) {
+    const where: any = { [field]: value };
+    if (excludeId) {
+      where.id_pegawai = { [Op.ne]: excludeId };
+    }
+    return await Model.findOne({ where });
+  }
 
   public async index(data: any) {
-    let query: Object = {
-      order: [['id_orgunit', 'DESC']],
+    const query: any = {
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
       distinct: true,
       subQuery: false,
       include: [
         {
-          model: OrganitationUnit,
-          as: 'organitationUnit',
+          model: OrganizationUnit,
+          as: 'organizationUnit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
         },
@@ -60,60 +70,31 @@ export default class Repository {
           required: false,
         },
       ],
+      where: {}
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
-
-    if (keyword) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { nama_pegawai: { [Op.like]: keyword } },
-            { nik: { [Op.like]: keyword } },
-            { nip: { [Op.like]: keyword } },
-            { email: { [Op.like]: keyword } },
-            { no_hp: { [Op.like]: keyword } },
-            { jenis_kelamin: { [Op.like]: keyword } },
-            { tempat_lahir: { [Op.like]: keyword } },
-            { tanggal_lahir: { [Op.like]: keyword } },
-            { umur: { [Op.like]: keyword } },
-            { alamat: { [Op.like]: keyword } },
-            { pendidikan: { [Op.like]: keyword } },
-            { bidang_ilmu: { [Op.like]: keyword } },
-            { status_pegawai: { [Op.like]: keyword } },
-            { tmt: { [Op.like]: keyword } },
-            { '$orgunit.nama_orgunit$': { [Op.like]: keyword } },
-            { '$jabatan.nama_jabatan$': { [Op.like]: keyword } },
-          ],
-        },
-      };
-
-      return await Model.findAndCountAll(query);
+    if (data?.keyword) {
+      query.where[Op.or] = [
+        { nama_lengkap: { [Op.like]: `%${data.keyword}%` } },
+        { nik: { [Op.like]: `%${data.keyword}%` } },
+        { nip: { [Op.like]: `%${data.keyword}%` } },
+        { email: { [Op.like]: `%${data.keyword}%` } },
+        { '$organizationUnit.nama_orgunit$': { [Op.like]: `%${data.keyword}%` } },
+        { '$jabatan.nama_jabatan$': { [Op.like]: `%${data.keyword}%` } },
+      ];
     }
 
-    return Model.findAndCountAll(query);
+    return await Model.findAndCountAll(query);
   }
 
   public detail(condition: any) {
     return Model.findOne({
       include: [
-        {
-          model: OrganitationUnit,
-          as: 'organitationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit'],
-          required: false,
-        },
-        {
-          model: Jabatan,
-          as: 'jabatan',
-          attributes: ['id_jabatan', 'nama_jabatan'],
-          required: false,
-        },
+        { model: OrganizationUnit, as: 'organizationUnit' },
+        { model: Jabatan, as: 'jabatan' },
+        { all: true, nested: true } // Mengambil relasi wilayah
       ],
-      where: {
-        ...condition,
-      },
+      where: condition,
     });
   }
 
@@ -127,9 +108,12 @@ export default class Repository {
     });
   }
 
-  public delete(data: any) {
+  /**
+   * Soft Delete mengandalkan properti { paranoid: true } di Model.
+   */
+  public async delete(condition: any) {
     return Model.destroy({
-      where: data?.condition,
+      where: condition,
     });
   }
 }

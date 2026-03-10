@@ -27,8 +27,8 @@ export const up = async (queryInterface: QueryInterface) => {
   // Tambahkan kolom created_at dan updated_at via raw SQL
   await queryInterface.sequelize.query(`
     ALTER TABLE jenis_penilaian
-    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
   `);
 };
 

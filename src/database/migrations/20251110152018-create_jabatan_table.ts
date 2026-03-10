@@ -29,7 +29,7 @@ export const up = async (queryInterface: QueryInterface) => {
       allowNull: true,
     },
     sifat_jabatan: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
       allowNull: true,
     },
     kode_jabatan: {
@@ -40,13 +40,17 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
   });
 
   // Tambahkan kolom created_at dan updated_at via raw SQL
   await queryInterface.sequelize.query(`
     ALTER TABLE jabatan
-    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
   `);
 };
 

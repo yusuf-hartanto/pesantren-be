@@ -51,6 +51,24 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    // --- TAMBAHAN KOLOM WILAYAH ---
+    province_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    city_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    district_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    sub_district_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    // ------------------------------
     pendidikan: {
       type: DataTypes.STRING(100),
       allowNull: true,
@@ -61,7 +79,7 @@ export const up = async (queryInterface: QueryInterface) => {
     },
     id_orgunit: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'orgunit',
         key: 'id_orgunit',
@@ -71,7 +89,7 @@ export const up = async (queryInterface: QueryInterface) => {
     },
     id_jabatan: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'jabatan',
         key: 'id_jabatan',
@@ -91,14 +109,29 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: new Date(),
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: new Date(),
+    },
+    // Penambahan kolom soft delete
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   });
 
   // Tambahkan kolom created_at & updated_at via raw SQL
-  await queryInterface.sequelize.query(`
-    ALTER TABLE pegawai
-    ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-  `);
+  // await queryInterface.sequelize.query(`
+  //   ALTER TABLE pegawai
+  //   ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  //   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+  // `);
 };
 
 export const down = async (queryInterface: QueryInterface) => {

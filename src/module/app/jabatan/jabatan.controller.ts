@@ -13,6 +13,8 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
+import z from 'zod';
+import { jabatanSchema } from './jabatan.schema';
 
 const date: string = helper.date();
 
@@ -57,62 +59,108 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      let data = req?.body;
+      const body = req.body;
+      const payloadArray = Array.isArray(body) ? body : [body];
+      const validatedData = [];
 
-      if (Array.isArray(data)) {
-        data = data.map((item) => helper.only(variable.fillable(), item));
-        await repository.create({
-          payload: data,
-        });
-      } else {
-        data = helper.only(variable.fillable(), data);
-        await repository.create({
-          payload: [data],
-        });
+      for (const item of payloadArray) {
+        const validItem = jabatanSchema.parse(item);
+
+        // 1. Cek duplikasi KODE di unit tersebut
+        const existKode = await repository.checkUniqueInOrgunit(validItem.id_orgunit, 'kode_jabatan', validItem.kode_jabatan);
+        if (existKode) throw new Error(`Kode [${validItem.kode_jabatan}] sudah ada di unit ini.`);
+
+        // 2. Cek duplikasi NAMA di unit tersebut
+        const existNama = await repository.checkUniqueInOrgunit(validItem.id_orgunit, 'nama_jabatan', validItem.nama_jabatan);
+        if (existNama) throw new Error(`Nama Jabatan [${validItem.nama_jabatan}] sudah ada di unit ini.`);
+
+        validatedData.push(helper.only(variable.fillable(), validItem));
       }
 
+      await repository.create({ payload: validatedData });
       return response.success(SUCCESS_SAVED, null, res);
+
     } catch (err: any) {
-      console.log(err);
-      return helper.catchError(
-        `organitation unit create: ${err?.message}`,
-        500,
-        res
-      );
+      let errorMessage = err.message;
+      let errorCode = 500;
+
+      if (err instanceof z.ZodError) {
+        errorMessage = `Field [${err.issues[0].path.join('.')}]: ${err.issues[0].message}`;
+        errorCode = 400;
+      } else if (err.message.includes('sudah digunakan')) {
+        errorCode = 400;
+      }
+
+      return helper.catchError(`Jabatan create: ${errorMessage}`, errorCode, res);
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
-      const id: string = req?.params?.id || '';
+      const id: string = req.params.id || '';
       const check = await repository.detail({ id_jabatan: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      const data: Object = helper.only(variable.fillable(), req?.body, true);
+
+      // 1. Validasi Partial Schema
+      const validData = jabatanSchema.partial().parse(req.body);
+
+      // 2. Cek Unik jika kode atau orgunit diubah
+      const orgId = validData.id_orgunit || check.id_orgunit;
+
+      // Cek Kode jika berubah
+      if (validData.kode_jabatan) {
+        const exist = await repository.checkUniqueInOrgunit(orgId, 'kode_jabatan', validData.kode_jabatan, id);
+        if (exist) throw new Error(`Kode [${validData.kode_jabatan}] sudah digunakan di unit ini.`);
+      }
+
+      // Cek Nama jika berubah
+      if (validData.nama_jabatan) {
+        const exist = await repository.checkUniqueInOrgunit(orgId, 'nama_jabatan', validData.nama_jabatan, id);
+        if (exist) throw new Error(`Nama Jabatan [${validData.nama_jabatan}] sudah digunakan di unit ini.`);
+      }
+
+      const dataToUpdate = helper.only(variable.fillable(), validData, true);
       await repository.update({
-        payload: { ...data },
+        payload: dataToUpdate,
         condition: { id_jabatan: id },
       });
+
       return response.success(SUCCESS_UPDATED, null, res);
+
     } catch (err: any) {
-      return helper.catchError(
-        `organitation unit update: ${err?.message}`,
-        500,
-        res
-      );
+      let errorMessage = err.message;
+      let errorCode = 500;
+
+      if (err instanceof z.ZodError) {
+        errorMessage = `Field [${err.issues[0].path.join('.')}]: ${err.issues[0].message}`;
+        errorCode = 400;
+      }
+
+      return helper.catchError(`Jabatan update: ${errorMessage}`, errorCode, res);
     }
   }
 
   public async delete(req: Request, res: Response) {
     try {
-      const id: string = req?.params?.id || '';
+      const id: string = req.params.id || '';
       const check = await repository.detail({ id_jabatan: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      await repository.delete({
-        condition: { id_jabatan: id },
-      });
+
+      // 3. Proteksi Hapus: Cek relasi Pegawai
+      const hasPegawai = await repository.checkHasPegawai(id);
+      if (hasPegawai) {
+        return response.failed(
+          "Jabatan tidak bisa dihapus karena masih digunakan oleh data pegawai.", 
+          400, 
+          res
+        );
+      }
+
+      await repository.delete({ condition: { id_jabatan: id } });
       return response.success(SUCCESS_DELETED, null, res);
+
     } catch (err: any) {
-      return helper.catchError(`jabatan delete: ${err?.message}`, 500, res);
+      return helper.catchError(`Jabatan delete: ${err?.message}`, 500, res);
     }
   }
 }

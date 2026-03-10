@@ -2,10 +2,11 @@
 
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './lembaga.pendidikan.kepesantrenan.variable';
+import { variable } from './location.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './lembaga.pendidikan.kepesantrenan.repository';
+import { repository } from './location.repository';
 import {
+  ALREADY_EXIST,
   NOT_FOUND,
   SUCCESS_DELETED,
   SUCCESS_RETRIEVED,
@@ -13,7 +14,7 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import { Op } from 'sequelize';
-import { lembagaSchema } from './lembaga.pendidikan.kepesantrenan.schema';
+import { locationSchema, locationUpdateSchema } from './location.schema';
 import z from 'zod';
 
 export default class Controller {
@@ -24,7 +25,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan list: ${err?.message}`, 500, res);
+      return helper.catchError(`Lokasi list: ${err?.message}`, 500, res);
     }
   }
 
@@ -40,42 +41,46 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan index: ${err?.message}`, 500, res);
+      return helper.catchError(`Lokasi index: ${err?.message}`, 500, res);
     }
   }
 
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: any = await repository.detail({ id_lembaga: id });
+      const result: any = await repository.detail({ id_lokasi: id });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan detail: ${err?.message}`, 500, res);
+      console.log('TSSTT', `${err?.message}`)
+      return helper.catchError(`Lokasi detail: ${err?.message}`, 500, res);
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
-      // 1. Validasi Schema menggunakan Zod (mendukung Array/Bulk atau Single Object)
+      console.log(req.body)
       const payload = Array.isArray(req.body) 
-        ? z.array(lembagaSchema).parse(req.body) 
-        : [lembagaSchema.parse(req.body)];
+        ? z.array(locationSchema).parse(req.body) 
+        : [locationSchema.parse(req.body)];
 
       const finalData = [];
 
       for (const item of payload) {
-        // 2. Validasi ID Cabang (Referensial)
-        const cabangExist = await repository.checkCabangExists(item.id_cabang);
-        if (!cabangExist) throw new Error(`Cabang dengan ID tersebut tidak ditemukan.`);
+        // 2. Logika Bisnis: Inherit ID Cabang dari Parent
+        if (item.parent_id) {
+          const parent: any = await repository.detail({ id_lokasi: item.parent_id });
+          if (parent?.id_cabang) item.id_cabang = parent.id_cabang;
+        }
 
-        // 3. Cek Duplikasi (Kombinasi id_cabang + nama_lembaga)
+        // 3. Cek Duplikasi
         const isDuplicate = await repository.detail({
-          id_cabang: item.id_cabang,
-          nama_lembaga: item.nama_lembaga,
+          id_cabang: item.id_cabang || null,
+          jenis_lokasi: item.jenis_lokasi,
+          nama_lokasi: item.nama_lokasi,
         });
 
-        if (isDuplicate) throw new Error(`Lembaga "${item.nama_lembaga}" sudah terdaftar di cabang ini.`);
+        if (isDuplicate) throw new Error(`Lokasi "${item.nama_lokasi}" sudah ada di cabang ini.`);
         
         finalData.push(item);
       }
@@ -83,9 +88,12 @@ export default class Controller {
       await repository.create({ payload: finalData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
+      console.error('Error detail:', err);
+
       let errorMessage = err.message;
       let errorCode = 500;
 
+      // Jika error berasal dari Zod (Validasi Field)
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
         const fieldName = firstIssue.path.join('.'); 
@@ -93,7 +101,7 @@ export default class Controller {
         errorCode = 400;
       }
 
-      return helper.catchError(`LP Kepesantrenan create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
     }
   }
 
@@ -101,44 +109,50 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      // 1. Ambil data lama
-      const existingData: any = await repository.detail({ id_lembaga: id });
+      // 1. Ambil data lama dari database
+      const existingData: any = await repository.detail({ id_lokasi: id });
       if (!existingData) return response.success(NOT_FOUND, null, res, false);
 
-      // 2. Validasi input (menggunakan schema yang sama atau partial)
-      const validatedData = lembagaSchema.parse(req.body);
+      // 2. Validasi input menggunakan partial schema 
+      const validatedData = locationUpdateSchema.parse(req.body);
 
-      // 3. Gabungkan data untuk pengecekan logika bisnis
+      // 3. Gabungkan data lama dan data baru untuk keperluan logika bisnis
       const mergedData = { ...existingData.get({ plain: true }), ...validatedData };
 
-      // 4. Validasi ID Cabang jika diubah
-      if (validatedData?.id_cabang) {
-        const cabangExist = await repository.checkCabangExists(validatedData?.id_cabang);
-        if (!cabangExist) throw new Error(`Cabang tidak ditemukan.`);
+      // 4. Logika Bisnis: Inherit ID Cabang dari Parent (jika parent_id berubah)
+      if (validatedData.parent_id) {
+        const parent: any = await repository.detail({ id_lokasi: validatedData.parent_id });
+        if (parent?.id_cabang) {
+          mergedData.id_cabang = parent.id_cabang;
+        }
       }
 
-      // 5. Check duplicate (Kombinasi nama + cabang, kecuali dirinya sendiri)
+      // 5. Check duplicate
       const isDuplicate = await repository.detail({
-        id_cabang: mergedData.id_cabang,
-        nama_lembaga: mergedData.nama_lembaga,
-        id_lembaga: { [Op.ne]: id }
+        id_cabang: mergedData.id_cabang || null,
+        jenis_lokasi: mergedData.jenis_lokasi,
+        nama_lokasi: mergedData.nama_lokasi,
+        id_lokasi: { [Op.ne]: id }
       });
 
       if (isDuplicate) {
-        throw new Error(`Nama lembaga "${mergedData.nama_lembaga}" sudah digunakan di cabang ini.`);
+        throw new Error(`Kombinasi Cabang, Jenis, dan Nama "${mergedData.nama_lokasi}" sudah digunakan oleh lokasi lain.`);
       }
 
       // 6. Eksekusi Update
       await repository.update({
-        payload: helper.only(variable.fillable(), mergedData, true), 
-        condition: { id_lembaga: id },
+        payload: mergedData, 
+        condition: { id_lokasi: id },
       });
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
+      console.error('Error detail:', err);
+
       let errorMessage = err.message;
       let errorCode = 500;
 
+      // Jika error berasal dari Zod (Validasi Field)
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
         const fieldName = firstIssue.path.join('.'); 
@@ -146,7 +160,7 @@ export default class Controller {
         errorCode = 400;
       }
 
-      return helper.catchError(`LP Kepesantrenan update: ${errorMessage}`, errorCode, res);
+      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
     }
   }
 
@@ -154,20 +168,32 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      // 1. Cek eksistensi
-      const check = await repository.detail({ id_lembaga: id });
+      // 1. Cek apakah data yang akan dihapus ada di database
+      const check = await repository.detail({ id_lokasi: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      // 2. Eksekusi penghapusan (Soft Delete otomatis karena model paranoid)
+      // 2. Cek apakah lokasi ini memiliki child (sub-lokasi)
+      const hasChild = await repository.detail({ parent_id: id });
+      
+      if (hasChild) {
+        return response.success(
+          `Gagal menghapus: Lokasi ini masih memiliki sub-lokasi di dalamnya. Silakan hapus atau pindahkan sub-lokasi terlebih dahulu.`, 
+          null, 
+          res, 
+          false
+        );
+      }
+
+      // 3. Jika tidak ada child, eksekusi penghapusan
       await repository.delete({
-        condition: { id_lembaga: id },
+        condition: { id_lokasi: id },
       });
 
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan delete: ${err?.message}`, 500, res);
+      return helper.catchError(`Lokasi delete: ${err?.message}`, 500, res);
     }
   }
 }
 
-export const LembagaPendidikanKepesantrenan = new Controller();
+export const Location = new Controller();
