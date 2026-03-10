@@ -1,8 +1,12 @@
 'use strict';
 
-export default class Variable {
+export class Variable {
+  /**
+   * Kolom yang diizinkan untuk diisi (Whitelist)
+   * Termasuk field wilayah dan field hasil kalkulasi (umur)
+   */
   public fillable() {
-    const field: Array<string> = [
+    return [
       'id_pegawai',
       'nik',
       'nip',
@@ -12,8 +16,16 @@ export default class Variable {
       'jenis_kelamin',
       'tempat_lahir',
       'tanggal_lahir',
-      'umur',
+      'umur', // Diizinkan karena dihitung di Controller
       'alamat',
+      
+      // Hierarki Wilayah
+      'province_id',
+      'city_id',
+      'district_id',
+      'sub_district_id',
+      
+      // Kepegawaian
       'pendidikan',
       'bidang_ilmu',
       'id_orgunit',
@@ -21,8 +33,11 @@ export default class Variable {
       'status_pegawai',
       'tmt',
       'foto',
+      
+      // Timestamps (Opsional, biasanya ditangani Sequelize)
+      'created_at',
+      'updated_at'
     ];
-    return field;
   }
 }
 

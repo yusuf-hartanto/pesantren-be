@@ -29,7 +29,7 @@ export const up = async (queryInterface: QueryInterface) => {
       allowNull: true,
     },
     sifat_jabatan: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
       allowNull: true,
     },
     kode_jabatan: {
@@ -39,6 +39,10 @@ export const up = async (queryInterface: QueryInterface) => {
     keterangan: {
       type: DataTypes.STRING(255),
       allowNull: true,
+    },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true
     },
   });
 

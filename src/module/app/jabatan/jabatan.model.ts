@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
 import OrganizationUnit from '../organization.unit/organization.unit.model';
+import Pegawai from '../pegawai/pegawai.model';
 
 export class Jabatan extends Model {
   public id_jabatan!: string;
@@ -18,6 +19,7 @@ export class Jabatan extends Model {
 
   // Relasi
   public orgunit?: OrganizationUnit;
+  public pegawai?: Pegawai;
 }
 
 export function initJabatan(sequelize: Sequelize) {
@@ -41,7 +43,7 @@ export function initJabatan(sequelize: Sequelize) {
         allowNull: true,
       },
       sifat_jabatan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
         allowNull: true,
       },
       kode_jabatan: {
@@ -83,7 +85,9 @@ export function initJabatan(sequelize: Sequelize) {
       sequelize,
       modelName: 'Jabatan',
       tableName: 'jabatan',
-      timestamps: false,
+      timestamps: true,
+      underscored: true,
+      paranoid: true
     }
   );
 
@@ -107,6 +111,13 @@ export function associateJabatan() {
     as: 'orgunit',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
+  });
+
+  Jabatan.hasMany(Pegawai, {
+    foreignKey: 'id_jabatan', 
+    as: 'pegawai',            
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL'
   });
 }
 
