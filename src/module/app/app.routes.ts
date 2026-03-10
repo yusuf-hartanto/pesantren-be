@@ -817,6 +817,16 @@ router.put(
 );
 router.delete('/kelas-mda/:id', auth.checkBearerToken, kelasMda.delete);
 router.post('/kelas-mda/export', auth.checkBearerToken, kelasMda.export);
+router.post(
+  '/kelas-mda/import',
+  auth.checkBearerToken,
+  kelasMda.import
+);
+router.post(
+  '/kelas-mda/insert',
+  auth.checkBearerToken,
+  kelasMda.insert
+);
 
 router.get('/kelas-formal/all-data', auth.checkBearerToken, kelasFormal.list);
 router.get('/kelas-formal', auth.checkBearerToken, kelasFormal.index);
@@ -837,6 +847,16 @@ router.put(
 );
 router.delete('/kelas-formal/:id', auth.checkBearerToken, kelasFormal.delete);
 router.post('/kelas-formal/export', auth.checkBearerToken, kelasFormal.export);
+router.post(
+  '/kelas-formal/import',
+  auth.checkBearerToken,
+  kelasFormal.import
+);
+router.post(
+  '/kelas-formal/insert',
+  auth.checkBearerToken,
+  kelasFormal.insert
+);
 
 router.get('/location/all-data', auth.checkBearerToken, Location.list);
 router.get('/location', auth.checkBearerToken, Location.index);
