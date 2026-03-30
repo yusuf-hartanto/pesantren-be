@@ -14,6 +14,7 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import { updateExistingBobot, validateBobot } from './validation';
+import { bobotSchema } from './jenis.penilaian.bobot.schema';
 
 const date: string = helper.date();
 
@@ -58,49 +59,53 @@ export default class Controller {
     }
   }
 
-  public async create(req: Request, res: Response) {
+ public async create(req: Request, res: Response) {
     try {
-      let data = req?.body;
+      const body = req.body;
+      const dataArray = Array.isArray(body) ? body : [body];
+      const validatedPayload = [];
 
-      if (Array.isArray(data)) {
-        data = data.map((item) => helper.only(variable.fillable(), item));
-        await repository.create({
-          payload: data,
-        });
-      } else {
-        data = helper.only(variable.fillable(), data);
+      for (const item of dataArray) {
+        // A. Validasi Schema (Zod)
+        const validData = bobotSchema.parse(item);
 
-        const isUpdated = await updateExistingBobot(data);
-        await validateBobot([data]);
+        // B. Validasi Business Logic (Unique & Total Bobot)
+        await repository.validateBobotLogic(validData);
 
-        if (!isUpdated)
-          await repository.create({
-            payload: [data],
-          });
+        validatedPayload.push(helper.only(variable.fillable(), validData));
       }
 
+      await repository.create({ payload: validatedPayload });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(`create: ${err?.message}`, 500, res);
+      return helper.catchError(err?.message, 400, res);
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
-      const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_bobot: id });
-      if (!check) return response.success(NOT_FOUND, null, res, false);
-      const data: Object = helper.only(variable.fillable(), req?.body, true);
+      const id: string = req.params.id || '';
+      const check: any = await repository.detail({ id_bobot: id });
+      if (!check || check.length === 0) return response.success(NOT_FOUND, null, res, false);
 
-      await validateBobot([data], true);
+      // A. Validasi Schema (Partial update)
+      const validData = bobotSchema.partial().parse(req.body);
 
+      // B. Merge data lama dengan data baru untuk divalidasi
+      // Karena repository.detail Anda mengembalikan raw query (array), ambil index 0
+      const mergedData = { ...check[0], ...validData };
+      
+      await repository.validateBobotLogic(mergedData, id);
+
+      const payload = helper.only(variable.fillable(), validData, true);
       await repository.update({
-        payload: { ...data },
+        payload: payload,
         condition: { id_bobot: id },
       });
+
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(`Update: ${err?.message}`, 500, res);
+      return helper.catchError(err?.message, 400, res);
     }
   }
 

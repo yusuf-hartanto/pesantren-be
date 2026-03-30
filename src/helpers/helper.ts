@@ -334,7 +334,7 @@ export default class Helper {
   public fetchQueryRequest(req: Request) {
     const limit: any = req?.query?.perPage || 10;
     const offset: any = req?.query?.page || 1;
-    const keyword: any = req?.query?.q;
+    const keyword: any = req?.query?.q || req?.query?.keyword;
 
     return {
       limit: parseInt(limit),

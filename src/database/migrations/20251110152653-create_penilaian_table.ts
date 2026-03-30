@@ -2,36 +2,60 @@
 
 import { QueryInterface, DataTypes } from 'sequelize';
 
-export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.createTable('jenis_penilaian', {
-    id_penilaian: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      primaryKey: true,
-      unique: true,
-    },
-    singkatan: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-    jenis_pengujian: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-    keterangan: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
-  });
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface: QueryInterface) {
+    await queryInterface.createTable('jenis_penilaian', {
+      id_penilaian: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false,
+        unique: true,
+      },                                                                                                                                                                                                         
+      singkatan: {
+        type: DataTypes.STRING(10),
+        allowNull: true,
+      },
+      jenis_pengujian: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      lembaga_type: {
+        type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
+        allowNull: false,
+      },
+      is_ujian: {
+        type: DataTypes.SMALLINT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      status: {
+        type: DataTypes.ENUM('active', 'inactive'),
+        allowNull: true,
+        defaultValue: 'active',
+      },
+      keterangan: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: new Date(),
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: new Date(),
+      },
+      deleted_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+    });
+  },
 
-  // Tambahkan kolom created_at dan updated_at via raw SQL
-  await queryInterface.sequelize.query(`
-    ALTER TABLE jenis_penilaian
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-  `);
-};
-
-export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.dropTable('jenis_penilaian');
+  async down(queryInterface: QueryInterface) {
+    await queryInterface.dropTable('jenis_penilaian');
+  }
 };
