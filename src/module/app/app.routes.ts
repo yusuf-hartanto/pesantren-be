@@ -48,6 +48,8 @@ import { kelasMdaSchema } from './kelas.mda/kelas.mda.schema';
 import { kelasFormal } from './kelas.formal/kelas.formal.controller';
 import { kelasFormalSchema } from './kelas.formal/kelas.formal.schema';
 import { Location } from './location/location.controller';
+import { jadwalPelajaran } from './jadwal.pelajaran/jadwal.pelajaran.controller';
+import { jadwalPelajaranSchema } from './jadwal.pelajaran/jadwal.pelajaran.schema';
 
 const router: Router = Router();
 
@@ -874,5 +876,27 @@ router.get('/location/:id', auth.checkBearerToken, Location.detail);
 router.post('/location', auth.checkBearerToken, Location.create);
 router.put('/location/:id', auth.checkBearerToken, Location.update);
 router.delete('/location/:id', auth.checkBearerToken, Location.delete);
+
+router.get('/jadwal-pelajaran/all-data', auth.checkBearerToken, jadwalPelajaran.list);
+router.get('/jadwal-pelajaran', auth.checkBearerToken, jadwalPelajaran.index);
+router.get('/jadwal-pelajaran/:id', auth.checkBearerToken, jadwalPelajaran.detail);
+router.post(
+  '/jadwal-pelajaran',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(jadwalPelajaranSchema),
+  jadwalPelajaran.create
+);
+router.put(
+  '/jadwal-pelajaran/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(jadwalPelajaranSchema),
+  jadwalPelajaran.update
+);
+router.delete('/jadwal-pelajaran/:id', auth.checkBearerToken, jadwalPelajaran.delete);
+router.post('/jadwal-pelajaran/export', auth.checkBearerToken, jadwalPelajaran.export);
+router.post('/jadwal-pelajaran/import', auth.checkBearerToken, jadwalPelajaran.import);
+router.post('/jadwal-pelajaran/insert', auth.checkBearerToken, jadwalPelajaran.insert);
 
 export default router;
