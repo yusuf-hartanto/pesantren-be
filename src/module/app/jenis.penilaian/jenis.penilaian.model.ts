@@ -5,12 +5,16 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
 
 export class JenisPenilaian extends Model {
-  public id_penilian!: string;
+  public id_penilaian!: string;
   public singkatan!: string;
   public jenis_pengujian!: string;
+  public lembaga_type!: 'FORMAL' | 'PESANTREN';
+  public is_ujian!: number;
+  public status!: 'active' | 'inactive';
   public keterangan!: string;
-  public createdAt!: Date;
-  public updatedAt!: Date;
+  public created_at!: Date;
+  public updated_at!: Date;
+  public deleted_at!: Date;
 }
 
 export function initJenisPenilaian(sequelize: Sequelize) {
@@ -22,28 +26,36 @@ export function initJenisPenilaian(sequelize: Sequelize) {
         unique: true,
       },
       singkatan: {
-        type: DataTypes.STRING(255),
-        unique: true,
-      },
-      jenis_pengujian: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.STRING(10),
         allowNull: true,
       },
+      jenis_pengujian: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      lembaga_type: {
+        type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
+        allowNull: false,
+      },
+      is_ujian: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      status: {
+        type: DataTypes.ENUM('active', 'inactive'),
+        allowNull: true,
+        defaultValue: 'active',
+      },
       keterangan: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
         allowNull: true,
       },
       created_at: {
         type: DataTypes.DATE,
         get() {
-          const value: string = this.getDataValue('created_at');
+          const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('created_at', formattedValue);
         },
       },
       updated_at: {
@@ -52,23 +64,26 @@ export function initJenisPenilaian(sequelize: Sequelize) {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('updated_at', formattedValue);
-        },
+      },
+      deleted_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
     },
     {
       sequelize,
       modelName: 'JenisPenilaian',
       tableName: 'jenis_penilaian',
-      timestamps: false,
+      underscored: true,
+      timestamps: true,
+      paranoid: true, // Soft delete enabled
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      deletedAt: 'deleted_at',
     }
   );
 
-  JenisPenilaian.beforeCreate((jenisPenilaian) => {
+JenisPenilaian.beforeCreate((jenisPenilaian) => {
     jenisPenilaian?.setDataValue('id_penilaian', uuidv4());
   });
 

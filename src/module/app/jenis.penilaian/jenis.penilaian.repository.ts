@@ -1,44 +1,56 @@
 'use strict';
 
-import { Op, Sequelize } from 'sequelize';
+import { Op } from 'sequelize';
 import Model from './jenis.penilaian.model';
 
 export default class Repository {
-  public list(data: any) {
-    let query: Object = {
-      order: [['id_penilaian', 'DESC']],
+  /**
+   * Cek duplikasi jenis_pengujian berdasarkan lembaga_type
+   */
+  public async checkDuplicate(jenis_pengujian: string, lembaga_type: string, excludeId?: string) {
+    const where: any = {
+      jenis_pengujian,
+      lembaga_type,
     };
 
-    if (data?.singkatan !== undefined && data?.singkatan != null) {
-      query = {
-        ...query,
-        where: {
-          singkatan: { [Op.like]: `%${data?.singkatan}%` },
-        },
-      };
+    if (excludeId) {
+      where.id_penilaian = { [Op.ne]: excludeId };
+    }
+
+    return await Model.findOne({ where });
+  }
+
+  public list(data: any) {
+    let query: any = {
+      order: [['id_penilaian', 'DESC']],
+      where: {}
+    };
+
+    if (data?.singkatan) {
+      query.where.singkatan = { [Op.like]: `%${data.singkatan}%` };
+    }
+    
+    if (data?.lembaga_type) {
+      query.where.lembaga_type = data.lembaga_type;
     }
 
     return Model.findAll(query);
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['id_penilaian', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where: {}
     };
-
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { singkatan: { [Op.like]: `%${data?.keyword}%` } },
-            { jenis_pengujian: { [Op.like]: `%${data?.keyword}%` } },
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-          ],
-        },
-      };
+    console.log('KEYWORD', data)
+    if (data?.keyword) {
+      query.where[Op.or] = [
+        { singkatan: { [Op.iLike]: `%${data.keyword}%` } },
+        { jenis_pengujian: { [Op.iLike]: `%${data.keyword}%` } },
+        { keterangan: { [Op.iLike]: `%${data.keyword}%` } },
+      ];
     }
 
     return Model.findAndCountAll(query);
@@ -46,9 +58,7 @@ export default class Repository {
 
   public detail(condition: any) {
     return Model.findOne({
-      where: {
-        ...condition,
-      },
+      where: { ...condition },
     });
   }
 
