@@ -13,29 +13,13 @@ export const up = async (queryInterface: QueryInterface) => {
     id_kelas: {
       type: DataTypes.STRING,
       allowNull: true,
-      references: {
-        model: 'kelas_formal',
-        key: 'id_kelas',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-    },
-    id_kelas_mda: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      references: {
-        model: 'kelas_mda',
-        key: 'id_kelas_mda',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
     },
     id_gmapel: {
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: 'guru_mapel',
-        key: 'id_gmapel',
+        model: 'jenis_guru',
+        key: 'id_jenisguru',
       },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
@@ -105,9 +89,9 @@ export const up = async (queryInterface: QueryInterface) => {
   });
 
   await queryInterface.addConstraint('jadwal_pelajaran', {
-    fields: ['id_kelas', 'id_kelas_mda', 'hari', 'id_jam_pelajaran'],
+    fields: ['id_kelas', 'hari', 'id_jam_pelajaran'],
     type: 'unique',
-    name: 'unique_jadwal_pelajaran_id_kelas_id_kelas_mda_hari_id_jam_pelajaran',
+    name: 'unique_jadwal_pelajaran_id_kelas_hari_id_jam_pelajaran',
   });
 };
 
@@ -127,7 +111,7 @@ export const down = async (queryInterface: QueryInterface) => {
 
   try {
     await queryInterface.sequelize.query(
-      'DROP CONSTRAINT IF EXISTS "unique_jadwal_pelajaran_id_kelas_id_kelas_mda_hari_id_jam_pelajaran";'
+      'DROP CONSTRAINT IF EXISTS "unique_jadwal_pelajaran_id_kelas_hari_id_jam_pelajaran";'
     );
   } catch (e) {}
 };

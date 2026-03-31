@@ -2,11 +2,10 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import KelasFormal from '../kelas.formal/kelas.formal.model';
-import KelasMda from '../kelas.mda/kelas.mda.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
 import Semester from '../semester/semester.model';
+import JenisGuru from '../jenis.guru/jenis.guru.model';
 
 export class JadwalPelajaran extends Model {
   public id_jadwal!: string;
@@ -14,7 +13,6 @@ export class JadwalPelajaran extends Model {
   public status!: string;
   public keterangan!: string;
   public id_kelas!: string;
-  public id_kelas_mda!: string;
   public id_gmapel!: string;
   public id_jam_pelajaran!: string;
   public id_semester!: string;
@@ -31,9 +29,6 @@ export function initJadwalPelajaran(sequelize: Sequelize) {
         unique: true,
       },
       id_kelas: {
-        type: DataTypes.STRING,
-      },
-      id_kelas_mda: {
         type: DataTypes.STRING,
       },
       id_gmapel: {
@@ -79,15 +74,11 @@ export function initJadwalPelajaran(sequelize: Sequelize) {
 }
 
 export function associateJadwalPelajaran() {
-  JadwalPelajaran.belongsTo(KelasFormal, {
-    as: 'kelas_formal',
-    foreignKey: 'id_kelas',
-  });
 
-  JadwalPelajaran.belongsTo(KelasMda, {
-    as: 'kelas_mda',
-    foreignKey: 'id_kelas_mda',
-  });
+  JadwalPelajaran.belongsTo(JenisGuru, {
+    as: 'jenis_guru',
+    foreignKey: 'id_jenisguru',
+  })
 
   JadwalPelajaran.belongsTo(Semester, {
     as: 'semester',
