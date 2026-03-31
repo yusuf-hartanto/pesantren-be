@@ -12,7 +12,7 @@ export default class Repository {
       include: [
         {
           model: OrganizationUnit,
-          as: 'organitazionUnit',
+          as: 'organizationUnit',
           attributes: ['id_orgunit', 'nama_orgunit'],
           required: false,
         },
