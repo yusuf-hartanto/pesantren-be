@@ -21,6 +21,8 @@ import fs from 'fs/promises';
 import KelasMda from './kelas.mda.model';
 import { repository as tahunAjaranRepository } from '../tahun.ajaran/tahun.ajaran.repository';
 import { repository as lembagaRepository } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.repository';
+import { repository as pegawaiRepository } from '../pegawai/pegawai.repository';
+import { repository as tingkatRepository } from '../tingkat/tingkat.repository';
 
 const date: string = helper.date();
 
@@ -313,6 +315,8 @@ export default class Controller {
         const nama_kelas_mda = row.nama_kelas_mda;
         const tahun_ajaran = row.tahun_ajaran;
         const nama_lembaga = row.nama_lembaga;
+        const tingkat = row.tingkat;
+        const nama_lengkap = row.nama_lengkap;
 
         const tahunAjaranExist = await tahunAjaranRepository.detail({ tahun_ajaran });
         if (!tahunAjaranExist) {
@@ -324,11 +328,23 @@ export default class Controller {
           errors.push(`Lembaga ${nama_lembaga} tidak ditemukan`);
         }
 
+        const tingkatExist = await tingkatRepository.detail({ tingkat });
+        if (!tingkatExist) {
+          errors.push(`Tingkat ${tingkat} tidak ditemukan`);
+        }
+
+        const pegawaiExist = await pegawaiRepository.detail({ nama_lengkap });
+        if (!pegawaiExist) {
+          errors.push(`Wali Kelas ${nama_lengkap} tidak ditemukan`);
+        }
+
         const valid = errors.length === 0;
 
         const payload = {
           id_tahunajaran: tahunAjaranExist?.id_tahunajaran,
           id_lembaga: lembagaExist?.id_lembaga,
+          id_tingkat: tingkatExist?.id_tingkat,
+          id_wali_kelas: pegawaiExist?.id_pegawai,
           nama_kelas_mda: row.nama_kelas_mda,
           lembaga: row.nama_lembaga,
           tahun_ajaran: row.tahun_ajaran,
