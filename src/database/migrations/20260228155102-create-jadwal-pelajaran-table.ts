@@ -29,7 +29,7 @@ export const up = async (queryInterface: QueryInterface) => {
       allowNull: true,
       references: {
         model: 'jam_pelajaran',
-        key: 'id_jam_pelajaran',
+        key: 'id_jampel',
       },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',
