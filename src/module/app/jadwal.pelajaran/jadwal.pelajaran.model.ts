@@ -6,6 +6,9 @@ import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
 import Semester from '../semester/semester.model';
 import JenisGuru from '../jenis.guru/jenis.guru.model';
+import Lokasi from '../location/location.model';
+import KelasFormal from '../kelas.formal/kelas.formal.model';
+import KelasMda from '../kelas.mda/kelas.mda.model';
 
 export class JadwalPelajaran extends Model {
   public id_jadwal!: string;
@@ -77,7 +80,7 @@ export function associateJadwalPelajaran() {
 
   JadwalPelajaran.belongsTo(JenisGuru, {
     as: 'jenis_guru',
-    foreignKey: 'id_jenisguru',
+    foreignKey: 'id_gmapel',
   })
 
   JadwalPelajaran.belongsTo(Semester, {
@@ -93,6 +96,21 @@ export function associateJadwalPelajaran() {
   JadwalPelajaran.belongsTo(JamPelajaran, {
     as: 'jam_pelajaran',
     foreignKey: 'id_jam_pelajaran',
+  });
+
+  JadwalPelajaran.belongsTo(Lokasi, {
+    as: 'lokasi',
+    foreignKey: 'id_lokasi',
+  });
+
+  JadwalPelajaran.belongsTo(KelasFormal, {
+    as: 'kelas_formal',
+    foreignKey: 'id_kelas',
+  });
+
+  JadwalPelajaran.belongsTo(KelasMda, {
+    as: 'kelas_mda',
+    foreignKey: 'id_kelas',
   });
 }
 

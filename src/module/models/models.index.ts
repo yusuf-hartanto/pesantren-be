@@ -111,6 +111,7 @@ import {
   associateKelasFormal,
 } from '../app/kelas.formal/kelas.formal.model';
 import { associateLokasi, initLokasi } from '../app/location/location.model';
+import { initJadwalPelajaran, associateJadwalPelajaran } from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -156,6 +157,7 @@ export function initializeModels(sequelize: Sequelize) {
   initKelasMda(sequelize);
   initKelasFormal(sequelize);
   initLokasi(sequelize);
+  initJadwalPelajaran(sequelize);
 
   // associate
   associateAppRole();
@@ -189,6 +191,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateKelasFormal();
   associateJenisGuru();
   associateLokasi();
+  associateJadwalPelajaran();
 
   addGlobalActivityHooks(sequelize);
 }

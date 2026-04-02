@@ -12,14 +12,24 @@ export default class Repository {
     let query: Object = {
       order: [['created_at', 'DESC']],
     };
+    
+    let condition: any = {};
+    if (data?.id_tingkat != '') {
+      condition = {
+        id_tingkat: data?.id_tingkat,
+      };
+    }
+
     if (data?.status != '') {
       query = {
         ...query,
         where: {
           status: { [Op.eq]: data?.status },
+          ...condition,
         },
       };
     }
+
     return Model.findAll({
       ...query,
       include: [
@@ -62,9 +72,9 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { nama_kelas_mda: { [Op.like]: `%${data?.keyword}%` } },
+            { nama_kelas: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('KelasMda.nomor_urut'), 'TEXT'),
+              Sequelize.cast(Sequelize.col('KelasFormal.nomor_urut'), 'TEXT'),
               { [Op.like]: `%${data?.keyword}%` }
             ),
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },

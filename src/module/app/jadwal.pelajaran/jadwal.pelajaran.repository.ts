@@ -7,6 +7,12 @@ import KelasMda from '../kelas.mda/kelas.mda.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import Semester from '../semester/semester.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
+import JenisGuru from '../jenis.guru/jenis.guru.model';
+import Lokasi from '../location/location.model';
+import Pegawai from '../pegawai/pegawai.model';
+import MataPelajaran from '../mata.pelajaran/mata.pelajaran.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public list(data: any) {
@@ -29,12 +35,28 @@ export default class Repository {
           as: 'kelas_formal',
           required: false,
           attributes: ['id_kelas', 'nama_kelas'],
+          include: [
+            {
+              model: LembagaPendidikanFormal,
+              as: 'lembaga',
+              required: false,
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+          ]
         },
         {
           model: KelasMda,
           as: 'kelas_mda',
           required: false,
           attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+          include: [
+            {
+              model: LembagaPendidikanKepesantrenan,
+              as: 'lembaga',
+              required: false,
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+          ]
         },
         {
           model: Semester,
@@ -52,8 +74,34 @@ export default class Repository {
           model: JamPelajaran,
           as: 'jam_pelajaran',
           required: false,
-          attributes: ['id_jampel', 'nama_jampel'],
+          attributes: ['id_jampel', 'nama_jampel', 'mulai', 'selesai'],
         },
+        {
+          model: Lokasi,
+          as: 'lokasi',
+          required: false,
+          attributes: ['id_lokasi', 'nama_lokasi'],
+        },
+        {
+          model: JenisGuru,
+          as: 'jenis_guru',
+          required: false,
+          attributes: ['id_jenisguru', 'nama_jenis_guru'],
+          include: [
+            {
+              model: Pegawai,
+              as: 'pegawai',
+              required: false,
+              attributes: ['id_pegawai', 'nama_lengkap', 'nip'],
+            },
+            {
+              model: MataPelajaran,
+              as: 'mata_pelajaran',
+              required: false,
+              attributes: ['id_mapel', 'nama_mapel'],
+            },
+          ]
+        }
       ],
     });
   }
@@ -82,12 +130,28 @@ export default class Repository {
           as: 'kelas_formal',
           required: false,
           attributes: ['id_kelas', 'nama_kelas'],
+          include: [
+            {
+              model: LembagaPendidikanFormal,
+              as: 'lembaga',
+              required: false,
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+          ]
         },
         {
           model: KelasMda,
           as: 'kelas_mda',
           required: false,
           attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+          include: [
+            {
+              model: LembagaPendidikanKepesantrenan,
+              as: 'lembaga',
+              required: false,
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+          ]
         },
         {
           model: Semester,
@@ -105,8 +169,34 @@ export default class Repository {
           model: JamPelajaran,
           as: 'jam_pelajaran',
           required: false,
-          attributes: ['id_jampel', 'nama_jampel'],
+          attributes: ['id_jampel', 'nama_jampel', 'mulai', 'selesai'],
         },
+        {
+          model: Lokasi,
+          as: 'lokasi',
+          required: false,
+          attributes: ['id_lokasi', 'nama_lokasi'],
+        },
+        {
+          model: JenisGuru,
+          as: 'jenis_guru',
+          required: false,
+          attributes: ['id_jenisguru', 'nama_jenis_guru'],
+          include: [
+            {
+              model: Pegawai,
+              as: 'pegawai',
+              required: false,
+              attributes: ['id_pegawai', 'nama_lengkap', 'nip'],
+            },
+            {
+              model: MataPelajaran,
+              as: 'mata_pelajaran',
+              required: false,
+              attributes: ['id_mapel', 'nama_mapel'],
+            },
+          ]
+        }
       ],
     });
   }
@@ -130,6 +220,26 @@ export default class Repository {
           attributes: ['id_kelas_mda', 'nama_kelas_mda'],
         },
         {
+          model: JenisGuru,
+          as: 'jenis_guru',
+          required: false,
+          attributes: ['id_jenisguru', 'nama_jenis_guru', 'id_tingkat', 'lembaga_type'],
+          include: [
+            {
+              model: Pegawai,
+              as: 'pegawai',
+              required: false,
+              attributes: ['id_pegawai', 'nama_lengkap', 'nip'],
+            },
+            {
+              model: MataPelajaran,
+              as: 'mata_pelajaran',
+              required: false,
+              attributes: ['id_mapel', 'nama_mapel'],
+            },
+          ]
+        },
+        {
           model: Semester,
           as: 'semester',
           required: false,
@@ -145,7 +255,13 @@ export default class Repository {
           model: JamPelajaran,
           as: 'jam_pelajaran',
           required: false,
-          attributes: ['id_jampel', 'nama_jampel'],
+          attributes: ['id_jampel', 'nama_jampel', 'mulai', 'selesai'],
+        },
+        {
+          model: Lokasi,
+          as: 'lokasi',
+          required: false,
+          attributes: ['id_lokasi', 'nama_lokasi'],
         },
       ],
     });
