@@ -8,7 +8,7 @@
     "start": "node dist/server.js",
     "start-with-migrate_old": "npm run migrate && npm start",
     "start-with-migrate": "npm start",
-    "dev": "concurrently \"tsc --watch\" \"nodemon -q dist/server.js\"",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "lint:check": "eslint .",
     "lint:fix": "eslint --fix .",
     "format:check": "prettier --check .",
@@ -46,20 +46,19 @@
     "puppeteer": "^24.8.2",
     "querystring": "^0.2.1",
     "sequelize": "^6.37.5",
+    "sequelize-cli": "^6.6.2",
     "sequelize-typescript": "^2.1.6",
     "sharp": "^0.33.5",
     "tele-sender": "^1.0.2",
     "ts-node": "^10.9.2",
-    "sequelize-cli": "^6.6.2",
     "uuid": "^11.0.5",
-    "uuidv4": "^6.2.13",
     "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
+    "@types/express": "^4.17.25",
     "@types/express-fileupload": "^1.5.1",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.5",
@@ -72,6 +71,10 @@
     "eslint-config-prettier": "^9.1.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.4.2",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

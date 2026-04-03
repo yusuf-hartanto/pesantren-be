@@ -19,7 +19,7 @@ export const up = async (queryInterface: QueryInterface) => {
           `ALTER TABLE "${item.table}" DROP CONSTRAINT IF EXISTS "${item.name}";`,
           { transaction }
         );
-      } catch (error) {
+      } catch (error: any) {
         console.warn(`Could not remove constraint ${item.name} on table ${item.table}:`, error.message);
       }
     }
@@ -44,7 +44,7 @@ export const down = async (queryInterface: QueryInterface) => {
           name: item.name,
           transaction
         });
-      } catch (error) {
+      } catch (error: any) {
         console.warn(`Could not add constraint ${item.name} on table ${item.table}:`, error.message);
       }
     }
