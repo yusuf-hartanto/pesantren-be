@@ -25,7 +25,20 @@ export default {
       return;
     }
 
-    const payload = [];
+    type BobotRecord = {
+      id_bobot: string;
+      id_penilaian: string;
+      lembaga_type: string;
+      id_lembaga: string;
+      id_tingkat: string | null;
+      id_tahunajaran: string;
+      bobot: number;
+      status: string;
+      created_at: Date;
+      updated_at: Date;
+    };
+
+    const payload: BobotRecord[] = [];
 
     // 2. Loop untuk data Lembaga FORMAL
     formalLembaga[0].forEach((lembaga: any, index: number) => {

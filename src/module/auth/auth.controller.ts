@@ -39,7 +39,7 @@ const generateToken = async (user: any) => {
     id: user?.getDataValue('resource_id'),
   });
   const getUser: Object = await transformer.detail(user);
-  const totalLogin: Number = user?.total_login + 1;
+  const totalLogin: Number = user?.getDataValue('total_login') + 1;
 
   await repository.update({
     payload: {
@@ -47,7 +47,7 @@ const generateToken = async (user: any) => {
       token_expired: helper.dateAdd(7, 'days'),
       total_login: totalLogin,
     },
-    condition: { resource_id: user?.resource_id },
+    condition: { resource_id: user?.getDataValue('resource_id') },
   });
 
   const data: Object = {
@@ -64,8 +64,9 @@ const generateToken = async (user: any) => {
 export default class Controller {
   public async login(req: Request, res: Response) {
     const user = req?.user;
+    if (!user) return response.success(NOT_FOUND, null, res, false);
 
-    const isMatch = await helper.compareIt(req?.body?.password, user?.password);
+    const isMatch = await helper.compareIt(req?.body?.password, user?.getDataValue('password'));
     if (isMatch) {
       try {
         if (!loginOtp) {
@@ -131,7 +132,7 @@ export default class Controller {
   public async refresh(req: Request, res: Response) {
     const result = await repository.detail(
       {
-        resource_id: req?.user?.id,
+        resource_id: req?.user?.getDataValue('id'),
       },
       ''
     );
@@ -158,7 +159,7 @@ export default class Controller {
           token: newToken,
           token_expired: helper.dateAdd(7, 'days'),
         },
-        condition: { resource_id: req?.user?.id },
+        condition: { resource_id: req?.user?.getDataValue('id') },
       });
       console.warn('refresh token', data);
       response.success('New access token', data, res);
@@ -204,7 +205,7 @@ export default class Controller {
           area_province_id: province_id?.value || null,
           area_regencies_id: regency_id?.value || null,
           role_id: role?.getDataValue('role_id') || null,
-          created_by: req?.user?.id || '00000000-0000-0000-0000-000000000000',
+          created_by: req?.user?.getDataValue('id') || '00000000-0000-0000-0000-000000000000',
         },
       });
 
@@ -347,10 +348,10 @@ export default class Controller {
     try {
       const user = req?.user;
 
-      if (user && user?.id) {
+      if (user && user?.getDataValue('id')) {
         await repository.update({
           payload: { token: null, token_expired: null },
-          condition: { resource_id: user?.id },
+          condition: { resource_id: user?.getDataValue('id') },
         });
       }
       return response.success('logout success', null, res);

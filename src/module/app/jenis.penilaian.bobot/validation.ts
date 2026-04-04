@@ -86,13 +86,17 @@ export const getTotalBobot = async ({
     await existing.update({ bobot });
   }
 
+  type TotalBobotResult = {
+    total_bobot: number;
+  };
+
   const result = await JenisPenilaianBobot.findOne({
     attributes: [[fn('COALESCE', fn('SUM', col('bobot')), 0), 'total_bobot']],
     where: whereCondition,
     raw: true,
-  });
+  }) as TotalBobotResult | null;
 
-  return Number(result?.total_bobot || 0);
+  return Number(result?.total_bobot ?? 0);
 };
 
 export const validateBobot = async (
