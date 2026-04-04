@@ -3,9 +3,9 @@
 import ExcelJS from 'exceljs';
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './kelas.mda.variable';
+import { variable } from './shift.presensi..variable';
 import { response } from '../../../helpers/response';
-import { repository } from './kelas.mda.repository';
+import { repository } from './shift.presensi.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -15,19 +15,15 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import moment from 'moment';
-import { kelasMdaSchema } from './kelas.mda.schema';
+import { shiftPresensiSchema } from './shift.presensi.schema';
 import { sequelize } from '../../../database/connection';
 import fs from 'fs/promises';
-import KelasMda from './kelas.mda.model';
-import { repository as tahunAjaranRepository } from '../tahun.ajaran/tahun.ajaran.repository';
-import { repository as lembagaRepository } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.repository';
-import { repository as pegawaiRepository } from '../pegawai/pegawai.repository';
-import { repository as tingkatRepository } from '../tingkat/tingkat.repository';
+import ShiftPresensi from './shift.presensi.model';
 
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Nama Kelas MDA', 'Lembaga', 'Tahun Ajaran', 'Tingkat', 'Wali Kelas', 'Status', 'Nomor Urut', 'Keterangan']);
+  sheet.addRow(['No', 'Kode Shift', 'Nama Shift', 'Kategori', 'Jam (Mulai - Selesai)', 'Toleransi', 'Wajib', 'Status', 'Keterangan']);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -37,13 +33,13 @@ const generateDataExcel = (sheet: any, details: any) => {
   for (let i in details) {
     sheet.addRow([
       parseInt(i) + 1,
-      details[i]?.nama_kelas_mda || '',
-      details[i]?.lembaga?.nama_lembaga || '',
-      details[i]?.tahun_ajaran?.tahun_ajaran || '',
-      details[i]?.tingkat?.tingkat || '',
-      details[i]?.pegawai?.nama_lengkap || '',
+      details[i]?.kode_shift || '',
+      details[i]?.nama_shift || '',
+      details[i]?.kategori_shift || '',
+      `${details[i]?.waktu_mulai?.slice(0, -3)} - ${details[i]?.waktu_selesai?.slice(0, -3)}`,
+      details[i]?.toleransi_menit || '',
+      details[i]?.is_wajib ? 'Ya' : 'Tidak',
       details[i]?.status,
-      details[i]?.nomor_urut,
       details[i]?.keterangan || '',
     ]);
   }
@@ -63,21 +59,30 @@ const generateDataExcel = (sheet: any, details: any) => {
 };
 
 const normalizeRow = (row: any) => ({
-  nama_kelas_mda: String(row['Nama Kelas MDA'] || '').trim(),
-  nama_lembaga: String(row['Lembaga'] || '').trim(),
-  tahun_ajaran: String(row['Tahun Ajaran'] || '').trim(),
-  tingkat: String(row['Tingkat'] || '').trim(),
-  nama_lengkap: String(row['Wali Kelas'] || '').trim(),
+  kode_shift: String(row['Kode Shift'] || '').trim(),
+  nama_shift: String(row['Nama Shift'] || '').trim(),
+  kategori_shift: String(row['Kategori'] || '').trim(),
+  waktu_mulai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[0],
+  waktu_selesai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[1],
+  toleransi_menit:
+    row['Toleransi'] !== undefined ? Number(row['Toleransi']) : null,
+  wajib: String(row['Wajib'] || '').trim(),
+  is_wajib: String(row['Wajib'] || '').trim() === 'Ya',
   status: String(row['Status'] || '').trim(),
-  nomor_urut:
-    row['Nomor Urut'] !== undefined ? Number(row['Nomor Urut']) : null,
   keterangan: String(row['Keterangan'] || '').trim(),
   __row: row.__row,
 });
 
 const validateRow = (row: any) => {
+  console.log(row)
+  
   const errors: string[] = [];
-  const valid = kelasMdaSchema.safeParse(row);
+
+  if (!['Ya', 'Tidak'].includes(row.wajib)) {
+    errors.push('Wajib harus Ya atau Tidak');
+  }
+
+  const valid = shiftPresensiSchema.safeParse(row);
 
   if (!valid.success) {
     for (const e of valid.error.issues) {
@@ -92,13 +97,12 @@ export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const status: any = req?.query?.status || '';
-      const id_tingkat: any = req?.query?.id_tingkat || '';
-      const result = await repository.list({ status, id_tingkat });
+      const result = await repository.list({ status });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`kelas mda list: ${err?.message}`, 500, res);
+      return helper.catchError(`shift presensi list: ${err?.message}`, 500, res);
     }
   }
 
@@ -114,7 +118,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`kelas mda index: ${err?.message}`, 500, res);
+      return helper.catchError(`shift presensi index: ${err?.message}`, 500, res);
     }
   }
 
@@ -122,81 +126,55 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
       const result: Object | any = await repository.detail({
-        id_kelas_mda: id,
+        id_shift: id,
       });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`kelas mda detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `shift presensi detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
-      const {
-        nama_kelas_mda,
-        id_lembaga,
-        id_tahunajaran,
-        id_tingkat,
-        id_wali_kelas,
-      } = req?.body;
+      const { kode_shift } = req?.body;
 
-      const idLembaga = id_lembaga?.value || null;
-      const idTahunajaran = id_tahunajaran?.value || null;
-      const idTingkat = id_tingkat?.value || null;
-      const idWaliKelas = id_wali_kelas?.value || null;
-      const check = await repository.detail({
-        nama_kelas_mda,
-        id_lembaga: idLembaga,
-        id_tahunajaran: idTahunajaran,
-      });
+      const check = await repository.detail({ kode_shift });
 
       if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       const result = await repository.create({
         payload: {
           ...data,
-          id_tingkat: idTingkat,
-          id_wali_kelas: idWaliKelas,
-          id_lembaga: idLembaga,
-          id_tahunajaran: idTahunajaran,
         },
       });
 
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(`kelas mda create: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `shift presensi create: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const {
-        nama_kelas_mda,
-        id_lembaga,
-        id_tahunajaran,
-        status,
-        id_tingkat,
-        id_wali_kelas,
-      } = req?.body;
-      const idLembaga = id_lembaga?.value;
-      const idTahunajaran = id_tahunajaran?.value;
-      const idTingkat = id_tingkat?.value;
-      const idWaliKelas = id_wali_kelas?.value;
-      const check = await repository.detail({ id_kelas_mda: id });
+      const { kode_shift } = req?.body;
+
+      const check = await repository.detail({ id_shift: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       if (
-        nama_kelas_mda !== check.nama_kelas_mda ||
-        idLembaga !== check.id_lembaga ||
-        idTahunajaran !== check.id_tahunajaran
+        kode_shift !== check.kode_shift
       ) {
-        const duplicate = await repository.detail({
-          nama_kelas_mda,
-          id_lembaga: idLembaga,
-          id_tahunajaran: idTahunajaran,
-        });
+        const duplicate = await repository.detail({ kode_shift });
 
         if (duplicate) {
           return response.failed(ALREADY_EXIST, 400, res);
@@ -204,41 +182,38 @@ export default class Controller {
       }
       const data: Object = helper.only(variable.fillable(), req?.body, true);
 
-      let newData: Object = {};
-      if (status === 'Arsip') {
-        newData = { archived_at: date, archived_by: req?.user?.id };
-      }
-
       await repository.update({
         payload: {
           ...data,
-          ...newData,
-          id_tahunajaran:
-            idTahunajaran || check?.getDataValue('id_tahunajaran'),
-          id_tingkat: idTingkat || check?.getDataValue('id_tingkat'),
-          id_wali_kelas: idWaliKelas || check?.getDataValue('id_wali_kelas'),
-          id_lembaga: idLembaga || check?.getDataValue('id_lembaga'),
         },
-        condition: { id_kelas_mda: id },
+        condition: { id_shift: id },
       });
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(`kelas mda update: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `shift presensi update: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_kelas_mda: id });
+      const check = await repository.detail({ id_shift: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_kelas_mda: id },
+        condition: { id_shift: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`kelas mda delete: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `shift presensi delete: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -257,7 +232,7 @@ export default class Controller {
 
       const { dir, path } = await helper.checkDirExport('excel');
 
-      const name: string = 'kelas-mda';
+      const name: string = 'shift-presensi';
       const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
       const title: string = `${name.replace(/-/g, ' ').toUpperCase()}`;
       const urlExcel: string = `${dir}/${filename}`;
@@ -266,10 +241,10 @@ export default class Controller {
 
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      return response.success('export excel kelas mda', urlExcel, res);
+      return response.success('export excel shift presensi', urlExcel, res);
     } catch (err: any) {
       return helper.catchError(
-        `export excel kelas mda: ${err?.message}`,
+        `export excel shift presensi: ${err?.message}`,
         500,
         res
       );
@@ -313,46 +288,20 @@ export default class Controller {
         const row = normalizeRow(raw);
         const errors = validateRow(row);
 
-        const nama_kelas_mda = row.nama_kelas_mda;
-        const tahun_ajaran = row.tahun_ajaran;
-        const nama_lembaga = row.nama_lembaga;
-        const tingkat = row.tingkat;
-        const nama_lengkap = row.nama_lengkap;
-
-        const tahunAjaranExist = await tahunAjaranRepository.detail({ tahun_ajaran });
-        if (!tahunAjaranExist) {
-          errors.push(`Tahun Ajaran ${tahun_ajaran} tidak ditemukan`);
-        }
-
-        const lembagaExist = await lembagaRepository.detail({ nama_lembaga });
-        if (!lembagaExist) {
-          errors.push(`Lembaga ${nama_lembaga} tidak ditemukan`);
-        }
-
-        const tingkatExist = await tingkatRepository.detail({ tingkat });
-        if (!tingkatExist) {
-          errors.push(`Tingkat ${tingkat} tidak ditemukan`);
-        }
-
-        const pegawaiExist = await pegawaiRepository.detail({ nama_lengkap });
-        if (!pegawaiExist) {
-          errors.push(`Wali Kelas ${nama_lengkap} tidak ditemukan`);
-        }
+        const kode_shift = row.kode_shift;
 
         const valid = errors.length === 0;
 
         const payload = {
-          id_tahunajaran: tahunAjaranExist?.id_tahunajaran,
-          id_lembaga: lembagaExist?.id_lembaga,
-          id_tingkat: tingkatExist?.id_tingkat,
-          id_wali_kelas: pegawaiExist?.id_pegawai,
-          nama_kelas_mda: row.nama_kelas_mda,
-          lembaga: row.nama_lembaga,
-          tahun_ajaran: row.tahun_ajaran,
-          tingkat: row.tingkat,
-          wali_kelas: row.nama_lengkap,
+          kode_shift: row.kode_shift,
+          nama_shift: row.nama_shift,
+          kategori_shift: row.kategori_shift,
+          waktu_mulai: row.waktu_mulai,
+          waktu_selesai: row.waktu_selesai,
+          toleransi_menit: row.toleransi_menit,
+          is_wajib: row.is_wajib,
+          wajib: row.wajib,
           status: row.status,
-          nomor_urut: row.nomor_urut,
           keterangan: row.keterangan ?? null,
         };
 
@@ -367,14 +316,14 @@ export default class Controller {
 
         if (mode === 'preview' || !valid) continue;
 
-        const existing = await repository.detail({ nama_kelas_mda, id_tahunajaran: tahunAjaranExist?.id_tahunajaran, id_lembaga: lembagaExist?.id_lembaga });
+        const existing = await repository.detail({ kode_shift });
 
         if (existing) {
           await existing.update({
             ...payload,
           }, { transaction: trx! });
         } else {
-          let newCreate = await KelasMda.create({
+          let newCreate = await ShiftPresensi.create({
             ...payload,
           }, { transaction: trx! });
         }
@@ -392,14 +341,14 @@ export default class Controller {
         await trx.commit();
         
         return response.success(
-          'import kelas mda berhasil',
+          'import shift presensi berhasil',
           dataRes,
           res
         );
       }
 
       return response.success(
-        'preview import kelas mda',
+        'preview import shift presensi',
         {
           ...dataRes,
           data: results,
@@ -411,7 +360,7 @@ export default class Controller {
 
       //console.error(err);
       return helper.catchError(
-        `import excel kelas mda: ${err?.message}`,
+        `import excel shift presensi: ${err?.message}`,
         500,
         res
       );
@@ -430,9 +379,7 @@ export default class Controller {
       let data = null;
       for (const payload of payloads) {
         const existing = await repository.detail({
-          nama_kelas_mda: payload.nama_kelas_mda,
-          id_tahunajaran: payload.id_tahunajaran,
-          id_lembaga: payload.id_lembaga
+          kode_shift: payload.kode_shift,
         });
 
         if (existing) {
@@ -440,7 +387,7 @@ export default class Controller {
             ...payload,
           }, { transaction: trx });
         } else {
-          let newCreate = await KelasMda.create({
+          let newCreate = await ShiftPresensi.create({
             ...payload,
           }, { transaction: trx });
         }
@@ -449,7 +396,7 @@ export default class Controller {
       await trx.commit();
 
       return response.success(
-        'Import batch kelas mda berhasil',
+        'Import batch shift presensi berhasil',
         { total: payloads.length },
         res
       );
@@ -458,6 +405,7 @@ export default class Controller {
       return helper.catchError(`Import batch gagal: ${err.message}`, 500, res);
     }
   }
+
 }
 
-export const kelasMda = new Controller();
+export const shiftPresensi = new Controller();

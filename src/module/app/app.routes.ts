@@ -50,6 +50,8 @@ import { kelasFormalSchema } from './kelas.formal/kelas.formal.schema';
 import { Location } from './location/location.controller';
 import { jadwalPelajaran } from './jadwal.pelajaran/jadwal.pelajaran.controller';
 import { jadwalPelajaranSchema } from './jadwal.pelajaran/jadwal.pelajaran.schema';
+import { shiftPresensi } from './shift.presensi/shift.presensi.controller';
+import { shiftPresensiSchema } from './shift.presensi/shift.presensi.schema';
 
 const router: Router = Router();
 
@@ -898,5 +900,27 @@ router.delete('/jadwal-pelajaran/:id', auth.checkBearerToken, jadwalPelajaran.de
 router.post('/jadwal-pelajaran/export', auth.checkBearerToken, jadwalPelajaran.export);
 router.post('/jadwal-pelajaran/import', auth.checkBearerToken, jadwalPelajaran.import);
 router.post('/jadwal-pelajaran/insert', auth.checkBearerToken, jadwalPelajaran.insert);
+
+router.get('/shift-presensi/all-data', auth.checkBearerToken, shiftPresensi.list);
+router.get('/shift-presensi', auth.checkBearerToken, shiftPresensi.index);
+router.get('/shift-presensi/:id', auth.checkBearerToken, shiftPresensi.detail);
+router.post(
+  '/shift-presensi',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(shiftPresensiSchema),
+  shiftPresensi.create
+);
+router.put(
+  '/shift-presensi/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(shiftPresensiSchema),
+  shiftPresensi.update
+);
+router.delete('/shift-presensi/:id', auth.checkBearerToken, shiftPresensi.delete);
+router.post('/shift-presensi/export', auth.checkBearerToken, shiftPresensi.export);
+router.post('/shift-presensi/import', auth.checkBearerToken, shiftPresensi.import);
+router.post('/shift-presensi/insert', auth.checkBearerToken, shiftPresensi.insert);
 
 export default router;

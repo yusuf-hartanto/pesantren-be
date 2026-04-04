@@ -12,11 +12,20 @@ export default class Repository {
     let query: Object = {
       order: [['created_at', 'DESC']],
     };
+
+    let condition: any = {};
+    if (data?.id_tingkat != '') {
+      condition = {
+        id_tingkat: data?.id_tingkat,
+      };
+    }
+
     if (data?.status != '') {
       query = {
         ...query,
         where: {
           status: { [Op.eq]: data?.status },
+          ...condition,
         },
       };
     }

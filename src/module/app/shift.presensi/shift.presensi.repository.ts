@@ -1,8 +1,7 @@
 'use strict';
 
 import { Op, Sequelize } from 'sequelize';
-import Model from './semester.model';
-import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import Model from './shift.presensi.model';
 
 export default class Repository {
   public list(data: any) {
@@ -10,32 +9,18 @@ export default class Repository {
       order: [['created_at', 'DESC']],
     };
 
-    let condition: any = {};
-    if (data?.id_tahunajaran != '') {
-      condition = {
-        id_tahunajaran: data?.id_tahunajaran,
-      };
-    }
     if (data?.status != '') {
       query = {
         ...query,
         where: {
           status: { [Op.eq]: data?.status },
-          ...condition,
         },
       };
     }
 
     return Model.findAll({
       ...query,
-      include: [
-        {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
-          required: true,
-          attributes: ['tahun_ajaran'],
-        },
-      ],
+      include: [],
     });
   }
 
@@ -50,29 +35,16 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
+            { kode_shift: { [Op.like]: `%${data?.keyword}%` } },
+            { nama_shift: { [Op.like]: `%${data?.keyword}%` } },
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
           ],
         },
       };
     }
     return Model.findAndCountAll({
       ...query,
-      include: [
-        {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
-          required: false,
-          attributes: ['tahun_ajaran'],
-        },
-      ],
+      include: [],
     });
   }
 
@@ -81,14 +53,7 @@ export default class Repository {
       where: {
         ...condition,
       },
-      include: [
-        {
-          model: TahunAjaran,
-          as: 'tahun_ajaran',
-          required: true,
-          attributes: ['tahun_ajaran', 'id_tahunajaran'],
-        },
-      ],
+      include: [],
     });
   }
 

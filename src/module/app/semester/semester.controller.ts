@@ -92,7 +92,8 @@ export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const status: any = req?.query?.status || '';
-      const result = await repository.list({ status });
+      const id_tahunajaran: any = req?.query?.id_tahunajaran || '';
+      const result = await repository.list({ status, id_tahunajaran });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
@@ -148,12 +149,13 @@ export default class Controller {
         payload: { ...data, id_tahunajaran: idTahunajaran },
       });
       if (result.status === 'Aktif') {
-        const query = `UPDATE semester SET status='Nonaktif' WHERE id_semester != :id_semester AND status != 'Arsip'`;
+        const query = `UPDATE semester SET status='Nonaktif' WHERE id_tahunajaran = :id_tahunajaran AND id_semester != :id_semester AND status != 'Arsip'`;
         const conn = await rawQuery.getConnection();
         await conn.query(query, {
           type: QueryTypes.UPDATE,
           replacements: {
             id_semester: result.id_semester,
+            id_tahunajaran: idTahunajaran,
           },
         });
       }
@@ -217,12 +219,13 @@ export default class Controller {
       });
 
       if (status === 'Aktif') {
-        const query = `UPDATE semester SET status='Nonaktif' WHERE id_semester != :id_semester AND status != 'Arsip'`;
+        const query = `UPDATE semester SET status='Nonaktif' WHERE id_tahunajaran = :id_tahunajaran AND id_semester != :id_semester AND status != 'Arsip'`;
         const conn = await rawQuery.getConnection();
         await conn.query(query, {
           type: QueryTypes.UPDATE,
           replacements: {
             id_semester: id,
+            id_tahunajaran: idTahunajaran,
           },
         });
       }
@@ -411,12 +414,13 @@ export default class Controller {
         await trx.commit();
 
         if (data) {
-          const query = `UPDATE semester SET status='Nonaktif' WHERE id_semester != :id_semester AND status != 'Arsip'`;
+          const query = `UPDATE semester SET status='Nonaktif' WHERE id_tahunajaran = :id_tahunajaran AND id_semester != :id_semester AND status != 'Arsip'`;
           const conn = await rawQuery.getConnection();
           await conn.query(query, {
             type: QueryTypes.UPDATE,
             replacements: {
               id_semester: data.id_semester,
+              id_tahunajaran: data.id_tahunajaran,
             },
           });
         }
@@ -486,12 +490,13 @@ export default class Controller {
       await trx.commit();
 
       if (data) {
-        const query = `UPDATE semester SET status='Nonaktif' WHERE id_semester != :id_semester AND status != 'Arsip'`;
+        const query = `UPDATE semester SET status='Nonaktif' WHERE id_tahunajaran = :id_tahunajaran AND id_semester != :id_semester AND status != 'Arsip'`;
         const conn = await rawQuery.getConnection();
         await conn.query(query, {
           type: QueryTypes.UPDATE,
           replacements: {
             id_semester: data.id_semester,
+            id_tahunajaran: data.id_tahunajaran,
           },
         });
       }
