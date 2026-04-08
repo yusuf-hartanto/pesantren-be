@@ -11,16 +11,16 @@ import KelasFormal from '../kelas.formal/kelas.formal.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
 
 export class JadwalPelajaran extends Model {
-  public id_jadwal!: string;
-  public hari!: string;
-  public status!: string;
-  public keterangan!: string;
-  public id_kelas!: string;
-  public id_gmapel!: string;
-  public id_jam_pelajaran!: string;
-  public id_semester!: string;
-  public id_tahunajaran!: string;
-  public id_lokasi!: string;
+  declare id_jadwal: string;
+  declare hari: string;
+  declare status: string;
+  declare keterangan: string;
+  declare id_kelas: string;
+  declare id_gmapel: string;
+  declare id_jam_pelajaran: string;
+  declare id_semester: string;
+  declare id_tahunajaran: string;
+  declare id_lokasi: string;
 }
 
 export function initJadwalPelajaran(sequelize: Sequelize) {

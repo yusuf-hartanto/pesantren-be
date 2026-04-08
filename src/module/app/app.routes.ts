@@ -52,6 +52,8 @@ import { jadwalPelajaran } from './jadwal.pelajaran/jadwal.pelajaran.controller'
 import { jadwalPelajaranSchema } from './jadwal.pelajaran/jadwal.pelajaran.schema';
 import { shiftPresensi } from './shift.presensi/shift.presensi.controller';
 import { shiftPresensiSchema } from './shift.presensi/shift.presensi.schema';
+import { masterSlotWaktu } from './master.slot.waktu/master.slot.waktu.controller';
+import { masterSlotWaktuSchema } from './master.slot.waktu/master.slot.waktu.schema';
 
 const router: Router = Router();
 
@@ -922,5 +924,27 @@ router.delete('/shift-presensi/:id', auth.checkBearerToken, shiftPresensi.delete
 router.post('/shift-presensi/export', auth.checkBearerToken, shiftPresensi.export);
 router.post('/shift-presensi/import', auth.checkBearerToken, shiftPresensi.import);
 router.post('/shift-presensi/insert', auth.checkBearerToken, shiftPresensi.insert);
+
+router.get('/master-slot-waktu/all-data', auth.checkBearerToken, masterSlotWaktu.list);
+router.get('/master-slot-waktu', auth.checkBearerToken, masterSlotWaktu.index);
+router.get('/master-slot-waktu/:id', auth.checkBearerToken, masterSlotWaktu.detail);
+router.post(
+  '/master-slot-waktu',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(masterSlotWaktuSchema),
+  masterSlotWaktu.create
+);
+router.put(
+  '/master-slot-waktu/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(masterSlotWaktuSchema),
+  masterSlotWaktu.update
+);
+router.delete('/master-slot-waktu/:id', auth.checkBearerToken, masterSlotWaktu.delete);
+router.post('/master-slot-waktu/export', auth.checkBearerToken, masterSlotWaktu.export);
+router.post('/master-slot-waktu/import', auth.checkBearerToken, masterSlotWaktu.import);
+router.post('/master-slot-waktu/insert', auth.checkBearerToken, masterSlotWaktu.insert);
 
 export default router;

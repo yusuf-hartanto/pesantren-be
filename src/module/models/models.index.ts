@@ -112,7 +112,8 @@ import {
 } from '../app/kelas.formal/kelas.formal.model';
 import { associateLokasi, initLokasi } from '../app/location/location.model';
 import { initJadwalPelajaran, associateJadwalPelajaran } from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
-import { initShiftPresensi, associateShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
+import { initShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
+import { initMasterSlotWaktu } from '../app/master.slot.waktu/master.slot.waktu.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -160,6 +161,7 @@ export function initializeModels(sequelize: Sequelize) {
   initLokasi(sequelize);
   initJadwalPelajaran(sequelize);
   initShiftPresensi(sequelize);
+  initMasterSlotWaktu(sequelize);
 
   // associate
   associateAppRole();

@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class StatusAwalSantri extends Model {
-  public id_status_awal_santri!: string;
-  public kode_status_awal!: string;
-  public nama_status_awal!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
+  declare id_status_awal_santri: string;
+  declare kode_status_awal: string;
+  declare nama_status_awal: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initStatusAwalSantri(sequelize: Sequelize) {

@@ -3,9 +3,9 @@
 import ExcelJS from 'exceljs';
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
-import { variable } from './shift.presensi..variable';
+import { variable } from './master.slot.waktu.variable';
 import { response } from '../../../helpers/response';
-import { repository } from './shift.presensi.repository';
+import { repository } from './master.slot.waktu.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -15,15 +15,15 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import moment from 'moment';
-import { shiftPresensiSchema } from './shift.presensi.schema';
+import { masterSlotWaktuSchema } from './master.slot.waktu.schema';
 import { sequelize } from '../../../database/connection';
 import fs from 'fs/promises';
-import ShiftPresensi from './shift.presensi.model';
+import MasterSlotWaktu from './master.slot.waktu.model';
 
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Kode Shift', 'Nama Shift', 'Kategori', 'Jam (Mulai - Selesai)', 'Toleransi', 'Wajib', 'Status', 'Keterangan']);
+  sheet.addRow(['No', 'Kode Slot', 'Jam (Mulai - Selesai)', 'Aktif', 'Keterangan']);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -33,13 +33,9 @@ const generateDataExcel = (sheet: any, details: any) => {
   for (let i in details) {
     sheet.addRow([
       parseInt(i) + 1,
-      details[i]?.kode_shift || '',
-      details[i]?.nama_shift || '',
-      details[i]?.kategori_shift || '',
-      `${details[i]?.waktu_mulai?.slice(0, -3)} - ${details[i]?.waktu_selesai?.slice(0, -3)}`,
-      details[i]?.toleransi_menit || '',
-      details[i]?.is_wajib ? 'Ya' : 'Tidak',
-      details[i]?.status,
+      details[i]?.kode_slot || '',
+      `${details[i]?.jam_mulai?.slice(0, -3)} - ${details[i]?.jam_selesai?.slice(0, -3)}`,
+      details[i]?.is_active ? 'Ya' : 'Tidak',
       details[i]?.keterangan || '',
     ]);
   }
@@ -59,29 +55,24 @@ const generateDataExcel = (sheet: any, details: any) => {
 };
 
 const normalizeRow = (row: any) => ({
-  kode_shift: String(row['Kode Shift'] || '').trim(),
-  nama_shift: String(row['Nama Shift'] || '').trim(),
-  kategori_shift: String(row['Kategori'] || '').trim(),
-  waktu_mulai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[0],
-  waktu_selesai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[1],
-  toleransi_menit:
-    row['Toleransi'] !== undefined ? Number(row['Toleransi']) : null,
-  wajib: String(row['Wajib'] || '').trim(),
-  is_wajib: String(row['Wajib'] || '').trim() === 'Ya',
-  status: String(row['Status'] || '').trim(),
+  kode_slot: String(row['Kode Slot'] || '').trim(),
+  jam_mulai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[0],
+  jam_selesai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[1],
+  active: String(row['Aktif'] || '').trim(),
+  is_active: String(row['Aktif'] || '').trim() === 'Ya',
   keterangan: String(row['Keterangan'] || '').trim(),
   __row: row.__row,
 });
 
 const validateRow = (row: any) => {
-  
+
   const errors: string[] = [];
 
-  if (!['Ya', 'Tidak'].includes(row.wajib)) {
-    errors.push('Wajib harus Ya atau Tidak');
+  if (!['Ya', 'Tidak'].includes(row.active)) {
+    errors.push('Aktif harus Ya atau Tidak');
   }
 
-  const valid = shiftPresensiSchema.safeParse(row);
+  const valid = masterSlotWaktuSchema.safeParse(row);
 
   if (!valid.success) {
     for (const e of valid.error.issues) {
@@ -95,13 +86,13 @@ const validateRow = (row: any) => {
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
-      const status: any = req?.query?.status || '';
-      const result = await repository.list({ status });
+      const is_active: any = req?.query?.is_active || '';
+      const result = await repository.list({ is_active });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`shift presensi list: ${err?.message}`, 500, res);
+      return helper.catchError(`master slot waktu list: ${err?.message}`, 500, res);
     }
   }
 
@@ -117,7 +108,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`shift presensi index: ${err?.message}`, 500, res);
+      return helper.catchError(`master slot waktu index: ${err?.message}`, 500, res);
     }
   }
 
@@ -125,13 +116,13 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
       const result: Object | any = await repository.detail({
-        id_shift: id,
+        id_master_slot_waktu: id,
       });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(
-        `shift presensi detail: ${err?.message}`,
+        `master slot waktu detail: ${err?.message}`,
         500,
         res
       );
@@ -140,9 +131,9 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const { kode_shift } = req?.body;
+      const { kode_slot } = req?.body;
 
-      const check = await repository.detail({ kode_shift });
+      const check = await repository.detail({ kode_slot });
 
       if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
@@ -155,7 +146,7 @@ export default class Controller {
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `shift presensi create: ${err?.message}`,
+        `master slot waktu create: ${err?.message}`,
         500,
         res
       );
@@ -165,33 +156,34 @@ export default class Controller {
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const { kode_shift } = req?.body;
+      const { kode_slot } = req?.body;
 
-      const check = await repository.detail({ id_shift: id });
+      const check = await repository.detail({ id_master_slot_waktu: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       if (
-        kode_shift !== check.kode_shift
+        kode_slot !== check.kode_slot
       ) {
-        const duplicate = await repository.detail({ kode_shift });
+        const duplicate = await repository.detail({ kode_slot });
 
         if (duplicate) {
           return response.failed(ALREADY_EXIST, 400, res);
         }
       }
+
       const data: Object = helper.only(variable.fillable(), req?.body, true);
 
       await repository.update({
         payload: {
           ...data,
         },
-        condition: { id_shift: id },
+        condition: { id_master_slot_waktu: id },
       });
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `shift presensi update: ${err?.message}`,
+        `master slot waktu update: ${err?.message}`,
         500,
         res
       );
@@ -201,15 +193,15 @@ export default class Controller {
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const check = await repository.detail({ id_shift: id });
+      const check = await repository.detail({ id_master_slot_waktu: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
       await repository.delete({
-        condition: { id_shift: id },
+        condition: { id_master_slot_waktu: id },
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(
-        `shift presensi delete: ${err?.message}`,
+        `master slot waktu delete: ${err?.message}`,
         500,
         res
       );
@@ -224,14 +216,14 @@ export default class Controller {
 
       let result: any = [];
       if (!isTemplate) {
-        result = await repository.list({ status: q });
+        result = await repository.list({ is_active: q });
         if (result?.length < 1)
           return response.success(NOT_FOUND, null, res, false);
       }
 
       const { dir, path } = await helper.checkDirExport('excel');
 
-      const name: string = 'shift-presensi';
+      const name: string = 'master-slot-waktu';
       const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
       const title: string = `${name.replace(/-/g, ' ').toUpperCase()}`;
       const urlExcel: string = `${dir}/${filename}`;
@@ -240,10 +232,10 @@ export default class Controller {
 
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      return response.success('export excel shift presensi', urlExcel, res);
+      return response.success('export excel master slot waktu', urlExcel, res);
     } catch (err: any) {
       return helper.catchError(
-        `export excel shift presensi: ${err?.message}`,
+        `export excel master slot waktu: ${err?.message}`,
         500,
         res
       );
@@ -287,20 +279,16 @@ export default class Controller {
         const row = normalizeRow(raw);
         const errors = validateRow(row);
 
-        const kode_shift = row.kode_shift;
+        const kode_slot = row.kode_slot;
 
         const valid = errors.length === 0;
 
         const payload = {
-          kode_shift: row.kode_shift,
-          nama_shift: row.nama_shift,
-          kategori_shift: row.kategori_shift,
-          waktu_mulai: row.waktu_mulai,
-          waktu_selesai: row.waktu_selesai,
-          toleransi_menit: row.toleransi_menit,
-          is_wajib: row.is_wajib,
-          wajib: row.wajib,
-          status: row.status,
+          kode_slot: row.kode_slot,
+          jam_mulai: row.jam_mulai,
+          jam_selesai: row.jam_selesai,
+          is_active: row.is_active,
+          active: row.active,
           keterangan: row.keterangan ?? null,
         };
 
@@ -315,14 +303,14 @@ export default class Controller {
 
         if (mode === 'preview' || !valid) continue;
 
-        const existing = await repository.detail({ kode_shift });
+        const existing = await repository.detail({ kode_slot });
 
         if (existing) {
           await existing.update({
             ...payload,
           }, { transaction: trx! });
         } else {
-          let newCreate = await ShiftPresensi.create({
+          let newCreate = await MasterSlotWaktu.create({
             ...payload,
           }, { transaction: trx! });
         }
@@ -340,14 +328,14 @@ export default class Controller {
         await trx.commit();
         
         return response.success(
-          'import shift presensi berhasil',
+          'import master slot waktu berhasil',
           dataRes,
           res
         );
       }
 
       return response.success(
-        'preview import shift presensi',
+        'preview import master slot waktu',
         {
           ...dataRes,
           data: results,
@@ -359,7 +347,7 @@ export default class Controller {
 
       //console.error(err);
       return helper.catchError(
-        `import excel shift presensi: ${err?.message}`,
+        `import excel master slot waktu: ${err?.message}`,
         500,
         res
       );
@@ -378,7 +366,7 @@ export default class Controller {
       let data = null;
       for (const payload of payloads) {
         const existing = await repository.detail({
-          kode_shift: payload.kode_shift,
+          kode_slot: payload.kode_slot,
         });
 
         if (existing) {
@@ -386,7 +374,7 @@ export default class Controller {
             ...payload,
           }, { transaction: trx });
         } else {
-          let newCreate = await ShiftPresensi.create({
+          let newCreate = await MasterSlotWaktu.create({
             ...payload,
           }, { transaction: trx });
         }
@@ -395,7 +383,7 @@ export default class Controller {
       await trx.commit();
 
       return response.success(
-        'Import batch shift presensi berhasil',
+        'Import batch master slot waktu berhasil',
         { total: payloads.length },
         res
       );
@@ -407,4 +395,4 @@ export default class Controller {
 
 }
 
-export const shiftPresensi = new Controller();
+export const masterSlotWaktu = new Controller();

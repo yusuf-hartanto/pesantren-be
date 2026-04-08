@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class JenisBeasiswa extends Model {
-  public id_beasiswa!: string;
-  public kode_beasiswa!: string;
-  public nama_beasiswa!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
+  declare id_beasiswa: string;
+  declare kode_beasiswa: string;
+  declare nama_beasiswa: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initJenisBeasiswa(sequelize: Sequelize) {
