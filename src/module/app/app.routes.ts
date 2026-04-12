@@ -54,6 +54,8 @@ import { shiftPresensi } from './shift.presensi/shift.presensi.controller';
 import { shiftPresensiSchema } from './shift.presensi/shift.presensi.schema';
 import { masterSlotWaktu } from './master.slot.waktu/master.slot.waktu.controller';
 import { masterSlotWaktuSchema } from './master.slot.waktu/master.slot.waktu.schema';
+import { jadwalInspeksiKebersihan } from './jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.controller';
+import { jadwalInspeksiKebersihanSchema } from './jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.schema';
 
 const router: Router = Router();
 
@@ -946,5 +948,27 @@ router.delete('/master-slot-waktu/:id', auth.checkBearerToken, masterSlotWaktu.d
 router.post('/master-slot-waktu/export', auth.checkBearerToken, masterSlotWaktu.export);
 router.post('/master-slot-waktu/import', auth.checkBearerToken, masterSlotWaktu.import);
 router.post('/master-slot-waktu/insert', auth.checkBearerToken, masterSlotWaktu.insert);
+
+router.get('/jadwal-inspeksi-kebersihan/all-data', auth.checkBearerToken, jadwalInspeksiKebersihan.list);
+router.get('/jadwal-inspeksi-kebersihan', auth.checkBearerToken, jadwalInspeksiKebersihan.index);
+router.get('/jadwal-inspeksi-kebersihan/:id', auth.checkBearerToken, jadwalInspeksiKebersihan.detail);
+router.post(
+  '/jadwal-inspeksi-kebersihan',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(jadwalInspeksiKebersihanSchema),
+  jadwalInspeksiKebersihan.create
+);
+router.put(
+  '/jadwal-inspeksi-kebersihan/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(jadwalInspeksiKebersihanSchema),
+  jadwalInspeksiKebersihan.update
+);
+router.delete('/jadwal-inspeksi-kebersihan/:id', auth.checkBearerToken, jadwalInspeksiKebersihan.delete);
+router.post('/jadwal-inspeksi-kebersihan/export', auth.checkBearerToken, jadwalInspeksiKebersihan.export);
+router.post('/jadwal-inspeksi-kebersihan/import', auth.checkBearerToken, jadwalInspeksiKebersihan.import);
+router.post('/jadwal-inspeksi-kebersihan/insert', auth.checkBearerToken, jadwalInspeksiKebersihan.insert);
 
 export default router;

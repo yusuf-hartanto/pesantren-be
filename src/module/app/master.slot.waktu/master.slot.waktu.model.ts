@@ -17,11 +17,11 @@ export function initMasterSlotWaktu(sequelize: Sequelize) {
     {
       id_master_slot_waktu: {
         type: DataTypes.STRING,
-        primaryKey: true,
         unique: true,
       },
       kode_slot: {
         type: DataTypes.STRING(255),
+        primaryKey: true,
         unique: true,
       },
       jam_mulai: {
