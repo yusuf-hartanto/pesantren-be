@@ -7,28 +7,28 @@ import AreaRegency from '../../area/regencies.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class AppResource extends Model {
-  public resource_id!: string;
-  public role_id!: string;
-  public username!: string;
-  public email!: string;
-  public password!: string;
-  public full_name!: string;
-  public place_of_birth!: string;
-  public date_of_birth!: string;
-  public usia!: number;
-  public telepon!: string;
-  public image_foto!: string;
-  public total_login!: number;
-  public area_province_id!: string;
-  public area_regencies_id!: string;
-  public confirm_hash!: string;
-  public status!: string;
-  public token!: string;
-  public token_expired!: string;
-  public created_by!: string;
-  public created_date!: Date;
-  public modified_by!: string;
-  public modified_date!: Date;
+  declare resource_id: string;
+  declare role_id: string;
+  declare username: string;
+  declare email: string;
+  declare password: string;
+  declare full_name: string;
+  declare place_of_birth: string;
+  declare date_of_birth: string;
+  declare usia: number;
+  declare telepon: string;
+  declare image_foto: string;
+  declare total_login: number;
+  declare area_province_id: string;
+  declare area_regencies_id: string;
+  declare confirm_hash: string;
+  declare status: string;
+  declare token: string;
+  declare token_expired: string;
+  declare created_by: string;
+  declare created_date: Date;
+  declare modified_by: string;
+  declare modified_date: Date;
 }
 
 export function initAppResourceModel(sequelize: Sequelize) {

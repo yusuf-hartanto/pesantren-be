@@ -7,18 +7,18 @@ import Asrama from '../asrama/asrama.model';
 import Pegawai from '../pegawai/pegawai.model';
 
 export class Kamar extends Model {
-  public id_kamar!: string;
-  public nama_kamar!: string;
-  public lantai!: string;
-  public kapasitas!: string;
-  public status!: string;
-  public keterangan!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  declare id_kamar: string;
+  declare nama_kamar: string;
+  declare lantai: string;
+  declare kapasitas: string;
+  declare status: string;
+  declare keterangan: string;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   // Relasi
-  public asrama?: Asrama;
-  public waliAsuh?: Pegawai;
+  declare asrama?: Asrama;
+  declare waliAsuh?: Pegawai;
 }
 
 export function initKamar(sequelize: Sequelize) {

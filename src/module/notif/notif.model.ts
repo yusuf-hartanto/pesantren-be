@@ -5,10 +5,10 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import Resource from '../app/resource/resource.model';
 
 export class Notif extends Model {
-  public id!: string;
-  public message!: string;
-  public nomor_urut!: number;
-  public status!: string;
+  declare id: string;
+  declare message: string;
+  declare nomor_urut: number;
+  declare status: string;
 }
 
 export function initNotif(sequelize: Sequelize) {

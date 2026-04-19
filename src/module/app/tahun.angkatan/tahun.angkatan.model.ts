@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class TahunAngkatan extends Model {
-  public id_angkatan!: string;
-  public tahun_angkatan!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
+  declare id_angkatan: string;
+  declare tahun_angkatan: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
 }
 
 export function initTahunAngkatan(sequelize: Sequelize) {

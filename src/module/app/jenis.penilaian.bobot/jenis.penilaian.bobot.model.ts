@@ -8,23 +8,23 @@ import Tingkat from '../tingkat/tingkat.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export class JenisPenilaianBobot extends Model {
-  public id_bobot!: string;
-  public id_penilaian!: string;
-  public lembaga_type!: 'FORMAL' | 'PESANTREN';
-  public id_lembaga!: string;
-  public id_tingkat!: string | null;
-  public id_tahunajaran!: string;
-  public bobot!: number; // Gunakan number untuk DECIMAL
-  public status!: 'Aktif' | 'Nonaktif';
+  declare id_bobot: string;
+  declare id_penilaian: string;
+  declare lembaga_type: 'FORMAL' | 'PESANTREN';
+  declare id_lembaga: string;
+  declare id_tingkat: string | null;
+  declare id_tahunajaran: string;
+  declare bobot: number; // Gunakan number untuk DECIMAL
+  declare status: 'Aktif' | 'Nonaktif';
   
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at!: Date | null;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
+  declare readonly deleted_at: Date | null;
 
   // Relasi
-  public readonly jenisPenilaian?: JenisPenilaian;
-  public readonly tingkat?: Tingkat;
-  public readonly tahunAjaran?: TahunAjaran;
+  declare readonly jenisPenilaian?: JenisPenilaian;
+  declare readonly tingkat?: Tingkat;
+  declare readonly tahunAjaran?: TahunAjaran;
 }
 
 export function initJenisPenilaianBobot(sequelize: Sequelize) {
