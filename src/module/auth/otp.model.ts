@@ -4,13 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class AppOtp extends Model {
-  public id!: string;
-  public email!: string;
-  public code!: number;
-  public status!: number;
-  public expired!: Date;
-  public created_date!: Date;
-  public modified_date!: Date;
+  declare id: string;
+  declare email: string;
+  declare code: number;
+  declare status: number;
+  declare expired: Date;
+  declare created_date: Date;
+  declare modified_date: Date;
 }
 
 export function initAppOtp(sequelize: Sequelize) {

@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class JenisJamPelajaran extends Model {
-  public id_jenisjam!: string;
-  public nama_jenis_jam!: string;
-  public lembaga_type!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
+  declare id_jenisjam: string;
+  declare nama_jenis_jam: string;
+  declare lembaga_type: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initJenisJamPelajaran(sequelize: Sequelize) {

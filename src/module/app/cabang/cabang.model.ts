@@ -9,13 +9,13 @@ import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 
 export class Cabang extends Model {
-  public id_cabang!: string;
-  public nama_cabang!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public alamat!: string;
-  public createdAt!: Date;
-  public updatedAt!: Date;
+  declare id_cabang: string;
+  declare nama_cabang: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare alamat: string;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export function initCabang(sequelize: Sequelize) {

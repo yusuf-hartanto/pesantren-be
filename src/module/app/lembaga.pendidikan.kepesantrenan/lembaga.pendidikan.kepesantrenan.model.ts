@@ -6,18 +6,18 @@ import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
 
 export class LembagaPendidikanKepesantrenan extends Model {
-  public id_lembaga!: string;
-  public nama_lembaga!: string;
-  public id_cabang!: string | null;
-  public keterangan!: string | null;
+  declare id_lembaga: string;
+  declare nama_lembaga: string;
+  declare id_cabang: string | null;
+  declare keterangan: string | null;
 
   // Timestamps otomatis
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at!: Date | null;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
+  declare readonly deleted_at: Date | null;
 
   // Relasi
-  public cabang?: Cabang;
+  declare cabang?: Cabang;
 }
 
 export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {

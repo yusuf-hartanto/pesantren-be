@@ -4,16 +4,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class InventarisUmum extends Model {
-  public id_aset!: string;
-  public kode_aset!: string;
-  public nama_aset!: string;
-  public kategori!: string;
-  public jumlah!: number;
-  public kondisi!: string;
-  public lokasi!: string;
-  public sumber_aset!: string;
-  public tanggal_input!: Date;
-  public keterangan!: string;
+  declare id_aset: string;
+  declare kode_aset: string;
+  declare nama_aset: string;
+  declare kategori: string;
+  declare jumlah: number;
+  declare kondisi: string;
+  declare lokasi: string;
+  declare sumber_aset: string;
+  declare tanggal_input: Date;
+  declare keterangan: string;
 }
 
 export function initInventarisUmum(sequelize: Sequelize) {

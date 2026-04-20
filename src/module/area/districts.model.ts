@@ -5,10 +5,10 @@ import AreaRegency from './regencies.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class AreaDistrict extends Model {
-  public id!: string;
-  public area_province_id!: string;
-  public area_regencies_id!: string;
-  public name!: string;
+  declare id: string;
+  declare area_province_id: string;
+  declare area_regencies_id: string;
+  declare name: string;
 }
 
 export function initAreaDistrict(sequelize: Sequelize) {

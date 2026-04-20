@@ -3,9 +3,9 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class AreaProvince extends Model {
-  public id!: string;
-  public area_province_id!: string;
-  public name!: string;
+  declare id: string;
+  declare area_province_id: string;
+  declare name: string;
 }
 
 export function initAreaProvince(sequelize: Sequelize) {

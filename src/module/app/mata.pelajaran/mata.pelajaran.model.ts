@@ -6,15 +6,15 @@ import KelompokPelajaran from '../kelompok.pelajaran/kelompok.pelajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
 export class MataPelajaran extends Model {
-  public id_mapel!: string;
-  public id_kelpelajaran!: string;
-  public id_lembaga!: string;
-  public kode_mapel!: string;
-  public nama_mapel!: string;
-  public nomor_urut!: number;
-  public kkm!: number | null;
-  public keterangan!: string;
-  public status!: string;
+  declare id_mapel: string;
+  declare id_kelpelajaran: string;
+  declare id_lembaga: string;
+  declare kode_mapel: string;
+  declare nama_mapel: string;
+  declare nomor_urut: number;
+  declare kkm: number | null;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initMataPelajaran(sequelize: Sequelize) {
