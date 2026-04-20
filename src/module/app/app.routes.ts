@@ -56,6 +56,12 @@ import { masterSlotWaktu } from './master.slot.waktu/master.slot.waktu.controlle
 import { masterSlotWaktuSchema } from './master.slot.waktu/master.slot.waktu.schema';
 import { jadwalInspeksiKebersihan } from './jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.controller';
 import { jadwalInspeksiKebersihanSchema } from './jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.schema';
+import { kebersihanInspeksi } from './kebersihan.inspeksi/kebersihan.inspeksi.controller';
+import { kebersihanInspeksiSchema } from './kebersihan.inspeksi/kebersihan.inspeksi.schema';
+import { kebersihanTemuan } from './kebersihan.temuan/kebersihan.temuan.controller';
+import { kebersihanTemuanSchema } from './kebersihan.temuan/kebersihan.temuan.schema';
+import { kebersihanScanLog } from './kebersihan.scan.log/kebersihan.scan.log.controller';
+import { kebersihanScanLogSchema } from './kebersihan.scan.log/kebersihan.scan.log.schema';
 
 const router: Router = Router();
 
@@ -970,5 +976,65 @@ router.delete('/jadwal-inspeksi-kebersihan/:id', auth.checkBearerToken, jadwalIn
 router.post('/jadwal-inspeksi-kebersihan/export', auth.checkBearerToken, jadwalInspeksiKebersihan.export);
 router.post('/jadwal-inspeksi-kebersihan/import', auth.checkBearerToken, jadwalInspeksiKebersihan.import);
 router.post('/jadwal-inspeksi-kebersihan/insert', auth.checkBearerToken, jadwalInspeksiKebersihan.insert);
+
+router.get('/kebersihan-inspeksi/all-data', auth.checkBearerToken, kebersihanInspeksi.list);
+router.get('/kebersihan-inspeksi', auth.checkBearerToken, kebersihanInspeksi.index);
+router.get('/kebersihan-inspeksi/:id', auth.checkBearerToken, kebersihanInspeksi.detail);
+router.post(
+  '/kebersihan-inspeksi',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(kebersihanInspeksiSchema),
+  kebersihanInspeksi.create
+);
+router.put(
+  '/kebersihan-inspeksi/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(kebersihanInspeksiSchema),
+  kebersihanInspeksi.update
+);
+router.delete('/kebersihan-inspeksi/:id', auth.checkBearerToken, kebersihanInspeksi.delete);
+router.post('/kebersihan-inspeksi/export', auth.checkBearerToken, kebersihanInspeksi.export);
+
+router.get('/kebersihan-temuan/all-data', auth.checkBearerToken, kebersihanTemuan.list);
+router.get('/kebersihan-temuan', auth.checkBearerToken, kebersihanTemuan.index);
+router.get('/kebersihan-temuan/:id', auth.checkBearerToken, kebersihanTemuan.detail);
+router.post(
+  '/kebersihan-temuan',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(kebersihanTemuanSchema),
+  kebersihanTemuan.create
+);
+router.put(
+  '/kebersihan-temuan/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(kebersihanTemuanSchema),
+  kebersihanTemuan.update
+);
+router.delete('/kebersihan-temuan/:id', auth.checkBearerToken, kebersihanTemuan.delete);
+router.post('/kebersihan-temuan/export', auth.checkBearerToken, kebersihanTemuan.export);
+
+router.get('/kebersihan-scan-log/all-data', auth.checkBearerToken, kebersihanScanLog.list);
+router.get('/kebersihan-scan-log', auth.checkBearerToken, kebersihanScanLog.index);
+router.get('/kebersihan-scan-log/:id', auth.checkBearerToken, kebersihanScanLog.detail);
+router.post(
+  '/kebersihan-scan-log',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(kebersihanScanLogSchema),
+  kebersihanScanLog.create
+);
+router.put(
+  '/kebersihan-scan-log/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(kebersihanScanLogSchema),
+  kebersihanScanLog.update
+);
+router.delete('/kebersihan-scan-log/:id', auth.checkBearerToken, kebersihanScanLog.delete);
+router.post('/kebersihan-scan-log/export', auth.checkBearerToken, kebersihanScanLog.export);
 
 export default router;
