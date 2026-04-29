@@ -110,7 +110,8 @@ export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const is_active: any = req?.query?.is_active || '';
-      const result = await repository.list({ is_active });
+      const id_petugas: any = req?.query?.id_petugas || '';
+      const result = await repository.list({ is_active, id_petugas });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);

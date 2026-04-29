@@ -13,9 +13,18 @@ export default class Repository {
     };
 
     if (data?.is_active != '') {
+
+      let condition: any = {};
+      if (data?.id_petugas != '') {
+        condition = {
+          id_petugas: data?.id_petugas,
+        };
+      }
+      
       query = {
         ...query,
         where: {
+          ...condition,
           is_active: data?.is_active == 'true',
         },
       };
