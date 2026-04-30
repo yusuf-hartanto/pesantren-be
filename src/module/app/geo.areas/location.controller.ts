@@ -1,3 +1,5 @@
+'use strict';
+
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { variable } from './location.variable';
@@ -13,17 +15,9 @@ import {
 } from '../../../utils/constant';
 import { Op } from 'sequelize';
 import { locationSchema, locationUpdateSchema } from './location.schema';
-import QRCode from 'qrcode';
 import z from 'zod';
 
 export default class Controller {
-  constructor() {
-    // Lakukan binding di sini
-    this.create = this.create.bind(this);
-    this.getParentCodes = this.getParentCodes.bind(this);
-    this.generateInitial = this.generateInitial.bind(this);
-  }
-
   public async list(req: Request, res: Response) {
     try {
       const result = await repository.list({});
@@ -54,21 +48,8 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      let result: any = (await repository.detail({ id_lokasi: id }));
-
+      const result: any = await repository.detail({ id_lokasi: id });
       if (!result) return response.success(NOT_FOUND, null, res, false);
-
-      result = result.get({ plain: true });
-
-      const qrBase64 = await QRCode.toDataURL(result.kode_lokasi, {
-        errorCorrectionLevel: 'H',
-        width: 300,
-        margin: 2
-      });
-
-      result.qr_code_base64 = qrBase64;
-      console.log('qrbase64', qrBase64)
-
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       console.log('TSSTT', `${err?.message}`)
@@ -76,30 +57,9 @@ export default class Controller {
     }
   }
 
-
-
-  private generateInitial(name: string): string {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .join('')
-      .replace(/[^A-Z]/g, ''); // Pastikan hanya karakter alfabet
-  }
-
-  private async getParentCodes(parentId: string | null): Promise<string> {
-    if (!parentId) return '';
-
-    const parent: any = await repository.detail({ id_lokasi: parentId });
-    if (!parent) return '';
-
-    const grandParentPath = await this.getParentCodes(parent.dataValues.parent_id);
-    const currentCode = parent.dataValues.kode_lokasi;;
-
-    return grandParentPath ? `${grandParentPath}-${currentCode}` : currentCode;
-  }
-
   public async create(req: Request, res: Response) {
     try {
+      console.log(req.body)
       const payload = Array.isArray(req.body) 
         ? z.array(locationSchema).parse(req.body) 
         : [locationSchema.parse(req.body)];
@@ -107,22 +67,13 @@ export default class Controller {
       const finalData = [];
 
       for (const item of payload) {
-        //Logika Bisnis: Inherit ID Cabang dari Parent
+        // 2. Logika Bisnis: Inherit ID Cabang dari Parent
         if (item.parent_id) {
           const parent: any = await repository.detail({ id_lokasi: item.parent_id });
           if (parent?.id_cabang) item.id_cabang = parent.id_cabang;
         }
 
-        if (!item.kode_lokasi || item.kode_lokasi === "") {
-          const parentPathCode = await this.getParentCodes(item?.parent_id || null);
-          console.log('Parent Path Code:', parentPathCode);
-          const myInitial = this.generateInitial(item.nama_lokasi);
-          
-          item.kode_lokasi = parentPathCode ? `${parentPathCode}-${myInitial}` : myInitial;
-          item.qr_code = item.kode_lokasi;
-        }
-
-        // Cek Duplikasi
+        // 3. Cek Duplikasi
         const isDuplicate = await repository.detail({
           id_cabang: item.id_cabang || null,
           jenis_lokasi: item.jenis_lokasi,

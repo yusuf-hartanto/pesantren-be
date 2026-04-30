@@ -3,7 +3,7 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface: QueryInterface) {
     await queryInterface.createTable('jenis_penilaian', {
       id_penilaian: {

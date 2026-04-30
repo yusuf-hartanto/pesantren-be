@@ -1,7 +1,7 @@
 'use strict';
 
 import { Op } from 'sequelize';
-import Model from './location.model';
+import Model from './geo.areas.model';
 
 export default class Repository {
   public list(data: any) {
@@ -69,7 +69,7 @@ export default class Repository {
         {
           model: Model,
           as: 'parent',
-          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi', 'parent_id'],
+          attributes: ['id_lokasi', 'nama_lokasi'],
           required: false,
         },
         {
