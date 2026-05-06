@@ -1,5 +1,6 @@
 import { Model, DataTypes, Optional, Sequelize } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
+import Cabang from '../cabang/cabang.model';
 
 // 1. Definisikan Interface untuk atribut Model
 interface LokasiAttributes {
@@ -142,6 +143,7 @@ export function initLokasi(sequelize: Sequelize) {
 export function associateLokasi() {
   Lokasi.hasMany(Lokasi, { foreignKey: 'parent_id', as: 'sub_lokasi' });
   Lokasi.belongsTo(Lokasi, { foreignKey: 'parent_id', as: 'parent' });
+  Lokasi.belongsTo(Cabang, { foreignKey: 'id_cabang', as: 'cabang' });
 }
 
 export default Lokasi;

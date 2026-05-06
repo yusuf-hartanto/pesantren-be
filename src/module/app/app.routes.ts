@@ -52,6 +52,7 @@ import { jadwalPelajaran } from './jadwal.pelajaran/jadwal.pelajaran.controller'
 import { jadwalPelajaranSchema } from './jadwal.pelajaran/jadwal.pelajaran.schema';
 import { shiftPresensi } from './shift.presensi/shift.presensi.controller';
 import { shiftPresensiSchema } from './shift.presensi/shift.presensi.schema';
+import { GeoArea } from './geo.areas/geo.areas.controller';
 
 const router: Router = Router();
 
@@ -878,6 +879,16 @@ router.get('/location/:id', auth.checkBearerToken, Location.detail);
 router.post('/location', auth.checkBearerToken, Location.create);
 router.put('/location/:id', auth.checkBearerToken, Location.update);
 router.delete('/location/:id', auth.checkBearerToken, Location.delete);
+router.post('/location/export', auth.checkBearerToken, Location.export);
+router.post('/location/import', auth.checkBearerToken, Location.import);
+router.post('/location/insert', auth.checkBearerToken, Location.insert);
+
+router.get('/geo-area/all-data', auth.checkBearerToken, GeoArea.list);
+router.get('/geo-area', auth.checkBearerToken, GeoArea.index);
+router.get('/geo-area/:id', auth.checkBearerToken, GeoArea.detail);
+router.post('/geo-area', auth.checkBearerToken, GeoArea.create);
+router.put('/geo-area/:id', auth.checkBearerToken, GeoArea.update);
+router.delete('/geo-area/:id', auth.checkBearerToken, GeoArea.delete);
 
 router.get('/jadwal-pelajaran/all-data', auth.checkBearerToken, jadwalPelajaran.list);
 router.get('/jadwal-pelajaran', auth.checkBearerToken, jadwalPelajaran.index);

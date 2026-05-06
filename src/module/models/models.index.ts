@@ -113,6 +113,7 @@ import {
 import { associateLokasi, initLokasi } from '../app/location/location.model';
 import { initJadwalPelajaran, associateJadwalPelajaran } from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
 import { initShiftPresensi, associateShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
+import { associateGeoArea, initGeoArea } from '../app/geo.areas/geo.areas.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -160,6 +161,7 @@ export function initializeModels(sequelize: Sequelize) {
   initLokasi(sequelize);
   initJadwalPelajaran(sequelize);
   initShiftPresensi(sequelize);
+  initGeoArea(sequelize);
 
   // associate
   associateAppRole();
@@ -194,6 +196,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateJenisGuru();
   associateLokasi();
   associateJadwalPelajaran();
+  associateGeoArea();
 
   addGlobalActivityHooks(sequelize);
 }
