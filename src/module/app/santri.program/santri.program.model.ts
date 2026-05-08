@@ -5,12 +5,12 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import ProgramPesantren from '../program.pesantren/program.pesantren.model';
 
 export class SantriProgram extends Model {
-  public id!: string;
-  public id_santri!: string;
-  public id_program!: string;
-  public tgl_mulai!: Date;
-  public tgl_selesai!: Date;
-  public status!: string;
+  declare id: string;
+  declare id_santri: string;
+  declare id_program: string;
+  declare tgl_mulai: Date;
+  declare tgl_selesai: Date;
+  declare status: string;
 }
 
 export function initSantriProgram(sequelize: Sequelize) {

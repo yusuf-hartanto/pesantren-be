@@ -4,11 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class KelompokPelajaran extends Model {
-  public id_kelpelajaran!: string;
-  public tahun_ajaran!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
+  declare id_kelpelajaran: string;
+  declare tahun_ajaran: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initKelompokPelajaran(sequelize: Sequelize) {

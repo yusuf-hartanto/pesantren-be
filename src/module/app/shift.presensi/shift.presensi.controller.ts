@@ -74,7 +74,6 @@ const normalizeRow = (row: any) => ({
 });
 
 const validateRow = (row: any) => {
-  console.log(row)
   
   const errors: string[] = [];
 

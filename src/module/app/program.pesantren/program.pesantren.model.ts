@@ -4,11 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class ProgramPesantren extends Model {
-  public id_program!: string;
-  public nama_program!: string;
-  public tipe_program!: string;
-  public wajib!: string;
-  public aktif!: string;
+  declare id_program: string;
+  declare nama_program: string;
+  declare tipe_program: string;
+  declare wajib: string;
+  declare aktif: string;
 }
 
 export function initProgramPesantren(sequelize: Sequelize) {

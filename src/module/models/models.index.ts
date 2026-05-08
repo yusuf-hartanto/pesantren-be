@@ -112,7 +112,12 @@ import {
 } from '../app/kelas.formal/kelas.formal.model';
 import { associateLokasi, initLokasi } from '../app/location/location.model';
 import { initJadwalPelajaran, associateJadwalPelajaran } from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
-import { initShiftPresensi, associateShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
+import { initShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
+import { initMasterSlotWaktu } from '../app/master.slot.waktu/master.slot.waktu.model';
+import { initJadwalInspeksiKebersihan, associateJadwalInspeksiKebersihan } from '../app/jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.model';
+import { initKebersihanInspeksi, associateKebersihanInspeksi } from '../app/kebersihan.inspeksi/kebersihan.inspeksi.model';
+import { initKebersihanTemuan, associateKebersihanTemuan } from '../app/kebersihan.temuan/kebersihan.temuan.model';
+import { initKebersihanScanLog, associateKebersihanScanLog } from '../app/kebersihan.scan.log/kebersihan.scan.log.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -160,6 +165,11 @@ export function initializeModels(sequelize: Sequelize) {
   initLokasi(sequelize);
   initJadwalPelajaran(sequelize);
   initShiftPresensi(sequelize);
+  initMasterSlotWaktu(sequelize);
+  initJadwalInspeksiKebersihan(sequelize);
+  initKebersihanInspeksi(sequelize);
+  initKebersihanTemuan(sequelize);
+  initKebersihanScanLog(sequelize);
 
   // associate
   associateAppRole();
@@ -194,6 +204,10 @@ export function initializeModels(sequelize: Sequelize) {
   associateJenisGuru();
   associateLokasi();
   associateJadwalPelajaran();
+  associateJadwalInspeksiKebersihan();
+  associateKebersihanInspeksi();
+  associateKebersihanTemuan();
+  associateKebersihanScanLog();
 
   addGlobalActivityHooks(sequelize);
 }

@@ -6,18 +6,18 @@ import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import Semester from '../semester/semester.model';
 
 export class KegiatanAkademik extends Model {
-  public id_kegiatan!: string;
-  public id_tahunajaran!: string;
-  public id_semester!: string;
-  public id_lembaga_formal!: string;
-  public id_lembaga_pesantren!: string;
-  public id_cabang!: string;
-  public nama_kegiatan!: string;
-  public keterangan!: string;
-  public tanggal_mulai!: Date;
-  public tanggal_selesai!: Date;
-  public status!: string;
-  public berlaku_untuk!: string;
+  declare id_kegiatan: string;
+  declare id_tahunajaran: string;
+  declare id_semester: string;
+  declare id_lembaga_formal: string;
+  declare id_lembaga_pesantren: string;
+  declare id_cabang: string;
+  declare nama_kegiatan: string;
+  declare keterangan: string;
+  declare tanggal_mulai: Date;
+  declare tanggal_selesai: Date;
+  declare status: string;
+  declare berlaku_untuk: string;
 }
 
 export function initKegiatanAkademik(sequelize: Sequelize) {

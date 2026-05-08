@@ -4,11 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class Tingkat extends Model {
-  public id_tingkat!: string;
-  public tingkat!: string;
-  public tingkat_type!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
+  declare id_tingkat: string;
+  declare tingkat: string;
+  declare tingkat_type: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
 }
 
 export function initTingkat(sequelize: Sequelize) {

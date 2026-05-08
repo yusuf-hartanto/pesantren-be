@@ -8,16 +8,16 @@ import MataPelajaran from '../mata.pelajaran/mata.pelajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
 export class JenisGuru extends Model {
-  public id_jenisguru!: string;
-  public nama_jenis_guru!: string;
-  public id_guru!: string;
-  public id_mapel!: string;
-  public id_lembaga!: string;
-  public lembaga_type!: string;
-  public id_tingkat!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
+  declare id_jenisguru: string;
+  declare nama_jenis_guru: string;
+  declare id_guru: string;
+  declare id_mapel: string;
+  declare id_lembaga: string;
+  declare lembaga_type: string;
+  declare id_tingkat: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initJenisGuru(sequelize: Sequelize) {

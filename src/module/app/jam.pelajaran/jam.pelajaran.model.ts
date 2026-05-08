@@ -6,16 +6,16 @@ import JenisJamPelajaran from '../jenis.jampel/jenis.jampel.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
 export class JamPelajaran extends Model {
-  public id_jampel!: string;
-  public id_jenisjam!: string;
-  public id_lembaga!: string;
-  public nama_jampel!: string;
-  public mulai!: string;
-  public selesai!: string;
-  public jumlah_jampel!: number;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
+  declare id_jampel: string;
+  declare id_jenisjam: string;
+  declare id_lembaga: string;
+  declare nama_jampel: string;
+  declare mulai: string;
+  declare selesai: string;
+  declare jumlah_jampel: number;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initJamPelajaran(sequelize: Sequelize) {

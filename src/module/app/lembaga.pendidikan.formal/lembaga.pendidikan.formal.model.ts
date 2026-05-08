@@ -6,18 +6,18 @@ import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
 
 export class LembagaPendidikanFormal extends Model {
-  public id_lembaga!: string;
-  public nama_lembaga!: string;
-  public keterangan!: string;
-  public jenis_lembaga!: string;
-  public status_akreditasi!: string;
-  public nomor_npsn!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public deleted_at!: Date | null; // Tambahkan properti deleted_at
+  declare id_lembaga: string;
+  declare nama_lembaga: string;
+  declare keterangan: string;
+  declare jenis_lembaga: string;
+  declare status_akreditasi: string;
+  declare nomor_npsn: string;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare deleted_at: Date | null; // Tambahkan properti deleted_at
 
   // Relasi
-  public cabang?: Cabang;
+  declare cabang?: Cabang;
 }
 
 export function initLembagaPendidikanFormal(sequelize: Sequelize) {

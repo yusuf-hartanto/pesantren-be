@@ -9,15 +9,15 @@ import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 
 export class OrangTuaWali extends Model {
-  public id_wali!: string;
-  public id_santri!: string;
-  public nama_wali!: string;
-  public hubungan!: string;
-  public nik!: string;
-  public pendidikan!: string;
-  public pekerjaan!: string;
-  public no_hp!: string;
-  public alamat!: string;
+  declare id_wali: string;
+  declare id_santri: string;
+  declare nama_wali: string;
+  declare hubungan: string;
+  declare nik: string;
+  declare pendidikan: string;
+  declare pekerjaan: string;
+  declare no_hp: string;
+  declare alamat: string;
 }
 
 export function initOrangTuaWali(sequelize: Sequelize) {

@@ -8,22 +8,22 @@ import Kamar from '../kamar/kamar.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export class PenempatanKamarSantri extends Model {
-  public id_penempatan!: string;
-  public id_santri!: string;
-  public id_asrama!: string;
-  public id_kamar!: string;
-  public id_tahunajaran!: string;
-  public tanggal_masuk!: Date;
-  public tanggal_keluar!: Date;
-  public status!: string;
-  public keterangan!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  declare id_penempatan: string;
+  declare id_santri: string;
+  declare id_asrama: string;
+  declare id_kamar: string;
+  declare id_tahunajaran: string;
+  declare tanggal_masuk: Date;
+  declare tanggal_keluar: Date;
+  declare status: string;
+  declare keterangan: string;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   // Relasi
-  public asrama?: Asrama;
-  public kamar?: Kamar;
-  public tahunAjaran?: TahunAjaran;
+  declare asrama?: Asrama;
+  declare kamar?: Kamar;
+  declare tahunAjaran?: TahunAjaran;
 }
 
 export function initPenempatanKamarSantri(sequelize: Sequelize) {

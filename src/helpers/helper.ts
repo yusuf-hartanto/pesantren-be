@@ -67,7 +67,7 @@ export default class Helper {
 
     keys.forEach((i) => {
       if (
-        (data[i] &&
+        ((typeof data[i] === 'boolean' ? true : data[i]) &&
           data[i] !== undefined &&
           data[i] !== '' &&
           data[i] != 'null') ||

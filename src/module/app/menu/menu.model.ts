@@ -4,18 +4,18 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class AppMenu extends Model {
-  public menu_id!: string;
-  public menu_name!: string;
-  public menu_icon!: string;
-  public module_name!: string;
-  public type_menu!: string;
-  public seq_number!: number;
-  public parent_id!: string;
-  public status!: number;
-  public created_by!: string;
-  public created_date!: Date;
-  public modified_by!: string;
-  public modified_date!: Date;
+  declare menu_id: string;
+  declare menu_name: string;
+  declare menu_icon: string;
+  declare module_name: string;
+  declare type_menu: string;
+  declare seq_number: number;
+  declare parent_id: string;
+  declare status: number;
+  declare created_by: string;
+  declare created_date: Date;
+  declare modified_by: string;
+  declare modified_date: Date;
 }
 
 export function initAppMenu(sequelize: Sequelize) {

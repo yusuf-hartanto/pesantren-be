@@ -5,12 +5,12 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export class Semester extends Model {
-  public id_semester!: string;
-  public id_tahunajaran!: string;
-  public nama_semester!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
+  declare id_semester: string;
+  declare id_tahunajaran: string;
+  declare nama_semester: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initSemester(sequelize: Sequelize) {
