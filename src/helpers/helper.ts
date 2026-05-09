@@ -417,6 +417,93 @@ export default class Helper {
     }
     throw new Error('Format file tidak didukung');
   }
+
+  public async uploadBase64(
+    base64: string,
+    filename: string,
+    folder: string = '',
+    username: string = 'system',
+    type: string = 'local'
+  ) {
+    try {
+      // hapus prefix kalau ada (data:image/png;base64,...)
+      const matches = base64.match(/^data:(.+);base64,(.+)$/);
+      let ext = 'png';
+      let data = base64;
+
+      if (matches) {
+        const mimeType = matches[1];
+        data = matches[2];
+        ext = mimeType.split('/')[1];
+      }
+
+      const cleanFilename = filename.replace(/ /g, '');
+      const finalName = `${Date.now()}_${cleanFilename}.${ext}`;
+
+      const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const upload_path = `./public/uploads/${folder}/${month}`;
+
+      if (!fs.existsSync(upload_path)) {
+        fs.mkdirSync(upload_path, { recursive: true });
+      }
+
+      const filePath = path.join(upload_path, finalName);
+
+      // decode base64 → buffer
+      const buffer = Buffer.from(data, 'base64');
+
+      // simpan file
+      fs.writeFileSync(filePath, buffer);
+
+      console.log(filePath, 'filePath')
+
+      return filePath.replace('public', '');
+    } catch (err: any) {
+      console.warn(`upload ${type} error: ${err?.message}`);
+
+      if (teleConfig?.token) {
+        const telegram = new TelegramBot(teleConfig?.token);
+        await telegram.send(teleConfig?.chatId, err?.message);
+      }
+
+      return err?.message;
+    }
+  }
+
+  public checkExtentionBase64(base64: string, type: string = 'image') {
+    if (!base64) return 'file tidak valid';
+
+    // ambil mime & data
+    const matches = base64.match(/^data:(.+);base64,(.+)$/);
+    if (!matches) return 'format base64 tidak valid';
+
+    const mimeType = matches[1]; // contoh: image/png
+    const data = matches[2];
+
+    const ext = mimeType.split('/')[1]?.toLowerCase();
+
+    const allowedExt: any = {
+      image: ['jpg', 'jpeg', 'png', 'gif'],
+      video: ['mp4', 'webm', 'avi', 'mkv', 'mov', 'flv', 'mts', 'wmv'],
+      file: ['pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'],
+    };
+
+    // validasi ekstensi
+    if (!allowedExt[type]?.includes(ext)) {
+      return `file extension allowed *${allowedExt[type]?.join(', ')}.`;
+    }
+
+    // hitung size dari base64 (byte)
+    const buffer = Buffer.from(data, 'base64');
+    const size = buffer.length;
+
+    // validasi size khusus image (2MB)
+    if (type === 'image' && size > 2048000) {
+      return 'file size maksimal *2MB.';
+    }
+
+    return 'allowed';
+  }
 }
 
 export const helper = new Helper();

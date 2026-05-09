@@ -16,6 +16,7 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import moment from 'moment';
+import { appConfig } from '../../../config/config.app';
 
 const date: string = helper.date();
 
@@ -134,15 +135,26 @@ export default class Controller {
         },
       });
 
+      let foto_path: any = null;
       let insert = []
       for (const temuan of temuans) {
+        let checkFile = helper.checkExtentionBase64(temuan.foto_path);
+        if (checkFile == 'allowed') return response.failed(checkFile, 422, res);
+        
+        foto_path = await helper.uploadBase64(
+          temuan.foto_path,
+          'temuan',
+          req?.user?.username,
+          appConfig?.assetType
+        );
+
         insert.push({
           id_inspeksi: result.id_inspeksi,
           kategori: temuan.kategori,
           deskripsi: temuan.deskripsi,
           tingkat: temuan.tingkat,
           perlu_tindak_lanjut: temuan.perlu_tindak_lanjut,
-          foto_path: temuan.foto_path,
+          foto_path,
         })
       }
 
@@ -214,15 +226,28 @@ export default class Controller {
         condition: { id_inspeksi: id },
       });
 
+      let foto_path: any = null;
       let insert = []
       for (const temuan of temuans) {
+        let checkFile = helper.checkExtentionBase64(temuan.foto_path);
+        if (checkFile == 'allowed') {
+          foto_path = await helper.uploadBase64(
+            temuan.foto_path,
+            'temuan',
+            req?.user?.username,
+            appConfig?.assetType
+          );
+        } else {
+          foto_path = temuan.foto_path
+        }
+
         insert.push({
           id_inspeksi: id,
           kategori: temuan.kategori,
           deskripsi: temuan.deskripsi,
           tingkat: temuan.tingkat,
           perlu_tindak_lanjut: temuan.perlu_tindak_lanjut,
-          foto_path: temuan.foto_path,
+          foto_path
         })
       }
 
