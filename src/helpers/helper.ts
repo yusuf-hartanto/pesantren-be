@@ -504,6 +504,10 @@ export default class Helper {
 
     return 'allowed';
   }
+
+  public generateTimestamp() {
+    return Math.floor(Date.now() / 1000).toString()
+  }
 }
 
 export const helper = new Helper();
