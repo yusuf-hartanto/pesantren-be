@@ -452,13 +452,17 @@ export default class Controller {
     try {
       const { institution_id } = req.body;
       if (!institution_id) return response.failed(`institution_id ${REQUIRED}`, 422, res);
+      const bodyOnly = helper.only(['institution_id','kelas','user_id'], req.body);
 
-      const result = await service.syncSantri({ institution_id });
+      const result = await service.syncSantri(bodyOnly);
       const { code, messages, data } = result;
 
       if (code == 200) {
-        const formatted = await service.syncSantriData(data);
-        return response.success('sync santri', formatted, res);
+        if (data && data.length > 0) {
+          const formatted = await service.syncSantriData(data);
+          return response.success('sync santri', formatted, res);
+        }
+        return response.success('sync santri', result, res);
       }
 
       return response.success(messages.join(','), null, res, false);

@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { helper } from '../../helpers/helper';
 import { repository as repoSantri } from '../app/santri/santri.repository';
@@ -10,12 +10,20 @@ const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || ''
 
 interface SyncSantriPayload {
   institution_id: string
+  kelas: string
+  user_id: string
 }
 
 export default class Service {
-  public async syncSantri(payload: SyncSantriPayload) {
+  public async syncSantri(data: SyncSantriPayload) {
     if (!BASE_URL) return 'Belum setup url SiTrendi';
     if (!SECRET_KEY) return 'Belum setup secret_key SiTrendi';
+
+    let payload: any = {
+      institution_id: data.institution_id,
+    }
+    if (data.kelas) payload['kelas'] = data.kelas;
+    if (data.user_id) payload['user_id'] = data.user_id;
 
     const timestamp = helper.generateTimestamp();
     const rawBody = JSON.stringify(payload);
