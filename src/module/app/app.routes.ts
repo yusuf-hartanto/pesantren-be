@@ -454,6 +454,9 @@ router.get('/cabang/:id', auth.checkBearerToken, cabang.detail);
 router.post('/cabang', auth.checkBearerToken, cabang.create);
 router.put('/cabang/:id', auth.checkBearerToken, cabang.update);
 router.delete('/cabang/:id', auth.checkBearerToken, cabang.delete);
+router.post('/cabang/export', auth.checkBearerToken, cabang.export);
+router.post('/cabang/import', auth.checkBearerToken, cabang.import);
+router.post('/cabang/insert', auth.checkBearerToken, cabang.insert);
 
 router.get(
   '/lembaga-kepesantrenan/all-data',

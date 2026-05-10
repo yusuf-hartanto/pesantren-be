@@ -124,6 +124,110 @@ export default class Repository {
       where: data?.condition,
     });
   }
+
+  public listForExport(condition: any, limit?: number) {
+    return Model.findAll({
+      where: condition,
+      limit: limit,
+      include: [
+        { model: AreaProvince, as: 'province', attributes: ['name'] },
+        { model: AreaRegency, as: 'city', attributes: ['name'] },
+        { model: AreaDistrict, as: 'district', attributes: ['name'] },
+        { model: AreaSubDistrict, as: 'subDistrict', attributes: ['name'] },
+      ],
+      order: [['nama_cabang', 'ASC']]
+    });
+  }
+
+  public findByName(name: string) {
+    return Model.findOne({
+      where: Model.sequelize?.where(
+        Model.sequelize.fn('LOWER', Model.sequelize.col('nama_cabang')),
+        name.toLowerCase().trim()
+      )
+    });
+  }
+
+  public async findAreaId(areaModel: any, name: string, parentField?: string, parentId?: string) {
+    if (!name) return null;
+
+    const whereClause: any = Model.sequelize?.where(
+      Model.sequelize.fn('LOWER', Model.sequelize.col('name')),
+      name.toLowerCase().trim()
+    );
+
+    const condition = (parentField && parentId) 
+      ? { [Op.and]: [whereClause, { [parentField]: parentId }] } 
+      : whereClause;
+
+    const res = await areaModel.findOne({ 
+      where: condition, 
+      attributes: ['id'] 
+    });
+
+    return res ? res.id : null;
+  }
+
+  public async resolveAreaIds(raw: any) {
+    const province_id = await this.findAreaId(AreaProvince, raw.provinsi);
+    
+    const city_id = await this.findAreaId(
+      AreaRegency, 
+      raw.kota_kabupaten, 
+      'area_province_id', 
+      province_id
+    );
+
+    const district_id = await this.findAreaId(
+      AreaDistrict, 
+      raw.kecamatan, 
+      'area_regencies_id', 
+      city_id
+    );
+
+    const sub_district_id = await this.findAreaId(
+      AreaSubDistrict, 
+      raw.kelurahan, 
+      'area_district_id', 
+      district_id
+    );
+
+    return {
+      province_id,
+      city_id,
+      district_id,
+      sub_district_id
+    };
+  }
+
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+    
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
+      }
+      await trx?.commit();
+      return true;
+    } catch (error) {
+      await trx?.rollback();
+      throw error;
+    }
+  }
+
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.nama_cabang);
+
+    if (existing) {
+      return await existing.update({
+        ...payload,
+      }, { transaction });
+    } else {
+      return await Model.create({
+        ...payload,
+      }, { transaction });
+    }
+  }
 }
 
 export const repository = new Repository();

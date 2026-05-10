@@ -13,6 +13,10 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
+import ExcelJS from "exceljs";
+import moment from 'moment';
+import { Op } from 'sequelize';
+import fs from 'fs/promises';
 
 const date: string = helper.date();
 
@@ -104,6 +108,126 @@ export default class Controller {
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(`tingkat delete: ${err?.message}`, 500, res);
+    }
+  }
+
+  public export = async (req: Request, res: Response) => {
+    try {
+      const { q, template } = req.body;
+      const isTemplate = template == '1';
+
+      const condition = q ? { nama_cabang: { [Op.like]: `%${q}%` } } : {};
+      const limit = isTemplate ? 5 : undefined;
+
+      const result = await repository.listForExport(condition, limit);
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('DATA CABANG');
+
+      sheet.columns = [
+        { header: 'NAMA CABANG', key: 'nama_cabang', width: 30 },
+        { header: 'PROVINSI', key: 'provinsi', width: 25 },
+        { header: 'KOTA/KABUPATEN', key: 'kota', width: 25 },
+        { header: 'KECAMATAN', key: 'kecamatan', width: 25 },
+        { header: 'KELURAHAN', key: 'kelurahan', width: 25 },
+        { header: 'KONTAK', key: 'contact', width: 20 },
+        { header: 'EMAIL', key: 'email', width: 25 },
+        { header: 'ALAMAT', key: 'alamat', width: 40 },
+        { header: 'KETERANGAN', key: 'keterangan', width: 30 },
+      ];
+
+      result.forEach((item: any) => {
+        sheet.addRow({
+          nama_cabang: item.nama_cabang,
+          provinsi: item.province?.name || '',
+          kota: item.city?.name || '',
+          kecamatan: item.district?.name || '',
+          kelurahan: item.subDistrict?.name || '',
+          contact: item.contact,
+          email: item.email,
+          alamat: item.alamat,
+          keterangan: item.keterangan,
+        });
+      });
+
+      const { dir, path } = await helper.checkDirExport('excel');
+      const filename = `export-cabang-${moment().format('YYYYMMDDHHmmss')}.xlsx`;
+      await workbook.xlsx.writeFile(`${path}/${filename}`);
+
+      return response.success('Export berhasil', `${dir}/${filename}`, res);
+    } catch (err: any) {
+      return helper.catchError(err.message, 500, res);
+    }
+  }
+
+  public import = async (req: Request, res: Response) => {
+    const uploaded = req.files?.file_import;
+    if (!uploaded) return response.success('File tidak ditemukan', null, res, false);
+
+    try {
+      const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
+      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
+      const rows = await helper.parseImportFile({ name: file.name, data: buffer }, true);
+      const results: any[] = [];
+      
+
+      for (const raw of rows) {
+        const errors: string[] = [];
+
+        const { province_id,
+          city_id,
+          district_id,
+          sub_district_id
+        } = await repository.resolveAreaIds(raw);
+
+        if (!raw.nama_cabang) errors.push("Nama cabang wajib diisi");
+        // if (raw.provinsi && !province_id) {
+        //   errors.push(`Provinsi "${raw.provinsi}" tidak ditemukan`);
+        // }
+
+        results.push({
+          row: raw.__row,
+          valid: errors.length === 0,
+          error: errors.join(', ') || null,
+          payload: {
+            nama_cabang: raw.nama_cabang,
+            province_id,
+            city_id,
+            district_id,
+            sub_district_id,
+            contact: raw.kontak,
+            email: raw.email,
+            alamat: raw.alamat,
+            keterangan: raw.keterangan
+          }
+        });
+      }
+
+      return response.success('Preview Import Cabang', {
+        total: results.length,
+        valid: results.filter(r => r.valid).length,
+        data: results
+      }, res);
+    } catch (err: any) {
+      return helper.catchError(err.message, 500, res);
+    }
+  }
+
+  public insert = async (req: Request, res: Response) => {
+    const payloads = req.body?.data as any[];
+    console.log('payloads', payloads)
+    
+    if (!payloads || payloads.length === 0) {
+      return response.success('Tidak ada data untuk disimpan', null, res, false);
+    }
+
+    try {
+      await repository.insertImport(payloads);
+      
+      return response.success('Import Cabang Berhasil', { 
+        count: payloads.length 
+      }, res);
+    } catch (err: any) {
+      return helper.catchError(err.message, 500, res);
     }
   }
 }

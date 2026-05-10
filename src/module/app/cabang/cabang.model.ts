@@ -88,8 +88,9 @@ export function initCabang(sequelize: Sequelize) {
     {
       sequelize,
       modelName: 'Cabang',
-      tableName: 'cabang',
-      timestamps: false,
+      timestamps: true,
+      underscored: true,
+      tableName: 'cabang'
     }
   );
 

@@ -376,7 +376,7 @@ export default class Helper {
     }));
   }
 
-  public async parseImportFile(file: any) {
+  public async parseImportFile(file: any, formatKey?: boolean) {
     const ext = file.name.split('.').pop()?.toLowerCase();
 
     if (ext === 'csv') {
@@ -392,7 +392,10 @@ export default class Helper {
 
       const headers: string[] = [];
       sheet.getRow(1).eachCell((cell, col) => {
-        const header = String(cell.value ?? '').trim();
+        const header = formatKey ? String(cell.value ?? '')
+          .trim()
+          .toLowerCase()
+          .replace(/[\s/]+/g, '_') : String(cell.value ?? '').trim();
         if (header) headers[col - 1] = header;
       });
 
