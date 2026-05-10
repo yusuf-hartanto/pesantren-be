@@ -6,6 +6,8 @@ import moment from 'moment';
 import JenisPenilaian from '../jenis.penilaian/jenis.penilaian.model';
 import Tingkat from '../tingkat/tingkat.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export class JenisPenilaianBobot extends Model {
   declare id_bobot: string;
@@ -131,6 +133,20 @@ export function associateJenisPenilaianBobot() {
   JenisPenilaianBobot.belongsTo(TahunAjaran, {
     foreignKey: 'id_tahunajaran',
     as: 'tahunAjaran'
+  });
+
+  JenisPenilaianBobot.belongsTo(LembagaPendidikanFormal, {
+    foreignKey: 'id_lembaga',
+    as: 'lembagaPendidikanFormal',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  JenisPenilaianBobot.belongsTo(LembagaPendidikanKepesantrenan, {
+    foreignKey: 'id_lembaga',
+    as: 'lembagaPendidikanKepesantrenan',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
   });
 }
 

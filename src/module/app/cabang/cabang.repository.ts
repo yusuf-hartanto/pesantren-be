@@ -207,10 +207,10 @@ export default class Repository {
       for (const item of payloads) {
         await this.upsertImport(item, trx);
       }
-      await trx?.commit();
+      if (trx) await trx.commit();
       return true;
     } catch (error) {
-      await trx?.rollback();
+      if (trx) await trx.rollback();
       throw error;
     }
   }

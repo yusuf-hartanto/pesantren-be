@@ -488,6 +488,9 @@ router.delete(
   auth.checkBearerToken,
   LembagaPendidikanKepesantrenan.delete
 );
+router.post('/lembaga-kepesantrenan/export', auth.checkBearerToken, LembagaPendidikanKepesantrenan.export);
+router.post('/lembaga-kepesantrenan/import', auth.checkBearerToken, LembagaPendidikanKepesantrenan.import);
+router.post('/lembaga-kepesantrenan/insert', auth.checkBearerToken, LembagaPendidikanKepesantrenan.insert);
 
 router.get(
   '/lembaga-formal/all-data',
@@ -519,6 +522,9 @@ router.delete(
   auth.checkBearerToken,
   LembagaPendidikanFormal.delete
 );
+router.post('/lembaga-formal/export', auth.checkBearerToken, LembagaPendidikanFormal.export);
+router.post('/lembaga-formal/import', auth.checkBearerToken, LembagaPendidikanFormal.import);
+router.post('/lembaga-formal/insert', auth.checkBearerToken, LembagaPendidikanFormal.insert);
 
 router.get(
   '/organization-unit/all-data',
@@ -546,6 +552,9 @@ router.delete(
   auth.checkBearerToken,
   OrganizationUnit.delete
 );
+router.post('/organization-unit/export', auth.checkBearerToken, OrganizationUnit.export);
+router.post('/organization-unit/import', auth.checkBearerToken, OrganizationUnit.import);
+router.post('/organization-unit/insert', auth.checkBearerToken, OrganizationUnit.insert);
 
 router.get('/jabatan/all-data', auth.checkBearerToken, Jabatan.list);
 router.get('/jabatan', auth.checkBearerToken, Jabatan.index);
@@ -553,6 +562,9 @@ router.get('/jabatan/:id', auth.checkBearerToken, Jabatan.detail);
 router.post('/jabatan', auth.checkBearerToken, Jabatan.create);
 router.put('/jabatan/:id', auth.checkBearerToken, Jabatan.update);
 router.delete('/jabatan/:id', auth.checkBearerToken, Jabatan.delete);
+router.post('/jabatan/export', auth.checkBearerToken, Jabatan.export);
+router.post('/jabatan/import', auth.checkBearerToken, Jabatan.import);
+router.post('/jabatan/insert', auth.checkBearerToken, Jabatan.insert);
 
 router.get(
   '/jenis-penilaian/all-data',
@@ -576,6 +588,9 @@ router.delete(
   auth.checkBearerToken,
   JenisPenilaian.delete
 );
+router.post('/jenis-penilaian/export', auth.checkBearerToken, JenisPenilaian.export);
+router.post('/jenis-penilaian/import', auth.checkBearerToken, JenisPenilaian.import);
+router.post('/jenis-penilaian/insert', auth.checkBearerToken, JenisPenilaian.insert);
 
 router.get(
   '/bobot-penilaian/all-data',
@@ -607,6 +622,9 @@ router.delete(
   auth.checkBearerToken,
   JenisPenilaianBobot.delete
 );
+router.post('/bobot-penilaian/export', auth.checkBearerToken, JenisPenilaianBobot.export);
+router.post('/bobot-penilaian/import', auth.checkBearerToken, JenisPenilaianBobot.import);
+router.post('/bobot-penilaian/insert', auth.checkBearerToken, JenisPenilaianBobot.insert);
 
 router.get('/asrama/all-data', auth.checkBearerToken, Asrama.list);
 router.get('/asrama', auth.checkBearerToken, Asrama.index);
@@ -621,6 +639,9 @@ router.get('/pegawai/:id', auth.checkBearerToken, Pegawai.detail);
 router.post('/pegawai', auth.checkBearerToken, Pegawai.create);
 router.put('/pegawai/:id', auth.checkBearerToken, Pegawai.update);
 router.delete('/pegawai/:id', auth.checkBearerToken, Pegawai.delete);
+router.post('/pegawai/export', auth.checkBearerToken, Pegawai.export);
+router.post('/pegawai/import', auth.checkBearerToken, Pegawai.import);
+router.post('/pegawai/insert', auth.checkBearerToken, Pegawai.insert);
 
 router.get('/kamar/all-data', auth.checkBearerToken, Kamar.list);
 router.get('/kamar', auth.checkBearerToken, Kamar.index);

@@ -3,6 +3,9 @@
 import { Op, QueryTypes, Sequelize } from 'sequelize';
 import Model from './jenis.penilaian.bobot.model';
 import { rawQuery } from '../../../helpers/rawQuery';
+import JenisPenilaian from '../jenis.penilaian/jenis.penilaian.model';
+import Tingkat from '../tingkat/tingkat.model';
+import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export default class Repository {
 	public async validateBobotLogic(data: any, id_bobot?: string) {
@@ -99,13 +102,10 @@ export default class Repository {
 		offset?: number;
 		limit?: number;
 	}) {
-		// 1. Persiapkan Parameter
 		const keyword = data?.keyword ? `%${data.keyword}%` : null;
 		const limit = data?.limit ? parseInt(data.limit.toString(), 10) : 10;
 		const offset = data?.offset ? parseInt(data.offset.toString(), 10) : 0;
 
-		// 2. WHERE Clause Lengkap (Soft Delete + Keyword Filter)
-		// Gunakan casting ::TEXT pada ENUM (lembaga_type, status) dan DECIMAL (bobot)
 		const whereClause = `
         WHERE jpb.deleted_at IS NULL
         ${keyword ? `AND (
@@ -120,7 +120,6 @@ export default class Repository {
         )` : ''}
     `;
 
-		// 3. Query Data Utama
 		const queryData = `
         SELECT 
             jpb.id_bobot,
@@ -152,7 +151,6 @@ export default class Repository {
         LIMIT :limit OFFSET :offset
     `;
 
-		// 4. Query Count (Sama dengan WHERE Clause data utama)
 		const queryCount = `
         SELECT COUNT(*) AS total
         FROM jenis_penilaian_bobot jpb
@@ -169,7 +167,6 @@ export default class Repository {
 		try {
 			const conn = await rawQuery.getConnection();
 
-			// 5. Eksekusi secara paralel untuk performa maksimal
 			const [dataResult, countResult]: [any[], any[]] = await Promise.all([
 				conn.query(queryData, {
 					type: QueryTypes.SELECT,
@@ -260,6 +257,78 @@ export default class Repository {
 			where: data?.condition,
 		});
 	}
+
+	public listForExport(condition: any, limit?: number) {
+		return Model.findAll({
+		where: condition,
+		limit: limit,
+		include: [
+			{ model: JenisPenilaian, as: 'jenisPenilaian', attributes: ['jenis_pengujian'] },
+			{ model: Tingkat, as: 'tingkat', attributes: ['tingkat'] },
+			{ model: TahunAjaran, as: 'tahunAjaran', attributes: ['tahun_ajaran'] },
+			{ 
+				model: require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model').default, 
+				as: 'lembagaPendidikanFormal', 
+				attributes: ['nama_lembaga'] 
+			},
+			{ 
+				model: require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model').default, 
+				as: 'lembagaPendidikanKepesantrenan', 
+				attributes: ['nama_lembaga'] 
+			},
+		],
+		order: [['created_at', 'DESC']]
+		});
+	}
+
+	public async checkDuplicate(payload: any, id?: string) {
+		const condition: any = {
+			id_penilaian: payload.id_penilaian,
+			id_tahunajaran: payload.id_tahunajaran,
+			id_lembaga: payload.id_lembaga,
+			id_tingkat: payload.id_tingkat || null,
+			lembaga_type: payload.lembaga_type
+		};
+		if (id) condition.id_bobot = { [Op.ne]: id };
+
+		return Model.findOne({ where: condition });
+	}
+
+	public async insertImport(payloads: any[]) {
+		const trx = await Model.sequelize?.transaction();
+		
+		try {
+		  for (const item of payloads) {
+			await this.upsertImport(item, trx);
+		  }
+		  
+		  if (trx) await trx.commit();
+		  return true;
+		} catch (error) {
+		  if (trx) await trx.rollback();
+		  throw error;
+		}
+	  }
+	  
+	  public async upsertImport(payload: any, transaction: any = null) {
+		const existing = await this.checkDuplicate(payload, payload.id_bobot);
+	
+		if (existing) {
+		  return await existing.update(
+			{
+			  ...payload,
+			}, 
+			{ transaction }
+		  );
+		} else {
+		  return await Model.create(
+			{
+			  ...payload,
+			}, 
+			{ transaction }
+		  );
+		}
+	  }
 }
 
 export const repository = new Repository();

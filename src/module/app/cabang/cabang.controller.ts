@@ -20,6 +20,86 @@ import fs from 'fs/promises';
 
 const date: string = helper.date();
 
+const generateDataExcel = (sheet: any, details: any) => {
+  sheet.addRow([
+    'No',
+    'Nama Cabang',
+    'Provinsi',
+    'Kota/Kabupaten',
+    'Kecamatan',
+    'Kelurahan',
+    'Kontak',
+    'Email',
+    'Alamat',
+    'Keterangan',
+  ]);
+
+  sheet.columns = [
+    { header: 'No', key: 'no', width: 5 },
+    { header: 'Nama Cabang', key: 'nama', width: 30 },
+    { header: 'Provinsi', key: 'provinsi', width: 30 },
+    { header: 'Kota/Kabupaten', key: 'kota_kabupaten', width: 30 },
+    { header: 'Kecamatan', key: 'kecamatan', width: 30 },
+    { header: 'Kelurahan', key: 'kelurahan', width: 30 },
+    { header: 'Kontak', key: 'contact', width: 30 },
+    { header: 'Email', key: 'email', width: 30 },
+    { header: 'Alamat', key: 'alamat', width: 40 },
+    { header: 'Keterangan', key: 'keterangan', width: 40 },
+  ];
+
+  sheet.getRow(1).eachCell((cell: any) => {
+    cell.font = { bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+
+  for (let i in details) {
+    sheet.addRow([
+      parseInt(i) + 1,
+      details[i]?.nama_cabang || '',
+      details[i]?.province?.name || '',
+      details[i]?.city?.name || '',
+      details[i]?.district?.name || '',
+      details[i]?.subDistrict?.name || '',
+      details[i]?.contact || '',
+      details[i]?.email || '',
+      details[i]?.alamat || '',
+      details[i]?.keterangan || '',
+    ]);
+  }
+
+  for (let row = 1; row <= (details?.length || 0) + 1; row++) {
+    sheet.getRow(row).eachCell((cell: any) => {
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } },
+      };
+    });
+  }
+  return sheet;
+};
+
+const normalizeRow = (row: any) => ({
+  nama_cabang: String(row['Nama Cabang'] || '').trim(),
+  provinsi: String(row['Provinsi'] || '').trim(),
+  kota_kabupaten: String(row['Kota/Kabupaten'] || '').trim(),
+  kecamatan: String(row['Kecamatan'] || '').trim(),
+  kelurahan: String(row['Kelurahan'] || '').trim(),
+  contact: String(row['Kontak'] || '').trim(),
+  email: String(row['Email'] || '').trim(),
+  alamat: String(row['Alamat'] || '').trim(),
+  keterangan: String(row['Keterangan'] || '').trim(),
+  __row: row.__row,
+});
+
+const validateRow = (row: any) => {
+  const errors: string[] = [];
+  if (!row.nama_cabang) {
+    errors.push('Nama Cabang wajib diisi');
+  }
+  return errors;
+};
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
@@ -111,110 +191,114 @@ export default class Controller {
     }
   }
 
-  public export = async (req: Request, res: Response) => {
+  public async export(req: Request, res: Response) {
     try {
-      const { q, template } = req.body;
-      const isTemplate = template == '1';
+      let condition: any = {};
+      const { q, template } = req?.body;
+      const isTemplate: boolean = template && template == '1';
+    
+      if (q) {
+        condition = {
+          ...condition,
+          nama_cabang: { [Op.like]: `%${q}%` },
+        };
+      }
 
-      const condition = q ? { nama_cabang: { [Op.like]: `%${q}%` } } : {};
-      const limit = isTemplate ? 5 : undefined;
-
-      const result = await repository.listForExport(condition, limit);
-      const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet('DATA CABANG');
-
-      sheet.columns = [
-        { header: 'NAMA CABANG', key: 'nama_cabang', width: 30 },
-        { header: 'PROVINSI', key: 'provinsi', width: 25 },
-        { header: 'KOTA/KABUPATEN', key: 'kota', width: 25 },
-        { header: 'KECAMATAN', key: 'kecamatan', width: 25 },
-        { header: 'KELURAHAN', key: 'kelurahan', width: 25 },
-        { header: 'KONTAK', key: 'contact', width: 20 },
-        { header: 'EMAIL', key: 'email', width: 25 },
-        { header: 'ALAMAT', key: 'alamat', width: 40 },
-        { header: 'KETERANGAN', key: 'keterangan', width: 30 },
-      ];
-
-      result.forEach((item: any) => {
-        sheet.addRow({
-          nama_cabang: item.nama_cabang,
-          provinsi: item.province?.name || '',
-          kota: item.city?.name || '',
-          kecamatan: item.district?.name || '',
-          kelurahan: item.subDistrict?.name || '',
-          contact: item.contact,
-          email: item.email,
-          alamat: item.alamat,
-          keterangan: item.keterangan,
-        });
-      });
+      let result: any = [];
+      if (!isTemplate) {
+        result = await repository.listForExport(condition);
+        if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      } else {
+        result = await repository.listForExport({}, 5);
+      }
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `export-cabang-${moment().format('YYYYMMDDHHmmss')}.xlsx`;
-      await workbook.xlsx.writeFile(`${path}/${filename}`);
+      const name: string = 'cabang';
+      const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const title: string = 'DATA CABANG';
+      const urlExcel: string = `${dir}/${filename}`;
 
-      return response.success('Export berhasil', `${dir}/${filename}`, res);
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet(title);
+
+      generateDataExcel(sheet, result);
+      await workbook.xlsx.writeFile(`${path}/${filename}`);
+      
+      return response.success('export excel cabang', urlExcel, res);
     } catch (err: any) {
-      return helper.catchError(err.message, 500, res);
+      return helper.catchError(`export excel cabang: ${err?.message}`, 500, res);
     }
   }
 
-  public import = async (req: Request, res: Response) => {
+  public async import(req: Request, res: Response) {
+    const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
-    if (!uploaded) return response.success('File tidak ditemukan', null, res, false);
+
+    if (!uploaded) return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
       const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer }, true);
+
       const results: any[] = [];
-      
+      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
 
       for (const raw of rows) {
-        const errors: string[] = [];
+        const row = normalizeRow(raw);
+        console.log(row);
+        const errors = validateRow(row);
 
-        const { province_id,
-          city_id,
-          district_id,
-          sub_district_id
-        } = await repository.resolveAreaIds(raw);
-
-        if (!raw.nama_cabang) errors.push("Nama cabang wajib diisi");
-        // if (raw.provinsi && !province_id) {
-        //   errors.push(`Provinsi "${raw.provinsi}" tidak ditemukan`);
+        // Resolve Area IDs
+        const areas = await repository.resolveAreaIds(row);
+        // if (row.provinsi && !areas.province_id) {
+        //   errors.push(`Provinsi "${row.provinsi}" tidak ditemukan`);
         // }
 
+        const valid = errors.length === 0;
+        const payload = {
+          nama_cabang: row.nama_cabang,
+          ...areas,
+          contact: row.contact,
+          email: row.email,
+          alamat: row.alamat,
+          keterangan: row.keterangan,
+        };
+
         results.push({
-          row: raw.__row,
-          valid: errors.length === 0,
-          error: errors.join(', ') || null,
-          payload: {
-            nama_cabang: raw.nama_cabang,
-            province_id,
-            city_id,
-            district_id,
-            sub_district_id,
-            contact: raw.kontak,
-            email: raw.email,
-            alamat: raw.alamat,
-            keterangan: raw.keterangan
-          }
+          row: row.__row,
+          valid,
+          error: errors.length ? errors.join(', ') : null,
+          payload
         });
       }
 
-      return response.success('Preview Import Cabang', {
+      const dataRes = {
+        mode,
         total: results.length,
-        valid: results.filter(r => r.valid).length,
-        data: results
-      }, res);
+        valid: results.filter((r) => r.valid).length,
+        invalid: results.filter((r) => !r.valid).length,
+      };
+
+      // JIKA MODE COMMIT: Panggil fungsi repository yang mengurusi transaksi
+      if (mode === 'commit') {
+        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
+        if (validPayloads.length > 0) {
+          await repository.insertImport(validPayloads);
+        }
+        return response.success('import cabang berhasil', dataRes, res);
+      }
+
+      // JIKA MODE PREVIEW: Kembalikan data untuk dicek user
+      return response.success('preview import cabang', { ...dataRes, data: results }, res);
+
     } catch (err: any) {
-      return helper.catchError(err.message, 500, res);
+      // Tidak perlu rollback manual di sini karena sudah dihandle repository
+      return helper.catchError(`import excel cabang: ${err?.message}`, 500, res);
     }
   }
 
   public insert = async (req: Request, res: Response) => {
     const payloads = req.body?.data as any[];
-    console.log('payloads', payloads)
     
     if (!payloads || payloads.length === 0) {
       return response.success('Tidak ada data untuk disimpan', null, res, false);

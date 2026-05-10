@@ -14,7 +14,99 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
+import moment from 'moment';
+import fs from 'fs/promises';
+import ExcelJS from "exceljs";
+import { Op } from 'sequelize';
 
+const generateDataExcel = (sheet: any, details: any) => {
+  sheet.columns = [
+    { header: 'No', key: 'no', width: 5 },
+    { header: 'Jenis Pengujian', key: 'jenis_pengujian', width: 30 },
+    { header: 'Singkatan', key: 'singkatan', width: 15 },
+    { header: 'Lembaga Type', key: 'lembaga_type', width: 15 },
+    { header: 'Ujian?', key: 'is_ujian', width: 10 },
+    { header: 'Status', key: 'status', width: 12 },
+    { header: 'Keterangan', key: 'keterangan', width: 40 },
+  ];
+
+  sheet.getRow(1).eachCell((cell: any) => {
+    cell.font = { bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+  });
+
+  details.forEach((item: any, i: number) => {
+    sheet.addRow({
+      no: i + 1,
+      jenis_pengujian: item.jenis_pengujian || '',
+      singkatan: item.singkatan || '',
+      lembaga_type: item.lembaga_type || '',
+      is_ujian: item.is_ujian === 1 ? 'Ya' : 'Tidak',
+      status: item.status === 'active' ? 'Aktif' : 'Non-Aktif',
+      keterangan: item.keterangan || '',
+    });
+  });
+
+  for (let row = 1; row <= (details?.length || 0) + 1; row++) {
+    sheet.getRow(row).eachCell((cell: any) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+    });
+  }
+  return sheet;
+};
+
+const normalizeRow = (row: any) => ({
+  jenis_pengujian: String(row['Jenis Pengujian'] || '').trim(),
+  singkatan: String(row['Singkatan'] || '').trim(),
+  lembaga_type: String(row['Lembaga Type'] || '').toUpperCase().trim(),
+  is_ujian: String(row['Ujian?'] || '').toLowerCase() === 'ya' ? 1 : 0,
+  status: String(row['Status'] || '').toLowerCase() === 'aktif' ? 'active' : 'inactive',
+  keterangan: String(row['Keterangan'] || '').trim(),
+  __row: row.__row,
+});
+
+const validateRow = (row: any) => {
+  const errors = [];
+
+  // singkatan: max 10 karakter
+  if (row.singkatan && row.singkatan.toString().length > 10) {
+    errors.push('Singkatan maksimal 10 karakter');
+  }
+
+  // jenis_pengujian: wajib diisi
+  if (!row.jenis_pengujian || row.jenis_pengujian.toString().trim() === '') {
+    errors.push('Jenis pengujian wajib diisi');
+  }
+
+  // lembaga_type: enum ['FORMAL', 'PESANTREN']
+  const validLembaga = ['FORMAL', 'PESANTREN'];
+  if (!row.lembaga_type) {
+    errors.push('Lembaga type wajib diisi');
+  } else if (!validLembaga.includes(row.lembaga_type)) {
+    errors.push(`Lembaga type harus salah satu dari: ${validLembaga.join(', ')}`);
+  }
+
+  // is_ujian: number, integer, min 0, max 1
+  const isUjianNum = parseInt(row.is_ujian);
+  if (!["0", "1"].includes(isUjianNum.toString())) {
+    errors.push('is_ujian hanya boleh 0 atau 1');
+  }
+
+  // status: enum ['active', 'inactive']
+  const validStatus = ['active', 'inactive'];
+  // Karena ada default 'active', kita hanya validasi jika field ini diisi
+  if (row.status && !validStatus.includes(row.status)) {
+    errors.push(`Status harus salah satu dari: ${validStatus.join(', ')}`);
+  }
+
+  return errors;
+};
 export default class Controller {
   constructor() {
     // Binding Private Methods
@@ -137,6 +229,82 @@ export default class Controller {
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(`Jenis Penilaian delete: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async export(req: Request, res: Response) {
+    try {
+      let condition: any = {};
+      const { q, template } = req?.body;
+      const isTemplate: boolean = template && template == '1';
+
+      if (q) condition = { keterangan: { [Op.like]: `%${q}%` } };
+
+      const result = await repository.list(isTemplate ? 5 : condition);
+      if (!isTemplate && result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+
+      const { dir, path } = await helper.checkDirExport('excel');
+      const filename = `jenis-penilaian-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('DATA JENIS PENILAIAN');
+
+      generateDataExcel(sheet, result);
+      await workbook.xlsx.writeFile(`${path}/${filename}`);
+
+      return response.success('export excel jenis penilaian', `${dir}/${filename}`, res);
+    } catch (err: any) {
+      return helper.catchError(`export excel: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async import(req: Request, res: Response) {
+    const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
+    const uploaded = req.files?.file_import;
+    if (!uploaded) return response.success('File tidak valid', null, res, false);
+
+    try {
+      const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
+      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
+      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const results: any[] = [];
+
+      for (const raw of rows) {
+        const row = normalizeRow(raw);
+        const errors = validateRow(row);
+
+        const valid = errors.length === 0;
+        const payload = helper.only(variable.fillable(), row);
+
+        results.push({
+          row: row.__row,
+          valid,
+          error: errors.join(', ') || null,
+          payload
+        });
+      }
+
+      if (mode === 'commit') {
+        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
+        if (validPayloads.length > 0) await repository.insertImport(validPayloads);
+        return response.success('import berhasil', { total: validPayloads.length }, res);
+      }
+
+      return response.success('preview import', { total: results.length, data: results }, res);
+    } catch (err: any) {
+      return helper.catchError(`import excel: ${err?.message}`, 500, res);
+    }
+  }
+
+  public insert = async (req: Request, res: Response) => {
+    const payloads = req.body?.data as any[];
+    if (!payloads || payloads.length === 0) return response.success('Data kosong', null, res, false);
+
+    try {
+      await repository.insertImport(payloads);
+      return response.success(SUCCESS_SAVED, { count: payloads.length }, res);
+    } catch (err: any) {
+      return helper.catchError(`insert batch gagal: ${err.message}`, 500, res);
     }
   }
 }

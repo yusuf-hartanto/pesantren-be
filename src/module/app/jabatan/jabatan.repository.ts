@@ -123,6 +123,67 @@ export default class Repository {
       where: data?.condition,
     });
   }
+
+  public listForExport(condition: any, limit?: number) {
+    return Model.findAll({
+      where: condition,
+      limit: limit,
+      include: [
+        { 
+          model: OrganizationUnit, 
+          as: 'orgunit', 
+          attributes: ['nama_orgunit'] 
+        }
+      ],
+      order: [['level_jabatan', 'ASC'], ['nama_jabatan', 'ASC']]
+    });
+  }
+
+  public findByName(name: string) {
+    return Model.findOne({
+      where: Model.sequelize?.where(
+        Model.sequelize.fn('LOWER', Model.sequelize.col('nama_jabatan')),
+        name.toLowerCase().trim()
+      ),
+    });
+  }
+
+  public async insertImport(payloads: any[]) {
+      const trx = await Model.sequelize?.transaction();
+      
+      try {
+        for (const item of payloads) {
+          await this.upsertImport(item, trx);
+        }
+        
+        if (trx) await trx.commit();
+        return true;
+      } catch (error) {
+        if (trx) await trx.rollback();
+        throw error;
+      }
+    }
+  
+    public async upsertImport(payload: any, transaction: any = null) {
+      const existing = await this.findByName(payload.nama_jabatan);
+  
+      if (existing) {
+        return await existing.update(
+          {
+            ...payload,
+          }, 
+          { transaction }
+        );
+      } else {
+        return await Model.create(
+          {
+            ...payload,
+            id_orgunit: '8de3cd2b-7f24-4870-b821-fd8cb5b3ba08'
+          }, 
+          { transaction }
+        );
+      }
+    }
 }
 
 export const repository = new Repository();

@@ -1,8 +1,10 @@
 'use strict';
 
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, WhereOptions } from 'sequelize';
 import Model from './organization.unit.model';
 import { rawQuery } from '../../../helpers/rawQuery';
+import Cabang from '../cabang/cabang.model';
+import { Op } from 'sequelize';
 
 export default class Repository {
   public async list(data: any) {
@@ -149,6 +151,57 @@ export default class Repository {
     return Model.destroy({
       where: data?.condition,
     });
+  }
+
+  public listForExport(condition: any, limit?: number) {
+    return Model.findAll({
+      where: condition,
+      limit: limit,
+      include: [
+        { model: Cabang, as: 'cabang', attributes: ['nama_cabang'] },
+        { model: Model, as: 'parent', attributes: ['nama_orgunit'] },
+        { model: require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model').default, as: 'lembagaPendidikanFormal', attributes: ['nama_lembaga'] },
+        { model: require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model').default, as: 'lembagaPendidikanKepesantrenan', attributes: ['nama_lembaga'] },
+      ],
+      order: [['level_orgunit', 'ASC'], ['nama_orgunit', 'ASC']],
+    });
+  }
+
+  public findByName(name: string, id_cabang: string, id_lembaga?: string | null, lembaga_type?: string | null) {
+    return Model.findOne({
+      where: {
+        nama_orgunit: { 
+          [Op.iLike]: name.trim() 
+        },
+        id_cabang,
+        id_lembaga: id_lembaga || null,
+        lembaga_type: lembaga_type || null,
+      }
+    });
+  }
+
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.nama_orgunit, payload.id_cabang, payload.id_lembaga, payload.lembaga_type);
+
+    if (existing) {
+      return await existing.update(payload, { transaction });
+    } else {
+      return await Model.create(payload, { transaction });
+    }
+  }
+
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
+      }
+      await trx?.commit();
+      return true;
+    } catch (error) {
+      await trx?.rollback();
+      throw error;
+    }
   }
 }
 

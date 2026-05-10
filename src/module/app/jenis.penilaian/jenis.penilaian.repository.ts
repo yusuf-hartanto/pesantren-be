@@ -77,6 +77,53 @@ export default class Repository {
       where: data?.condition,
     });
   }
+
+  public findByName(name: string, type?: string | null) {
+    return Model.findOne({
+      where: {
+        singkatan: {
+          [Op.iLike]: name.trim()
+        },
+        ...(type && { lembaga_type: type })
+      }
+    });
+  }
+  
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+    
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
+      }
+      
+      if (trx) await trx.commit();
+      return true;
+    } catch (error) {
+      if (trx) await trx.rollback();
+      throw error;
+    }
+  }
+  
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.singkatan, payload.lembaga_type);
+
+    if (existing) {
+      return await existing.update(
+        {
+          ...payload,
+        }, 
+        { transaction }
+      );
+    } else {
+      return await Model.create(
+        {
+          ...payload,
+        }, 
+        { transaction }
+      );
+    }
+  }
 }
 
 export const repository = new Repository();

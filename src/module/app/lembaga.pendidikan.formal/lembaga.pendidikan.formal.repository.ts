@@ -97,6 +97,66 @@ export default class Repository {
       where: data?.condition,
     });
   }
+
+  public listForExport(condition: any, limit?: number) {
+    return Model.findAll({
+      where: condition,
+      limit: limit,
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          attributes: ['nama_cabang'],
+        },
+      ],
+      order: [['nama_lembaga', 'ASC']],
+    });
+  }
+
+  public findByName(name: string) {
+    return Model.findOne({
+      where: Model.sequelize?.where(
+        Model.sequelize.fn('LOWER', Model.sequelize.col('nama_lembaga')),
+        name.toLowerCase().trim()
+      ),
+    });
+  }
+
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+    
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
+      }
+      
+      if (trx) await trx.commit();
+      return true;
+    } catch (error) {
+      if (trx) await trx.rollback();
+      throw error;
+    }
+  }
+
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.nama_lembaga);
+
+    if (existing) {
+      return await existing.update(
+        {
+          ...payload,
+        }, 
+        { transaction }
+      );
+    } else {
+      return await Model.create(
+        {
+          ...payload,
+        }, 
+        { transaction }
+      );
+    }
+  }
 }
 
 export const repository = new Repository();
