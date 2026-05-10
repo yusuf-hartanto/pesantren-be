@@ -4,6 +4,7 @@ import moment from 'moment';
 import ExcelJS from 'exceljs';
 import puppeteer from 'puppeteer';
 import { Op } from 'sequelize';
+import { service } from './global.service';
 import { Request, Response } from 'express';
 import { helper } from '../../helpers/helper';
 import { response } from '../../helpers/response';
@@ -445,6 +446,29 @@ export default class Controller {
       res,
       health.status == 'success'
     );
+  }
+
+  public async syncSantri(req: Request, res: Response) {
+    try {
+      const { institution_id } = req.body;
+      if (!institution_id) return response.failed(`institution_id ${REQUIRED}`, 422, res);
+
+      const result = await service.syncSantri({ institution_id });
+      const { code, messages, data } = result;
+
+      if (code == 200) {
+        const formatted = await service.syncSantriData(data);
+        return response.success('sync santri', formatted, res);
+      }
+
+      return response.success(messages.join(','), null, res, false);
+    } catch (err: any) {
+      return helper.catchError(
+        `sync santri: ${err?.message}`,
+        500,
+        res
+      );
+    }
   }
 }
 

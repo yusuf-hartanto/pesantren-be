@@ -15,10 +15,12 @@ export const up = async (queryInterface: QueryInterface) => {
       id_santri: {
         type: DataTypes.STRING,
         allowNull: true,
-        // Aktifkan jika tabel santri sudah ada
-        // references: { model: 'santri', key: 'id_santri' },
-        // onUpdate: 'CASCADE',
-        // onDelete: 'SET NULL',
+        references: {
+          model: 'santri',
+          key: 'id_santri'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
       },
       id_asrama: {
         type: DataTypes.STRING,

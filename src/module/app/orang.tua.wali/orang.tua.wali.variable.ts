@@ -17,6 +17,7 @@ export default class Variable {
       'district_id',
       'sub_district_id',
       'keterangan',
+      'id_wali_sitrendi',
     ];
     return field;
   }
