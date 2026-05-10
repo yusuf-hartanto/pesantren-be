@@ -139,7 +139,7 @@ export default class Controller {
       let insert = []
       for (const temuan of temuans) {
         let checkFile = helper.checkExtentionBase64(temuan.foto_path);
-        if (checkFile == 'allowed') return response.failed(checkFile, 422, res);
+        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
         
         foto_path = await helper.uploadBase64(
           temuan.foto_path,
