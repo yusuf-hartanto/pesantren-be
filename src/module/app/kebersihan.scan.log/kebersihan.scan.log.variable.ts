@@ -17,7 +17,6 @@ export default class Variable {
       'scan_source',
       'user_agent',
       'ip_address',
-      'scan_at',
       'keterangan',
     ];
     return field;

@@ -15,11 +15,11 @@ export function initializeApp(data: any) {
   if (appConfig) return appConfig;
 
   appConfig = {
-    app: data?.app || 'Skeleton Typescript API',
+    app: data?.app || 'SADA API',
     appEnv: data?.appEnv || 'development',
     port: data?.port || 5000,
     assetType: data?.assetType || 'local',
-    baseDomain: data?.baseDomain || 'dummy.com',
+    baseDomain: data?.baseDomain || 'myf.digital',
     baseUrlFe: data?.baseUrlFe || 'http://localhost:3000',
   };
 

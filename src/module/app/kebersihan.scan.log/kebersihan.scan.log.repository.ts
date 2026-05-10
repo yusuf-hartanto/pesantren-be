@@ -3,23 +3,20 @@
 import { Op, Sequelize } from 'sequelize';
 import Model from './kebersihan.scan.log.model';
 import Pegawai from '../pegawai/pegawai.model';
-import Cabang from '../cabang/cabang.model';
 import Lokasi from '../location/location.model';
-import JadwalInspeksiKebersihan from '../jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.model';
-import KebersihanTemuan from '../kebersihan.temuan/kebersihan.temuan.model';
 import KebersihanInspeksi from '../kebersihan.inspeksi/kebersihan.inspeksi.model';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['created_at', 'DESC']],
+      order: [['scan_at', 'DESC']],
     };
 
-    if (data?.id_inspeksi != '') {
+    if (data?.id_scan_log != '') {
       query = {
         ...query,
         where: {
-          id_inspeksi: { [Op.eq]: data?.id_inspeksi },
+          id_scan_log: { [Op.eq]: data?.id_scan_log },
         },
       };
     }
@@ -51,7 +48,7 @@ export default class Repository {
 
   public index(data: any) {
     let query: Object = {
-      order: [['created_at', 'DESC']],
+      order: [['scan_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };

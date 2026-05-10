@@ -912,6 +912,8 @@ router.get('/location/:id', auth.checkBearerToken, Location.detail);
 router.post('/location', auth.checkBearerToken, Location.create);
 router.put('/location/:id', auth.checkBearerToken, Location.update);
 router.delete('/location/:id', auth.checkBearerToken, Location.delete);
+router.post('/location_qrcode', auth.checkBearerToken, Location.findQrCode);
+router.post('/location_latlong', auth.checkBearerToken, Location.findAllLocationByLatlong);
 
 router.get('/jadwal-pelajaran/all-data', auth.checkBearerToken, jadwalPelajaran.list);
 router.get('/jadwal-pelajaran', auth.checkBearerToken, jadwalPelajaran.index);

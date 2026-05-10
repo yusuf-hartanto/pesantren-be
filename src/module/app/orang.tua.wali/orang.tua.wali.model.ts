@@ -18,6 +18,7 @@ export class OrangTuaWali extends Model {
   declare pekerjaan: string;
   declare no_hp: string;
   declare alamat: string;
+  declare id_wali_sitrendi: string;
 }
 
 export function initOrangTuaWali(sequelize: Sequelize) {
@@ -111,6 +112,10 @@ export function initOrangTuaWali(sequelize: Sequelize) {
       },
       deleted_at: {
         type: DataTypes.DATE,
+      },
+      id_wali_sitrendi: {
+        type: DataTypes.STRING,
+        unique: true,
       },
     },
     {

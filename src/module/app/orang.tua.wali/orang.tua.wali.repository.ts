@@ -151,6 +151,37 @@ export default class Repository {
       individualHooks: true,
     });
   }
+
+  public all(condition: any = {}) {
+    return Model.findAll({
+      where: {
+        ...condition,
+        is_deleted: false,
+      },
+      order: [['created_at', 'DESC']],
+    });
+  }
+  
+  public async upsert(data: any) {
+    const [result] = await Model.findOrCreate({
+      where: {
+        id_wali_sitrendi: data.id_wali_sitrendi
+      },
+      defaults: data,
+    });
+    return result;
+  }
+
+  public async bulkUpsert(data: any) {
+    await Model.bulkCreate(data, {
+      conflictAttributes: ['id_wali_sitrendi'],
+      updateOnDuplicate: [
+        'nama_wali',
+        'no_hp',
+        'updated_at'
+      ]
+    });
+  }
 }
 
 export const repository = new Repository();

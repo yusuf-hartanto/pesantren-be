@@ -11,10 +11,11 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { locationSchema, locationUpdateSchema } from './location.schema';
 import QRCode from 'qrcode';
 import z from 'zod';
+import { rawQuery } from '../../../helpers/rawQuery';
 
 export default class Controller {
   constructor() {
@@ -243,6 +244,87 @@ export default class Controller {
       return helper.catchError(`Lokasi delete: ${err?.message}`, 500, res);
     }
   }
+
+  public async findQrCode(req: Request, res: Response) {
+    try {
+      const {
+        qr_code,
+      } = req?.body;
+
+      const result: any = await repository.detail({ qr_code });
+      if (!result) return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, result, res);
+    } catch (err: any) {
+      return helper.catchError(`Lokasi qrcode: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async findAllLocationByLatlong(req: Request, res: Response) {
+    try {
+      const {
+        latitude,
+        longitude,
+      } = req?.body;
+
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+
+      const radius = 50; // meter
+
+      const latDelta = radius / 111320;
+      const lngDelta = radius / (111320 * Math.cos(lat * Math.PI / 180));
+
+      const minLat = lat - latDelta;
+      const maxLat = lat + latDelta;
+      const minLng = lng - lngDelta;
+      const maxLng = lng + lngDelta;
+
+      const query = `SELECT *
+      FROM (
+          SELECT 
+              id_lokasi,
+              nama_lokasi,
+              latitude,
+              longitude,
+              (
+                  6371000 * acos(
+                      cos(radians(?)) * 
+                      cos(radians(latitude)) *
+                      cos(radians(longitude) - radians(?)) +
+                      sin(radians(?)) * 
+                      sin(radians(latitude))
+                  )
+              ) AS distance
+          FROM lokasi
+          WHERE 
+              latitude BETWEEN ? AND ?
+              AND longitude BETWEEN ? AND ?
+      ) AS nearby_locations
+      WHERE distance <= ?
+      ORDER BY distance ASC;`;
+
+      const conn = await rawQuery.getConnection();
+      const result: any =await conn.query(query, {
+        type: QueryTypes.SELECT,
+        replacements: [
+          lat,
+          lng,
+          lat,
+          minLat,
+          maxLat,
+          minLng,
+          maxLng,
+          radius
+        ],
+      });
+
+      if (!result) return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, result, res);
+    } catch (err: any) {
+      return helper.catchError(`Lokasi latlong: ${err?.message}`, 500, res);
+    }
+  }
+
 }
 
 export const Location = new Controller();
