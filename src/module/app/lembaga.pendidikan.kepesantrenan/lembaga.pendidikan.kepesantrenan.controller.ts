@@ -234,25 +234,10 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      let condition: any = {};
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
-
-      if (q) {
-        condition = {
-          ...condition,
-          nama_lembaga: { [Op.like]: `%${q}%` },
-        };
-      }
-
-      let result: any = [];
-      if (!isTemplate) {
-        result = await repository.listForExport(condition);
-        if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
-      } else {
-        // Ambil 5 data sample untuk template
-        result = await repository.listForExport({}, 5);
-      }
+    
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const name: string = 'lembaga-kepesantrenan';

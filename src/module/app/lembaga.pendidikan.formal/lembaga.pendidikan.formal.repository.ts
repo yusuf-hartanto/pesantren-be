@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './lembaga.pendidikan.formal.model';
 import Cabang from '../cabang/cabang.model';
 
@@ -50,11 +50,19 @@ export default class Repository {
     if (keyword) {
       query.where = {
         [Op.or]: [
-          { nama_lembaga: { [Op.like]: keyword } },
-          { keterangan: { [Op.like]: keyword } },
-          { jenis_lembaga: { [Op.like]: keyword } },
-          { nomor_npsn: { [Op.like]: keyword } },
-          { '$cabang.nama_cabang$': { [Op.like]: keyword } },
+          { nama_lembaga: { [Op.iLike]: keyword } },
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { keterangan: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
         ],
       };
     }
@@ -98,10 +106,35 @@ export default class Repository {
     });
   }
 
-  public listForExport(condition: any, limit?: number) {
+  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+        whereClause = {
+          [Op.or]: [
+            { nama_lembaga: { [Op.iLike]: keyword } },
+            { nomor_npsn: { [Op.iLike]: keyword } },
+            { keterangan: { [Op.iLike]: keyword } },
+            Sequelize.where(
+              Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
+              { [Op.iLike]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
+              { [Op.iLike]: keyword }
+            ),
+            { nomor_npsn: { [Op.iLike]: keyword } },
+            { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
+          ],
+        };
+      }
+
     return Model.findAll({
-      where: condition,
-      limit: limit,
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
       include: [
         {
           model: Cabang,

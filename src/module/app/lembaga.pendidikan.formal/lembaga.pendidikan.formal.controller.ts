@@ -244,33 +244,19 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      let condition: any = {};
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
-
-      if (q) {
-        condition = {
-          ...condition,
-          nama_orgunit: { [Op.like]: `%${q}%` },
-        };
-      }
-
-      let result: any = [];
-      if (!isTemplate) {
-        result = await repository.listForExport(condition);
-        if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
-      } else {
-        result = await repository.listForExport({}, 5);
-      }
+    
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
       
-      const name: string = 'organization-unit';
+      const name: string = 'lembaga-pendidikan-formal';
       const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
       const urlExcel: string = `${dir}/${filename}`;
 
       const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet('DATA ORGANIZATION UNIT');
+      const sheet = workbook.addWorksheet('DATA LEMBAGA PENDIDIKAN FORMAL');
 
       generateDataExcel(sheet, result);
       
@@ -278,7 +264,7 @@ export default class Controller {
 
       return response.success(`export excel ${name.replace(/-/g, ' ')}`, urlExcel, res);
     } catch (err: any) {
-      return helper.catchError(`export excel organization unit: ${err?.message}`, 500, res);
+      return helper.catchError(`export excel lembaga pendidikan formal: ${err?.message}`, 500, res);
     }
   }
 

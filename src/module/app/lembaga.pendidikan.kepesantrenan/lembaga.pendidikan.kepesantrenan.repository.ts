@@ -60,10 +60,10 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { id_lembaga: { [Op.like]: keyword } },
-            { nama_lembaga: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { '$cabang.nama_cabang$': { [Op.like]: keyword } },
+            { id_lembaga: { [Op.iLike]: `%${keyword}%` } },
+            { nama_lembaga: { [Op.iLike]: `%${keyword}%` } },
+            { keterangan: { [Op.iLike]: `%${keyword}%` } },
+            { '$cabang.nama_cabang$': { [Op.iLike]: `%${keyword}%` } },
           ],
         },
       };
@@ -106,10 +106,25 @@ export default class Repository {
     });
   }
 
-  public listForExport(condition: any, limit?: number) {
+  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+    
+    if (!isTemplate && keyword) {
+      whereClause = {
+        [Op.or]: [
+          { nama_lembaga: { [Op.iLike]: `%${keyword}%` } },
+          { keterangan: { [Op.iLike]: `%${keyword}%` } },
+          { '$cabang.nama_cabang$': { [Op.iLike]: `%${keyword}%` } },
+        ],
+      };
+    }
+
     return Model.findAll({
-      where: condition,
-      limit: limit,
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
       include: [
         {
           model: Cabang,

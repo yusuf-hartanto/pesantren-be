@@ -89,10 +89,15 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { id_cabang: { [Op.like]: `%${data?.keyword}%` } },
-            { nama_cabang: { [Op.like]: `%${data?.keyword}%` } },
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-            { alamat: { [Op.like]: `%${data?.keyword}%` } },
+            { id_cabang: { [Op.iLike]: `%${data?.keyword}%` } },
+            { nama_cabang: { [Op.iLike]: `%${data?.keyword}%` } },
+            { keterangan: { [Op.iLike]: `%${data?.keyword}%` } },
+            { alamat: { [Op.iLike]: `%${data?.keyword}%` } },
+
+            { '$province.name$': { [Op.iLike]: `%${data?.keyword}%` } },
+            { '$city.name$': { [Op.iLike]: `%${data?.keyword}%` } },
+            { '$district.name$': { [Op.iLike]: `%${data?.keyword}%` } },
+            { '$subDistrict.name$': { [Op.iLike]: `%${data?.keyword}%` } },
           ],
         },
       };
@@ -125,16 +130,60 @@ export default class Repository {
     });
   }
 
-  public listForExport(condition: any, limit?: number) {
+  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+      whereClause = {
+        [Op.or]: [
+          // Pencarian di Tabel Utama
+          { id_cabang: { [Op.iLike]: keyword } },
+          { nama_cabang: { [Op.iLike]: keyword } },
+          { keterangan: { [Op.iLike]: keyword } },
+          { alamat: { [Op.iLike]: keyword } },
+
+          // Pencarian di Tabel Relasi (menggunakan alias yang didefinisikan di include)
+          { '$province.name$': { [Op.iLike]: keyword } },
+          { '$city.name$': { [Op.iLike]: keyword } },
+          { '$district.name$': { [Op.iLike]: keyword } },
+          { '$subDistrict.name$': { [Op.iLike]: keyword } },
+        ],
+      };
+    }
+
     return Model.findAll({
-      where: condition,
-      limit: limit,
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
       include: [
-        { model: AreaProvince, as: 'province', attributes: ['name'] },
-        { model: AreaRegency, as: 'city', attributes: ['name'] },
-        { model: AreaDistrict, as: 'district', attributes: ['name'] },
-        { model: AreaSubDistrict, as: 'subDistrict', attributes: ['name'] },
+        {
+          model: AreaProvince,
+          as: 'province',
+          attributes: ['id', 'name'],
+          required: false // Gunakan false agar cabang tetap muncul meski wilayahnya null
+        },
+        {
+          model: AreaRegency,
+          as: 'city',
+          attributes: ['id', 'name'],
+          required: false
+        },
+        {
+          model: AreaDistrict,
+          as: 'district',
+          attributes: ['id', 'name'],
+          required: false
+        },
+        {
+          model: AreaSubDistrict,
+          as: 'subDistrict',
+          attributes: ['id', 'name'],
+          required: false
+        },
       ],
+      // Urutkan berdasarkan nama cabang agar rapi saat di-export
       order: [['nama_cabang', 'ASC']]
     });
   }
@@ -148,6 +197,30 @@ export default class Repository {
     });
   }
 
+  public async validateAreaIds(raw: any) {
+    const checkId = async (model: any, id: any) => {
+      if (id === null || id === undefined || id === '') return null;
+
+      const cleanId = String(id).trim();
+
+      const res = await model.findByPk(cleanId, { attributes: ['id'] });
+      return res ? res.id : null;
+    };
+
+    // Gunakan mapping yang sesuai dengan input raw Anda
+    const province_id = await checkId(AreaProvince, raw.provinsi);
+    const city_id = await checkId(AreaRegency, raw.kota_kabupaten);
+    const district_id = await checkId(AreaDistrict, raw.kecamatan);
+    const sub_district_id = await checkId(AreaSubDistrict, raw.kelurahan);
+
+    return {
+      province_id,
+      city_id,
+      district_id,
+      sub_district_id
+    };
+  }
+
   public async findAreaId(areaModel: any, name: string, parentField?: string, parentId?: string) {
     if (!name) return null;
 
@@ -156,13 +229,13 @@ export default class Repository {
       name.toLowerCase().trim()
     );
 
-    const condition = (parentField && parentId) 
-      ? { [Op.and]: [whereClause, { [parentField]: parentId }] } 
+    const condition = (parentField && parentId)
+      ? { [Op.and]: [whereClause, { [parentField]: parentId }] }
       : whereClause;
 
-    const res = await areaModel.findOne({ 
-      where: condition, 
-      attributes: ['id'] 
+    const res = await areaModel.findOne({
+      where: condition,
+      attributes: ['id']
     });
 
     return res ? res.id : null;
@@ -170,25 +243,25 @@ export default class Repository {
 
   public async resolveAreaIds(raw: any) {
     const province_id = await this.findAreaId(AreaProvince, raw.provinsi);
-    
+
     const city_id = await this.findAreaId(
-      AreaRegency, 
-      raw.kota_kabupaten, 
-      'area_province_id', 
+      AreaRegency,
+      raw.kota_kabupaten,
+      'area_province_id',
       province_id
     );
 
     const district_id = await this.findAreaId(
-      AreaDistrict, 
-      raw.kecamatan, 
-      'area_regencies_id', 
+      AreaDistrict,
+      raw.kecamatan,
+      'area_regencies_id',
       city_id
     );
 
     const sub_district_id = await this.findAreaId(
-      AreaSubDistrict, 
-      raw.kelurahan, 
-      'area_district_id', 
+      AreaSubDistrict,
+      raw.kelurahan,
+      'area_district_id',
       district_id
     );
 
@@ -202,7 +275,7 @@ export default class Repository {
 
   public async insertImport(payloads: any[]) {
     const trx = await Model.sequelize?.transaction();
-    
+
     try {
       for (const item of payloads) {
         await this.upsertImport(item, trx);

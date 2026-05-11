@@ -20,7 +20,7 @@ import fs from 'fs/promises';
 
 const date: string = helper.date();
 
-const generateDataExcel = (sheet: any, details: any) => {
+const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
   sheet.addRow([
     'No',
     'Nama Cabang',
@@ -56,10 +56,10 @@ const generateDataExcel = (sheet: any, details: any) => {
     sheet.addRow([
       parseInt(i) + 1,
       details[i]?.nama_cabang || '',
-      details[i]?.province?.name || '',
-      details[i]?.city?.name || '',
-      details[i]?.district?.name || '',
-      details[i]?.subDistrict?.name || '',
+      (isTemplate ? details[i]?.province_id : details[i]?.province?.name || ''),
+      (isTemplate ? details[i]?.city_id : details[i]?.city?.name || ''),
+      (isTemplate ? details[i]?.district_id : details[i]?.district?.name || ''),
+      (isTemplate ? details[i]?.sub_district_id : details[i]?.subDistrict?.name || ''),
       details[i]?.contact || '',
       details[i]?.email || '',
       details[i]?.alamat || '',
@@ -67,16 +67,22 @@ const generateDataExcel = (sheet: any, details: any) => {
     ]);
   }
 
+  const columnCount = sheet.columns.length;
+
   for (let row = 1; row <= (details?.length || 0) + 1; row++) {
-    sheet.getRow(row).eachCell((cell: any) => {
+    const currentRow = sheet.getRow(row);
+    
+    for (let col = 1; col <= columnCount; col++) {
+      const cell = currentRow.getCell(col); // Get cell secara paksa meski kosong
       cell.border = {
         top: { style: 'thin', color: { argb: 'FF000000' } },
         left: { style: 'thin', color: { argb: 'FF000000' } },
         bottom: { style: 'thin', color: { argb: 'FF000000' } },
         right: { style: 'thin', color: { argb: 'FF000000' } },
       };
-    });
+    }
   }
+
   return sheet;
 };
 
@@ -193,24 +199,10 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      let condition: any = {};
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
     
-      if (q) {
-        condition = {
-          ...condition,
-          nama_cabang: { [Op.like]: `%${q}%` },
-        };
-      }
-
-      let result: any = [];
-      if (!isTemplate) {
-        result = await repository.listForExport(condition);
-        if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
-      } else {
-        result = await repository.listForExport({}, 5);
-      }
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const name: string = 'cabang';
@@ -221,7 +213,7 @@ export default class Controller {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet(title);
 
-      generateDataExcel(sheet, result);
+      generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
       
       return response.success('export excel cabang', urlExcel, res);
@@ -245,14 +237,15 @@ export default class Controller {
 
       for (const raw of rows) {
         const row = normalizeRow(raw);
-        console.log(row);
         const errors = validateRow(row);
 
-        // Resolve Area IDs
-        const areas = await repository.resolveAreaIds(row);
-        // if (row.provinsi && !areas.province_id) {
-        //   errors.push(`Provinsi "${row.provinsi}" tidak ditemukan`);
-        // }
+        if (!row.nama_cabang) errors.push(`Nama Cabang tidak boleh kosong`);
+
+        const areas = await repository.validateAreaIds(row);
+        if (row.provinsi && !areas.province_id) errors.push(`ID Provinsi ${row.provinsi} tidak valid`);
+        if (row.kota_kabupaten && !areas.city_id) errors.push(`ID Kota ${row.kota_kabupaten} tidak valid`);
+        if (row.kecamatan && !areas.district_id) errors.push(`ID Kecamatan ${row.kecamatan} tidak valid`);
+        if (row.kelurahan && !areas.sub_district_id) errors.push(`ID Kelurahan ${row.kelurahan} tidak valid`);
 
         const valid = errors.length === 0;
         const payload = {
