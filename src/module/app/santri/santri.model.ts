@@ -52,7 +52,6 @@ export function initAppSantri(sequelize: Sequelize) {
       },
       nik: {
         type: DataTypes.STRING,
-        unique: true,
       },
       gender: {
         type: DataTypes.ENUM('L','P'),

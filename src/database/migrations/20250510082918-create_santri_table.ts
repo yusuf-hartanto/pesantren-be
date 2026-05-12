@@ -121,11 +121,6 @@ export const up = async (queryInterface: QueryInterface) => {
   });
 
   await queryInterface.addConstraint('santri', {
-    fields: ['nik'],
-    type: 'unique',
-    name: 'unique_santri_nik',
-  });
-  await queryInterface.addConstraint('santri', {
     fields: ['id_santri_sitrendi', 'institution_id_sitrendi'],
     type: 'unique',
     name: 'unique_santri_institution_sitrendi',
