@@ -131,7 +131,7 @@ export const up = async (queryInterface: QueryInterface) => {
     name: 'unique_santri_institution_sitrendi',
   });
   await queryInterface.addIndex('santri', ['nik']);
-  await queryInterface.addIndex('santri', ['institution_id']);
+  await queryInterface.addIndex('santri', ['id_institution']);
   await queryInterface.addIndex('santri', ['id_wali']);
 };
 

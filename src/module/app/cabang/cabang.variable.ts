@@ -12,6 +12,7 @@ export default class Variable {
       'email',
       'keterangan',
       'alamat',
+      'institution_id_sitrendi',
     ];
     return field;
   }
