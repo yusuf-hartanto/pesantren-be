@@ -455,7 +455,6 @@ export default class Controller {
       const bodyOnly = helper.only(['institution_id','kelas','user_id'], req.body);
 
       const result = await service.syncSantri(bodyOnly);
-      return response.success('sync santri', result, res);
       const { code, data, message, error } = result;
 
       if (code == 200) {
