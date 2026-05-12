@@ -1,6 +1,7 @@
 'use strict';
 
 import { v4 as uuidv4 } from 'uuid';
+import Cabang from '../cabang/cabang.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import AppInstitution from '../institution/institution.model';
 import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
@@ -14,13 +15,15 @@ export class AppSantri extends Model {
   declare birth_place: string;
   declare birth_date: Date;
   declare phone: string;
+  declare id_cabang: string;
+  declare nama_cabang: string;
   declare id_institution: string;
   declare institution_name: string;
   declare group_code_1: string;
   declare group_code_2: string;
   declare group_code_3: string;
   declare nomor_nasabah: string;
-  declare nomor_rekening: string;
+  declare kartu_santri_nomor: string;
   declare kartu_santri: string;
   declare status: number;
   declare created_at: Date;
@@ -64,6 +67,12 @@ export function initAppSantri(sequelize: Sequelize) {
       phone: {
         type: DataTypes.STRING,
       },
+      id_cabang: {
+        type: DataTypes.STRING,
+      },
+      nama_cabang: {
+        type: DataTypes.STRING,
+      },
       id_institution: {
         type: DataTypes.STRING,
       },
@@ -82,7 +91,7 @@ export function initAppSantri(sequelize: Sequelize) {
       nomor_nasabah: {
         type: DataTypes.STRING,
       },
-      nomor_rekening: {
+      kartu_santri_nomor: {
         type: DataTypes.STRING,
       },
       kartu_santri: {
@@ -130,6 +139,7 @@ export function initAppSantri(sequelize: Sequelize) {
 }
 
 export function associateAppSantri() {
+  AppSantri.belongsTo(Cabang, { as: 'cabang', foreignKey: 'id_cabang' });
   AppSantri.belongsTo(AppInstitution, { as: 'institution', foreignKey: 'id_institution' });
   AppSantri.belongsTo(OrangTuaWali, { as: 'wali', foreignKey: 'id_wali', targetKey: 'id_wali' });
 }

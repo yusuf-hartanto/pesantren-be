@@ -455,7 +455,7 @@ export default class Controller {
       const bodyOnly = helper.only(['institution_id','kelas','user_id'], req.body);
 
       const result = await service.syncSantri(bodyOnly);
-      const { code, messages, data } = result;
+      const { code, data, message, error } = result;
 
       if (code == 200) {
         if (data && data.length > 0) {
@@ -465,7 +465,7 @@ export default class Controller {
         return response.success('sync santri', result, res);
       }
 
-      return response.success(messages.join(','), null, res, false);
+      return response.success(message, error, res, false);
     } catch (err: any) {
       return helper.catchError(
         `sync santri: ${err?.message}`,

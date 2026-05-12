@@ -62,6 +62,7 @@ import { kebersihanTemuan } from './kebersihan.temuan/kebersihan.temuan.controll
 import { kebersihanTemuanSchema } from './kebersihan.temuan/kebersihan.temuan.schema';
 import { kebersihanScanLog } from './kebersihan.scan.log/kebersihan.scan.log.controller';
 import { kebersihanScanLogSchema } from './kebersihan.scan.log/kebersihan.scan.log.schema';
+import { santri } from '../app/santri/santri.controller';
 
 const router: Router = Router();
 
@@ -1062,5 +1063,10 @@ router.put(
 );
 router.delete('/kebersihan-scan-log/:id', auth.checkBearerToken, kebersihanScanLog.delete);
 router.post('/kebersihan-scan-log/export', auth.checkBearerToken, kebersihanScanLog.export);
+
+router.get('/santri/all-data', auth.checkBearerToken, santri.list);
+router.get('/santri', auth.checkBearerToken, santri.index);
+router.get('/santri/:id', auth.checkBearerToken, santri.detail);
+router.post('/santri/export', auth.checkBearerToken, santri.export);
 
 export default router;

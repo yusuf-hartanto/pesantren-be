@@ -178,6 +178,12 @@ export default class Repository {
       updateOnDuplicate: [
         'nama_wali',
         'no_hp',
+        'nik',
+        'alamat',
+        'keterangan',
+        'hubungan',
+        'pendidikan',
+        'pekerjaan',
         'updated_at'
       ]
     });

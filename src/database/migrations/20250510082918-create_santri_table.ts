@@ -42,6 +42,14 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    id_cabang: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    nama_cabang: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     id_institution: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -72,7 +80,7 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    nomor_rekening: {
+    kartu_santri_nomor: {
       type: DataTypes.STRING,
       allowNull: true,
     },

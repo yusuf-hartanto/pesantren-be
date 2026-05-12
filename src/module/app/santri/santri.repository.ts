@@ -2,8 +2,12 @@
 
 import { Op } from 'sequelize';
 import Model from './santri.model';
-import AppInstitution from '../institution/institution.model';
+import Cabang from '../cabang/cabang.model';
 import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
+import AreaDistrict from '../../area/districts.model';
+import AreaProvince from '../../area/provinces.model';
+import AreaRegency from '../../area/regencies.model';
+import AreaSubDistrict from '../../area/subdistricts.model';
 
 export default class Repository {
   public list(condition: any = {}) {
@@ -30,7 +34,7 @@ export default class Repository {
         ...query,
         where: {
           status: { [Op.ne]: 9 },
-          [Op.or]: [{ role_name: { [Op.like]: `%${data?.keyword}%` } }],
+          [Op.or]: [{ fullname: { [Op.like]: `%${data?.keyword}%` } }],
         },
       };
     }
@@ -38,10 +42,10 @@ export default class Repository {
       ...query,
       include: [
         {
-          model: AppInstitution,
-          as: 'institution',
+          model: Cabang,
+          as: 'cabang',
           required: false,
-          attributes: ['id_institution', 'institution_id_sitrendi', 'institution_name'],
+          attributes: ['id_cabang', 'institution_id_sitrendi', 'nama_cabang', 'email'],
         },
         {
           model: OrangTuaWali,
@@ -61,16 +65,66 @@ export default class Repository {
       },
       include: [
         {
-          model: AppInstitution,
-          as: 'institution',
+          model: Cabang,
+          as: 'cabang',
           required: false,
-          attributes: ['id_institution', 'institution_id_sitrendi', 'institution_name'],
+          include: [
+            {
+              model: AreaProvince,
+              as: 'province',
+              attributes: ['id', 'name'],
+              required: false
+            },
+            {
+              model: AreaRegency,
+              as: 'city',
+              attributes: ['id', 'name'],
+              required: false
+            },
+            {
+              model: AreaDistrict,
+              as: 'district',
+              attributes: ['id', 'name'],
+              required: false
+            },
+            {
+              model: AreaSubDistrict,
+              as: 'subDistrict',
+              attributes: ['id', 'name'],
+              required: false
+            },
+          ],
         },
         {
           model: OrangTuaWali,
           as: 'wali',
           required: false,
-          attributes: ['id_wali', 'nama_wali', 'id_wali_sitrendi','no_hp'],
+          include: [
+            {
+              model: AreaProvince,
+              as: 'province',
+              required: false,
+              attributes: ['name'],
+            },
+            {
+              model: AreaRegency,
+              as: 'city',
+              required: false,
+              attributes: ['name'],
+            },
+            {
+              model: AreaDistrict,
+              as: 'district',
+              required: false,
+              attributes: ['name'],
+            },
+            {
+              model: AreaSubDistrict,
+              as: 'sub_district',
+              required: false,
+              attributes: ['name'],
+            },
+          ],
         }
       ],
     });
@@ -115,6 +169,9 @@ export default class Repository {
         'birth_date',
         'phone',
 
+        'id_cabang',
+        'nama_cabang',
+
         'institution_id',
         'institution_name',
 
@@ -123,7 +180,7 @@ export default class Repository {
         'group_code_3',
 
         'nomor_nasabah',
-        'nomor_rekening',
+        'kartu_santri_nomor',
         'kartu_santri',
 
         'status',
