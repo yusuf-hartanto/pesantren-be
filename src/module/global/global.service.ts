@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { helper } from '../../helpers/helper';
+import { repository as repoCabang } from '../app/cabang/cabang.repository';
 import { repository as repoSantri } from '../app/santri/santri.repository';
 import { repository as repoWali } from '../app/orang.tua.wali/orang.tua.wali.repository';
 import { repository as repoInstitution } from '../app/institution/institution.repository';
@@ -77,17 +78,50 @@ export default class Service {
 
     /*
     |--------------------------------------------------------------------------
+    | CABANG
+    |--------------------------------------------------------------------------
+    */
+    const cabangMap = new Map();
+    for (const item of data) {
+      if (!cabangMap.has(item.institution_id)) {
+        cabangMap.set(item.institution_id, {
+          id_cabang: uuidv4(),
+          institution_id_sitrendi: item.institution_id,
+          nama_cabang: item.institution_name,
+        });
+      }
+    }
+    const cabang = Array.from(cabangMap.values());
+    await repoCabang.bulkUpsert(cabang);
+
+    const cabangDb = await repoCabang.all({});
+    const cabangPkMap = new Map(
+      cabangDb.map((item: any) => [
+        item.institution_id_sitrendi,
+        item.id_cabang
+      ])
+    );
+
+    /*
+    |--------------------------------------------------------------------------
     | WALI
     |--------------------------------------------------------------------------
     */
     const waliMap = new Map();
     for (const item of data) {
-      if (!waliMap.has(item.user_id)) {
+      let wali = item.wali;
+      if (!waliMap.has(item.user_id) && wali) {
         waliMap.set(item.user_id, {
           id_wali: uuidv4(),
           id_wali_sitrendi: item.user_id,
-          nama_wali: item.nama_wali,
-          no_hp: item.phone_wali,
+          nama_wali: wali.nama_wali,
+          no_hp: wali.no_hp,
+          nik: wali.nik,
+          alamat: wali.alamat,
+          keterangan: wali.keterangan,
+          hubungan: helper.waliData(wali.hubungan, 'hubungan'),
+          pendidikan: helper.waliData(wali.pendidikan),
+          pekerjaan: helper.waliData(wali.pekerjaan),
         });
       }
     }
@@ -122,6 +156,9 @@ export default class Service {
           birth_date: item.birth_date,
           phone: item.phone,
 
+          id_cabang: cabangPkMap.get(item.institution_id) || null,
+          nama_cabang: item.institution_name,
+
           id_institution: institutionPkMap.get(item.institution_id) || null,
           institution_name: item.institution_name,
 
@@ -130,7 +167,7 @@ export default class Service {
           group_code_3: item.group_code_3,
 
           nomor_nasabah: item.nomor_nasabah,
-          nomor_rekening: item.nomor_rekening,
+          kartu_santri_nomor: item.kartu_santri_nomor,
           kartu_santri: item.kartu_santri,
 
           status: item.is_active ? 1 : 0,

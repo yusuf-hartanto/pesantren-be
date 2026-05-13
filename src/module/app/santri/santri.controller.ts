@@ -2,22 +2,14 @@
 
 import moment from 'moment';
 import ExcelJS from 'exceljs';
-import fs from 'fs/promises';
 import { Op } from 'sequelize';
-import AppRole from './santri.model';
-import { variable } from './santri.variable';
 import { Request, Response } from 'express';
 import { repository } from './santri.repository';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
-import { sequelize } from '../../../database/connection';
 import {
-  ALREADY_EXIST,
   NOT_FOUND,
-  SUCCESS_DELETED,
   SUCCESS_RETRIEVED,
-  SUCCESS_SAVED,
-  SUCCESS_UPDATED,
 } from '../../../utils/constant';
 
 const date: string = helper.date();
@@ -31,10 +23,9 @@ const generateDataExcel = (sheet: any, details: any) => {
     'NIK',
     'Jenis Kelamin',
     'No. Hp',
-    'Lembaga',
+    'Cabang',
     'Kelas',
-    'No. Rekening',
-    'Kartu Santri',
+    'No. Kartu Santri',
     'Status',
   ]);
 
@@ -56,10 +47,9 @@ const generateDataExcel = (sheet: any, details: any) => {
       details[i]?.nik || '',
       gender,
       details[i]?.phone || '',
-      details[i]?.institution_name || '',
+      details[i]?.nama_cabang || '',
       details[i]?.group_code_1 || '',
-      details[i]?.nomor_rekening || '',
-      details[i]?.kartu_santri || '',
+      details[i]?.kartu_santri_nomor || '',
       details[i]?.status == 1 ? 'Aktif' : 'Nonaktif',
     ]);
   }

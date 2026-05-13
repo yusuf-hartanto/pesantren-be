@@ -14,6 +14,11 @@ export class Cabang extends Model {
   declare nomor_urut: number;
   declare keterangan: string;
   declare alamat: string;
+  declare province_id: string;
+  declare city_id: string;
+  declare district_id: string;
+  declare sub_district_id: string;
+  declare institution_id_sitrendi: string;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -43,6 +48,10 @@ export function initCabang(sequelize: Sequelize) {
         allowNull: true,
       },
       sub_district_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      institution_id_sitrendi: {
         type: DataTypes.STRING,
         allowNull: true,
       },

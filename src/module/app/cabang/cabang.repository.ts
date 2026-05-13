@@ -301,6 +301,23 @@ export default class Repository {
       }, { transaction });
     }
   }
+  
+  public all(condition: any = {}) {
+    return Model.findAll({
+      where: condition,
+      order: [['id_cabang', 'DESC']],
+    });
+  }
+  
+  public async bulkUpsert(data: any) {
+    await Model.bulkCreate(data, {
+      conflictAttributes: ['nama_cabang'],
+      updateOnDuplicate: [
+        'institution_id_sitrendi',
+        'updated_at'
+      ]
+    });
+  }
 }
 
 export const repository = new Repository();
