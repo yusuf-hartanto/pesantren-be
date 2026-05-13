@@ -5,6 +5,7 @@ import { helper } from '../../../helpers/helper';
 import { variable } from './jabatan.variable';
 import { response } from '../../../helpers/response';
 import { repository } from './jabatan.repository';
+import { repository as orgRepo } from '../organization.unit/organization.unit.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -22,7 +23,7 @@ import { Op } from 'sequelize';
 
 const date: string = helper.date();
 
-const generateDataExcel = (sheet: any, details: any) => {
+const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
   sheet.columns = [
     { header: 'No', key: 'no', width: 5 },
     { header: 'Kode Jabatan', key: 'kode_jabatan', width: 15 },
@@ -40,26 +41,31 @@ const generateDataExcel = (sheet: any, details: any) => {
   });
 
   details.forEach((item: any, i: number) => {
-    sheet.addRow({
-      no: i + 1,
-      kode_jabatan: item.kode_jabatan || '',
-      nama_jabatan: item.nama_jabatan || '',
-      unit: item.orgunit?.nama_orgunit || '',
-      level_jabatan: item.level_jabatan ?? '',
-      sifat_jabatan: item.sifat_jabatan || '',
-      keterangan: item.keterangan || '',
-    });
+    sheet.addRow([
+      i + 1,
+      item.kode_jabatan || '',
+      item.nama_jabatan || '',
+      (isTemplate ? item.id_orgunit : item.orgunit?.nama_orgunit || ''),
+      item.level_jabatan ?? '',
+      item.sifat_jabatan || '',
+      item.keterangan || '',
+    ]);
   });
 
-  for (let row = 1; row <= (details?.length || 0) + 1; row++) {
-    sheet.getRow(row).eachCell((cell: any) => {
+  const columnCount = sheet.columns.length;
+  const rowCount = (details?.length || 0) + 1;
+
+  for (let row = 1; row <= rowCount; row++) {
+    const currentRow = sheet.getRow(row);
+    for (let col = 1; col <= columnCount; col++) {
+      const cell = currentRow.getCell(col);
       cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } },
       };
-    });
+    }
   }
 
   return sheet;
@@ -68,7 +74,7 @@ const generateDataExcel = (sheet: any, details: any) => {
 const normalizeRow = (row: any) => ({
   kode_jabatan: String(row['Kode Jabatan'] || '').trim(),
   nama_jabatan: String(row['Nama Jabatan'] || '').trim(),
-  nama_orgunit: String(row['Unit Organisasi'] || '').trim(),
+  id_orgunit: String(row['Unit Organisasi'] || '').trim(),
   level_jabatan: row['Level'] ? parseInt(row['Level']) : null,
   sifat_jabatan: String(row['Sifat Jabatan'] || 'Umum').trim(),
   keterangan: String(row['Keterangan'] || '').trim(),
@@ -237,12 +243,7 @@ export default class Controller {
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
 
-      if (q) {
-        condition = { nama_jabatan: { [Op.like]: `%${q}%` } };
-      }
-
-      const result = await repository.listForExport(condition, isTemplate ? 5 : undefined);
-      if (!isTemplate && result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      let result = await repository.listForExport({ q, isTemplate }); 
 
       const { dir, path } = await helper.checkDirExport('excel');
       const name: string = 'jabatan';
@@ -251,7 +252,7 @@ export default class Controller {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('DATA JABATAN');
 
-      generateDataExcel(sheet, result);
+      generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
       return response.success(`export excel ${name}`, `${dir}/${filename}`, res);
@@ -278,14 +279,14 @@ export default class Controller {
         let id_orgunit = null;
 
         // Resolve Unit Organisasi
-        // if (row.nama_orgunit) {
-        //   const unit = await orgRepo.detail({ nama_orgunit: row.nama_orgunit });
-        //   if (unit) {
-        //     id_orgunit = unit.id_orgunit;
-        //   } else {
-        //     errors.push(`Unit Organisasi "${row.nama_orgunit}" tidak ditemukan`);
-        //   }
-        // }
+        if (row.id_orgunit) {
+          const unit: any = await orgRepo.detail({ id_orgunit: row.id_orgunit });
+          if (unit) {
+            id_orgunit = unit.id_orgunit;
+          } else {
+            errors.push(`Unit Organisasi "${row.id_orgunit}" tidak ditemukan`);
+          }
+        }
 
         const valid = errors.length === 0;
         const payload = {
@@ -305,13 +306,20 @@ export default class Controller {
         });
       }
 
+      const dataRes = {
+        mode,
+        total: results.length,
+        valid: results.filter((r) => r.valid).length,
+        invalid: results.filter((r) => !r.valid).length,
+      };
+
       if (mode === 'commit') {
-        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
-        if (validPayloads.length > 0) await repository.insertImport(validPayloads);
-        return response.success('import jabatan berhasil', { total: validPayloads.length }, res);
+        const validData = results.filter(r => r.valid).map(r => r.payload);
+        await repository.insertImport(validData);
+        return response.success('import berhasil', dataRes, res);
       }
 
-      return response.success('preview import jabatan', { total: results.length, data: results }, res);
+      return response.success('preview import', { ...dataRes, data: results }, res);
     } catch (err: any) {
       return helper.catchError(`import excel jabatan: ${err?.message}`, 500, res);
     }

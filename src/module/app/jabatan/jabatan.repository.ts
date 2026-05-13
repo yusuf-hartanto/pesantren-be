@@ -57,12 +57,18 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { nama_jabatan: { [Op.like]: keyword } },
-            { level_jabatan: { [Op.like]: keyword } },
-            { sifat_jabatan: { [Op.like]: keyword } },
-            { kode_jabatan: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { '$orgunit.nama_orgunit$': { [Op.like]: keyword } },
+            { nama_jabatan: { [Op.iLike]: keyword } },
+            Sequelize.where(
+              Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'), 
+              { [Op.iLike]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'), 
+              { [Op.iLike]: keyword }
+            ),
+            { kode_jabatan: { [Op.iLike]: keyword } },
+            { keterangan: { [Op.iLike]: keyword } },
+            { '$orgunit.nama_orgunit$': { [Op.iLike]: keyword } },
           ],
         },
       };
@@ -124,18 +130,43 @@ export default class Repository {
     });
   }
 
-  public listForExport(condition: any, limit?: number) {
+  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+      whereClause = {
+        [Op.and]: [
+          { deleted_at: null },
+          {
+            [Op.or]: [
+              { nama_jabatan: { [Op.iLike]: keyword } },
+              { kode_jabatan: { [Op.iLike]: keyword } },
+              { keterangan: { [Op.iLike]: keyword } },
+              Sequelize.where(Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'), { [Op.iLike]: keyword }),
+              Sequelize.where(Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'), { [Op.iLike]: keyword }),
+              { '$orgunit.nama_orgunit$': { [Op.iLike]: keyword } },
+            ]
+          }
+        ]
+      };
+    }
+
     return Model.findAll({
-      where: condition,
-      limit: limit,
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
       include: [
-        { 
-          model: OrganizationUnit, 
-          as: 'orgunit', 
-          attributes: ['nama_orgunit'] 
-        }
+        {
+          model: OrganizationUnit,
+          as: 'orgunit',
+          attributes: ['nama_orgunit'],
+          required: false, // LEFT OUTER JOIN
+        },
       ],
-      order: [['level_jabatan', 'ASC'], ['nama_jabatan', 'ASC']]
+      order: [['level_jabatan', 'ASC'], ['nama_jabatan', 'ASC']],
     });
   }
 

@@ -32,7 +32,7 @@ const generateDataExcel = (sheet: any, details: any) => {
     { header: 'Nama Unit', key: 'nama_orgunit', width: 30 },
     // { header: 'Level', key: 'level_orgunit', width: 10 }, 
     { header: 'Jenis Unit', key: 'jenis_orgunit', width: 15 },
-    { header: 'Induk Unit', key: 'parent', width: 30 },
+    { header: 'Nama Parent', key: 'parent', width: 30 },
     { header: 'Cabang', key: 'cabang', width: 25 },
     { header: 'Tipe Lembaga', key: 'lembaga_type', width: 15 },
     { header: 'Nama Lembaga', key: 'nama_lembaga', width: 30 },
@@ -68,7 +68,7 @@ const generateDataExcel = (sheet: any, details: any) => {
 const normalizeRow = (row: any) => ({
   nama_orgunit: String(row['Nama Unit'] || '').trim(),
   jenis_orgunit: String(row['Jenis Unit'] || '').trim(),
-  nama_parent: String(row['Induk Unit'] || '').trim(),
+  nama_parent: String(row['Nama Parent'] || '').trim(),
   nama_cabang: String(row['Cabang'] || '').trim(),
   lembaga_type: String(row['Tipe Lembaga'] || '').toUpperCase().trim(),
   nama_lembaga: String(row['Nama Lembaga'] || '').trim(),
@@ -141,10 +141,8 @@ export default class Controller {
       const validatedData = [];
 
       for (const item of payloadArray) {
-        // 1. Validasi Schema (Zod)
         const validItem = orgUnitSchema.parse(item);
 
-        // 2. VALIDASI ROLE: Cek jika jenis_orgunit adalah 'Lembaga'
         if (validItem.jenis_orgunit === 'Lembaga') {
           if (!user || !ALLOWED_ROLES_FOR_LEMBAGA.includes(user.role_name)) {
             return helper.catchError(
@@ -155,7 +153,6 @@ export default class Controller {
           }
         }
 
-        // 3. Otomatisasi Level
         let level = 0;
         if (validItem.parent_id) {
           const parent: any = await repository.detail({ id_orgunit: validItem.parent_id });
@@ -255,11 +252,10 @@ export default class Controller {
   public async export(req: Request, res: Response) {
     try {
       const { q, template } = req.body;
-      const isTemplate = template == '1';
-      let condition = q ? { nama_orgunit: { [Op.like]: `%${q}%` } } : {};
+      const isTemplate: boolean = template && template == '1';
 
-      const result = isTemplate ? await repository.listForExport({}, 5) : await repository.listForExport(condition);
-      
+      let result = await repository.listForExport({ q, isTemplate });    
+
       const { dir, path } = await helper.checkDirExport('excel');
 
       const name: string = 'organization-unit';
@@ -343,13 +339,21 @@ export default class Controller {
         });
       }
 
+      const dataRes = {
+        mode,
+        total: results.length,
+        valid: results.filter((r) => r.valid).length,
+        invalid: results.filter((r) => !r.valid).length,
+      };
+
       if (mode === 'commit') {
         const validData = results.filter(r => r.valid).map(r => r.payload);
         await repository.insertImport(validData);
-        return response.success('Import berhasil', { total: validData.length }, res);
+        return response.success('import berhasil', dataRes, res);
       }
 
-      return response.success('Preview Import', { data: results }, res);
+      return response.success('preview import', { ...dataRes, data: results }, res);
+
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }

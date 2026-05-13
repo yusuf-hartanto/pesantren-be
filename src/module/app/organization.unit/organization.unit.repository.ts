@@ -1,6 +1,6 @@
 'use strict';
 
-import { QueryTypes, WhereOptions } from 'sequelize';
+import { QueryTypes, Sequelize, WhereOptions } from 'sequelize';
 import Model from './organization.unit.model';
 import { rawQuery } from '../../../helpers/rawQuery';
 import Cabang from '../cabang/cabang.model';
@@ -53,7 +53,7 @@ export default class Repository {
         o.id_orgunit::text ILIKE :keyword OR
         o.nama_orgunit ILIKE :keyword OR
         o.level_orgunit::text ILIKE :keyword OR
-        o.jenis_orgunit ILIKE :keyword OR
+        o.jenis_orgunit::text ILIKE :keyword OR
         o.keterangan ILIKE :keyword OR
         p.nama_orgunit ILIKE :keyword OR
         c.nama_cabang ILIKE :keyword OR
@@ -153,19 +153,58 @@ export default class Repository {
     });
   }
 
-  public listForExport(condition: any, limit?: number) {
+
+public listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+     if (!isTemplate && keyword) {
+        whereClause = [
+            { deleted_at: null },
+            {
+                [Op.or]: [
+                    Sequelize.where(Sequelize.cast(Sequelize.col('OrganizationUnit.id_orgunit'), 'text'), { [Op.iLike]: keyword }),
+                    Sequelize.where(Sequelize.cast(Sequelize.col('OrganizationUnit.level_orgunit'), 'text'), { [Op.iLike]: keyword }),
+                    Sequelize.where(Sequelize.cast(Sequelize.col('OrganizationUnit.jenis_orgunit'), 'text'), { [Op.iLike]: keyword }),
+                    
+                    { nama_orgunit: { [Op.iLike]: keyword } },
+                    { keterangan: { [Op.iLike]: keyword } },
+                    
+                    { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
+                    { '$parent.nama_orgunit$': { [Op.iLike]: keyword } },
+                    { '$lembagaPendidikanFormal.nama_lembaga$': { [Op.iLike]: keyword } },
+                    { '$lembagaPendidikanKepesantrenan.nama_lembaga$': { [Op.iLike]: keyword } },
+                ]
+            }
+        ];
+    }
+
     return Model.findAll({
-      where: condition,
-      limit: limit,
-      include: [
-        { model: Cabang, as: 'cabang', attributes: ['nama_cabang'] },
-        { model: Model, as: 'parent', attributes: ['nama_orgunit'] },
-        { model: require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model').default, as: 'lembagaPendidikanFormal', attributes: ['nama_lembaga'] },
-        { model: require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model').default, as: 'lembagaPendidikanKepesantrenan', attributes: ['nama_lembaga'] },
-      ],
-      order: [['level_orgunit', 'ASC'], ['nama_orgunit', 'ASC']],
+        where: whereClause,
+        limit: limit || (isTemplate ? 5 : undefined),
+        subQuery: false,
+        include: [
+            { model: Cabang, as: 'cabang', attributes: ['nama_cabang'] },
+            { model: Model, as: 'parent', attributes: ['nama_orgunit'] },
+            { 
+                model: require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model').default, 
+                as: 'lembagaPendidikanFormal', 
+                attributes: ['nama_lembaga'],
+                required: false 
+            },
+            { 
+                model: require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model').default, 
+                as: 'lembagaPendidikanKepesantrenan', 
+                attributes: ['nama_lembaga'],
+                required: false
+            },
+        ],
+
+        order: [['level_orgunit', 'ASC'], ['nama_orgunit', 'ASC']],
     });
-  }
+}
 
   public findByName(name: string, id_cabang: string, id_lembaga?: string | null, lembaga_type?: string | null) {
     return Model.findOne({
