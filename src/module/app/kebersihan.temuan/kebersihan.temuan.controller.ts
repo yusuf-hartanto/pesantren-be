@@ -19,7 +19,14 @@ import moment from 'moment';
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Kategori', 'Deskripsi', 'Tingkat', 'Perlu Tindak Lanjut', 'Foto Path']);
+  sheet.addRow([
+    'No',
+    'Kategori',
+    'Deskripsi',
+    'Tingkat',
+    'Perlu Tindak Lanjut',
+    'Foto Path',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -60,7 +67,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`kebersihan temuan list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `kebersihan temuan list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -76,7 +87,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`kebersihan temuan index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `kebersihan temuan index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -99,9 +114,7 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const {
-        id_inspeksi,
-      } = req?.body;
+      const { id_inspeksi } = req?.body;
 
       const idInspeksi = id_inspeksi?.value || null;
 
@@ -127,9 +140,7 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const {
-        id_inspeksi,
-      } = req?.body;
+      const { id_inspeksi } = req?.body;
       const idInspeksi = id_inspeksi?.value;
       const check = await repository.detail({ id_temuan: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
@@ -159,7 +170,7 @@ export default class Controller {
       const id: string = req?.params?.id || '';
       const check = await repository.detail({ id_temuan: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      
+
       await repository.delete({
         condition: { id_temuan: id },
       });
@@ -207,7 +218,6 @@ export default class Controller {
       );
     }
   }
-
 }
 
 export const kebersihanTemuan = new Controller();

@@ -7,15 +7,18 @@ import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './institution.repository';
-import {
-  NOT_FOUND,
-  SUCCESS_RETRIEVED,
-} from '../../../utils/constant';
+import { NOT_FOUND, SUCCESS_RETRIEVED } from '../../../utils/constant';
 
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Lembaga ID SiTrendi', 'Nama Lembaga', 'Status', 'Keterangan']);
+  sheet.addRow([
+    'No',
+    'Lembaga ID SiTrendi',
+    'Nama Lembaga',
+    'Status',
+    'Keterangan',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -66,7 +69,9 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({ id_institution: id });
+      const result: Object | any = await repository.detail({
+        id_institution: id,
+      });
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
@@ -106,7 +111,11 @@ export default class Controller {
       await workbook.xlsx.writeFile(`${path}/${filename}`);
       return response.success('export excel institution', urlExcel, res);
     } catch (err: any) {
-      return helper.catchError(`export excel institution: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel institution: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 }

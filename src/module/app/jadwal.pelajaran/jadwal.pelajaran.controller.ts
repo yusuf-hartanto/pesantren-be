@@ -34,7 +34,19 @@ import JadwalPelajaran from './jadwal.pelajaran.model';
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Tahun Ajaran', 'Semester', 'Hari', 'Jam', 'Kelas/Lembaga', 'Mata Pelajaran', 'Guru', 'Lokasi', 'Status', 'Keterangan']);
+  sheet.addRow([
+    'No',
+    'Tahun Ajaran',
+    'Semester',
+    'Hari',
+    'Jam',
+    'Kelas/Lembaga',
+    'Mata Pelajaran',
+    'Guru',
+    'Lokasi',
+    'Status',
+    'Keterangan',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -47,7 +59,9 @@ const generateDataExcel = (sheet: any, details: any) => {
       details[i]?.tahun_ajaran?.tahun_ajaran || '',
       details[i]?.semester?.nama_semester || '',
       details[i]?.hari || '',
-      details[i]?.jam_pelajaran ? `${details[i]?.jam_pelajaran?.mulai.slice(0, -3)} - ${details[i]?.jam_pelajaran?.selesai.slice(0, -3)}` : '',
+      details[i]?.jam_pelajaran
+        ? `${details[i]?.jam_pelajaran?.mulai.slice(0, -3)} - ${details[i]?.jam_pelajaran?.selesai.slice(0, -3)}`
+        : '',
       `${details[i]?.kelas_formal ? details[i]?.kelas_formal?.nama_kelas : details[i]?.kelas_mda?.nama_kelas_mda} (${details[i]?.kelas_formal ? details[i]?.kelas_formal?.lembaga?.nama_lembaga : details[i]?.kelas_mda?.lembaga?.nama_lembaga})`,
       details[i]?.jenis_guru?.mata_pelajaran?.nama_mapel || '',
       details[i]?.jenis_guru?.pegawai?.nama_lengkap || '',
@@ -107,7 +121,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`jadwal pelajaran list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal pelajaran list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -123,7 +141,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`jadwal pelajaran index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal pelajaran index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -153,7 +175,7 @@ export default class Controller {
         id_gmapel,
         id_jam_pelajaran,
         id_semester,
-        id_lokasi
+        id_lokasi,
       } = req?.body;
 
       const idKelas = id_kelas?.value || null;
@@ -204,7 +226,7 @@ export default class Controller {
         id_gmapel,
         id_jam_pelajaran,
         id_semester,
-        id_lokasi
+        id_lokasi,
       } = req?.body;
       const idKelas = id_kelas?.value;
       const idTahunajaran = id_tahunajaran?.value;
@@ -244,7 +266,8 @@ export default class Controller {
           id_tahunajaran:
             idTahunajaran || check?.getDataValue('id_tahunajaran'),
           id_gmapel: idGmapel || check?.getDataValue('id_gmapel'),
-          id_jam_pelajaran: idJamPelajaran || check?.getDataValue('id_jam_pelajaran'),
+          id_jam_pelajaran:
+            idJamPelajaran || check?.getDataValue('id_jam_pelajaran'),
           id_kelas: idKelas || check?.getDataValue('id_kelas'),
           id_semester: idSemester || check?.getDataValue('id_semester'),
           id_lokasi: idLokasi || check?.getDataValue('id_lokasi'),
@@ -356,46 +379,59 @@ export default class Controller {
         const hari = row.hari;
         const jam = row.jam.split(' - ');
         const kelas = row.kelas.split('(');
-        const jamMulai = jam[0]
-        const jamSelesai = jam[1]
-        const kelasName = kelas[0].trim()
-        const nama_lembaga = kelas[1].replace(')', '')
-        const nama_mapel = row.mapel
-        const nama_lengkap = row.guru
-        const nama_lokasi = row.lokasi
+        const jamMulai = jam[0];
+        const jamSelesai = jam[1];
+        const kelasName = kelas[0].trim();
+        const nama_lembaga = kelas[1].replace(')', '');
+        const nama_mapel = row.mapel;
+        const nama_lengkap = row.guru;
+        const nama_lokasi = row.lokasi;
 
-        const tahunAjaranExist = await tahunAjaranRepository.detail({ tahun_ajaran });
+        const tahunAjaranExist = await tahunAjaranRepository.detail({
+          tahun_ajaran,
+        });
         if (!tahunAjaranExist) {
           errors.push(`Tahun Ajaran ${tahun_ajaran} tidak ditemukan`);
         }
 
-        const semesterExist = await semesterRepository.detail({ nama_semester: semester, id_tahunajaran: tahunAjaranExist?.id_tahunajaran || '' });
+        const semesterExist = await semesterRepository.detail({
+          nama_semester: semester,
+          id_tahunajaran: tahunAjaranExist?.id_tahunajaran || '',
+        });
         if (!semesterExist) {
           errors.push(`Semester ${semester} tidak ditemukan`);
         }
 
         let idLembaga = null;
         let typeLembaga = null;
-        const lembagaFormalExist = await lembagaFormalRepository.detail({ nama_lembaga });
-        
+        const lembagaFormalExist = await lembagaFormalRepository.detail({
+          nama_lembaga,
+        });
+
         if (!lembagaFormalExist) {
-          const lembagaKepesantrenanExist = await lembagaKepesantrenanRepository.detail({ nama_lembaga });
-          
+          const lembagaKepesantrenanExist =
+            await lembagaKepesantrenanRepository.detail({ nama_lembaga });
+
           if (!lembagaKepesantrenanExist) {
             errors.push(`Lembaga ${nama_lembaga} tidak ditemukan`);
           } else {
             idLembaga = lembagaKepesantrenanExist?.id_lembaga;
             typeLembaga = 'PESANTREN';
           }
-          
         } else {
           idLembaga = lembagaFormalExist?.id_lembaga;
           typeLembaga = 'FORMAL';
         }
 
-        const jamPelajaranExist = await jamPelajaranRepository.detail({ mulai: jamMulai, selesai: jamSelesai, id_lembaga: idLembaga || '' });
+        const jamPelajaranExist = await jamPelajaranRepository.detail({
+          mulai: jamMulai,
+          selesai: jamSelesai,
+          id_lembaga: idLembaga || '',
+        });
         if (!jamPelajaranExist) {
-          errors.push(`Jam Pelajaran ${jamMulai} - ${jamSelesai} tidak ditemukan`);
+          errors.push(
+            `Jam Pelajaran ${jamMulai} - ${jamSelesai} tidak ditemukan`
+          );
         }
 
         const lokasiExist = await lokasiRepository.detail({ nama_lokasi });
@@ -403,17 +439,27 @@ export default class Controller {
           errors.push(`Lokasi ${nama_lokasi} tidak ditemukan`);
         }
 
-        const mapelExist = await mapelRepository.detail({ nama_mapel, id_lembaga: idLembaga || '' });
+        const mapelExist = await mapelRepository.detail({
+          nama_mapel,
+          id_lembaga: idLembaga || '',
+        });
         const guruExist = await guruRepository.detail({ nama_lengkap });
 
-        const guruMapelExist = await guruMapelRepository.detail({ id_guru: guruExist?.id_pegawai || '', id_mapel: mapelExist?.id_mapel || '', id_lembaga: idLembaga || '' });
+        const guruMapelExist = await guruMapelRepository.detail({
+          id_guru: guruExist?.id_pegawai || '',
+          id_mapel: mapelExist?.id_mapel || '',
+          id_lembaga: idLembaga || '',
+        });
         if (!guruMapelExist) {
           errors.push(`Guru & Mata Pelajaran tidak ditemukan`);
         }
 
         let idKelas = null;
         if (typeLembaga == 'FORMAL') {
-          const kelasFormalExist = await kelasFormalRepository.detail({ nama_kelas: kelasName, id_tingkat: guruMapelExist?.id_tingkat || '' });
+          const kelasFormalExist = await kelasFormalRepository.detail({
+            nama_kelas: kelasName,
+            id_tingkat: guruMapelExist?.id_tingkat || '',
+          });
 
           if (!kelasFormalExist) {
             errors.push(`Kelas ${kelasName} tidak ditemukan`);
@@ -421,7 +467,10 @@ export default class Controller {
             idKelas = kelasFormalExist?.id_kelas;
           }
         } else {
-          const kelasMdaExist = await kelasMdaRepository.detail({ nama_kelas_mda: kelasName, id_tingkat: guruMapelExist?.id_tingkat || '' });
+          const kelasMdaExist = await kelasMdaRepository.detail({
+            nama_kelas_mda: kelasName,
+            id_tingkat: guruMapelExist?.id_tingkat || '',
+          });
           if (!kelasMdaExist) {
             errors.push(`Kelas ${kelasName} tidak ditemukan`);
           } else {
@@ -461,16 +510,26 @@ export default class Controller {
 
         if (mode === 'preview' || !valid) continue;
 
-        const existing = await repository.detail({ hari, id_kelas: idKelas, id_jam_pelajaran: jamPelajaranExist?.id_jampel });
+        const existing = await repository.detail({
+          hari,
+          id_kelas: idKelas,
+          id_jam_pelajaran: jamPelajaranExist?.id_jampel,
+        });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx! });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         } else {
-          let newCreate = await JadwalPelajaran.create({
-            ...payload,
-          }, { transaction: trx! });
+          let newCreate = await JadwalPelajaran.create(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         }
       }
 
@@ -482,9 +541,8 @@ export default class Controller {
       };
 
       if (trx) {
-
         await trx.commit();
-        
+
         return response.success(
           'import jadwal pelajaran berhasil',
           dataRes,
@@ -526,17 +584,23 @@ export default class Controller {
         const existing = await repository.detail({
           hari: payload.hari,
           id_tahunajaran: payload.id_tahunajaran,
-          id_kelas: payload.id_kelas
+          id_kelas: payload.id_kelas,
         });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         } else {
-          let newCreate = await JadwalPelajaran.create({
-            ...payload,
-          }, { transaction: trx });
+          let newCreate = await JadwalPelajaran.create(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         }
       }
 
@@ -552,7 +616,6 @@ export default class Controller {
       return helper.catchError(`Import batch gagal: ${err.message}`, 500, res);
     }
   }
-
 }
 
 export const jadwalPelajaran = new Controller();

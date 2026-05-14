@@ -1,6 +1,6 @@
 'use strict';
 
-import { QueryInterface, Sequelize } from "sequelize";
+import { QueryInterface, Sequelize } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 
 // Simpan UUID di luar agar bisa dipakai di up dan down
@@ -12,9 +12,9 @@ export default {
   up: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
     const branches = [
       {
-        id_cabang: ID_PUSAT, 
+        id_cabang: ID_PUSAT,
         nama_cabang: 'Kantor Pusat Jakarta',
-        province_id: '34', 
+        province_id: '34',
         city_id: '34.04',
         contact: '021-1234567',
         email: 'pusat@lembaga.com',
@@ -34,7 +34,7 @@ export default {
         alamat: 'Jl. Asia Afrika No. 10',
         created_at: new Date(),
         updated_at: new Date(),
-      }
+      },
     ];
 
     return queryInterface.bulkInsert('cabang', branches);
@@ -43,7 +43,7 @@ export default {
   down: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
     // Menghapus berdasarkan UUID yang digenerate tadi
     return queryInterface.bulkDelete('cabang', {
-      id_cabang: [ID_PUSAT, ID_BANDUNG]
+      id_cabang: [ID_PUSAT, ID_BANDUNG],
     });
-  }
+  },
 };

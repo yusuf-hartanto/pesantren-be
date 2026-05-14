@@ -5,7 +5,7 @@ import { QueryInterface, DataTypes } from 'sequelize';
 export const up = async (queryInterface: QueryInterface) => {
   try {
     console.log('--- Memulai Migrasi: create_lokasi_table ---');
-    
+
     await queryInterface.createTable('lokasi', {
       id_lokasi: {
         type: DataTypes.STRING,
@@ -19,12 +19,40 @@ export const up = async (queryInterface: QueryInterface) => {
       },
       jenis_lokasi: {
         type: DataTypes.ENUM(
-          'Cabang', 'Asrama', 'Kamar', 'Masjid', 'AreaMasjid', 'SekolahFormal', 
-          'SekolahMDA', 'RuangKelas', 'RuangGuru', 'RuangTU', 'Perpustakaan', 
-          'Laboratorium', 'GuestHouse', 'Klinik', 'UKS', 'Dapur', 'Kantin', 
-          'Koperasi', 'Kantor', 'Aula', 'Gudang', 'Lapangan', 'Parkiran', 
-          'PosSatpam', 'RuangRapat', 'RuangSerbaguna', 'Taman', 'AreaUmum', 
-          'RuangMakan', 'Lahan', 'Workshop', 'Studio', 'RuangIT', 'GedungLain', 
+          'Cabang',
+          'Asrama',
+          'Kamar',
+          'Masjid',
+          'AreaMasjid',
+          'SekolahFormal',
+          'SekolahMDA',
+          'RuangKelas',
+          'RuangGuru',
+          'RuangTU',
+          'Perpustakaan',
+          'Laboratorium',
+          'GuestHouse',
+          'Klinik',
+          'UKS',
+          'Dapur',
+          'Kantin',
+          'Koperasi',
+          'Kantor',
+          'Aula',
+          'Gudang',
+          'Lapangan',
+          'Parkiran',
+          'PosSatpam',
+          'RuangRapat',
+          'RuangSerbaguna',
+          'Taman',
+          'AreaUmum',
+          'RuangMakan',
+          'Lahan',
+          'Workshop',
+          'Studio',
+          'RuangIT',
+          'GedungLain',
           'AreaLain'
         ),
         allowNull: false,

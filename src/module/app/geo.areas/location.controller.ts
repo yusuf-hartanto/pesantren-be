@@ -52,16 +52,16 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      console.log('TSSTT', `${err?.message}`)
+      console.log('TSSTT', `${err?.message}`);
       return helper.catchError(`Lokasi detail: ${err?.message}`, 500, res);
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
-      console.log(req.body)
-      const payload = Array.isArray(req.body) 
-        ? z.array(locationSchema).parse(req.body) 
+      console.log(req.body);
+      const payload = Array.isArray(req.body)
+        ? z.array(locationSchema).parse(req.body)
         : [locationSchema.parse(req.body)];
 
       const finalData = [];
@@ -69,7 +69,9 @@ export default class Controller {
       for (const item of payload) {
         // 2. Logika Bisnis: Inherit ID Cabang dari Parent
         if (item.parent_id) {
-          const parent: any = await repository.detail({ id_lokasi: item.parent_id });
+          const parent: any = await repository.detail({
+            id_lokasi: item.parent_id,
+          });
           if (parent?.id_cabang) item.id_cabang = parent.id_cabang;
         }
 
@@ -80,11 +82,14 @@ export default class Controller {
           nama_lokasi: item.nama_lokasi,
         });
 
-        if (isDuplicate) throw new Error(`Lokasi "${item.nama_lokasi}" sudah ada di cabang ini.`);
-        
+        if (isDuplicate)
+          throw new Error(
+            `Lokasi "${item.nama_lokasi}" sudah ada di cabang ini.`
+          );
+
         finalData.push(item);
       }
-        
+
       await repository.create({ payload: finalData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
@@ -96,12 +101,16 @@ export default class Controller {
       // Jika error berasal dari Zod (Validasi Field)
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
-        const fieldName = firstIssue.path.join('.'); 
+        const fieldName = firstIssue.path.join('.');
         errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
         errorCode = 400;
       }
 
-      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `Lokasi create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -113,15 +122,20 @@ export default class Controller {
       const existingData: any = await repository.detail({ id_lokasi: id });
       if (!existingData) return response.success(NOT_FOUND, null, res, false);
 
-      // 2. Validasi input menggunakan partial schema 
+      // 2. Validasi input menggunakan partial schema
       const validatedData = locationUpdateSchema.parse(req.body);
 
       // 3. Gabungkan data lama dan data baru untuk keperluan logika bisnis
-      const mergedData = { ...existingData.get({ plain: true }), ...validatedData };
+      const mergedData = {
+        ...existingData.get({ plain: true }),
+        ...validatedData,
+      };
 
       // 4. Logika Bisnis: Inherit ID Cabang dari Parent (jika parent_id berubah)
       if (validatedData.parent_id) {
-        const parent: any = await repository.detail({ id_lokasi: validatedData.parent_id });
+        const parent: any = await repository.detail({
+          id_lokasi: validatedData.parent_id,
+        });
         if (parent?.id_cabang) {
           mergedData.id_cabang = parent.id_cabang;
         }
@@ -132,16 +146,18 @@ export default class Controller {
         id_cabang: mergedData.id_cabang || null,
         jenis_lokasi: mergedData.jenis_lokasi,
         nama_lokasi: mergedData.nama_lokasi,
-        id_lokasi: { [Op.ne]: id }
+        id_lokasi: { [Op.ne]: id },
       });
 
       if (isDuplicate) {
-        throw new Error(`Kombinasi Cabang, Jenis, dan Nama "${mergedData.nama_lokasi}" sudah digunakan oleh lokasi lain.`);
+        throw new Error(
+          `Kombinasi Cabang, Jenis, dan Nama "${mergedData.nama_lokasi}" sudah digunakan oleh lokasi lain.`
+        );
       }
 
       // 6. Eksekusi Update
       await repository.update({
-        payload: mergedData, 
+        payload: mergedData,
         condition: { id_lokasi: id },
       });
 
@@ -155,12 +171,16 @@ export default class Controller {
       // Jika error berasal dari Zod (Validasi Field)
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
-        const fieldName = firstIssue.path.join('.'); 
+        const fieldName = firstIssue.path.join('.');
         errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
         errorCode = 400;
       }
 
-      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `Lokasi create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -174,12 +194,12 @@ export default class Controller {
 
       // 2. Cek apakah lokasi ini memiliki child (sub-lokasi)
       const hasChild = await repository.detail({ parent_id: id });
-      
+
       if (hasChild) {
         return response.success(
-          `Gagal menghapus: Lokasi ini masih memiliki sub-lokasi di dalamnya. Silakan hapus atau pindahkan sub-lokasi terlebih dahulu.`, 
-          null, 
-          res, 
+          `Gagal menghapus: Lokasi ini masih memiliki sub-lokasi di dalamnya. Silakan hapus atau pindahkan sub-lokasi terlebih dahulu.`,
+          null,
+          res,
           false
         );
       }

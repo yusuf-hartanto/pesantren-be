@@ -21,7 +21,17 @@ import { appConfig } from '../../../config/config.app';
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Cabang', 'Lokasi', 'Petugas', 'Tanggal', 'Waktu', 'Kode Slot', 'Status Kondisi', 'Catatan Umum']);
+  sheet.addRow([
+    'No',
+    'Cabang',
+    'Lokasi',
+    'Petugas',
+    'Tanggal',
+    'Waktu',
+    'Kode Slot',
+    'Status Kondisi',
+    'Catatan Umum',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -65,7 +75,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`kebersihan inspeksi list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `kebersihan inspeksi list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -81,7 +95,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`kebersihan inspeksi index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `kebersihan inspeksi index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -104,14 +122,8 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const {
-        waktu,
-        id_lokasi,
-        id_petugas,
-        id_cabang,
-        id_jadwal,
-        temuans
-      } = req?.body;
+      const { waktu, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans } =
+        req?.body;
 
       const idLokasi = id_lokasi?.value || null;
       const idPetugas = id_petugas?.value || null;
@@ -136,11 +148,11 @@ export default class Controller {
       });
 
       let foto_path: any = null;
-      let insert = []
+      let insert = [];
       for (const temuan of temuans) {
         let checkFile = helper.checkExtentionBase64(temuan.foto_path);
         if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
-        
+
         foto_path = await helper.uploadBase64(
           temuan.foto_path,
           'temuan',
@@ -155,10 +167,10 @@ export default class Controller {
           tingkat: temuan.tingkat,
           perlu_tindak_lanjut: temuan.perlu_tindak_lanjut,
           foto_path,
-        })
+        });
       }
 
-      const details = await temuanRepository.insert(insert)
+      const details = await temuanRepository.insert(insert);
 
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
@@ -174,14 +186,8 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const {
-        waktu,
-        id_lokasi,
-        id_petugas,
-        id_cabang,
-        id_jadwal,
-        temuans
-      } = req?.body;
+      const { waktu, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans } =
+        req?.body;
       const idLokasi = id_lokasi?.value;
       const idPetugas = id_petugas?.value;
       const idCabang = id_cabang?.value;
@@ -190,13 +196,12 @@ export default class Controller {
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       const waktuArr = check.waktu.split(':');
-      
+
       if (
         waktu !== `${waktuArr[0]}:${waktuArr[1]}` ||
         idLokasi !== check.id_lokasi ||
         idPetugas !== check.id_petugas
       ) {
-
         const duplicate = await repository.detail({
           waktu,
           id_lokasi: idLokasi,
@@ -212,8 +217,7 @@ export default class Controller {
       await repository.update({
         payload: {
           ...data,
-          id_petugas:
-            idPetugas || check?.getDataValue('id_petugas'),
+          id_petugas: idPetugas || check?.getDataValue('id_petugas'),
           id_cabang: idCabang || check?.getDataValue('id_cabang'),
           id_jadwal: idJadwal || check?.getDataValue('id_jadwal'),
           id_lokasi: idLokasi || check?.getDataValue('id_lokasi'),
@@ -227,7 +231,7 @@ export default class Controller {
       });
 
       let foto_path: any = null;
-      let insert = []
+      let insert = [];
       for (const temuan of temuans) {
         let checkFile = helper.checkExtentionBase64(temuan.foto_path);
         if (checkFile == 'allowed') {
@@ -238,7 +242,7 @@ export default class Controller {
             appConfig?.assetType
           );
         } else {
-          foto_path = temuan.foto_path
+          foto_path = temuan.foto_path;
         }
 
         insert.push({
@@ -247,11 +251,11 @@ export default class Controller {
           deskripsi: temuan.deskripsi,
           tingkat: temuan.tingkat,
           perlu_tindak_lanjut: temuan.perlu_tindak_lanjut,
-          foto_path
-        })
+          foto_path,
+        });
       }
 
-      const details = await temuanRepository.insert(insert)
+      const details = await temuanRepository.insert(insert);
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
@@ -312,7 +316,11 @@ export default class Controller {
 
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      return response.success('export excel kebersihan inspeksi', urlExcel, res);
+      return response.success(
+        'export excel kebersihan inspeksi',
+        urlExcel,
+        res
+      );
     } catch (err: any) {
       return helper.catchError(
         `export excel kebersihan inspeksi: ${err?.message}`,
@@ -321,7 +329,6 @@ export default class Controller {
       );
     }
   }
-
 }
 
 export const kebersihanInspeksi = new Controller();

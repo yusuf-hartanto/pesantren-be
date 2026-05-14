@@ -65,7 +65,15 @@ export const up = async (queryInterface: QueryInterface) => {
       onDelete: 'SET NULL',
     },
     hari: {
-      type: DataTypes.ENUM('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Ahad'),
+      type: DataTypes.ENUM(
+        'Senin',
+        'Selasa',
+        'Rabu',
+        'Kamis',
+        'Jumat',
+        'Sabtu',
+        'Ahad'
+      ),
       allowNull: true,
     },
     status: {

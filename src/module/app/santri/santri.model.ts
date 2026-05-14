@@ -54,7 +54,7 @@ export function initAppSantri(sequelize: Sequelize) {
         type: DataTypes.STRING,
       },
       gender: {
-        type: DataTypes.ENUM('L','P'),
+        type: DataTypes.ENUM('L', 'P'),
         defaultValue: null,
       },
       birth_place: {
@@ -139,8 +139,15 @@ export function initAppSantri(sequelize: Sequelize) {
 
 export function associateAppSantri() {
   AppSantri.belongsTo(Cabang, { as: 'cabang', foreignKey: 'id_cabang' });
-  AppSantri.belongsTo(AppInstitution, { as: 'institution', foreignKey: 'id_institution' });
-  AppSantri.belongsTo(OrangTuaWali, { as: 'wali', foreignKey: 'id_wali', targetKey: 'id_wali' });
+  AppSantri.belongsTo(AppInstitution, {
+    as: 'institution',
+    foreignKey: 'id_institution',
+  });
+  AppSantri.belongsTo(OrangTuaWali, {
+    as: 'wali',
+    foreignKey: 'id_wali',
+    targetKey: 'id_wali',
+  });
 }
 
 export default AppSantri;

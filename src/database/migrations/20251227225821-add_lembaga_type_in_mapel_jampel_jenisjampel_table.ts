@@ -11,10 +11,15 @@ export const up = async (queryInterface: QueryInterface) => {
       const tableDesc = await queryInterface.describeTable(table);
 
       if (!tableDesc.lembaga_type) {
-        await queryInterface.addColumn(table, 'lembaga_type', {
-          type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
-          allowNull: true,
-        }, { transaction });
+        await queryInterface.addColumn(
+          table,
+          'lembaga_type',
+          {
+            type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
+            allowNull: true,
+          },
+          { transaction }
+        );
       }
     }
   });
@@ -26,9 +31,11 @@ export const down = async (queryInterface: QueryInterface) => {
 
     for (const table of tables) {
       const tableDesc = await queryInterface.describeTable(table);
-      
+
       if (tableDesc.lembaga_type) {
-        await queryInterface.removeColumn(table, 'lembaga_type', { transaction });
+        await queryInterface.removeColumn(table, 'lembaga_type', {
+          transaction,
+        });
       }
     }
 

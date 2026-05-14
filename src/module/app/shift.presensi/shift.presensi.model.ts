@@ -43,16 +43,16 @@ export function initShiftPresensi(sequelize: Sequelize) {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      is_wajib: { 
+      is_wajib: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false 
+        defaultValue: false,
       },
       keterangan: {
         type: DataTypes.TEXT,
       },
       status: {
         type: DataTypes.ENUM('Aktif', 'Nonaktif'),
-      }
+      },
     },
     {
       sequelize,
@@ -71,8 +71,6 @@ export function initShiftPresensi(sequelize: Sequelize) {
   return ShiftPresensi;
 }
 
-export function associateShiftPresensi() {
-
-}
+export function associateShiftPresensi() {}
 
 export default ShiftPresensi;

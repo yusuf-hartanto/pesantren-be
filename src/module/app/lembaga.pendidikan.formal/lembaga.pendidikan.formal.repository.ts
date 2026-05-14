@@ -96,7 +96,7 @@ export default class Repository {
   public update(data: any) {
     return Model.update(data?.payload, {
       where: data?.condition,
-      individualHooks: true // Penting jika ada hook beforeUpdate
+      individualHooks: true, // Penting jika ada hook beforeUpdate
     });
   }
 
@@ -106,31 +106,35 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
-        whereClause = {
-          [Op.or]: [
-            { nama_lembaga: { [Op.iLike]: keyword } },
-            { nomor_npsn: { [Op.iLike]: keyword } },
-            { keterangan: { [Op.iLike]: keyword } },
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
-              { [Op.iLike]: keyword }
-            ),
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
-              { [Op.iLike]: keyword }
-            ),
-            { nomor_npsn: { [Op.iLike]: keyword } },
-            { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
-          ],
-        };
-      }
+      whereClause = {
+        [Op.or]: [
+          { nama_lembaga: { [Op.iLike]: keyword } },
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { keterangan: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
+        ],
+      };
+    }
 
     return Model.findAll({
       where: whereClause,
@@ -157,12 +161,12 @@ export default class Repository {
 
   public async insertImport(payloads: any[]) {
     const trx = await Model.sequelize?.transaction();
-    
+
     try {
       for (const item of payloads) {
         await this.upsertImport(item, trx);
       }
-      
+
       if (trx) await trx.commit();
       return true;
     } catch (error) {
@@ -178,14 +182,14 @@ export default class Repository {
       return await existing.update(
         {
           ...payload,
-        }, 
+        },
         { transaction }
       );
     } else {
       return await Model.create(
         {
           ...payload,
-        }, 
+        },
         { transaction }
       );
     }

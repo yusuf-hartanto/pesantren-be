@@ -106,12 +106,16 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
     let whereClause: any = {};
-    
+
     if (!isTemplate && keyword) {
       whereClause = {
         [Op.or]: [

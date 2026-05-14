@@ -18,7 +18,7 @@ export class JenisPenilaianBobot extends Model {
   declare id_tahunajaran: string;
   declare bobot: number; // Gunakan number untuk DECIMAL
   declare status: 'Aktif' | 'Nonaktif';
-  
+
   declare readonly created_at: Date;
   declare readonly updated_at: Date;
   declare readonly deleted_at: Date | null;
@@ -40,7 +40,7 @@ export function initJenisPenilaianBobot(sequelize: Sequelize) {
       id_penilaian: {
         type: DataTypes.STRING,
         allowNull: false,
-        references: { model: 'jenis_penilaian', key: 'id_penilaian' }
+        references: { model: 'jenis_penilaian', key: 'id_penilaian' },
       },
       lembaga_type: {
         type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
@@ -53,12 +53,12 @@ export function initJenisPenilaianBobot(sequelize: Sequelize) {
       id_tingkat: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: { model: 'tingkat', key: 'id_tingkat' }
+        references: { model: 'tingkat', key: 'id_tingkat' },
       },
       id_tahunajaran: {
         type: DataTypes.STRING,
         allowNull: false,
-        references: { model: 'tahun_ajaran', key: 'id_tahunajaran' }
+        references: { model: 'tahun_ajaran', key: 'id_tahunajaran' },
       },
       bobot: {
         type: DataTypes.DECIMAL(5, 2),
@@ -67,31 +67,31 @@ export function initJenisPenilaianBobot(sequelize: Sequelize) {
           // Mengonversi string decimal dari DB ke float agar enak dipakai di Frontend
           const value = this.getDataValue('bobot');
           return value ? parseFloat(value) : 0;
-        }
+        },
       },
       status: {
         type: DataTypes.ENUM('Aktif', 'Nonaktif'),
         allowNull: false,
-        defaultValue: 'Aktif'
+        defaultValue: 'Aktif',
       },
       created_at: {
         type: DataTypes.DATE,
         get() {
           const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
       updated_at: {
         type: DataTypes.DATE,
         get() {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
       deleted_at: {
         type: DataTypes.DATE,
         allowNull: true,
-      }
+      },
     },
     {
       sequelize,
@@ -99,7 +99,7 @@ export function initJenisPenilaianBobot(sequelize: Sequelize) {
       tableName: 'jenis_penilaian_bobot',
       underscored: true, // Otomatis mengelola created_at & updated_at
       timestamps: true,
-      paranoid: true,    // Soft delete
+      paranoid: true, // Soft delete
       createdAt: 'created_at',
       updatedAt: 'updated_at',
       deletedAt: 'deleted_at',
@@ -122,17 +122,17 @@ export function initJenisPenilaianBobot(sequelize: Sequelize) {
 export function associateJenisPenilaianBobot() {
   JenisPenilaianBobot.belongsTo(JenisPenilaian, {
     foreignKey: 'id_penilaian',
-    as: 'jenisPenilaian'
+    as: 'jenisPenilaian',
   });
 
   JenisPenilaianBobot.belongsTo(Tingkat, {
     foreignKey: 'id_tingkat',
-    as: 'tingkat'
+    as: 'tingkat',
   });
 
   JenisPenilaianBobot.belongsTo(TahunAjaran, {
     foreignKey: 'id_tahunajaran',
-    as: 'tahunAjaran'
+    as: 'tahunAjaran',
   });
 
   JenisPenilaianBobot.belongsTo(LembagaPendidikanFormal, {

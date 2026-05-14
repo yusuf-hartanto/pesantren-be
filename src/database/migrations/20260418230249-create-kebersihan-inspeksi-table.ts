@@ -5,85 +5,88 @@ import { QueryInterface, DataTypes } from 'sequelize';
 export const up = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
     // 1. Buat tabel di dalam transaksi
-    await queryInterface.createTable('kebersihan_inspeksi', {
-      id_inspeksi: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-        allowNull: false,
-        unique: true,
-      },
-      id_cabang: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        references: {
-          model: 'cabang',
-          key: 'id_cabang',
+    await queryInterface.createTable(
+      'kebersihan_inspeksi',
+      {
+        id_inspeksi: {
+          type: DataTypes.STRING,
+          primaryKey: true,
+          allowNull: false,
+          unique: true,
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
-      },
-      id_lokasi: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        references: {
-          model: 'lokasi',
-          key: 'id_lokasi',
+        id_cabang: {
+          type: DataTypes.STRING,
+          allowNull: true,
+          references: {
+            model: 'cabang',
+            key: 'id_cabang',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
-      },
-      id_petugas: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        references: {
-          model: 'pegawai',
-          key: 'id_pegawai',
+        id_lokasi: {
+          type: DataTypes.STRING,
+          allowNull: true,
+          references: {
+            model: 'lokasi',
+            key: 'id_lokasi',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
-      },
-      id_jadwal: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        references: {
-          model: 'jadwal_inspeksi_kebersihan',
-          key: 'id_jadwal',
+        id_petugas: {
+          type: DataTypes.STRING,
+          allowNull: true,
+          references: {
+            model: 'pegawai',
+            key: 'id_pegawai',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
+        id_jadwal: {
+          type: DataTypes.STRING,
+          allowNull: true,
+          references: {
+            model: 'jadwal_inspeksi_kebersihan',
+            key: 'id_jadwal',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
+        },
+        tanggal: {
+          type: DataTypes.DATEONLY,
+          allowNull: true,
+        },
+        waktu: {
+          type: DataTypes.TIME,
+          allowNull: true,
+        },
+        kode_slot: {
+          type: DataTypes.ENUM('PAGI', 'SIANG', 'SORE', 'MALAM'),
+          allowNull: false,
+        },
+        status_kondisi: {
+          type: DataTypes.ENUM('BERSIH', 'KOTOR'),
+          allowNull: true,
+        },
+        catatan_umum: {
+          type: DataTypes.TEXT,
+          allowNull: true,
+        },
+        created_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          defaultValue: DataTypes.NOW,
+        },
+        updated_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          defaultValue: DataTypes.NOW,
+        },
       },
-      tanggal: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-      },
-      waktu: {
-        type: DataTypes.TIME,
-        allowNull: true,
-      },
-      kode_slot: {
-        type: DataTypes.ENUM('PAGI', 'SIANG', 'SORE', 'MALAM'),
-        allowNull: false,
-      },
-      status_kondisi: {
-        type: DataTypes.ENUM('BERSIH', 'KOTOR'),
-        allowNull: true,
-      },
-      catatan_umum: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: DataTypes.NOW,
-      },
-    }, { transaction });
-
+      { transaction }
+    );
   });
 };
 

@@ -6,13 +6,13 @@ import { repository as repoSantri } from '../app/santri/santri.repository';
 import { repository as repoWali } from '../app/orang.tua.wali/orang.tua.wali.repository';
 import { repository as repoInstitution } from '../app/institution/institution.repository';
 
-const BASE_URL = process.env.SITRENDI_URL || ''
-const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || ''
+const BASE_URL = process.env.SITRENDI_URL || '';
+const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || '';
 
 interface SyncSantriPayload {
-  institution_id: string
-  kelas: string
-  user_id: string
+  institution_id: string;
+  kelas: string;
+  user_id: string;
 }
 
 export default class Service {
@@ -22,7 +22,7 @@ export default class Service {
 
     let payload: any = {
       institution_id: data.institution_id,
-    }
+    };
     if (data.kelas) payload['kelas'] = data.kelas;
     if (data.user_id) payload['user_id'] = data.user_id;
 
@@ -39,9 +39,9 @@ export default class Service {
       headers: {
         'Content-Type': 'application/json',
         'X-Timestamp': timestamp,
-        'X-Signature': signature
+        'X-Signature': signature,
       },
-      body: rawBody
+      body: rawBody,
     });
 
     const result = await response.json();
@@ -72,7 +72,7 @@ export default class Service {
     const institutionPkMap = new Map(
       institutionDb.map((item: any) => [
         item.institution_id_sitrendi,
-        item.id_institution
+        item.id_institution,
       ])
     );
 
@@ -98,7 +98,7 @@ export default class Service {
     const cabangPkMap = new Map(
       cabangDb.map((item: any) => [
         item.institution_id_sitrendi,
-        item.id_cabang
+        item.id_cabang,
       ])
     );
 
@@ -130,10 +130,7 @@ export default class Service {
 
     const waliDb = await repoWali.all({});
     const waliPkMap = new Map(
-      waliDb.map((item: any) => [
-        item.id_wali_sitrendi,
-        item.id_wali
-      ])
+      waliDb.map((item: any) => [item.id_wali_sitrendi, item.id_wali])
     );
 
     /*
@@ -185,7 +182,7 @@ export default class Service {
     return {
       institution: institution.length,
       wali: wali.length,
-      santri: santri.length
+      santri: santri.length,
     };
   }
 }

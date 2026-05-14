@@ -76,7 +76,7 @@ export default class Repository {
           model: Model,
           as: 'sub_lokasi', // Menampilkan list ruangan di dalamnya jika ada
           required: false,
-        }
+        },
       ],
       where: {
         ...condition,

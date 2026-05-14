@@ -161,11 +161,11 @@ export default class Repository {
       order: [['created_at', 'DESC']],
     });
   }
-  
+
   public async upsert(data: any) {
     const [result] = await Model.findOrCreate({
       where: {
-        id_wali_sitrendi: data.id_wali_sitrendi
+        id_wali_sitrendi: data.id_wali_sitrendi,
       },
       defaults: data,
     });
@@ -184,8 +184,8 @@ export default class Repository {
         'hubungan',
         'pendidikan',
         'pekerjaan',
-        'updated_at'
-      ]
+        'updated_at',
+      ],
     });
   }
 }

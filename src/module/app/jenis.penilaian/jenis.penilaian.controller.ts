@@ -16,7 +16,7 @@ import {
 } from '../../../utils/constant';
 import moment from 'moment';
 import fs from 'fs/promises';
-import ExcelJS from "exceljs";
+import ExcelJS from 'exceljs';
 import { Op } from 'sequelize';
 
 const generateDataExcel = (sheet: any, details: any) => {
@@ -33,7 +33,11 @@ const generateDataExcel = (sheet: any, details: any) => {
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
   });
 
   details.forEach((item: any, i: number) => {
@@ -64,9 +68,14 @@ const generateDataExcel = (sheet: any, details: any) => {
 const normalizeRow = (row: any) => ({
   jenis_pengujian: String(row['Jenis Pengujian'] || '').trim(),
   singkatan: String(row['Singkatan'] || '').trim(),
-  lembaga_type: String(row['Lembaga Type'] || '').toUpperCase().trim(),
+  lembaga_type: String(row['Lembaga Type'] || '')
+    .toUpperCase()
+    .trim(),
   is_ujian: String(row['Ujian?'] || '').toLowerCase() === 'ya' ? 1 : 0,
-  status: String(row['Status'] || '').toLowerCase() === 'aktif' ? 'active' : 'inactive',
+  status:
+    String(row['Status'] || '').toLowerCase() === 'aktif'
+      ? 'active'
+      : 'inactive',
   keterangan: String(row['Keterangan'] || '').trim(),
   __row: row.__row,
 });
@@ -89,12 +98,14 @@ const validateRow = (row: any) => {
   if (!row.lembaga_type) {
     errors.push('Lembaga type wajib diisi');
   } else if (!validLembaga.includes(row.lembaga_type)) {
-    errors.push(`Lembaga type harus salah satu dari: ${validLembaga.join(', ')}`);
+    errors.push(
+      `Lembaga type harus salah satu dari: ${validLembaga.join(', ')}`
+    );
   }
 
   // is_ujian: number, integer, min 0, max 1
   const isUjianNum = parseInt(row.is_ujian);
-  if (!["0", "1"].includes(isUjianNum.toString())) {
+  if (!['0', '1'].includes(isUjianNum.toString())) {
     errors.push('is_ujian hanya boleh 0 atau 1');
   }
 
@@ -120,17 +131,19 @@ export default class Controller {
     this.update = this.update.bind(this);
     this.delete = this.delete.bind(this);
   }
-  
+
   private async validateBusinessLogic(item: any, id_penilaian?: string) {
     // Validasi Unik: jenis_pengujian per lembaga_type
     const isExist = await repository.checkDuplicate(
-      item.jenis_pengujian, 
-      item.lembaga_type, 
+      item.jenis_pengujian,
+      item.lembaga_type,
       id_penilaian
     );
-    
+
     if (isExist) {
-      throw new Error(`Jenis pengujian '${item.jenis_pengujian}' sudah terdaftar untuk lembaga ${item.lembaga_type}`);
+      throw new Error(
+        `Jenis pengujian '${item.jenis_pengujian}' sudah terdaftar untuk lembaga ${item.lembaga_type}`
+      );
     }
 
     return item;
@@ -139,10 +152,15 @@ export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const result = await repository.list(req.query);
-      if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (result?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`Jenis Penilaian list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `Jenis Penilaian list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -150,10 +168,19 @@ export default class Controller {
     try {
       const query = helper.fetchQueryRequest(req);
       const { count, rows } = await repository.index(query);
-      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
-      return response.success(SUCCESS_RETRIEVED, { total: count, values: rows }, res);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
+      return response.success(
+        SUCCESS_RETRIEVED,
+        { total: count, values: rows },
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`Jenis Penilaian index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `Jenis Penilaian index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -164,7 +191,11 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`Jenis Penilaian detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `Jenis Penilaian detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -177,10 +208,10 @@ export default class Controller {
       for (const item of payloadArray) {
         // 1. Zod Validation
         const validItem = jenisPenilaianSchema.parse(item);
-        
+
         // 2. Business Logic Validation (Unique Constraint)
         await this.validateBusinessLogic(validItem);
-        
+
         // 3. Filter Fillable
         validatedData.push(helper.only(variable.fillable(), validItem));
       }
@@ -188,7 +219,8 @@ export default class Controller {
       await repository.create({ payload: validatedData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      const msg = err instanceof z.ZodError ? err.issues[0].message : err.message;
+      const msg =
+        err instanceof z.ZodError ? err.issues[0].message : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
@@ -214,7 +246,8 @@ export default class Controller {
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      const msg = err instanceof z.ZodError ? err.issues[0].message : err.message;
+      const msg =
+        err instanceof z.ZodError ? err.issues[0].message : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
@@ -228,7 +261,11 @@ export default class Controller {
       await repository.delete({ condition: { id_penilaian: id } });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`Jenis Penilaian delete: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `Jenis Penilaian delete: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -241,18 +278,23 @@ export default class Controller {
       if (q) condition = { keterangan: { [Op.like]: `%${q}%` } };
 
       const result = await repository.list(isTemplate ? 5 : condition);
-      if (!isTemplate && result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (!isTemplate && result?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `jenis-penilaian-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
-      
+
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('DATA JENIS PENILAIAN');
 
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
-      return response.success('export excel jenis penilaian', `${dir}/${filename}`, res);
+      return response.success(
+        'export excel jenis penilaian',
+        `${dir}/${filename}`,
+        res
+      );
     } catch (err: any) {
       return helper.catchError(`export excel: ${err?.message}`, 500, res);
     }
@@ -261,12 +303,18 @@ export default class Controller {
   public async import(req: Request, res: Response) {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
-    if (!uploaded) return response.success('File tidak valid', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
       const results: any[] = [];
 
       for (const raw of rows) {
@@ -280,17 +328,28 @@ export default class Controller {
           row: row.__row,
           valid,
           error: errors.join(', ') || null,
-          payload
+          payload,
         });
       }
 
       if (mode === 'commit') {
-        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
-        if (validPayloads.length > 0) await repository.insertImport(validPayloads);
-        return response.success('import berhasil', { total: validPayloads.length }, res);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
+        if (validPayloads.length > 0)
+          await repository.insertImport(validPayloads);
+        return response.success(
+          'import berhasil',
+          { total: validPayloads.length },
+          res
+        );
       }
 
-      return response.success('preview import', { total: results.length, data: results }, res);
+      return response.success(
+        'preview import',
+        { total: results.length, data: results },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(`import excel: ${err?.message}`, 500, res);
     }
@@ -298,7 +357,8 @@ export default class Controller {
 
   public insert = async (req: Request, res: Response) => {
     const payloads = req.body?.data as any[];
-    if (!payloads || payloads.length === 0) return response.success('Data kosong', null, res, false);
+    if (!payloads || payloads.length === 0)
+      return response.success('Data kosong', null, res, false);
 
     try {
       await repository.insertImport(payloads);
@@ -306,7 +366,7 @@ export default class Controller {
     } catch (err: any) {
       return helper.catchError(`insert batch gagal: ${err.message}`, 500, res);
     }
-  }
+  };
 }
 
 export const JenisPenilaian = new Controller();

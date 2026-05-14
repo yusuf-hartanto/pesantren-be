@@ -11,7 +11,7 @@ export default {
         primaryKey: true,
         allowNull: false,
         unique: true,
-      },                                                                                                                                                                                                         
+      },
       singkatan: {
         type: DataTypes.STRING(10),
         allowNull: true,
@@ -57,5 +57,5 @@ export default {
 
   async down(queryInterface: QueryInterface) {
     await queryInterface.dropTable('jenis_penilaian');
-  }
+  },
 };

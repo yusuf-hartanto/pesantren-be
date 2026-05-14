@@ -40,7 +40,7 @@ export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
-      // Kita tetap gunakan Getters untuk format tampilan di API, 
+      // Kita tetap gunakan Getters untuk format tampilan di API,
       // tapi biarkan Sequelize yang mengelola datanya secara otomatis.
       created_at: {
         type: DataTypes.DATE,
@@ -69,9 +69,9 @@ export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
       tableName: 'lembaga_pendidikan_kepesantrenan',
 
       // KONFIGURASI OTOMATIS:
-      timestamps: true,   // Mengaktifkan created_at & updated_at otomatis
-      paranoid: true,     // Mengaktifkan deleted_at otomatis (Soft Delete)
-      underscored: true,  // Memastikan format snake_case di database
+      timestamps: true, // Mengaktifkan created_at & updated_at otomatis
+      paranoid: true, // Mengaktifkan deleted_at otomatis (Soft Delete)
+      underscored: true, // Memastikan format snake_case di database
 
       // Mapping nama kolom database ke properti model
       createdAt: 'created_at',

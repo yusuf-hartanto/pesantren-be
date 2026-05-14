@@ -28,7 +28,13 @@ export default class Repository {
           model: KebersihanInspeksi,
           as: 'kebersihan_inspeksi',
           required: false,
-          attributes: ['id_inspeksi', 'tanggal', 'waktu', 'kode_slot', 'status_kondisi'],
+          attributes: [
+            'id_inspeksi',
+            'tanggal',
+            'waktu',
+            'kode_slot',
+            'status_kondisi',
+          ],
         },
         {
           model: Lokasi,
@@ -70,7 +76,13 @@ export default class Repository {
           model: KebersihanInspeksi,
           as: 'kebersihan_inspeksi',
           required: false,
-          attributes: ['id_inspeksi', 'tanggal', 'waktu', 'kode_slot', 'status_kondisi'],
+          attributes: [
+            'id_inspeksi',
+            'tanggal',
+            'waktu',
+            'kode_slot',
+            'status_kondisi',
+          ],
         },
         {
           model: Lokasi,
@@ -98,7 +110,13 @@ export default class Repository {
           model: KebersihanInspeksi,
           as: 'kebersihan_inspeksi',
           required: false,
-          attributes: ['id_inspeksi', 'tanggal', 'waktu', 'kode_slot', 'status_kondisi'],
+          attributes: [
+            'id_inspeksi',
+            'tanggal',
+            'waktu',
+            'kode_slot',
+            'status_kondisi',
+          ],
         },
         {
           model: Lokasi,

@@ -59,7 +59,10 @@ export function initAppInstitution(sequelize: Sequelize) {
 }
 
 export function associateAppInstitution() {
-  AppInstitution.hasMany(AppSantri, { as: 'santri', foreignKey: 'id_institution' });
+  AppInstitution.hasMany(AppSantri, {
+    as: 'santri',
+    foreignKey: 'id_institution',
+  });
 }
 
 export default AppInstitution;

@@ -130,7 +130,11 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
@@ -162,29 +166,29 @@ export default class Repository {
           model: AreaProvince,
           as: 'province',
           attributes: ['id', 'name'],
-          required: false // Gunakan false agar cabang tetap muncul meski wilayahnya null
+          required: false, // Gunakan false agar cabang tetap muncul meski wilayahnya null
         },
         {
           model: AreaRegency,
           as: 'city',
           attributes: ['id', 'name'],
-          required: false
+          required: false,
         },
         {
           model: AreaDistrict,
           as: 'district',
           attributes: ['id', 'name'],
-          required: false
+          required: false,
         },
         {
           model: AreaSubDistrict,
           as: 'subDistrict',
           attributes: ['id', 'name'],
-          required: false
+          required: false,
         },
       ],
       // Urutkan berdasarkan nama cabang agar rapi saat di-export
-      order: [['nama_cabang', 'ASC']]
+      order: [['nama_cabang', 'ASC']],
     });
   }
 
@@ -193,7 +197,7 @@ export default class Repository {
       where: Model.sequelize?.where(
         Model.sequelize.fn('LOWER', Model.sequelize.col('nama_cabang')),
         name.toLowerCase().trim()
-      )
+      ),
     });
   }
 
@@ -217,11 +221,16 @@ export default class Repository {
       province_id,
       city_id,
       district_id,
-      sub_district_id
+      sub_district_id,
     };
   }
 
-  public async findAreaId(areaModel: any, name: string, parentField?: string, parentId?: string) {
+  public async findAreaId(
+    areaModel: any,
+    name: string,
+    parentField?: string,
+    parentId?: string
+  ) {
     if (!name) return null;
 
     const whereClause: any = Model.sequelize?.where(
@@ -229,13 +238,14 @@ export default class Repository {
       name.toLowerCase().trim()
     );
 
-    const condition = (parentField && parentId)
-      ? { [Op.and]: [whereClause, { [parentField]: parentId }] }
-      : whereClause;
+    const condition =
+      parentField && parentId
+        ? { [Op.and]: [whereClause, { [parentField]: parentId }] }
+        : whereClause;
 
     const res = await areaModel.findOne({
       where: condition,
-      attributes: ['id']
+      attributes: ['id'],
     });
 
     return res ? res.id : null;
@@ -269,7 +279,7 @@ export default class Repository {
       province_id,
       city_id,
       district_id,
-      sub_district_id
+      sub_district_id,
     };
   }
 
@@ -292,30 +302,33 @@ export default class Repository {
     const existing = await this.findByName(payload.nama_cabang);
 
     if (existing) {
-      return await existing.update({
-        ...payload,
-      }, { transaction });
+      return await existing.update(
+        {
+          ...payload,
+        },
+        { transaction }
+      );
     } else {
-      return await Model.create({
-        ...payload,
-      }, { transaction });
+      return await Model.create(
+        {
+          ...payload,
+        },
+        { transaction }
+      );
     }
   }
-  
+
   public all(condition: any = {}) {
     return Model.findAll({
       where: condition,
       order: [['id_cabang', 'DESC']],
     });
   }
-  
+
   public async bulkUpsert(data: any) {
     await Model.bulkCreate(data, {
       conflictAttributes: ['nama_cabang'],
-      updateOnDuplicate: [
-        'institution_id_sitrendi',
-        'updated_at'
-      ]
+      updateOnDuplicate: ['institution_id_sitrendi', 'updated_at'],
     });
   }
 }

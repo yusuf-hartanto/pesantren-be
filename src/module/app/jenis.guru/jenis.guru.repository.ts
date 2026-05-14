@@ -63,22 +63,18 @@ export default class Repository {
         where: {
           [Op.or]: [
             { nama_jenis_guru: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.col('pegawai.nama_lengkap'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
-            Sequelize.where(
-              Sequelize.col('tingkat.tingkat'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
-            Sequelize.where(
-              Sequelize.col('mata_pelajaran.nama_mapel'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
-            Sequelize.where(
-              Sequelize.col('lembaga_formal.nama_lembaga'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
+            Sequelize.where(Sequelize.col('pegawai.nama_lengkap'), {
+              [Op.like]: `%${data?.keyword}%`,
+            }),
+            Sequelize.where(Sequelize.col('tingkat.tingkat'), {
+              [Op.like]: `%${data?.keyword}%`,
+            }),
+            Sequelize.where(Sequelize.col('mata_pelajaran.nama_mapel'), {
+              [Op.like]: `%${data?.keyword}%`,
+            }),
+            Sequelize.where(Sequelize.col('lembaga_formal.nama_lembaga'), {
+              [Op.like]: `%${data?.keyword}%`,
+            }),
           ],
         },
       };

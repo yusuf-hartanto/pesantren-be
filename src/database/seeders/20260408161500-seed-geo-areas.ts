@@ -12,7 +12,9 @@ export async function up(queryInterface: QueryInterface, sequelize: Sequelize) {
   );
 
   if (lokasis.length === 0) {
-    console.log('Seed ditunda: Tidak ada data di tabel lokasi untuk direferensikan.');
+    console.log(
+      'Seed ditunda: Tidak ada data di tabel lokasi untuk direferensikan.'
+    );
     return;
   }
 
@@ -41,7 +43,7 @@ export async function up(queryInterface: QueryInterface, sequelize: Sequelize) {
       polygon_json: JSON.stringify([
         { lat: -6.20876, lng: 106.84559 },
         { lat: -6.20886, lng: 106.84569 },
-        { lat: -6.20896, lng: 106.84559 }
+        { lat: -6.20896, lng: 106.84559 },
       ]),
       toleransi_meter: 10,
       is_active: true,
@@ -49,7 +51,7 @@ export async function up(queryInterface: QueryInterface, sequelize: Sequelize) {
       keterangan: 'Area poligon gudang logistik',
       created_at: new Date(),
       updated_at: new Date(),
-    }
+    },
   ]);
 }
 

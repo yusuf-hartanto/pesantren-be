@@ -51,7 +51,7 @@ export function initKebersihanTemuan(sequelize: Sequelize) {
       sequelize,
       modelName: 'KebersihanTemuan',
       tableName: 'kebersihan_temuan',
-      timestamps: false
+      timestamps: false,
     }
   );
 

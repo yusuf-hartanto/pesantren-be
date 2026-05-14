@@ -33,10 +33,19 @@ const haris = [
   { id: 5, label: 'Jumat' },
   { id: 6, label: 'Sabtu' },
   { id: 7, label: 'Ahad' },
-]
+];
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Cabang', 'Hari', 'Slot', 'Jam', 'Petugas', 'Status', 'Keterangan']);
+  sheet.addRow([
+    'No',
+    'Cabang',
+    'Hari',
+    'Slot',
+    'Jam',
+    'Petugas',
+    'Status',
+    'Keterangan',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -47,9 +56,9 @@ const generateDataExcel = (sheet: any, details: any) => {
     sheet.addRow([
       parseInt(i) + 1,
       details[i]?.cabang?.nama_cabang || '',
-      haris.find(r => r.id == details[i]?.hari)?.label || '',
+      haris.find((r) => r.id == details[i]?.hari)?.label || '',
       details[i]?.master_slot_waktu?.kode_slot || '',
-       `${details[i]?.master_slot_waktu?.jam_mulai?.slice(0, -3)} - ${details[i]?.master_slot_waktu?.jam_selesai?.slice(0, -3)}`,
+      `${details[i]?.master_slot_waktu?.jam_mulai?.slice(0, -3)} - ${details[i]?.master_slot_waktu?.jam_selesai?.slice(0, -3)}`,
       details[i]?.pegawai?.nama_lengkap || '',
       details[i]?.is_active ? 'Aktif' : 'Non-Aktif',
       details[i]?.keterangan || '',
@@ -72,11 +81,16 @@ const generateDataExcel = (sheet: any, details: any) => {
 
 const normalizeRow = (row: any) => ({
   cabang: String(row['Cabang'] || '').trim(),
-  hari: haris.find((h) => h.label === String(row['Hari'] || '').trim())?.id ?? null,
+  hari:
+    haris.find((h) => h.label === String(row['Hari'] || '').trim())?.id ?? null,
   hari_text: String(row['Hari'] || '').trim(),
   kode_slot: String(row['Slot'] || '').trim(),
-  jam_mulai: String(row['Jam'] || '').trim().split(' - ')[0],
-  jam_selesai: String(row['Jam'] || '').trim().split(' - ')[1],
+  jam_mulai: String(row['Jam'] || '')
+    .trim()
+    .split(' - ')[0],
+  jam_selesai: String(row['Jam'] || '')
+    .trim()
+    .split(' - ')[1],
   active: String(row['Status'] || '').trim(),
   is_active: String(row['Status'] || '').trim() === 'Aktif',
   nama_lengkap: String(row['Petugas'] || '').trim(),
@@ -116,7 +130,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`jadwal inspeksi kebersihan list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal inspeksi kebersihan list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -132,7 +150,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`jadwal inspeksi kebersihan index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal inspeksi kebersihan index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -145,18 +167,17 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`jadwal inspeksi kebersihan detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal inspeksi kebersihan detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
-      const {
-        id_cabang,
-        hari,
-        kode_slot,
-        id_petugas,
-      } = req?.body;
+      const { id_cabang, hari, kode_slot, id_petugas } = req?.body;
 
       const idCabang = id_cabang?.value || null;
       const kodeSlot = kode_slot?.value || null;
@@ -174,25 +195,24 @@ export default class Controller {
           ...data,
           id_cabang: idCabang,
           id_petugas: idPetugas,
-          kode_slot: kodeSlot
+          kode_slot: kodeSlot,
         },
       });
 
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(`jadwal inspeksi kebersihan create: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal inspeksi kebersihan create: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const {
-        id_cabang,
-        hari,
-        kode_slot,
-        id_petugas,
-      } = req?.body;
+      const { id_cabang, hari, kode_slot, id_petugas } = req?.body;
       const idCabang = id_cabang?.value;
       const kodeSlot = kode_slot?.value;
       const idPetugas = id_petugas?.value;
@@ -221,14 +241,18 @@ export default class Controller {
           ...data,
           id_cabang: idCabang || check?.getDataValue('id_cabang'),
           id_petugas: idPetugas || check?.getDataValue('id_petugas'),
-          kode_slot: kodeSlot || check?.getDataValue('kode_slot')
+          kode_slot: kodeSlot || check?.getDataValue('kode_slot'),
         },
         condition: { id_jadwal: id },
       });
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(`jadwal inspeksi kebersihan update: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal inspeksi kebersihan update: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -242,7 +266,11 @@ export default class Controller {
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`jadwal inspeksi kebersihan delete: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jadwal inspeksi kebersihan delete: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -270,7 +298,11 @@ export default class Controller {
 
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      return response.success('export excel jadwal inspeksi kebersihan', urlExcel, res);
+      return response.success(
+        'export excel jadwal inspeksi kebersihan',
+        urlExcel,
+        res
+      );
     } catch (err: any) {
       return helper.catchError(
         `export excel jadwal inspeksi kebersihan: ${err?.message}`,
@@ -329,9 +361,15 @@ export default class Controller {
           errors.push(`Cabang ${nama_cabang} tidak ditemukan`);
         }
 
-        const slotExist = await slotRepository.detail({ kode_slot, jam_mulai, jam_selesai });
+        const slotExist = await slotRepository.detail({
+          kode_slot,
+          jam_mulai,
+          jam_selesai,
+        });
         if (!slotExist) {
-          errors.push(`Kode Slot ${kode_slot}, Jam Mulai ${jam_mulai}, Jam Selesai ${jam_selesai} tidak ditemukan`);
+          errors.push(
+            `Kode Slot ${kode_slot}, Jam Mulai ${jam_mulai}, Jam Selesai ${jam_selesai} tidak ditemukan`
+          );
         }
 
         const pegawaiExist = await pegawaiRepository.detail({ nama_lengkap });
@@ -367,16 +405,26 @@ export default class Controller {
 
         if (mode === 'preview' || !valid) continue;
 
-        const existing = await repository.detail({ hari, id_cabang: cabangExist?.id_cabang, kode_slot: slotExist?.kode_slot });
+        const existing = await repository.detail({
+          hari,
+          id_cabang: cabangExist?.id_cabang,
+          kode_slot: slotExist?.kode_slot,
+        });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx! });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         } else {
-          let newCreate = await JadwalInspeksiKebersihan.create({
-            ...payload,
-          }, { transaction: trx! });
+          let newCreate = await JadwalInspeksiKebersihan.create(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         }
       }
 
@@ -388,9 +436,8 @@ export default class Controller {
       };
 
       if (trx) {
-
         await trx.commit();
-        
+
         return response.success(
           'import jadwal inspeksi kebersihan berhasil',
           dataRes,
@@ -432,17 +479,23 @@ export default class Controller {
         const existing = await repository.detail({
           id_cabang: payload.id_cabang,
           kode_slot: payload.kode_slot,
-          hari: payload.hari
+          hari: payload.hari,
         });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         } else {
-          let newCreate = await JadwalInspeksiKebersihan.create({
-            ...payload,
-          }, { transaction: trx });
+          let newCreate = await JadwalInspeksiKebersihan.create(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         }
       }
 

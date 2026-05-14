@@ -23,16 +23,16 @@ import { repository as repoJenisJamPel } from '../jenis.jampel/jenis.jampel.repo
 import { repository as repoLembagaFormal } from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.repository';
 
 const formatExcelTimeHHmm = (value: any): string => {
-  if (!value) return ''
+  if (!value) return '';
 
-  const date = value instanceof Date ? value : new Date(value)
-  if (isNaN(date.getTime())) return ''
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
 
-  const hh = String(date.getUTCHours()).padStart(2, '0')
-  const mm = String(date.getUTCMinutes()).padStart(2, '0')
+  const hh = String(date.getUTCHours()).padStart(2, '0');
+  const mm = String(date.getUTCMinutes()).padStart(2, '0');
 
-  return `${hh}:${mm}`
-}
+  return `${hh}:${mm}`;
+};
 
 const generateDataExcel = (sheet: any, details: any) => {
   sheet.addRow([
@@ -83,8 +83,8 @@ const generateDataExcel = (sheet: any, details: any) => {
 };
 
 const normalizeRow = (row: any) => {
-  const mulai = formatExcelTimeHHmm(row['Waktu Mulai'])
-  const selesai = formatExcelTimeHHmm(row['Waktu Selesai'])
+  const mulai = formatExcelTimeHHmm(row['Waktu Mulai']);
+  const selesai = formatExcelTimeHHmm(row['Waktu Selesai']);
 
   return {
     nama_jampel: String(row['Nama'] || '').trim(),
@@ -95,15 +95,14 @@ const normalizeRow = (row: any) => {
     mulai,
     selesai,
 
-    jumlah_jampel: mulai && selesai
-      ? helper.calDurationTime(mulai, selesai)
-      : 0,
+    jumlah_jampel:
+      mulai && selesai ? helper.calDurationTime(mulai, selesai) : 0,
 
     status: row['Status'] === 'Aktif' ? 'A' : 'N',
     keterangan: String(row['Keterangan'] || '').trim(),
-    __row: row.__row
-  }
-}
+    __row: row.__row,
+  };
+};
 
 const validateRow = (row: any) => {
   const errors: string[] = [];
@@ -346,7 +345,9 @@ export default class Controller {
           });
 
           if (!kelPelajaran) {
-            errors.push(`Jenis Jam Pelajaran "${row.nama_jenis_jam}" tidak ditemukan`);
+            errors.push(
+              `Jenis Jam Pelajaran "${row.nama_jenis_jam}" tidak ditemukan`
+            );
           } else {
             id_jenisjam = kelPelajaran.id_jenisjam;
             nama_jenis_jam = kelPelajaran.getDataValue('nama_jenis_jam');

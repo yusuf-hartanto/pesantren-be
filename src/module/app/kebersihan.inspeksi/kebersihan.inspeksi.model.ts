@@ -19,7 +19,6 @@ export class KebersihanInspeksi extends Model {
   declare kode_slot: string;
   declare status_kondisi: string;
   declare catatan_umum: string;
-  
 }
 
 export function initKebersihanInspeksi(sequelize: Sequelize) {
@@ -57,7 +56,7 @@ export function initKebersihanInspeksi(sequelize: Sequelize) {
       },
       catatan_umum: {
         type: DataTypes.TEXT,
-      }
+      },
     },
     {
       sequelize,

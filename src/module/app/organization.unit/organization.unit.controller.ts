@@ -20,17 +20,22 @@ import { orgUnitSchema } from './oraganization.unit.schema';
 import z from 'zod';
 import moment from 'moment';
 import fs from 'fs/promises';
-import ExcelJS from "exceljs";
+import ExcelJS from 'exceljs';
 import { Op } from 'sequelize';
 
 const date: string = helper.date();
-const ALLOWED_ROLES_FOR_LEMBAGA = ['administrator', 'superadmin', 'admin_pusat', 'kepala_biro'];
+const ALLOWED_ROLES_FOR_LEMBAGA = [
+  'administrator',
+  'superadmin',
+  'admin_pusat',
+  'kepala_biro',
+];
 
 const generateDataExcel = (sheet: any, details: any) => {
   sheet.columns = [
     { header: 'No', key: 'no', width: 5 },
     { header: 'Nama Unit', key: 'nama_orgunit', width: 30 },
-    // { header: 'Level', key: 'level_orgunit', width: 10 }, 
+    // { header: 'Level', key: 'level_orgunit', width: 10 },
     { header: 'Jenis Unit', key: 'jenis_orgunit', width: 15 },
     { header: 'Nama Parent', key: 'parent', width: 30 },
     { header: 'Cabang', key: 'cabang', width: 25 },
@@ -46,8 +51,10 @@ const generateDataExcel = (sheet: any, details: any) => {
 
   for (let i in details) {
     const item = details[i];
-    const namaLembaga = item.lembagaPendidikanFormal?.nama_lembaga || 
-                        item.lembagaPendidikanKepesantrenan?.nama_lembaga || '';
+    const namaLembaga =
+      item.lembagaPendidikanFormal?.nama_lembaga ||
+      item.lembagaPendidikanKepesantrenan?.nama_lembaga ||
+      '';
 
     sheet.addRow({
       no: parseInt(i) + 1,
@@ -70,7 +77,9 @@ const normalizeRow = (row: any) => ({
   jenis_orgunit: String(row['Jenis Unit'] || '').trim(),
   nama_parent: String(row['Nama Parent'] || '').trim(),
   nama_cabang: String(row['Cabang'] || '').trim(),
-  lembaga_type: String(row['Tipe Lembaga'] || '').toUpperCase().trim(),
+  lembaga_type: String(row['Tipe Lembaga'] || '')
+    .toUpperCase()
+    .trim(),
   nama_lembaga: String(row['Nama Lembaga'] || '').trim(),
   keterangan: String(row['Keterangan'] || '').trim(),
   __row: row.__row,
@@ -80,10 +89,11 @@ const validateRow = (row: any) => {
   const errors: string[] = [];
   if (!row.nama_orgunit) errors.push('Nama Unit wajib diisi');
   if (!row.nama_cabang) errors.push('Cabang wajib diisi');
-  
+
   const validJenis = ['Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'];
-  if (!validJenis.includes(row.jenis_orgunit)) errors.push('Jenis Unit tidak valid');
-  
+  if (!validJenis.includes(row.jenis_orgunit))
+    errors.push('Jenis Unit tidak valid');
+
   if (row.lembaga_type && !['FORMAL', 'PESANTREN'].includes(row.lembaga_type)) {
     errors.push('Tipe Lembaga harus FORMAL atau PESANTREN');
   }
@@ -155,17 +165,21 @@ export default class Controller {
 
         let level = 0;
         if (validItem.parent_id) {
-          const parent: any = await repository.detail({ id_orgunit: validItem.parent_id });
+          const parent: any = await repository.detail({
+            id_orgunit: validItem.parent_id,
+          });
           if (parent) level = (parent.level_orgunit || 0) + 1;
         }
 
-        const cleanItem = helper.only(variable.fillable(), { ...validItem, level_orgunit: level });
+        const cleanItem = helper.only(variable.fillable(), {
+          ...validItem,
+          level_orgunit: level,
+        });
         validatedData.push(cleanItem);
       }
 
       await repository.create({ payload: validatedData });
       return response.success(SUCCESS_SAVED, null, res);
-
     } catch (err: any) {
       let errorMessage = err.message;
       let errorCode = 500;
@@ -173,7 +187,11 @@ export default class Controller {
         errorMessage = `Field [${err.issues[0].path.join('.')}]: ${err.issues[0].message}`;
         errorCode = 400;
       }
-      return helper.catchError(`OrgUnit create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `OrgUnit create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -203,7 +221,9 @@ export default class Controller {
       if (validData.parent_id !== undefined) {
         let newLevel = 0;
         if (validData.parent_id) {
-          const parent: any = await repository.detail({ id_orgunit: validData.parent_id });
+          const parent: any = await repository.detail({
+            id_orgunit: validData.parent_id,
+          });
           newLevel = (parent?.level_orgunit || 0) + 1;
         }
         (validData as any).level_orgunit = newLevel;
@@ -216,7 +236,6 @@ export default class Controller {
       });
 
       return response.success(SUCCESS_UPDATED, null, res);
-
     } catch (err: any) {
       let errorMessage = err.message;
       let errorCode = 500;
@@ -224,18 +243,26 @@ export default class Controller {
         errorMessage = `Field [${err.issues[0].path.join('.')}]: ${err.issues[0].message}`;
         errorCode = 400;
       }
-      return helper.catchError(`OrgUnit update: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `OrgUnit update: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
   public async delete(req: Request, res: Response) {
     try {
       const id: string = req.params.id || '';
-      
+
       // Proteksi hierarki
       const hasChildren = await repository.checkHasChildren(id);
       if (hasChildren) {
-        return helper.catchError("Unit gagal dihapus: Masih memiliki sub-unit di bawahnya.", 400, res);
+        return helper.catchError(
+          'Unit gagal dihapus: Masih memiliki sub-unit di bawahnya.',
+          400,
+          res
+        );
       }
 
       const check = await repository.detail({ id_orgunit: id });
@@ -243,7 +270,6 @@ export default class Controller {
 
       await repository.delete({ condition: { id_orgunit: id } });
       return response.success(SUCCESS_DELETED, null, res);
-
     } catch (err: any) {
       return helper.catchError(`OrgUnit delete: ${err?.message}`, 500, res);
     }
@@ -254,7 +280,7 @@ export default class Controller {
       const { q, template } = req.body;
       const isTemplate: boolean = template && template == '1';
 
-      let result = await repository.listForExport({ q, isTemplate });    
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
 
@@ -276,19 +302,28 @@ export default class Controller {
   public async import(req: Request, res: Response) {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
-    if (!uploaded) return response.success('File tidak ditemukan', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak ditemukan', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
       const results: any[] = [];
 
       for (const raw of rows) {
         const row = normalizeRow(raw);
         const errors = validateRow(row);
-       
-        let id_cabang = null, id_lembaga = null, parent_id = null, level = 0;
+
+        let id_cabang = null,
+          id_lembaga = null,
+          parent_id = null,
+          level = 0;
 
         // Resolve Cabang
         const cabang = await cabangRepo.findByName(row.nama_cabang);
@@ -297,26 +332,36 @@ export default class Controller {
 
         // Resolve Lembaga (Formal vs Pesantren)
         if (id_cabang && row.nama_lembaga && row.lembaga_type) {
-          const repo = row.lembaga_type === 'FORMAL' ? formalRepo : pesantrenRepo;
+          const repo =
+            row.lembaga_type === 'FORMAL' ? formalRepo : pesantrenRepo;
           const lembaga = await repo.findByName(row.nama_lembaga);
           if (lembaga) id_lembaga = lembaga.id_lembaga;
-          else errors.push(`Lembaga ${row.lembaga_type} "${row.nama_lembaga}" tidak ditemukan`);
+          else
+            errors.push(
+              `Lembaga ${row.lembaga_type} "${row.nama_lembaga}" tidak ditemukan`
+            );
         }
 
         // Resolve Parent & Level
         if (id_cabang && row.nama_parent) {
-          const parent = await repository.findByName(row.nama_parent, 
-            id_cabang, 
-            id_lembaga, 
-            row.lembaga_type);
-          
+          const parent = await repository.findByName(
+            row.nama_parent,
+            id_cabang,
+            id_lembaga,
+            row.lembaga_type
+          );
+
           if (parent) {
             parent_id = parent.id_orgunit;
-            level= (parent.level_orgunit || 0) + 1;
+            level = (parent.level_orgunit || 0) + 1;
           } else {
             // Pesan error lebih informatif
-            const suffix = row.nama_lembaga ? ` di lembaga ${row.nama_lembaga}` : '';
-            errors.push(`Induk Unit "${row.nama_parent}" tidak ditemukan pada cabang${suffix}`);
+            const suffix = row.nama_lembaga
+              ? ` di lembaga ${row.nama_lembaga}`
+              : '';
+            errors.push(
+              `Induk Unit "${row.nama_parent}" tidak ditemukan pada cabang${suffix}`
+            );
           }
         }
 
@@ -335,7 +380,7 @@ export default class Controller {
           row: row.__row,
           valid: errors.length === 0,
           error: errors.join(', ') || null,
-          payload
+          payload,
         });
       }
 
@@ -347,13 +392,16 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validData = results.filter(r => r.valid).map(r => r.payload);
+        const validData = results.filter((r) => r.valid).map((r) => r.payload);
         await repository.insertImport(validData);
         return response.success('import berhasil', dataRes, res);
       }
 
-      return response.success('preview import', { ...dataRes, data: results }, res);
-
+      return response.success(
+        'preview import',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }
@@ -363,7 +411,12 @@ export default class Controller {
     const payloads = req.body?.data as any[];
 
     if (!payloads || !Array.isArray(payloads) || payloads.length === 0) {
-      return response.success('Tidak ada data untuk diproses', null, res, false);
+      return response.success(
+        'Tidak ada data untuk diproses',
+        null,
+        res,
+        false
+      );
     }
 
     try {

@@ -7,17 +7,27 @@ export const up = async (queryInterface: QueryInterface) => {
     const tableDesc = await queryInterface.describeTable('tingkat');
 
     // 1. Ubah kolom tingkat
-    await queryInterface.changeColumn('tingkat', 'tingkat', {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    }, { transaction });
+    await queryInterface.changeColumn(
+      'tingkat',
+      'tingkat',
+      {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      { transaction }
+    );
 
     // 2. Tambah kolom tingkat_type hanya jika belum ada
     if (!tableDesc.tingkat_type) {
-      await queryInterface.addColumn('tingkat', 'tingkat_type', {
-        allowNull: true,
-        type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
-      }, { transaction });
+      await queryInterface.addColumn(
+        'tingkat',
+        'tingkat_type',
+        {
+          allowNull: true,
+          type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
+        },
+        { transaction }
+      );
     }
 
     // 3. Tambah constraint unik (bungkus try-catch agar tidak error jika sudah ada)
@@ -26,10 +36,12 @@ export const up = async (queryInterface: QueryInterface) => {
         fields: ['tingkat', 'tingkat_type'],
         type: 'unique',
         name: 'unique_tingkat_tingkat_type',
-        transaction
+        transaction,
       });
     } catch (error) {
-      console.log('Constraint unique_tingkat_tingkat_type already exists, skipping...');
+      console.log(
+        'Constraint unique_tingkat_tingkat_type already exists, skipping...'
+      );
     }
   });
 };
@@ -47,7 +59,9 @@ export const down = async (queryInterface: QueryInterface) => {
     // 2. Hapus kolom tingkat_type
     const tableDesc = await queryInterface.describeTable('tingkat');
     if (tableDesc.tingkat_type) {
-      await queryInterface.removeColumn('tingkat', 'tingkat_type', { transaction });
+      await queryInterface.removeColumn('tingkat', 'tingkat_type', {
+        transaction,
+      });
     }
 
     // 3. Hapus tipe ENUM
@@ -57,10 +71,15 @@ export const down = async (queryInterface: QueryInterface) => {
     );
 
     // 4. Kembalikan kolom tingkat ke semula
-    await queryInterface.changeColumn('tingkat', 'tingkat', {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      // Hati-hati: mengembalikan unique: true mungkin gagal jika ada data duplikat
-    }, { transaction });
+    await queryInterface.changeColumn(
+      'tingkat',
+      'tingkat',
+      {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        // Hati-hati: mengembalikan unique: true mungkin gagal jika ada data duplikat
+      },
+      { transaction }
+    );
   });
 };

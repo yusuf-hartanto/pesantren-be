@@ -43,7 +43,11 @@ export default class Repository {
     });
   }
 
-  public async index(data: { keyword?: string; offset?: number; limit?: number }) {
+  public async index(data: {
+    keyword?: string;
+    offset?: number;
+    limit?: number;
+  }) {
     const keyword = data?.keyword ? `%${data.keyword}%` : null;
 
     // Satukan deleted_at dengan filter keyword
@@ -92,16 +96,25 @@ export default class Repository {
 
     const conn = await rawQuery.getConnection();
     const [dataResult, countResult] = await Promise.all([
-      conn.query(queryData, { type: QueryTypes.SELECT, replacements: { keyword } }),
-      conn.query<any>(queryCount, { type: QueryTypes.SELECT, replacements: { keyword } }),
+      conn.query(queryData, {
+        type: QueryTypes.SELECT,
+        replacements: { keyword },
+      }),
+      conn.query<any>(queryCount, {
+        type: QueryTypes.SELECT,
+        replacements: { keyword },
+      }),
     ]);
 
-    return { rows: dataResult, count: parseInt(countResult[0]?.total || '0', 10) };
+    return {
+      rows: dataResult,
+      count: parseInt(countResult[0]?.total || '0', 10),
+    };
   }
 
- public async detail(condition: { id_orgunit?: string }) {
+  public async detail(condition: { id_orgunit?: string }) {
     const conditions = ['o.deleted_at IS NULL'];
-    
+
     if (condition.id_orgunit) {
       conditions.push(`o.id_orgunit::text = :id_orgunit`);
     }
@@ -153,74 +166,118 @@ export default class Repository {
     });
   }
 
-
-public listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+  public listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
     let whereClause: any = {};
 
-     if (!isTemplate && keyword) {
-        whereClause = [
-            { deleted_at: null },
+    if (!isTemplate && keyword) {
+      whereClause = [
+        { deleted_at: null },
+        {
+          [Op.or]: [
+            Sequelize.where(
+              Sequelize.cast(
+                Sequelize.col('OrganizationUnit.id_orgunit'),
+                'text'
+              ),
+              { [Op.iLike]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.cast(
+                Sequelize.col('OrganizationUnit.level_orgunit'),
+                'text'
+              ),
+              { [Op.iLike]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.cast(
+                Sequelize.col('OrganizationUnit.jenis_orgunit'),
+                'text'
+              ),
+              { [Op.iLike]: keyword }
+            ),
+
+            { nama_orgunit: { [Op.iLike]: keyword } },
+            { keterangan: { [Op.iLike]: keyword } },
+
+            { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
+            { '$parent.nama_orgunit$': { [Op.iLike]: keyword } },
             {
-                [Op.or]: [
-                    Sequelize.where(Sequelize.cast(Sequelize.col('OrganizationUnit.id_orgunit'), 'text'), { [Op.iLike]: keyword }),
-                    Sequelize.where(Sequelize.cast(Sequelize.col('OrganizationUnit.level_orgunit'), 'text'), { [Op.iLike]: keyword }),
-                    Sequelize.where(Sequelize.cast(Sequelize.col('OrganizationUnit.jenis_orgunit'), 'text'), { [Op.iLike]: keyword }),
-                    
-                    { nama_orgunit: { [Op.iLike]: keyword } },
-                    { keterangan: { [Op.iLike]: keyword } },
-                    
-                    { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
-                    { '$parent.nama_orgunit$': { [Op.iLike]: keyword } },
-                    { '$lembagaPendidikanFormal.nama_lembaga$': { [Op.iLike]: keyword } },
-                    { '$lembagaPendidikanKepesantrenan.nama_lembaga$': { [Op.iLike]: keyword } },
-                ]
-            }
-        ];
+              '$lembagaPendidikanFormal.nama_lembaga$': { [Op.iLike]: keyword },
+            },
+            {
+              '$lembagaPendidikanKepesantrenan.nama_lembaga$': {
+                [Op.iLike]: keyword,
+              },
+            },
+          ],
+        },
+      ];
     }
 
     return Model.findAll({
-        where: whereClause,
-        limit: limit || (isTemplate ? 5 : undefined),
-        subQuery: false,
-        include: [
-            { model: Cabang, as: 'cabang', attributes: ['nama_cabang'] },
-            { model: Model, as: 'parent', attributes: ['nama_orgunit'] },
-            { 
-                model: require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model').default, 
-                as: 'lembagaPendidikanFormal', 
-                attributes: ['nama_lembaga'],
-                required: false 
-            },
-            { 
-                model: require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model').default, 
-                as: 'lembagaPendidikanKepesantrenan', 
-                attributes: ['nama_lembaga'],
-                required: false
-            },
-        ],
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
+      include: [
+        { model: Cabang, as: 'cabang', attributes: ['nama_cabang'] },
+        { model: Model, as: 'parent', attributes: ['nama_orgunit'] },
+        {
+          model:
+            require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model')
+              .default,
+          as: 'lembagaPendidikanFormal',
+          attributes: ['nama_lembaga'],
+          required: false,
+        },
+        {
+          model:
+            require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model')
+              .default,
+          as: 'lembagaPendidikanKepesantrenan',
+          attributes: ['nama_lembaga'],
+          required: false,
+        },
+      ],
 
-        order: [['level_orgunit', 'ASC'], ['nama_orgunit', 'ASC']],
+      order: [
+        ['level_orgunit', 'ASC'],
+        ['nama_orgunit', 'ASC'],
+      ],
     });
-}
+  }
 
-  public findByName(name: string, id_cabang: string, id_lembaga?: string | null, lembaga_type?: string | null) {
+  public findByName(
+    name: string,
+    id_cabang: string,
+    id_lembaga?: string | null,
+    lembaga_type?: string | null
+  ) {
     return Model.findOne({
       where: {
-        nama_orgunit: { 
-          [Op.iLike]: name.trim() 
+        nama_orgunit: {
+          [Op.iLike]: name.trim(),
         },
         id_cabang,
         id_lembaga: id_lembaga || null,
         lembaga_type: lembaga_type || null,
-      }
+      },
     });
   }
 
   public async upsertImport(payload: any, transaction: any = null) {
-    const existing = await this.findByName(payload.nama_orgunit, payload.id_cabang, payload.id_lembaga, payload.lembaga_type);
+    const existing = await this.findByName(
+      payload.nama_orgunit,
+      payload.id_cabang,
+      payload.id_lembaga,
+      payload.lembaga_type
+    );
 
     if (existing) {
       return await existing.update(payload, { transaction });

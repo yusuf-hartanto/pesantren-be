@@ -7,7 +7,11 @@ export default class Repository {
   /**
    * Cek duplikasi jenis_pengujian berdasarkan lembaga_type
    */
-  public async checkDuplicate(jenis_pengujian: string, lembaga_type: string, excludeId?: string) {
+  public async checkDuplicate(
+    jenis_pengujian: string,
+    lembaga_type: string,
+    excludeId?: string
+  ) {
     const where: any = {
       jenis_pengujian,
       lembaga_type,
@@ -23,13 +27,13 @@ export default class Repository {
   public list(data: any) {
     let query: any = {
       order: [['id_penilaian', 'DESC']],
-      where: {}
+      where: {},
     };
 
     if (data?.singkatan) {
       query.where.singkatan = { [Op.like]: `%${data.singkatan}%` };
     }
-    
+
     if (data?.lembaga_type) {
       query.where.lembaga_type = data.lembaga_type;
     }
@@ -42,9 +46,9 @@ export default class Repository {
       order: [['id_penilaian', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
-      where: {}
+      where: {},
     };
-    console.log('KEYWORD', data)
+    console.log('KEYWORD', data);
     if (data?.keyword) {
       query.where[Op.or] = [
         { singkatan: { [Op.iLike]: `%${data.keyword}%` } },
@@ -82,21 +86,21 @@ export default class Repository {
     return Model.findOne({
       where: {
         singkatan: {
-          [Op.iLike]: name.trim()
+          [Op.iLike]: name.trim(),
         },
-        ...(type && { lembaga_type: type })
-      }
+        ...(type && { lembaga_type: type }),
+      },
     });
   }
-  
+
   public async insertImport(payloads: any[]) {
     const trx = await Model.sequelize?.transaction();
-    
+
     try {
       for (const item of payloads) {
         await this.upsertImport(item, trx);
       }
-      
+
       if (trx) await trx.commit();
       return true;
     } catch (error) {
@@ -104,22 +108,25 @@ export default class Repository {
       throw error;
     }
   }
-  
+
   public async upsertImport(payload: any, transaction: any = null) {
-    const existing = await this.findByName(payload.singkatan, payload.lembaga_type);
+    const existing = await this.findByName(
+      payload.singkatan,
+      payload.lembaga_type
+    );
 
     if (existing) {
       return await existing.update(
         {
           ...payload,
-        }, 
+        },
         { transaction }
       );
     } else {
       return await Model.create(
         {
           ...payload,
-        }, 
+        },
         { transaction }
       );
     }

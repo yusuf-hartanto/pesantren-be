@@ -45,7 +45,11 @@ export default class Repository {
   /**
    * Cek duplikasi field tertentu (NIK/NIP/Email)
    */
-  public async checkDuplicate(field: string, value: string, excludeId?: string) {
+  public async checkDuplicate(
+    field: string,
+    value: string,
+    excludeId?: string
+  ) {
     const where: any = { [field]: value };
     if (excludeId) {
       where.id_pegawai = { [Op.ne]: excludeId };
@@ -74,7 +78,7 @@ export default class Repository {
           required: false,
         },
       ],
-      where: {}
+      where: {},
     };
 
     if (data?.keyword) {
@@ -83,7 +87,9 @@ export default class Repository {
         { nik: { [Op.like]: `%${data.keyword}%` } },
         { nip: { [Op.like]: `%${data.keyword}%` } },
         { email: { [Op.like]: `%${data.keyword}%` } },
-        { '$organizationUnit.nama_orgunit$': { [Op.like]: `%${data.keyword}%` } },
+        {
+          '$organizationUnit.nama_orgunit$': { [Op.like]: `%${data.keyword}%` },
+        },
         { '$jabatan.nama_jabatan$': { [Op.like]: `%${data.keyword}%` } },
       ];
     }
@@ -96,7 +102,7 @@ export default class Repository {
       include: [
         { model: OrganizationUnit, as: 'organizationUnit' },
         { model: Jabatan, as: 'jabatan' },
-        { all: true, nested: true } // Mengambil relasi wilayah
+        { all: true, nested: true }, // Mengambil relasi wilayah
       ],
       where: condition,
     });
@@ -126,40 +132,64 @@ export default class Repository {
       where: condition,
       limit: limit,
       include: [
-        { model: OrganizationUnit, as: 'organizationUnit', attributes: ['nama_orgunit'] },
+        {
+          model: OrganizationUnit,
+          as: 'organizationUnit',
+          attributes: ['nama_orgunit'],
+        },
         { model: Jabatan, as: 'jabatan', attributes: ['nama_jabatan'] },
         { model: AreaProvince, as: 'province', attributes: ['name'] },
         { model: AreaRegency, as: 'city', attributes: ['name'] },
         { model: AreaDistrict, as: 'district', attributes: ['name'] },
         { model: AreaSubDistrict, as: 'subDistrict', attributes: ['name'] },
       ],
-      order: [['nama_lengkap', 'ASC']]
+      order: [['nama_lengkap', 'ASC']],
     });
   }
 
   public async resolveAreaIds(raw: any) {
-    const findArea = async (model: any, name: string, parentField?: string, parentId?: string) => {
+    const findArea = async (
+      model: any,
+      name: string,
+      parentField?: string,
+      parentId?: string
+    ) => {
       if (!name) return null;
       const condition: any = {
-        name: { [Op.iLike]: name.trim() }
+        name: { [Op.iLike]: name.trim() },
       };
 
       if (parentField && parentId) {
         condition[parentField] = parentId;
       }
 
-      const res = await model.findOne({ 
-        where: condition, 
-        attributes: ['id'] 
+      const res = await model.findOne({
+        where: condition,
+        attributes: ['id'],
       });
 
       return res ? res.id : null;
     };
 
     const province_id = await findArea(AreaProvince, raw.provinsi);
-    const city_id = await findArea(AreaRegency, raw.kota_kabupaten, 'area_province_id', province_id);
-    const district_id = await findArea(AreaDistrict, raw.kecamatan, 'area_regencies_id', city_id);
-    const sub_district_id = await findArea(AreaSubDistrict, raw.kelurahan, 'area_district_id', district_id);
+    const city_id = await findArea(
+      AreaRegency,
+      raw.kota_kabupaten,
+      'area_province_id',
+      province_id
+    );
+    const district_id = await findArea(
+      AreaDistrict,
+      raw.kecamatan,
+      'area_regencies_id',
+      city_id
+    );
+    const sub_district_id = await findArea(
+      AreaSubDistrict,
+      raw.kelurahan,
+      'area_district_id',
+      district_id
+    );
 
     return { province_id, city_id, district_id, sub_district_id };
   }
@@ -170,8 +200,8 @@ export default class Repository {
       for (const item of payloads) {
         const existing = await Model.findOne({
           where: {
-            [Op.or]: [{ nik: item.nik }, { nip: item.nip }]
-          }
+            [Op.or]: [{ nik: item.nik }, { nip: item.nip }],
+          },
         });
 
         if (existing) {
