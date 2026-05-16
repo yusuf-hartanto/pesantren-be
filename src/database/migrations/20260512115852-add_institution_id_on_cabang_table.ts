@@ -8,10 +8,15 @@ export const up = async (queryInterface: QueryInterface) => {
     const tableDesc: any = await queryInterface.describeTable('cabang');
 
     if (!tableDesc.institution_id_sitrendi) {
-      await queryInterface.addColumn('cabang', 'institution_id_sitrendi', {
-        type: DataTypes.STRING,
-        allowNull: true,
-      }, { transaction });
+      await queryInterface.addColumn(
+        'cabang',
+        'institution_id_sitrendi',
+        {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        { transaction }
+      );
     }
   });
 };
@@ -24,7 +29,9 @@ export const down = async (queryInterface: QueryInterface) => {
     for (const columnName of columnsToRemove) {
       // Cek apakah kolom benar-benar ada di deskripsi tabel
       if (tableDesc[columnName]) {
-        await queryInterface.removeColumn('cabang', columnName, { transaction });
+        await queryInterface.removeColumn('cabang', columnName, {
+          transaction,
+        });
       }
     }
   });

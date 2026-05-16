@@ -45,14 +45,19 @@ export default class Repository {
           model: Cabang,
           as: 'cabang',
           required: false,
-          attributes: ['id_cabang', 'institution_id_sitrendi', 'nama_cabang', 'email'],
+          attributes: [
+            'id_cabang',
+            'institution_id_sitrendi',
+            'nama_cabang',
+            'email',
+          ],
         },
         {
           model: OrangTuaWali,
           as: 'wali',
           required: false,
-          attributes: ['id_wali', 'nama_wali', 'id_wali_sitrendi','no_hp'],
-        }
+          attributes: ['id_wali', 'nama_wali', 'id_wali_sitrendi', 'no_hp'],
+        },
       ],
     });
   }
@@ -73,25 +78,25 @@ export default class Repository {
               model: AreaProvince,
               as: 'province',
               attributes: ['id', 'name'],
-              required: false
+              required: false,
             },
             {
               model: AreaRegency,
               as: 'city',
               attributes: ['id', 'name'],
-              required: false
+              required: false,
             },
             {
               model: AreaDistrict,
               as: 'district',
               attributes: ['id', 'name'],
-              required: false
+              required: false,
             },
             {
               model: AreaSubDistrict,
               as: 'subDistrict',
               attributes: ['id', 'name'],
-              required: false
+              required: false,
             },
           ],
         },
@@ -125,7 +130,7 @@ export default class Repository {
               attributes: ['name'],
             },
           ],
-        }
+        },
       ],
     });
   }
@@ -140,23 +145,20 @@ export default class Repository {
       individualHooks: true,
     });
   }
-  
+
   public async upsert(data: any) {
     const [result] = await Model.findOrCreate({
       where: {
-        id_santri_sitrendi: data.id_santri_sitrendi
+        id_santri_sitrendi: data.id_santri_sitrendi,
       },
       defaults: data,
     });
     return result;
   }
-  
+
   public async bulkUpsert(data: any) {
     await Model.bulkCreate(data, {
-      conflictAttributes: [
-        'id_santri_sitrendi',
-        'institution_id_sitrendi'
-      ],
+      conflictAttributes: ['id_santri_sitrendi', 'institution_id_sitrendi'],
       updateOnDuplicate: [
         'id_wali',
         'id_wali_sitrendi',
@@ -184,8 +186,8 @@ export default class Repository {
         'kartu_santri',
 
         'status',
-        'updated_at'
-      ]
+        'updated_at',
+      ],
     });
   }
 }

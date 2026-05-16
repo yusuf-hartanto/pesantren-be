@@ -4,11 +4,13 @@ import moment from 'moment';
 import ExcelJS from 'exceljs';
 import { Op } from 'sequelize';
 import { Request, Response } from 'express';
+import { variable } from './santri.variable';
 import { repository } from './santri.repository';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import {
   NOT_FOUND,
+  SUCCESS_UPDATED,
   SUCCESS_RETRIEVED,
 } from '../../../utils/constant';
 
@@ -37,7 +39,8 @@ const generateDataExcel = (sheet: any, details: any) => {
   for (let i in details) {
     let gender = '';
     if (details[i]?.gender && details[i]?.gender == 'L') gender = 'Laki-Laki';
-    else if (details[i]?.gender && details[i]?.gender == 'P') gender = 'Perempuan';
+    else if (details[i]?.gender && details[i]?.gender == 'P')
+      gender = 'Perempuan';
 
     sheet.addRow([
       parseInt(i) + 1,
@@ -107,6 +110,27 @@ export default class Controller {
     }
   }
 
+  public async update(req: Request, res: Response) {
+    try {
+      const id: string = req?.params?.id || '';
+      const check = await repository.detail({ id_santri: id });
+      if (!check) return response.success(NOT_FOUND, null, res, false);
+
+      const data: Object = helper.only(variable.fillable(), req?.body, true);
+      await repository.update({
+        payload: data,
+        condition: { id_santri: id },
+      });
+      return response.success(SUCCESS_UPDATED, null, res);
+    } catch (err: any) {
+      return helper.catchError(
+        `mata pelajaran update: ${err?.message}`,
+        500,
+        res
+      );
+    }
+  }
+
   public async export(req: Request, res: Response) {
     try {
       let condition: any = {};
@@ -139,7 +163,11 @@ export default class Controller {
       await workbook.xlsx.writeFile(`${path}/${filename}`);
       return response.success('export excel santri', urlExcel, res);
     } catch (err: any) {
-      return helper.catchError(`export excel santri: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel santri: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 }

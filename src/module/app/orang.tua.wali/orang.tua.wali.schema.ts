@@ -12,7 +12,7 @@ export const pendidikan = [
   'S1',
   'S2',
   'S3',
-  'Lainnya'
+  'Lainnya',
 ];
 
 export const pekerjaan = [
@@ -29,7 +29,7 @@ export const pekerjaan = [
   'Guru / Dosen',
   'Pekerja Migran',
   'Pensiunan',
-  'Lainnya'
+  'Lainnya',
 ];
 
 export const penghasilan = [
@@ -38,7 +38,7 @@ export const penghasilan = [
   '2–3 juta',
   '3–5 juta',
   '> 5 juta',
-  'Tidak berpenghasilan'
+  'Tidak berpenghasilan',
 ];
 
 export const orangTuaWaliSchema = z.object({
@@ -47,7 +47,10 @@ export const orangTuaWaliSchema = z.object({
   nik: z.string(),
   pendidikan: z.enum(pendidikan, `Pendidikan wajib ${pendidikan.join('/')}`),
   pekerjaan: z.enum(pekerjaan, `Pekerjaan wajib ${pekerjaan.join('/')}`),
-  penghasilan: z.enum(penghasilan, `Penghasilan wajib ${penghasilan.join('/')}`),
+  penghasilan: z.enum(
+    penghasilan,
+    `Penghasilan wajib ${penghasilan.join('/')}`
+  ),
   no_hp: z.string().nonempty('No HP wajib diisi'),
   alamat: z.string().nonempty('Alamat wajib diisi'),
   province_id: z.any(),

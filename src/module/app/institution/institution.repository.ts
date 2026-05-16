@@ -58,7 +58,7 @@ export default class Repository {
   public async upsert(data: any) {
     const [result] = await Model.findOrCreate({
       where: {
-        institution_id_sitrendi: data.institution_id_sitrendi
+        institution_id_sitrendi: data.institution_id_sitrendi,
       },
       defaults: data,
     });
@@ -68,10 +68,7 @@ export default class Repository {
   public async bulkUpsert(data: any) {
     await Model.bulkCreate(data, {
       conflictAttributes: ['institution_id_sitrendi'],
-      updateOnDuplicate: [
-        'institution_name',
-        'updated_at'
-      ]
+      updateOnDuplicate: ['institution_name', 'updated_at'],
     });
   }
 }

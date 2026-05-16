@@ -59,11 +59,11 @@ export default class Repository {
           [Op.or]: [
             { nama_jabatan: { [Op.iLike]: keyword } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'), 
+              Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'),
               { [Op.iLike]: keyword }
             ),
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'), 
+              Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'),
               { [Op.iLike]: keyword }
             ),
             { kode_jabatan: { [Op.iLike]: keyword } },
@@ -95,11 +95,16 @@ export default class Repository {
     });
   }
 
-  public async checkUniqueInOrgunit(id_orgunit: string, field: 'nama_jabatan' | 'kode_jabatan', value: string, excludeId?: string) {
-    const condition: any = { 
-      id_orgunit, 
+  public async checkUniqueInOrgunit(
+    id_orgunit: string,
+    field: 'nama_jabatan' | 'kode_jabatan',
+    value: string,
+    excludeId?: string
+  ) {
+    const condition: any = {
+      id_orgunit,
       [field]: value,
-      deleted_at: null
+      deleted_at: null,
     };
 
     if (excludeId) {
@@ -130,7 +135,11 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
@@ -145,12 +154,18 @@ export default class Repository {
               { nama_jabatan: { [Op.iLike]: keyword } },
               { kode_jabatan: { [Op.iLike]: keyword } },
               { keterangan: { [Op.iLike]: keyword } },
-              Sequelize.where(Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'), { [Op.iLike]: keyword }),
-              Sequelize.where(Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'), { [Op.iLike]: keyword }),
+              Sequelize.where(
+                Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'),
+                { [Op.iLike]: keyword }
+              ),
+              Sequelize.where(
+                Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'),
+                { [Op.iLike]: keyword }
+              ),
               { '$orgunit.nama_orgunit$': { [Op.iLike]: keyword } },
-            ]
-          }
-        ]
+            ],
+          },
+        ],
       };
     }
 
@@ -166,7 +181,10 @@ export default class Repository {
           required: false, // LEFT OUTER JOIN
         },
       ],
-      order: [['level_jabatan', 'ASC'], ['nama_jabatan', 'ASC']],
+      order: [
+        ['level_jabatan', 'ASC'],
+        ['nama_jabatan', 'ASC'],
+      ],
     });
   }
 
@@ -180,41 +198,41 @@ export default class Repository {
   }
 
   public async insertImport(payloads: any[]) {
-      const trx = await Model.sequelize?.transaction();
-      
-      try {
-        for (const item of payloads) {
-          await this.upsertImport(item, trx);
-        }
-        
-        if (trx) await trx.commit();
-        return true;
-      } catch (error) {
-        if (trx) await trx.rollback();
-        throw error;
+    const trx = await Model.sequelize?.transaction();
+
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
       }
+
+      if (trx) await trx.commit();
+      return true;
+    } catch (error) {
+      if (trx) await trx.rollback();
+      throw error;
     }
-  
-    public async upsertImport(payload: any, transaction: any = null) {
-      const existing = await this.findByName(payload.nama_jabatan);
-  
-      if (existing) {
-        return await existing.update(
-          {
-            ...payload,
-          }, 
-          { transaction }
-        );
-      } else {
-        return await Model.create(
-          {
-            ...payload,
-            id_orgunit: '8de3cd2b-7f24-4870-b821-fd8cb5b3ba08'
-          }, 
-          { transaction }
-        );
-      }
+  }
+
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.nama_jabatan);
+
+    if (existing) {
+      return await existing.update(
+        {
+          ...payload,
+        },
+        { transaction }
+      );
+    } else {
+      return await Model.create(
+        {
+          ...payload,
+          id_orgunit: '8de3cd2b-7f24-4870-b821-fd8cb5b3ba08',
+        },
+        { transaction }
+      );
     }
+  }
 }
 
 export const repository = new Repository();

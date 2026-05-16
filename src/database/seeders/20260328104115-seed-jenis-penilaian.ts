@@ -17,7 +17,7 @@ export default {
         keterangan: 'Penilaian Akhir Semester Ganjil',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_penilaian: uuidv4(),
@@ -29,7 +29,7 @@ export default {
         keterangan: 'Imtihan Syafahi Kitab Kuning',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_penilaian: uuidv4(),
@@ -41,12 +41,12 @@ export default {
         keterangan: 'Ulangan Harian Rutin',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
-      }
+        deleted_at: null,
+      },
     ]);
   },
 
   async down(queryInterface: QueryInterface) {
     return queryInterface.bulkDelete('jenis_penilaian', {}, {});
-  }
+  },
 };

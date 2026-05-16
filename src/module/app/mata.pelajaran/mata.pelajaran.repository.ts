@@ -54,10 +54,9 @@ export default class Repository {
               Sequelize.col('kelompok_pelajaran.nama_kelpelajaran'),
               { [Op.like]: `%${data?.keyword}%` }
             ),
-            Sequelize.where(
-              Sequelize.col('lembaga_formal.nama_lembaga'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
+            Sequelize.where(Sequelize.col('lembaga_formal.nama_lembaga'), {
+              [Op.like]: `%${data?.keyword}%`,
+            }),
           ],
         },
       };

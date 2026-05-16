@@ -321,7 +321,9 @@ export default class Controller {
           });
 
           if (!kelPelajaran) {
-            errors.push(`Kelompok Pelajaran "${row.nama_kelpelajaran}" tidak ditemukan`);
+            errors.push(
+              `Kelompok Pelajaran "${row.nama_kelpelajaran}" tidak ditemukan`
+            );
           } else {
             id_kelpelajaran = kelPelajaran.id_kelpelajaran;
             nama_kelpelajaran = kelPelajaran.getDataValue('nama_kelpelajaran');

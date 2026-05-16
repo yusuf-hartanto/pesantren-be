@@ -66,7 +66,10 @@ export default class Controller {
     const user = req?.user;
     if (!user) return response.success(NOT_FOUND, null, res, false);
 
-    const isMatch = await helper.compareIt(req?.body?.password, user?.getDataValue('password'));
+    const isMatch = await helper.compareIt(
+      req?.body?.password,
+      user?.getDataValue('password')
+    );
     if (isMatch) {
       try {
         if (!loginOtp) {
@@ -205,7 +208,9 @@ export default class Controller {
           area_province_id: province_id?.value || null,
           area_regencies_id: regency_id?.value || null,
           role_id: role?.getDataValue('role_id') || null,
-          created_by: req?.user?.getDataValue('id') || '00000000-0000-0000-0000-000000000000',
+          created_by:
+            req?.user?.getDataValue('id') ||
+            '00000000-0000-0000-0000-000000000000',
         },
       });
 

@@ -42,7 +42,7 @@ export default class Repository {
               required: false,
               attributes: ['id_lembaga', 'nama_lembaga'],
             },
-          ]
+          ],
         },
         {
           model: KelasMda,
@@ -56,7 +56,7 @@ export default class Repository {
               required: false,
               attributes: ['id_lembaga', 'nama_lembaga'],
             },
-          ]
+          ],
         },
         {
           model: Semester,
@@ -100,8 +100,8 @@ export default class Repository {
               required: false,
               attributes: ['id_mapel', 'nama_mapel'],
             },
-          ]
-        }
+          ],
+        },
       ],
     });
   }
@@ -116,9 +116,7 @@ export default class Repository {
       query = {
         ...query,
         where: {
-          [Op.or]: [
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-          ],
+          [Op.or]: [{ keterangan: { [Op.like]: `%${data?.keyword}%` } }],
         },
       };
     }
@@ -137,7 +135,7 @@ export default class Repository {
               required: false,
               attributes: ['id_lembaga', 'nama_lembaga'],
             },
-          ]
+          ],
         },
         {
           model: KelasMda,
@@ -151,7 +149,7 @@ export default class Repository {
               required: false,
               attributes: ['id_lembaga', 'nama_lembaga'],
             },
-          ]
+          ],
         },
         {
           model: Semester,
@@ -195,8 +193,8 @@ export default class Repository {
               required: false,
               attributes: ['id_mapel', 'nama_mapel'],
             },
-          ]
-        }
+          ],
+        },
       ],
     });
   }
@@ -223,7 +221,12 @@ export default class Repository {
           model: JenisGuru,
           as: 'jenis_guru',
           required: false,
-          attributes: ['id_jenisguru', 'nama_jenis_guru', 'id_tingkat', 'lembaga_type'],
+          attributes: [
+            'id_jenisguru',
+            'nama_jenis_guru',
+            'id_tingkat',
+            'lembaga_type',
+          ],
           include: [
             {
               model: Pegawai,
@@ -237,7 +240,7 @@ export default class Repository {
               required: false,
               attributes: ['id_mapel', 'nama_mapel'],
             },
-          ]
+          ],
         },
         {
           model: Semester,

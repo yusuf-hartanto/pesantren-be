@@ -27,7 +27,7 @@ export class Pegawai extends Model {
   declare city_id: string;
   declare district_id: string;
   declare sub_district_id: string;
-  
+
   declare pendidikan: string;
   declare bidang_ilmu: string;
   declare id_orgunit: string;
@@ -161,7 +161,7 @@ export function initPegawai(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
         // set(value) {
         //   const formattedValue = value
         //     ? moment(value).format('YYYY-MM-DD HH:mm:ss')
@@ -174,7 +174,7 @@ export function initPegawai(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
         // set(value) {
         //   const formattedValue = value
         //     ? moment(value).format('YYYY-MM-DD HH:mm:ss')
@@ -189,7 +189,7 @@ export function initPegawai(sequelize: Sequelize) {
       tableName: 'pegawai',
       underscored: true, // Otomatis mengubah createdAt jadi created_at
       timestamps: true,
-      paranoid: true,    // Aktifkan Soft Delete
+      paranoid: true, // Aktifkan Soft Delete
       createdAt: 'created_at',
       updatedAt: 'updated_at',
       deletedAt: 'deleted_at',

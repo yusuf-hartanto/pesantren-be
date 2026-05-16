@@ -7,7 +7,7 @@ import { response } from '../../../helpers/response';
 import { repository } from './pegawai.repository';
 import { repository as orgRepo } from '../organization.unit/organization.unit.repository';
 import { repository as jabatanRepo } from '../jabatan/jabatan.repository';
-import { pegawaiSchema } from './pegawai.schema'; 
+import { pegawaiSchema } from './pegawai.schema';
 import moment from 'moment';
 import { z } from 'zod';
 import {
@@ -18,7 +18,7 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import fs from 'fs/promises';
-import ExcelJS from "exceljs";
+import ExcelJS from 'exceljs';
 import { Op } from 'sequelize';
 
 const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
@@ -165,12 +165,22 @@ export default class Controller {
    */
   private async validateBusinessLogic(item: any, id_pegawai?: string) {
     // 1. Cek Duplikasi NIK & NIP
-    const checkNik = await repository.checkDuplicate('nik', item.nik, id_pegawai);
-    if (checkNik) throw new Error(`NIK [${item.nik}] sudah terdaftar pada pegawai lain.`);
+    const checkNik = await repository.checkDuplicate(
+      'nik',
+      item.nik,
+      id_pegawai
+    );
+    if (checkNik)
+      throw new Error(`NIK [${item.nik}] sudah terdaftar pada pegawai lain.`);
 
     if (item.nip) {
-      const checkNip = await repository.checkDuplicate('nip', item.nip, id_pegawai);
-      if (checkNip) throw new Error(`NIP [${item.nip}] sudah terdaftar pada pegawai lain.`);
+      const checkNip = await repository.checkDuplicate(
+        'nip',
+        item.nip,
+        id_pegawai
+      );
+      if (checkNip)
+        throw new Error(`NIP [${item.nip}] sudah terdaftar pada pegawai lain.`);
     }
 
     // Hitung Umur Otomatis
@@ -182,14 +192,23 @@ export default class Controller {
     }
 
     // Validasi Hierarki Wilayah
-    if (item.sub_district_id && (!item.district_id || !item.city_id || !item.province_id)) {
-      throw new Error('Data Wilayah Tidak Lengkap: Jika Kelurahan diisi, maka Kecamatan, Kota, dan Provinsi wajib ada.');
+    if (
+      item.sub_district_id &&
+      (!item.district_id || !item.city_id || !item.province_id)
+    ) {
+      throw new Error(
+        'Data Wilayah Tidak Lengkap: Jika Kelurahan diisi, maka Kecamatan, Kota, dan Provinsi wajib ada.'
+      );
     }
     if (item.district_id && (!item.city_id || !item.province_id)) {
-      throw new Error('Data Wilayah Tidak Lengkap: Jika Kecamatan diisi, maka Kota dan Provinsi wajib ada.');
+      throw new Error(
+        'Data Wilayah Tidak Lengkap: Jika Kecamatan diisi, maka Kota dan Provinsi wajib ada.'
+      );
     }
     if (item.city_id && !item.province_id) {
-      throw new Error('Data Wilayah Tidak Lengkap: Jika Kota diisi, maka Provinsi wajib ada.');
+      throw new Error(
+        'Data Wilayah Tidak Lengkap: Jika Kota diisi, maka Provinsi wajib ada.'
+      );
     }
 
     return item;
@@ -210,9 +229,14 @@ export default class Controller {
     try {
       const query = helper.fetchQueryRequest(req);
       const { count, rows } = await repository.index(query);
-      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
-      
-      return response.success(SUCCESS_RETRIEVED, { total: count, values: rows }, res);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
+
+      return response.success(
+        SUCCESS_RETRIEVED,
+        { total: count, values: rows },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(`Pegawai index: ${err?.message}`, 500, res);
     }
@@ -223,7 +247,7 @@ export default class Controller {
       const id = req.params.id;
       const result = await repository.detail({ id_pegawai: id });
       if (!result) return response.success(NOT_FOUND, null, res, false);
-      
+
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(`Pegawai detail: ${err?.message}`, 500, res);
@@ -239,10 +263,10 @@ export default class Controller {
       for (const item of payloadArray) {
         // Validasi Schema Zod
         const validItem = pegawaiSchema.parse(item);
-        
+
         // Validasi Logika Bisnis & Transformasi Data
         let finalItem = await this.validateBusinessLogic(validItem);
-        
+
         // Filter Fillable Fields
         validatedData.push(helper.only(variable.fillable(), finalItem));
       }
@@ -251,7 +275,10 @@ export default class Controller {
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
       // Menangani error Zod secara spesifik agar pesan lebih user-friendly
-      const msg = err instanceof z.ZodError ? `Validasi Gagal: ${err.issues[0].message}` : err.message;
+      const msg =
+        err instanceof z.ZodError
+          ? `Validasi Gagal: ${err.issues[0].message}`
+          : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
@@ -266,7 +293,10 @@ export default class Controller {
       const validData = pegawaiSchema.partial().parse(req.body);
 
       // B. Validasi Logika Bisnis & Duplikasi
-      const finalUpdate = await this.validateBusinessLogic({ ...check.toJSON(), ...validData }, id);
+      const finalUpdate = await this.validateBusinessLogic(
+        { ...check.toJSON(), ...validData },
+        id
+      );
 
       // C. Filter Fillable & Simpan
       const payload = helper.only(variable.fillable(), finalUpdate, true);
@@ -277,7 +307,6 @@ export default class Controller {
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      console.log(err);
       const msg = err instanceof z.ZodError ? `Update Gagal: ${err.issues[0].message}` : err.message;
       return helper.catchError(msg, 400, res);
     }
@@ -291,7 +320,7 @@ export default class Controller {
 
       // Melakukan Soft Delete (Sequelize paranoid)
       await repository.delete({ id_pegawai: id });
-      
+
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(`Gagal menghapus: ${err?.message}`, 500, res);
@@ -308,35 +337,50 @@ export default class Controller {
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
-      
+
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('DATA PEGAWAI');
 
       generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
-      return response.success('export excel pegawai', `${dir}/${filename}`, res);
+      return response.success(
+        'export excel pegawai',
+        `${dir}/${filename}`,
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`export excel pegawai: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel pegawai: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async import(req: Request, res: Response) {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
-    if (!uploaded) return response.success('File tidak valid', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
       const results: any[] = [];
 
       for (const raw of rows) {
         const row = normalizeRow(raw);
         const errors = validateRow(row);
-        
-        let id_orgunit = null, id_jabatan = null;
+
+        let id_orgunit = null,
+          id_jabatan = null;
 
         // Resolve Wilayah IDs
         const areas = await repository.resolveAreaIds(row);
@@ -363,7 +407,9 @@ export default class Controller {
           no_hp: row.no_hp,
           jenis_kelamin: row.jenis_kelamin,
           tempat_lahir: row.tempat_lahir,
-          tanggal_lahir: row.tanggal_lahir ? moment(row.tanggal_lahir).format('YYYY-MM-DD') : null,
+          tanggal_lahir: row.tanggal_lahir
+            ? moment(row.tanggal_lahir).format('YYYY-MM-DD')
+            : null,
           pendidikan: row.pendidikan,
           bidang_ilmu: row.bidang_ilmu,
           tmt: row.tmt ? moment(row.tmt).format('YYYY-MM-DD') : null,
@@ -372,14 +418,14 @@ export default class Controller {
           alamat: row.alamat,
           id_orgunit,
           id_jabatan,
-          ...areas
+          ...areas,
         };
 
         results.push({
           row: row.__row,
           valid,
           error: errors.length ? errors.join(', ') : null,
-          payload
+          payload,
         });
       }
 
@@ -398,21 +444,30 @@ export default class Controller {
 
       return response.success('preview import pegawai', {...dataRes, data: results}, res);
     } catch (err: any) {
-      return helper.catchError(`import excel pegawai: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `import excel pegawai: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public insert = async (req: Request, res: Response) => {
     const payloads = req.body?.data as any[];
-    if (!payloads || payloads.length === 0) return response.success('Data kosong', null, res, false);
+    if (!payloads || payloads.length === 0)
+      return response.success('Data kosong', null, res, false);
 
     try {
       await repository.insertImport(payloads);
-      return response.success('Import batch berhasil', { count: payloads.length }, res);
+      return response.success(
+        'Import batch berhasil',
+        { count: payloads.length },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }
-  }
+  };
 }
 
 export const Pegawai = new Controller();

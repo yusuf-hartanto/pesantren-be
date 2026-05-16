@@ -4,7 +4,6 @@ import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-
     const tableDesc: any = await queryInterface.describeTable('orang_tua_wali');
 
     if (!tableDesc.id_wali_sitrendi) {
@@ -19,21 +18,17 @@ export const up = async (queryInterface: QueryInterface) => {
       );
     }
 
-    await queryInterface.addConstraint(
-      'orang_tua_wali',
-      {
-        fields: ['id_wali_sitrendi'],
-        type: 'unique',
-        name: 'unique_orang_tua_wali_id_wali_sitrendi',
-        transaction
-      }
-    );
+    await queryInterface.addConstraint('orang_tua_wali', {
+      fields: ['id_wali_sitrendi'],
+      type: 'unique',
+      name: 'unique_orang_tua_wali_id_wali_sitrendi',
+      transaction,
+    });
   });
 };
 
 export const down = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-
     try {
       await queryInterface.removeConstraint(
         'orang_tua_wali',
@@ -45,11 +40,9 @@ export const down = async (queryInterface: QueryInterface) => {
     const tableDesc: any = await queryInterface.describeTable('orang_tua_wali');
 
     if (tableDesc.id_wali_sitrendi) {
-      await queryInterface.removeColumn(
-        'orang_tua_wali',
-        'id_wali_sitrendi',
-        { transaction }
-      );
+      await queryInterface.removeColumn('orang_tua_wali', 'id_wali_sitrendi', {
+        transaction,
+      });
     }
   });
 };

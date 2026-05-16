@@ -18,15 +18,10 @@ import { lembagaSchema } from './lembaga.pendidikan.kepesantrenan.schema';
 import z from 'zod';
 import moment from 'moment';
 import fs from 'fs/promises';
-import ExcelJS from "exceljs";
+import ExcelJS from 'exceljs';
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow([
-    'No',
-    'Nama Lembaga',
-    'Cabang',
-    'Keterangan',
-  ]);
+  sheet.addRow(['No', 'Nama Lembaga', 'Cabang', 'Keterangan']);
 
   sheet.columns = [
     { header: 'No', key: 'no', width: 5 },
@@ -87,7 +82,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `LP Kepesantrenan list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -103,7 +102,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `LP Kepesantrenan index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -114,15 +117,19 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `LP Kepesantrenan detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
       // Validasi Schema menggunakan Zod (mendukung Array/Bulk atau Single Object)
-      const payload = Array.isArray(req.body) 
-        ? z.array(lembagaSchema).parse(req.body) 
+      const payload = Array.isArray(req.body)
+        ? z.array(lembagaSchema).parse(req.body)
         : [lembagaSchema.parse(req.body)];
 
       const finalData = [];
@@ -130,7 +137,8 @@ export default class Controller {
       for (const item of payload) {
         // Validasi ID Cabang (Referensial)
         const cabangExist = await repository.checkCabangExists(item.id_cabang);
-        if (!cabangExist) throw new Error(`Cabang dengan ID tersebut tidak ditemukan.`);
+        if (!cabangExist)
+          throw new Error(`Cabang dengan ID tersebut tidak ditemukan.`);
 
         // Cek Duplikasi (Kombinasi id_cabang + nama_lembaga)
         const isDuplicate = await repository.detail({
@@ -138,11 +146,14 @@ export default class Controller {
           nama_lembaga: item.nama_lembaga,
         });
 
-        if (isDuplicate) throw new Error(`Lembaga "${item.nama_lembaga}" sudah terdaftar di cabang ini.`);
-        
+        if (isDuplicate)
+          throw new Error(
+            `Lembaga "${item.nama_lembaga}" sudah terdaftar di cabang ini.`
+          );
+
         finalData.push(item);
       }
-        
+
       await repository.create({ payload: finalData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
@@ -151,12 +162,16 @@ export default class Controller {
 
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
-        const fieldName = firstIssue.path.join('.'); 
+        const fieldName = firstIssue.path.join('.');
         errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
         errorCode = 400;
       }
 
-      return helper.catchError(`LP Kepesantrenan create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `LP Kepesantrenan create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -172,11 +187,16 @@ export default class Controller {
       const validatedData = lembagaSchema.parse(req.body);
 
       // Gabungkan data untuk pengecekan logika bisnis
-      const mergedData = { ...existingData.get({ plain: true }), ...validatedData };
+      const mergedData = {
+        ...existingData.get({ plain: true }),
+        ...validatedData,
+      };
 
       // Validasi ID Cabang jika diubah
       if (validatedData?.id_cabang) {
-        const cabangExist = await repository.checkCabangExists(validatedData?.id_cabang);
+        const cabangExist = await repository.checkCabangExists(
+          validatedData?.id_cabang
+        );
         if (!cabangExist) throw new Error(`Cabang tidak ditemukan.`);
       }
 
@@ -184,16 +204,18 @@ export default class Controller {
       const isDuplicate = await repository.detail({
         id_cabang: mergedData.id_cabang,
         nama_lembaga: mergedData.nama_lembaga,
-        id_lembaga: { [Op.ne]: id }
+        id_lembaga: { [Op.ne]: id },
       });
 
       if (isDuplicate) {
-        throw new Error(`Nama lembaga "${mergedData.nama_lembaga}" sudah digunakan di cabang ini.`);
+        throw new Error(
+          `Nama lembaga "${mergedData.nama_lembaga}" sudah digunakan di cabang ini.`
+        );
       }
 
       // Eksekusi Update
       await repository.update({
-        payload: helper.only(variable.fillable(), mergedData, true), 
+        payload: helper.only(variable.fillable(), mergedData, true),
         condition: { id_lembaga: id },
       });
 
@@ -204,12 +226,16 @@ export default class Controller {
 
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
-        const fieldName = firstIssue.path.join('.'); 
+        const fieldName = firstIssue.path.join('.');
         errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
         errorCode = 400;
       }
 
-      return helper.catchError(`LP Kepesantrenan update: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `LP Kepesantrenan update: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -228,7 +254,11 @@ export default class Controller {
 
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`LP Kepesantrenan delete: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `LP Kepesantrenan delete: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -236,7 +266,7 @@ export default class Controller {
     try {
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
-    
+
       let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
@@ -251,9 +281,17 @@ export default class Controller {
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
-      return response.success('export excel lembaga kepesantrenan', urlExcel, res);
+      return response.success(
+        'export excel lembaga kepesantrenan',
+        urlExcel,
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`export excel lembaga: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel lembaga: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -261,14 +299,20 @@ export default class Controller {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
 
-    if (!uploaded) return response.success('File tidak valid', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
 
       const results: any[] = [];
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
 
       for (const raw of rows) {
         const row = normalizeRow(raw);
@@ -296,7 +340,7 @@ export default class Controller {
           row: row.__row,
           valid,
           error: errors.length ? errors.join(', ') : null,
-          payload
+          payload,
         });
       }
 
@@ -308,16 +352,26 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
         if (validPayloads.length > 0) {
           await repository.insertImport(validPayloads);
         }
         return response.success('import lembaga berhasil', dataRes, res);
       }
 
-      return response.success('preview import lembaga', { ...dataRes, data: results }, res);
+      return response.success(
+        'preview import lembaga',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`import excel lembaga: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `import excel lembaga: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -325,18 +379,27 @@ export default class Controller {
     const payloads = req.body?.data as any[];
 
     if (!payloads || payloads.length === 0) {
-      return response.success('Tidak ada data untuk disimpan', null, res, false);
+      return response.success(
+        'Tidak ada data untuk disimpan',
+        null,
+        res,
+        false
+      );
     }
 
     try {
       await repository.insertImport(payloads);
-      return response.success('Import Lembaga Berhasil', {
-        count: payloads.length
-      }, res);
+      return response.success(
+        'Import Lembaga Berhasil',
+        {
+          count: payloads.length,
+        },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }
-  }
+  };
 }
 
 export const LembagaPendidikanKepesantrenan = new Controller();

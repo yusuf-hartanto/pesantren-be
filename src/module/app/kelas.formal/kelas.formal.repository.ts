@@ -12,7 +12,7 @@ export default class Repository {
     let query: Object = {
       order: [['created_at', 'DESC']],
     };
-    
+
     let condition: any = {};
     if (data?.id_tingkat != '') {
       condition = {

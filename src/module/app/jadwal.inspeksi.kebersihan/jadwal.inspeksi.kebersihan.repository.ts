@@ -13,14 +13,13 @@ export default class Repository {
     };
 
     if (data?.is_active != '') {
-
       let condition: any = {};
       if (data?.id_petugas != '') {
         condition = {
           id_petugas: data?.id_petugas,
         };
       }
-      
+
       query = {
         ...query,
         where: {
@@ -67,7 +66,10 @@ export default class Repository {
           [Op.or]: [
             { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('JadwalInspeksiKebersihan.hari'), 'TEXT'),
+              Sequelize.cast(
+                Sequelize.col('JadwalInspeksiKebersihan.hari'),
+                'TEXT'
+              ),
               { [Op.like]: `%${data?.keyword}%` }
             ),
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },

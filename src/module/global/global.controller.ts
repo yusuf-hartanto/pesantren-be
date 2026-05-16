@@ -451,8 +451,12 @@ export default class Controller {
   public async syncSantri(req: Request, res: Response) {
     try {
       const { institution_id } = req.body;
-      if (!institution_id) return response.failed(`institution_id ${REQUIRED}`, 422, res);
-      const bodyOnly = helper.only(['institution_id','kelas','user_id'], req.body);
+      if (!institution_id)
+        return response.failed(`institution_id ${REQUIRED}`, 422, res);
+      const bodyOnly = helper.only(
+        ['institution_id', 'kelas', 'user_id'],
+        req.body
+      );
 
       const result = await service.syncSantri(bodyOnly);
       const { code, data, message, error } = result;
@@ -467,11 +471,7 @@ export default class Controller {
 
       return response.success(message, error, res, false);
     } catch (err: any) {
-      return helper.catchError(
-        `sync santri: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`sync santri: ${err?.message}`, 500, res);
     }
   }
 }

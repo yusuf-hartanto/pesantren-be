@@ -17,7 +17,6 @@ export class KebersihanScanLog extends Model {
   declare kode_slot: string;
   declare status_kondisi: string;
   declare catatan_umum: string;
-  
 }
 
 export function initKebersihanScanLog(sequelize: Sequelize) {
@@ -77,7 +76,7 @@ export function initKebersihanScanLog(sequelize: Sequelize) {
       },
       keterangan: {
         type: DataTypes.TEXT,
-      }
+      },
     },
     {
       sequelize,

@@ -19,7 +19,7 @@ import { lembagaFormalSchema } from './lembaga.pendidikan.formal.schema';
 import z from 'zod';
 import moment from 'moment';
 import fs from 'fs/promises';
-import ExcelJS from "exceljs";
+import ExcelJS from 'exceljs';
 
 const generateDataExcel = (sheet: any, details: any) => {
   // Setup Kolom sesuai Model Lembaga Pendidikan Formal
@@ -39,7 +39,7 @@ const generateDataExcel = (sheet: any, details: any) => {
     cell.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
+      fgColor: { argb: 'FFE0E0E0' },
     };
   });
 
@@ -81,19 +81,36 @@ const normalizeRow = (row: any) => ({
 const validateRow = (row: any) => {
   const errors: string[] = [];
   if (!row.nama_lembaga) errors.push('Nama Lembaga wajib diisi');
-  
+
   // Validasi Enum Jenis Lembaga
-  const validJenis = ['SD', 'MI', 'SMP', 'MTs', 'SMA', 'MA', 'SMK', 'Diniyah', 'Perguruan Tinggi'];
+  const validJenis = [
+    'SD',
+    'MI',
+    'SMP',
+    'MTs',
+    'SMA',
+    'MA',
+    'SMK',
+    'Diniyah',
+    'Perguruan Tinggi',
+  ];
   if (row.jenis_lembaga && !validJenis.includes(row.jenis_lembaga)) {
-    errors.push(`Jenis Lembaga harus salah satu dari: ${validJenis.join(', ')}`);
+    errors.push(
+      `Jenis Lembaga harus salah satu dari: ${validJenis.join(', ')}`
+    );
   }
 
   // Validasi Enum Akreditasi
   const validAkreditasi = ['A', 'B', 'C', 'Belum Terakreditasi'];
-  if (row.status_akreditasi && !validAkreditasi.includes(row.status_akreditasi)) {
-    errors.push(`Status Akreditasi harus salah satu dari: ${validAkreditasi.join(', ')}`);
+  if (
+    row.status_akreditasi &&
+    !validAkreditasi.includes(row.status_akreditasi)
+  ) {
+    errors.push(
+      `Status Akreditasi harus salah satu dari: ${validAkreditasi.join(', ')}`
+    );
   }
-  
+
   return errors;
 };
 export default class Controller {
@@ -138,8 +155,8 @@ export default class Controller {
   public async create(req: Request, res: Response) {
     try {
       // 1. Validasi Schema (Bulk atau Single)
-      const payload = Array.isArray(req.body) 
-        ? z.array(lembagaFormalSchema).parse(req.body) 
+      const payload = Array.isArray(req.body)
+        ? z.array(lembagaFormalSchema).parse(req.body)
         : [lembagaFormalSchema.parse(req.body)];
 
       const finalData = [];
@@ -147,26 +164,32 @@ export default class Controller {
       for (const item of payload) {
         // 2. Validasi Relasi Cabang
         if (item.id_cabang) {
-          const cabangExist = await repository.checkCabangExists(item.id_cabang);
-          if (!cabangExist) throw new Error(`Cabang dengan ID "${item.id_cabang}" tidak ditemukan.`);
+          const cabangExist = await repository.checkCabangExists(
+            item.id_cabang
+          );
+          if (!cabangExist)
+            throw new Error(
+              `Cabang dengan ID "${item.id_cabang}" tidak ditemukan.`
+            );
         }
 
         // 3. Cek Duplikasi (Nama + NPSN)
         const isDuplicate = await repository.detail({
           [Op.or]: [
             { nama_lembaga: item.nama_lembaga },
-            { nomor_npsn: item.nomor_npsn ? item.nomor_npsn : 'DUMMY_NONE' }
-          ]
+            { nomor_npsn: item.nomor_npsn ? item.nomor_npsn : 'DUMMY_NONE' },
+          ],
         });
 
         if (isDuplicate) {
-           const reason = isDuplicate.nama_lembaga === item.nama_lembaga ? 'Nama' : 'NPSN';
-           throw new Error(`${reason} lembaga sudah terdaftar di cabang ini.`);
+          const reason =
+            isDuplicate.nama_lembaga === item.nama_lembaga ? 'Nama' : 'NPSN';
+          throw new Error(`${reason} lembaga sudah terdaftar di cabang ini.`);
         }
-        
+
         finalData.push(item);
       }
-        
+
       await repository.create({ payload: finalData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
@@ -179,7 +202,11 @@ export default class Controller {
         errorCode = 400;
       }
 
-      return helper.catchError(`LP Formal create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `LP Formal create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -192,22 +219,30 @@ export default class Controller {
 
       // Validasi partial schema (zod)
       const validatedData = lembagaFormalSchema.parse(req.body);
-      const mergedData = { ...existingData.get({ plain: true }), ...validatedData };
+      const mergedData = {
+        ...existingData.get({ plain: true }),
+        ...validatedData,
+      };
 
       // Cek duplikasi kecuali dirinya sendiri
       const isDuplicate = await repository.detail({
         [Op.or]: [
           { nama_lembaga: mergedData.nama_lembaga },
-          { nomor_npsn: mergedData.nomor_npsn ? mergedData.nomor_npsn : 'DUMMY_NONE' }
+          {
+            nomor_npsn: mergedData.nomor_npsn
+              ? mergedData.nomor_npsn
+              : 'DUMMY_NONE',
+          },
         ],
         // id_cabang: mergedData.id_cabang || null,
-        id_lembaga: { [Op.ne]: id }
+        id_lembaga: { [Op.ne]: id },
       });
 
-      if (isDuplicate) throw new Error(`Data sudah digunakan oleh lembaga formal lain.`);
+      if (isDuplicate)
+        throw new Error(`Data sudah digunakan oleh lembaga formal lain.`);
 
       await repository.update({
-        payload: helper.only(variable.fillable(), mergedData, true), 
+        payload: helper.only(variable.fillable(), mergedData, true),
         condition: { id_lembaga: id },
       });
 
@@ -221,7 +256,11 @@ export default class Controller {
         errorCode = 400;
       }
 
-      return helper.catchError(`LP Formal update: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `LP Formal update: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -246,11 +285,11 @@ export default class Controller {
     try {
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
-    
+
       let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      
+
       const name: string = 'lembaga-pendidikan-formal';
       const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
       const urlExcel: string = `${dir}/${filename}`;
@@ -259,12 +298,20 @@ export default class Controller {
       const sheet = workbook.addWorksheet('DATA LEMBAGA PENDIDIKAN FORMAL');
 
       generateDataExcel(sheet, result);
-      
+
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
-      return response.success(`export excel ${name.replace(/-/g, ' ')}`, urlExcel, res);
+      return response.success(
+        `export excel ${name.replace(/-/g, ' ')}`,
+        urlExcel,
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`export excel lembaga pendidikan formal: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel lembaga pendidikan formal: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -272,14 +319,20 @@ export default class Controller {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
 
-    if (!uploaded) return response.success('File tidak valid', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
 
       const results: any[] = [];
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
 
       for (const raw of rows) {
         const row = normalizeRow(raw);
@@ -310,7 +363,7 @@ export default class Controller {
           row: row.__row,
           valid,
           error: errors.length ? errors.join(', ') : null,
-          payload
+          payload,
         });
       }
 
@@ -322,15 +375,20 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
         if (validPayloads.length > 0) {
           await repository.insertImport(validPayloads);
         }
         return response.success('import berhasil', dataRes, res);
       }
 
-      return response.success('preview import', { ...dataRes, data: results }, res);
-
+      return response.success(
+        'preview import',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(`import excel: ${err?.message}`, 500, res);
     }
@@ -338,15 +396,20 @@ export default class Controller {
 
   public insert = async (req: Request, res: Response) => {
     const payloads = req.body?.data as any[];
-    if (!payloads || payloads.length === 0) return response.success('Data kosong', null, res, false);
+    if (!payloads || payloads.length === 0)
+      return response.success('Data kosong', null, res, false);
 
     try {
       await repository.insertImport(payloads);
-      return response.success('Import Berhasil', { count: payloads.length }, res);
+      return response.success(
+        'Import Berhasil',
+        { count: payloads.length },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }
-  }
+  };
 }
 
 export const LembagaPendidikanFormal = new Controller();

@@ -68,14 +68,14 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
       updated_at: {
         type: DataTypes.DATE,
         get() {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
       // 1. Tambahkan kolom deleted_at
       deleted_at: {
@@ -84,7 +84,7 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('deleted_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
     },
     {
@@ -92,7 +92,7 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
       modelName: 'LembagaPendidikanFormal',
       tableName: 'lembaga_pendidikan_formal',
       // 2. Aktifkan timestamps dan paranoid
-      timestamps: true, 
+      timestamps: true,
       paranoid: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at',

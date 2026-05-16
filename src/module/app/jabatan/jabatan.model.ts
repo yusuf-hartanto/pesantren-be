@@ -87,7 +87,7 @@ export function initJabatan(sequelize: Sequelize) {
       tableName: 'jabatan',
       timestamps: true,
       underscored: true,
-      paranoid: true
+      paranoid: true,
     }
   );
 
@@ -114,10 +114,10 @@ export function associateJabatan() {
   });
 
   Jabatan.hasMany(Pegawai, {
-    foreignKey: 'id_jabatan', 
-    as: 'pegawai',            
+    foreignKey: 'id_jabatan',
+    as: 'pegawai',
     onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
+    onDelete: 'SET NULL',
   });
 }
 

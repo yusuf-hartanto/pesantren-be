@@ -21,10 +21,16 @@ interface GeoAreaAttributes {
 }
 
 // 2. Tentukan atribut mana yang opsional saat proses 'create'
-interface GeoAreaCreationAttributes extends Optional<GeoAreaAttributes, 'id_geo' | 'created_at' | 'updated_at'> { }
+interface GeoAreaCreationAttributes extends Optional<
+  GeoAreaAttributes,
+  'id_geo' | 'created_at' | 'updated_at'
+> {}
 
 // 3. Class Model
-class GeoArea extends Model<GeoAreaAttributes, GeoAreaCreationAttributes> implements GeoAreaAttributes {
+class GeoArea
+  extends Model<GeoAreaAttributes, GeoAreaCreationAttributes>
+  implements GeoAreaAttributes
+{
   public id_geo!: string;
   public id_lokasi!: string | null;
   public nama_area!: string;
@@ -128,11 +134,11 @@ export function initGeoArea(sequelize: Sequelize) {
 
 // 5. Definisi Relasi
 export function associateGeoArea() {
-  GeoArea.belongsTo(Lokasi, { 
-    foreignKey: 'id_lokasi', 
+  GeoArea.belongsTo(Lokasi, {
+    foreignKey: 'id_lokasi',
     as: 'lokasi',
     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   });
 }
 

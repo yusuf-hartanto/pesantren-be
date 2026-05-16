@@ -13,14 +13,18 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
-import ExcelJS from "exceljs";
+import ExcelJS from 'exceljs';
 import moment from 'moment';
 import { Op } from 'sequelize';
 import fs from 'fs/promises';
 
 const date: string = helper.date();
 
-const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
+const generateDataExcel = (
+  sheet: any,
+  details: any,
+  isTemplate: boolean = false
+) => {
   sheet.addRow([
     'No',
     'Nama Cabang',
@@ -56,10 +60,12 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
     sheet.addRow([
       parseInt(i) + 1,
       details[i]?.nama_cabang || '',
-      (isTemplate ? details[i]?.province_id : details[i]?.province?.name || ''),
-      (isTemplate ? details[i]?.city_id : details[i]?.city?.name || ''),
-      (isTemplate ? details[i]?.district_id : details[i]?.district?.name || ''),
-      (isTemplate ? details[i]?.sub_district_id : details[i]?.subDistrict?.name || ''),
+      isTemplate ? details[i]?.province_id : details[i]?.province?.name || '',
+      isTemplate ? details[i]?.city_id : details[i]?.city?.name || '',
+      isTemplate ? details[i]?.district_id : details[i]?.district?.name || '',
+      isTemplate
+        ? details[i]?.sub_district_id
+        : details[i]?.subDistrict?.name || '',
       details[i]?.contact || '',
       details[i]?.email || '',
       details[i]?.alamat || '',
@@ -71,7 +77,7 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
 
   for (let row = 1; row <= (details?.length || 0) + 1; row++) {
     const currentRow = sheet.getRow(row);
-    
+
     for (let col = 1; col <= columnCount; col++) {
       const cell = currentRow.getCell(col); // Get cell secara paksa meski kosong
       cell.border = {
@@ -201,7 +207,7 @@ export default class Controller {
     try {
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
-    
+
       let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
@@ -215,10 +221,14 @@ export default class Controller {
 
       generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      
+
       return response.success('export excel cabang', urlExcel, res);
     } catch (err: any) {
-      return helper.catchError(`export excel cabang: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel cabang: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -226,14 +236,20 @@ export default class Controller {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
 
-    if (!uploaded) return response.success('File tidak valid', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
 
       const results: any[] = [];
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
 
       for (const raw of rows) {
         const row = normalizeRow(raw);
@@ -242,10 +258,14 @@ export default class Controller {
         if (!row.nama_cabang) errors.push(`Nama Cabang tidak boleh kosong`);
 
         const areas = await repository.validateAreaIds(row);
-        if (row.provinsi && !areas.province_id) errors.push(`ID Provinsi ${row.provinsi} tidak valid`);
-        if (row.kota_kabupaten && !areas.city_id) errors.push(`ID Kota ${row.kota_kabupaten} tidak valid`);
-        if (row.kecamatan && !areas.district_id) errors.push(`ID Kecamatan ${row.kecamatan} tidak valid`);
-        if (row.kelurahan && !areas.sub_district_id) errors.push(`ID Kelurahan ${row.kelurahan} tidak valid`);
+        if (row.provinsi && !areas.province_id)
+          errors.push(`ID Provinsi ${row.provinsi} tidak valid`);
+        if (row.kota_kabupaten && !areas.city_id)
+          errors.push(`ID Kota ${row.kota_kabupaten} tidak valid`);
+        if (row.kecamatan && !areas.district_id)
+          errors.push(`ID Kecamatan ${row.kecamatan} tidak valid`);
+        if (row.kelurahan && !areas.sub_district_id)
+          errors.push(`ID Kelurahan ${row.kelurahan} tidak valid`);
 
         const valid = errors.length === 0;
         const payload = {
@@ -261,7 +281,7 @@ export default class Controller {
           row: row.__row,
           valid,
           error: errors.length ? errors.join(', ') : null,
-          payload
+          payload,
         });
       }
 
@@ -274,7 +294,9 @@ export default class Controller {
 
       // JIKA MODE COMMIT: Panggil fungsi repository yang mengurusi transaksi
       if (mode === 'commit') {
-        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
         if (validPayloads.length > 0) {
           await repository.insertImport(validPayloads);
         }
@@ -282,31 +304,47 @@ export default class Controller {
       }
 
       // JIKA MODE PREVIEW: Kembalikan data untuk dicek user
-      return response.success('preview import cabang', { ...dataRes, data: results }, res);
-
+      return response.success(
+        'preview import cabang',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
       // Tidak perlu rollback manual di sini karena sudah dihandle repository
-      return helper.catchError(`import excel cabang: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `import excel cabang: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public insert = async (req: Request, res: Response) => {
     const payloads = req.body?.data as any[];
-    
+
     if (!payloads || payloads.length === 0) {
-      return response.success('Tidak ada data untuk disimpan', null, res, false);
+      return response.success(
+        'Tidak ada data untuk disimpan',
+        null,
+        res,
+        false
+      );
     }
 
     try {
       await repository.insertImport(payloads);
-      
-      return response.success('Import Cabang Berhasil', { 
-        count: payloads.length 
-      }, res);
+
+      return response.success(
+        'Import Cabang Berhasil',
+        {
+          count: payloads.length,
+        },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }
-  }
+  };
 }
 
 export const cabang = new Controller();
