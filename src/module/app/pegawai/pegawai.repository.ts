@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './pegawai.model';
 import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Jabatan from '../jabatan/jabatan.model';
@@ -77,14 +77,20 @@ export default class Repository {
       where: {}
     };
 
-    if (data?.keyword) {
+    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+
+    if (keyword) {
       query.where[Op.or] = [
-        { nama_lengkap: { [Op.like]: `%${data.keyword}%` } },
-        { nik: { [Op.like]: `%${data.keyword}%` } },
-        { nip: { [Op.like]: `%${data.keyword}%` } },
-        { email: { [Op.like]: `%${data.keyword}%` } },
-        { '$organizationUnit.nama_orgunit$': { [Op.like]: `%${data.keyword}%` } },
-        { '$jabatan.nama_jabatan$': { [Op.like]: `%${data.keyword}%` } },
+        { nama_lengkap: { [Op.iLike]: keyword } },
+        { nik: { [Op.iLike]: keyword } },
+        { nip: { [Op.iLike]: keyword } },
+        { email: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'), 
+          { [Op.iLike]: keyword }
+        ),
+        { '$organizationUnit.nama_orgunit$': { [Op.iLike]: keyword } },
+        { '$jabatan.nama_jabatan$': { [Op.iLike]: keyword } },
       ];
     }
 
@@ -121,17 +127,39 @@ export default class Repository {
     });
   }
 
-  public listForExport(condition: any, limit?: number) {
+  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    // Jika bukan template dan ada keyword, terapkan filter pencarian
+    if (!isTemplate && keyword) {
+      whereClause[Op.or] = [
+        { nama_lengkap: { [Op.iLike]: keyword } },
+        { nik: { [Op.iLike]: keyword } },
+        { nip: { [Op.iLike]: keyword } },
+        { email: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'), 
+          { [Op.iLike]: keyword }
+        ),
+        { '$organizationUnit.nama_orgunit$': { [Op.iLike]: keyword } },
+        { '$jabatan.nama_jabatan$': { [Op.iLike]: keyword } },
+      ];
+    }
+    
     return Model.findAll({
-      where: condition,
-      limit: limit,
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
       include: [
-        { model: OrganizationUnit, as: 'organizationUnit', attributes: ['nama_orgunit'] },
-        { model: Jabatan, as: 'jabatan', attributes: ['nama_jabatan'] },
-        { model: AreaProvince, as: 'province', attributes: ['name'] },
-        { model: AreaRegency, as: 'city', attributes: ['name'] },
-        { model: AreaDistrict, as: 'district', attributes: ['name'] },
-        { model: AreaSubDistrict, as: 'subDistrict', attributes: ['name'] },
+        { model: OrganizationUnit, as: 'organizationUnit', attributes: ['id_orgunit', 'nama_orgunit'] },
+        { model: Jabatan, as: 'jabatan', attributes: ['id_jabatan', 'nama_jabatan'] },
+        { model: AreaProvince, as: 'province', attributes: ['id', 'name'] },
+        { model: AreaRegency, as: 'city', attributes: ['id', 'name'] },
+        { model: AreaDistrict, as: 'district', attributes: ['id', 'name'] },
+        { model: AreaSubDistrict, as: 'subDistrict', attributes: ['id', 'name'] },
       ],
       order: [['nama_lengkap', 'ASC']]
     });
