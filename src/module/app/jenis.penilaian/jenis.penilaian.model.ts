@@ -83,7 +83,7 @@ export function initJenisPenilaian(sequelize: Sequelize) {
     }
   );
 
-JenisPenilaian.beforeCreate((jenisPenilaian) => {
+  JenisPenilaian.beforeCreate((jenisPenilaian) => {
     jenisPenilaian?.setDataValue('id_penilaian', uuidv4());
   });
 

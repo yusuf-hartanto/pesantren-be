@@ -5,9 +5,15 @@ import { QueryInterface } from 'sequelize';
 export const up = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
     const constraints = [
-      { table: 'kelompok_pelajaran', name: 'kelompok_pelajaran_nomor_urut_key' },
+      {
+        table: 'kelompok_pelajaran',
+        name: 'kelompok_pelajaran_nomor_urut_key',
+      },
       { table: 'mata_pelajaran', name: 'mata_pelajaran_nomor_urut_key' },
-      { table: 'jenis_jam_pelajaran', name: 'jenis_jam_pelajaran_nomor_urut_key' },
+      {
+        table: 'jenis_jam_pelajaran',
+        name: 'jenis_jam_pelajaran_nomor_urut_key',
+      },
       { table: 'jenis_guru', name: 'jenis_guru_nomor_urut_key' },
       { table: 'jam_pelajaran', name: 'jam_pelajaran_nomor_urut_key' },
     ];
@@ -20,7 +26,10 @@ export const up = async (queryInterface: QueryInterface) => {
           { transaction }
         );
       } catch (error: any) {
-        console.warn(`Could not remove constraint ${item.name} on table ${item.table}:`, error.message);
+        console.warn(
+          `Could not remove constraint ${item.name} on table ${item.table}:`,
+          error.message
+        );
       }
     }
   });
@@ -29,9 +38,15 @@ export const up = async (queryInterface: QueryInterface) => {
 export const down = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
     const constraints = [
-      { table: 'kelompok_pelajaran', name: 'kelompok_pelajaran_nomor_urut_key' },
+      {
+        table: 'kelompok_pelajaran',
+        name: 'kelompok_pelajaran_nomor_urut_key',
+      },
       { table: 'mata_pelajaran', name: 'mata_pelajaran_nomor_urut_key' },
-      { table: 'jenis_jam_pelajaran', name: 'jenis_jam_pelajaran_nomor_urut_key' },
+      {
+        table: 'jenis_jam_pelajaran',
+        name: 'jenis_jam_pelajaran_nomor_urut_key',
+      },
       { table: 'jenis_guru', name: 'jenis_guru_nomor_urut_key' },
       { table: 'jam_pelajaran', name: 'jam_pelajaran_nomor_urut_key' },
     ];
@@ -42,10 +57,13 @@ export const down = async (queryInterface: QueryInterface) => {
           fields: ['nomor_urut'],
           type: 'unique',
           name: item.name,
-          transaction
+          transaction,
         });
       } catch (error: any) {
-        console.warn(`Could not add constraint ${item.name} on table ${item.table}:`, error.message);
+        console.warn(
+          `Could not add constraint ${item.name} on table ${item.table}:`,
+          error.message
+        );
       }
     }
   });

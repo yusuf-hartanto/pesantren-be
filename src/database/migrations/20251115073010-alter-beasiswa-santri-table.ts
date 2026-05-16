@@ -6,9 +6,12 @@ export const up = async (queryInterface: QueryInterface) => {
   // 1. Ambil daftar semua tabel di database
   const tables = await queryInterface.showAllTables();
 
-  // 2. Hanya rename jika tabel lama 'beasiswa_santri' masih ada 
+  // 2. Hanya rename jika tabel lama 'beasiswa_santri' masih ada
   // dan tabel baru 'jenis_beasiswa' belum ada
-  if (tables.includes('beasiswa_santri') && !tables.includes('jenis_beasiswa')) {
+  if (
+    tables.includes('beasiswa_santri') &&
+    !tables.includes('jenis_beasiswa')
+  ) {
     await queryInterface.renameTable('beasiswa_santri', 'jenis_beasiswa');
   }
 
@@ -57,7 +60,7 @@ export const up = async (queryInterface: QueryInterface) => {
 
 export const down = async (queryInterface: QueryInterface) => {
   const tables = await queryInterface.showAllTables();
-  
+
   if (tables.includes('jenis_beasiswa')) {
     // 1. Hapus Kolom Timestamps
     await queryInterface.removeColumn('jenis_beasiswa', 'created_at');

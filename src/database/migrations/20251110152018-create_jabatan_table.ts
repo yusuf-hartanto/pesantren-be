@@ -42,7 +42,7 @@ export const up = async (queryInterface: QueryInterface) => {
     },
     deleted_at: {
       type: DataTypes.DATE,
-      allowNull: true
+      allowNull: true,
     },
   });
 

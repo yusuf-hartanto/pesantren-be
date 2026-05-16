@@ -60,10 +60,10 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { id_lembaga: { [Op.like]: keyword } },
-            { nama_lembaga: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { '$cabang.nama_cabang$': { [Op.like]: keyword } },
+            { id_lembaga: { [Op.iLike]: `%${keyword}%` } },
+            { nama_lembaga: { [Op.iLike]: `%${keyword}%` } },
+            { keterangan: { [Op.iLike]: `%${keyword}%` } },
+            { '$cabang.nama_cabang$': { [Op.iLike]: `%${keyword}%` } },
           ],
         },
       };
@@ -104,6 +104,72 @@ export default class Repository {
     return Model.destroy({
       where: data?.condition,
     });
+  }
+
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+      whereClause = {
+        [Op.or]: [
+          { nama_lembaga: { [Op.iLike]: `%${keyword}%` } },
+          { keterangan: { [Op.iLike]: `%${keyword}%` } },
+          { '$cabang.nama_cabang$': { [Op.iLike]: `%${keyword}%` } },
+        ],
+      };
+    }
+
+    return Model.findAll({
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          attributes: ['nama_cabang'],
+        },
+      ],
+      order: [['nama_lembaga', 'ASC']],
+    });
+  }
+
+  public findByName(name: string) {
+    return Model.findOne({
+      where: Model.sequelize?.where(
+        Model.sequelize.fn('LOWER', Model.sequelize.col('nama_lembaga')),
+        name.toLowerCase().trim()
+      ),
+    });
+  }
+
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.nama_lembaga);
+
+    if (existing) {
+      return await existing.update(payload, { transaction });
+    } else {
+      return await Model.create(payload, { transaction });
+    }
+  }
+
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
+      }
+      await trx?.commit();
+    } catch (error) {
+      await trx?.rollback();
+      throw error;
+    }
   }
 }
 

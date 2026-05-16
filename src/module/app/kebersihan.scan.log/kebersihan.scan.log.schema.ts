@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const metode = ['QR', 'GPS', 'QR+GPS', 'MANUAL']
-export const source = ['MOBILE', 'PWA', 'WEB']
+export const metode = ['QR', 'GPS', 'QR+GPS', 'MANUAL'];
+export const source = ['MOBILE', 'PWA', 'WEB'];
 export const kebersihanScanLogSchema = z.object({
   id_inspeksi: z.any(),
   id_lokasi: z.any(),

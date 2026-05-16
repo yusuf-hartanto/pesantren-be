@@ -21,17 +21,17 @@ import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 
 const month: string = moment().format('YYYY-MM');
 const parseTimeToSeconds = (time: string): number => {
-  if (!time) return 0
+  if (!time) return 0;
 
-  const normalized = time.replace(/\./g, ':')
-  const parts = normalized.split(':').map(Number)
+  const normalized = time.replace(/\./g, ':');
+  const parts = normalized.split(':').map(Number);
 
-  const h = parts[0] ?? 0
-  const m = parts[1] ?? 0
-  const s = parts[2] ?? 0
+  const h = parts[0] ?? 0;
+  const m = parts[1] ?? 0;
+  const s = parts[2] ?? 0;
 
-  return h * 3600 + m * 60 + s
-}
+  return h * 3600 + m * 60 + s;
+};
 
 export default class Helper {
   public date() {
@@ -344,16 +344,16 @@ export default class Helper {
   }
 
   public calDurationTime(start: string, end: string): number {
-    if (!start || !end) return 0
+    if (!start || !end) return 0;
 
-    const totalStart = parseTimeToSeconds(start)
-    const totalEnd = parseTimeToSeconds(end)
+    const totalStart = parseTimeToSeconds(start);
+    const totalEnd = parseTimeToSeconds(end);
 
-    let duration = (totalEnd - totalStart) / 3600
+    let duration = (totalEnd - totalStart) / 3600;
 
-    if (duration < 0) duration += 24
+    if (duration < 0) duration += 24;
 
-    return duration
+    return duration;
   }
 
   public getOriginUrl(req: Request) {
@@ -376,7 +376,7 @@ export default class Helper {
     }));
   }
 
-  public async parseImportFile(file: any) {
+  public async parseImportFile(file: any, formatKey?: boolean) {
     const ext = file.name.split('.').pop()?.toLowerCase();
 
     if (ext === 'csv') {
@@ -392,7 +392,12 @@ export default class Helper {
 
       const headers: string[] = [];
       sheet.getRow(1).eachCell((cell, col) => {
-        const header = String(cell.value ?? '').trim();
+        const header = formatKey
+          ? String(cell.value ?? '')
+              .trim()
+              .toLowerCase()
+              .replace(/[\s/]+/g, '_')
+          : String(cell.value ?? '').trim();
         if (header) headers[col - 1] = header;
       });
 
@@ -455,7 +460,7 @@ export default class Helper {
       // simpan file
       fs.writeFileSync(filePath, buffer);
 
-      console.log(filePath, 'filePath')
+      console.log(filePath, 'filePath');
 
       return filePath.replace('public', '');
     } catch (err: any) {
@@ -503,6 +508,62 @@ export default class Helper {
     }
 
     return 'allowed';
+  }
+
+  public generateTimestamp() {
+    return Math.floor(Date.now() / 1000).toString();
+  }
+
+  public waliData(val: string, type: string = '') {
+    const wali: any = {
+      hubungan: ['Ayah', 'Ibu', 'Wali'],
+      pendidikan: [
+        'Tidak Sekolah',
+        'SD / MI',
+        'SMP / MTs',
+        'SMA / MA',
+        'SMK',
+        'D1',
+        'D2',
+        'D3',
+        'S1',
+        'S2',
+        'S3',
+        'Lainnya',
+      ],
+      pekerjaan: [
+        'Tidak Bekerja',
+        'Ibu Rumah Tangga',
+        'Petani',
+        'Buruh Harian',
+        'Nelayan',
+        'Wiraswasta',
+        'Pedagang',
+        'Karyawan Swasta',
+        'PNS',
+        'TNI / POLRI',
+        'Guru / Dosen',
+        'Pekerja Migran',
+        'Pensiunan',
+        'Lainnya',
+      ],
+      penghasilan: [
+        '< 1 juta',
+        '1–2 juta',
+        '2–3 juta',
+        '3–5 juta',
+        '> 5 juta',
+        'Tidak berpenghasilan',
+      ],
+    };
+    if (!type) return null;
+
+    const w = wali[type] || null;
+    if (w) {
+      const r = w.find((wv: any) => wv == val);
+      if (r) return val;
+    }
+    return null;
   }
 }
 

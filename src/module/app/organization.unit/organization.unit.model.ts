@@ -44,7 +44,7 @@ export function initOrganizationUnit(sequelize: Sequelize) {
       parent_id: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: { model: 'orgunit', key: 'id_orgunit' }
+        references: { model: 'orgunit', key: 'id_orgunit' },
       },
       level_orgunit: {
         type: DataTypes.INTEGER,
@@ -77,7 +77,7 @@ export function initOrganizationUnit(sequelize: Sequelize) {
       tableName: 'orgunit',
       underscored: true, // Otomatis mengubah createdAt jadi created_at
       timestamps: true,
-      paranoid: true,    // Aktifkan Soft Delete
+      paranoid: true, // Aktifkan Soft Delete
       createdAt: 'created_at',
       updatedAt: 'updated_at',
       deletedAt: 'deleted_at',

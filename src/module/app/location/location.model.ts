@@ -5,13 +5,42 @@ import { v4 as uuidv4 } from 'uuid';
 interface LokasiAttributes {
   id_lokasi: string;
   nama_lokasi: string;
-  jenis_lokasi: 'Cabang' | 'Asrama' | 'Kamar' | 'Masjid' | 'AreaMasjid' | 'SekolahFormal' |
-  'SekolahMDA' | 'RuangKelas' | 'RuangGuru' | 'RuangTU' | 'Perpustakaan' |
-  'Laboratorium' | 'GuestHouse' | 'Klinik' | 'UKS' | 'Dapur' | 'Kantin' |
-  'Koperasi' | 'Kantor' | 'Aula' | 'Gudang' | 'Lapangan' | 'Parkiran' |
-  'PosSatpam' | 'RuangRapat' | 'RuangSerbaguna' | 'Taman' | 'AreaUmum' |
-  'RuangMakan' | 'Lahan' | 'Workshop' | 'Studio' | 'RuangIT' | 'GedungLain' |
-  'AreaLain';
+  jenis_lokasi:
+    | 'Cabang'
+    | 'Asrama'
+    | 'Kamar'
+    | 'Masjid'
+    | 'AreaMasjid'
+    | 'SekolahFormal'
+    | 'SekolahMDA'
+    | 'RuangKelas'
+    | 'RuangGuru'
+    | 'RuangTU'
+    | 'Perpustakaan'
+    | 'Laboratorium'
+    | 'GuestHouse'
+    | 'Klinik'
+    | 'UKS'
+    | 'Dapur'
+    | 'Kantin'
+    | 'Koperasi'
+    | 'Kantor'
+    | 'Aula'
+    | 'Gudang'
+    | 'Lapangan'
+    | 'Parkiran'
+    | 'PosSatpam'
+    | 'RuangRapat'
+    | 'RuangSerbaguna'
+    | 'Taman'
+    | 'AreaUmum'
+    | 'RuangMakan'
+    | 'Lahan'
+    | 'Workshop'
+    | 'Studio'
+    | 'RuangIT'
+    | 'GedungLain'
+    | 'AreaLain';
   parent_id?: string | null;
   id_cabang?: string | null;
   latitude?: number | null;
@@ -27,10 +56,16 @@ interface LokasiAttributes {
 }
 
 // 2. Tentukan atribut mana yang opsional saat proses 'create' (seperti ID jika manual atau timestamps)
-interface LokasiCreationAttributes extends Optional<LokasiAttributes, 'created_at' | 'updated_at'> { }
+interface LokasiCreationAttributes extends Optional<
+  LokasiAttributes,
+  'created_at' | 'updated_at'
+> {}
 
 // 3. Class Model
-class Lokasi extends Model<LokasiAttributes, LokasiCreationAttributes> implements LokasiAttributes {
+class Lokasi
+  extends Model<LokasiAttributes, LokasiCreationAttributes>
+  implements LokasiAttributes
+{
   public id_lokasi!: string;
   public nama_lokasi!: string;
   public jenis_lokasi!: LokasiAttributes['jenis_lokasi'];
@@ -64,12 +99,40 @@ export function initLokasi(sequelize: Sequelize) {
       },
       jenis_lokasi: {
         type: DataTypes.ENUM(
-          'Cabang', 'Asrama', 'Kamar', 'Masjid', 'AreaMasjid', 'SekolahFormal',
-          'SekolahMDA', 'RuangKelas', 'RuangGuru', 'RuangTU', 'Perpustakaan',
-          'Laboratorium', 'GuestHouse', 'Klinik', 'UKS', 'Dapur', 'Kantin',
-          'Koperasi', 'Kantor', 'Aula', 'Gudang', 'Lapangan', 'Parkiran',
-          'PosSatpam', 'RuangRapat', 'RuangSerbaguna', 'Taman', 'AreaUmum',
-          'RuangMakan', 'Lahan', 'Workshop', 'Studio', 'RuangIT', 'GedungLain',
+          'Cabang',
+          'Asrama',
+          'Kamar',
+          'Masjid',
+          'AreaMasjid',
+          'SekolahFormal',
+          'SekolahMDA',
+          'RuangKelas',
+          'RuangGuru',
+          'RuangTU',
+          'Perpustakaan',
+          'Laboratorium',
+          'GuestHouse',
+          'Klinik',
+          'UKS',
+          'Dapur',
+          'Kantin',
+          'Koperasi',
+          'Kantor',
+          'Aula',
+          'Gudang',
+          'Lapangan',
+          'Parkiran',
+          'PosSatpam',
+          'RuangRapat',
+          'RuangSerbaguna',
+          'Taman',
+          'AreaUmum',
+          'RuangMakan',
+          'Lahan',
+          'Workshop',
+          'Studio',
+          'RuangIT',
+          'GedungLain',
           'AreaLain'
         ),
         allowNull: false,

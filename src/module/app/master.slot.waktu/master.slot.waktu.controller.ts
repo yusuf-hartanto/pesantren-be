@@ -23,7 +23,13 @@ import MasterSlotWaktu from './master.slot.waktu.model';
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Kode Slot', 'Jam (Mulai - Selesai)', 'Aktif', 'Keterangan']);
+  sheet.addRow([
+    'No',
+    'Kode Slot',
+    'Jam (Mulai - Selesai)',
+    'Aktif',
+    'Keterangan',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -56,8 +62,12 @@ const generateDataExcel = (sheet: any, details: any) => {
 
 const normalizeRow = (row: any) => ({
   kode_slot: String(row['Kode Slot'] || '').trim(),
-  jam_mulai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[0],
-  jam_selesai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[1],
+  jam_mulai: String(row['Jam (Mulai - Selesai)'] || '')
+    .trim()
+    .split(' - ')[0],
+  jam_selesai: String(row['Jam (Mulai - Selesai)'] || '')
+    .trim()
+    .split(' - ')[1],
   active: String(row['Aktif'] || '').trim(),
   is_active: String(row['Aktif'] || '').trim() === 'Ya',
   keterangan: String(row['Keterangan'] || '').trim(),
@@ -65,7 +75,6 @@ const normalizeRow = (row: any) => ({
 });
 
 const validateRow = (row: any) => {
-
   const errors: string[] = [];
 
   if (!['Ya', 'Tidak'].includes(row.active)) {
@@ -92,7 +101,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`master slot waktu list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `master slot waktu list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -108,7 +121,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`master slot waktu index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `master slot waktu index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -161,9 +178,7 @@ export default class Controller {
       const check = await repository.detail({ id_master_slot_waktu: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      if (
-        kode_slot !== check.kode_slot
-      ) {
+      if (kode_slot !== check.kode_slot) {
         const duplicate = await repository.detail({ kode_slot });
 
         if (duplicate) {
@@ -306,13 +321,19 @@ export default class Controller {
         const existing = await repository.detail({ kode_slot });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx! });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         } else {
-          let newCreate = await MasterSlotWaktu.create({
-            ...payload,
-          }, { transaction: trx! });
+          let newCreate = await MasterSlotWaktu.create(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         }
       }
 
@@ -324,9 +345,8 @@ export default class Controller {
       };
 
       if (trx) {
-
         await trx.commit();
-        
+
         return response.success(
           'import master slot waktu berhasil',
           dataRes,
@@ -370,13 +390,19 @@ export default class Controller {
         });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         } else {
-          let newCreate = await MasterSlotWaktu.create({
-            ...payload,
-          }, { transaction: trx });
+          let newCreate = await MasterSlotWaktu.create(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         }
       }
 
@@ -392,7 +418,6 @@ export default class Controller {
       return helper.catchError(`Import batch gagal: ${err.message}`, 500, res);
     }
   }
-
 }
 
 export const masterSlotWaktu = new Controller();

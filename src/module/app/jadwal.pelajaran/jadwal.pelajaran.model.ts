@@ -50,7 +50,15 @@ export function initJadwalPelajaran(sequelize: Sequelize) {
         type: DataTypes.STRING,
       },
       hari: {
-        type: DataTypes.ENUM('Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Ahad'),
+        type: DataTypes.ENUM(
+          'Senin',
+          'Selasa',
+          'Rabu',
+          'Kamis',
+          'Jumat',
+          'Sabtu',
+          'Ahad'
+        ),
       },
       keterangan: {
         type: DataTypes.TEXT,
@@ -77,11 +85,10 @@ export function initJadwalPelajaran(sequelize: Sequelize) {
 }
 
 export function associateJadwalPelajaran() {
-
   JadwalPelajaran.belongsTo(JenisGuru, {
     as: 'jenis_guru',
     foreignKey: 'id_gmapel',
-  })
+  });
 
   JadwalPelajaran.belongsTo(Semester, {
     as: 'semester',

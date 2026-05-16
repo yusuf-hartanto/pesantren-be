@@ -127,7 +127,10 @@ export function associateAppResource() {
     as: 'province',
     foreignKey: 'area_province_id',
   });
-  AppResource.belongsTo(AreaRegency, { as: 'regency', foreignKey: 'area_regencies_id' });
+  AppResource.belongsTo(AreaRegency, {
+    as: 'regency',
+    foreignKey: 'area_regencies_id',
+  });
 }
 
 export default AppResource;

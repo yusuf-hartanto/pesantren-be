@@ -19,7 +19,23 @@ import moment from 'moment';
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Lokasi', 'Petugas', 'QR Code', 'Scan Latitude', 'Scan Longitude', 'Jarak Meter', 'Valid QR', 'Valid Geo', 'Metode Scan', 'Scan Source', 'User Agent', 'IP Address', 'Scan At', 'Keterangan']);
+  sheet.addRow([
+    'No',
+    'Lokasi',
+    'Petugas',
+    'QR Code',
+    'Scan Latitude',
+    'Scan Longitude',
+    'Jarak Meter',
+    'Valid QR',
+    'Valid Geo',
+    'Metode Scan',
+    'Scan Source',
+    'User Agent',
+    'IP Address',
+    'Scan At',
+    'Keterangan',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -69,7 +85,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`kebersihan scan log list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `kebersihan scan log list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -85,7 +105,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`kebersihan scan log index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `kebersihan scan log index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -108,12 +132,7 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const {
-        id_inspeksi,
-        id_petugas,
-        id_lokasi,
-        id_geo,
-      } = req?.body;
+      const { id_inspeksi, id_petugas, id_lokasi, id_geo } = req?.body;
 
       const idInspeksi = id_inspeksi?.value || null;
       const idPetugas = id_petugas?.value || null;
@@ -145,12 +164,7 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const {
-        id_inspeksi,
-        id_petugas,
-        id_lokasi,
-        id_geo,
-      } = req?.body;
+      const { id_inspeksi, id_petugas, id_lokasi, id_geo } = req?.body;
       const idInspeksi = id_inspeksi?.value;
       const idPetugas = id_petugas?.value;
       const idLokasi = id_lokasi?.value;
@@ -163,8 +177,7 @@ export default class Controller {
       await repository.update({
         payload: {
           ...data,
-          id_petugas:
-            idPetugas || check?.getDataValue('id_petugas'),
+          id_petugas: idPetugas || check?.getDataValue('id_petugas'),
           id_lokasi: idLokasi || check?.getDataValue('id_lokasi'),
           id_geo: idGeo || check?.getDataValue('id_geo'),
           id_inspeksi: idInspeksi || check?.getDataValue('id_inspeksi'),
@@ -187,7 +200,7 @@ export default class Controller {
       const id: string = req?.params?.id || '';
       const check = await repository.detail({ id_scan_log: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      
+
       await repository.delete({
         condition: { id_scan_log: id },
       });
@@ -226,7 +239,11 @@ export default class Controller {
 
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      return response.success('export excel kebersihan scan log', urlExcel, res);
+      return response.success(
+        'export excel kebersihan scan log',
+        urlExcel,
+        res
+      );
     } catch (err: any) {
       return helper.catchError(
         `export excel kebersihan scan log: ${err?.message}`,
@@ -235,7 +252,6 @@ export default class Controller {
       );
     }
   }
-
 }
 
 export const kebersihanScanLog = new Controller();

@@ -21,7 +21,9 @@ export default {
 
     // Pastikan data referensi ada sebelum insert
     if (jenisPenilaian[0].length === 0 || tahunAjaran[0].length === 0) {
-      console.error('Gagal Seed: Data jenis_penilaian atau tahun_ajaran kosong!');
+      console.error(
+        'Gagal Seed: Data jenis_penilaian atau tahun_ajaran kosong!'
+      );
       return;
     }
 
@@ -49,10 +51,10 @@ export default {
         id_lembaga: lembaga.id_lembaga,
         id_tingkat: null, // Bisa diisi jika ada data tingkat
         id_tahunajaran: tahunAjaran[0][0].id_tahunajaran,
-        bobot: 30.00,
+        bobot: 30.0,
         status: 'Aktif',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       });
     });
 
@@ -60,15 +62,17 @@ export default {
     pesantrenLembaga[0].forEach((lembaga: any, index: number) => {
       payload.push({
         id_bobot: uuidv4(),
-        id_penilaian: jenisPenilaian[0][1]?.id_penilaian || jenisPenilaian[0][0].id_penilaian,
+        id_penilaian:
+          jenisPenilaian[0][1]?.id_penilaian ||
+          jenisPenilaian[0][0].id_penilaian,
         lembaga_type: 'PESANTREN',
         id_lembaga: lembaga.id_lembaga,
         id_tingkat: null,
         id_tahunajaran: tahunAjaran[0][0].id_tahunajaran,
-        bobot: 50.00,
+        bobot: 50.0,
         status: 'Aktif',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       });
     });
 
@@ -79,5 +83,5 @@ export default {
 
   async down(queryInterface: QueryInterface) {
     return queryInterface.bulkDelete('jenis_penilaian_bobot', {}, {});
-  }
+  },
 };

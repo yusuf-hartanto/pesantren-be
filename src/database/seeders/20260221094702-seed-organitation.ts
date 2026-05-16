@@ -7,12 +7,20 @@ import { v4 as uuidv4 } from 'uuid';
 export default {
   async up(queryInterface: QueryInterface, sequelize: Sequelize) {
     // 1. Ambil ID referensi dari tabel terkait
-    const [cabangs]: any = await queryInterface.sequelize.query("SELECT id_cabang FROM cabang LIMIT 1");
-    const [formal]: any = await queryInterface.sequelize.query("SELECT id_lembaga FROM lembaga_pendidikan_formal LIMIT 1");
-    const [pesantren]: any = await queryInterface.sequelize.query("SELECT id_lembaga FROM lembaga_pendidikan_kepesantrenan LIMIT 1");
+    const [cabangs]: any = await queryInterface.sequelize.query(
+      'SELECT id_cabang FROM cabang LIMIT 1'
+    );
+    const [formal]: any = await queryInterface.sequelize.query(
+      'SELECT id_lembaga FROM lembaga_pendidikan_formal LIMIT 1'
+    );
+    const [pesantren]: any = await queryInterface.sequelize.query(
+      'SELECT id_lembaga FROM lembaga_pendidikan_kepesantrenan LIMIT 1'
+    );
 
     if (cabangs.length === 0) {
-      console.error('Gagal: Tabel cabang kosong. Harap isi seeder cabang terlebih dahulu.');
+      console.error(
+        'Gagal: Tabel cabang kosong. Harap isi seeder cabang terlebih dahulu.'
+      );
       return;
     }
 
@@ -37,7 +45,7 @@ export default {
         lembaga_type: null,
         keterangan: 'Unit tertinggi pengelola administrasi umum.',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       },
 
       // --- LEVEL 1: Bagian (Child of Biro Umum) ---
@@ -52,7 +60,7 @@ export default {
         lembaga_type: null,
         keterangan: 'Mengelola standarisasi kurikulum pusat.',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       },
 
       // --- LEVEL 2: Sub-Unit (Terkait Lembaga Formal) ---
@@ -67,7 +75,7 @@ export default {
         lembaga_type: 'FORMAL',
         keterangan: 'Administrasi khusus untuk lembaga pendidikan formal.',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       },
 
       // --- LEVEL 2: Sub-Unit (Terkait Lembaga Pesantren) ---
@@ -82,7 +90,7 @@ export default {
         lembaga_type: 'PESANTREN',
         keterangan: 'Pengelola kedisiplinan harian santri.',
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       },
 
       // --- Unit Independen: Lembaga ---
@@ -97,12 +105,12 @@ export default {
         lembaga_type: null,
         keterangan: 'Unit audit internal mutu organisasi.',
         created_at: new Date(),
-        updated_at: new Date()
-      }
+        updated_at: new Date(),
+      },
     ]);
   },
 
   async down(queryInterface: QueryInterface) {
     return queryInterface.bulkDelete('orgunit', {}, {});
-  }
+  },
 };

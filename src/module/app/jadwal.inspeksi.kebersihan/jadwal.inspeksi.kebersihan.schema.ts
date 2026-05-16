@@ -6,5 +6,5 @@ export const jadwalInspeksiKebersihanSchema = z.object({
   kode_slot: z.any(),
   hari: z.number('Hari harus angka').min(1, 'Hari wajib diisi'),
   is_active: z.boolean().optional(),
-  keterangan: z.any()
+  keterangan: z.any(),
 });

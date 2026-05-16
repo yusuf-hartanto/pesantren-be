@@ -8,12 +8,14 @@ export default {
   async up(queryInterface: QueryInterface, sequelize: Sequelize) {
     // 1. Ambil minimal satu ID Cabang untuk menjaga Referential Integrity
     const [cabangs]: any = await queryInterface.sequelize.query(
-      "SELECT id_cabang FROM cabang LIMIT 1"
+      'SELECT id_cabang FROM cabang LIMIT 1'
     );
 
     // Pastikan ada cabang, jika tidak ada seeder akan gagal karena constraint FK
     if (cabangs.length === 0) {
-      console.error('Gagal: Tabel cabang kosong. Harap isi seeder cabang terlebih dahulu.');
+      console.error(
+        'Gagal: Tabel cabang kosong. Harap isi seeder cabang terlebih dahulu.'
+      );
       return;
     }
 
@@ -30,7 +32,7 @@ export default {
         keterangan: 'Sekolah dasar dengan fokus tahfidz dan karakter.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_lembaga: uuidv4(),
@@ -42,7 +44,7 @@ export default {
         keterangan: 'Pendidikan menengah pertama berbasis teknologi sains.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_lembaga: uuidv4(),
@@ -54,7 +56,7 @@ export default {
         keterangan: 'Madrasah Aliyah dengan pendalaman kitab kuning.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_lembaga: uuidv4(),
@@ -63,10 +65,11 @@ export default {
         jenis_lembaga: 'SMK',
         status_akreditasi: 'Belum Terakreditasi',
         nomor_npsn: '40209014',
-        keterangan: 'Sekolah menengah kejuruan jurusan rekayasa perangkat lunak.',
+        keterangan:
+          'Sekolah menengah kejuruan jurusan rekayasa perangkat lunak.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_lembaga: uuidv4(),
@@ -78,13 +81,13 @@ export default {
         keterangan: 'Sekolah tinggi agama Islam untuk jenjang sarjana.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
-      }
+        deleted_at: null,
+      },
     ]);
   },
 
   async down(queryInterface: QueryInterface) {
     // Menghapus semua data dari tabel lembaga_pendidikan_formal
     return queryInterface.bulkDelete('lembaga_pendidikan_formal', {}, {});
-  }
+  },
 };

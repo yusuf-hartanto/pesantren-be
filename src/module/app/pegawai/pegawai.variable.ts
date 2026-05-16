@@ -18,13 +18,13 @@ export class Variable {
       'tanggal_lahir',
       'umur', // Diizinkan karena dihitung di Controller
       'alamat',
-      
+
       // Hierarki Wilayah
       'province_id',
       'city_id',
       'district_id',
       'sub_district_id',
-      
+
       // Kepegawaian
       'pendidikan',
       'bidang_ilmu',
@@ -33,10 +33,10 @@ export class Variable {
       'status_pegawai',
       'tmt',
       'foto',
-      
+
       // Timestamps (Opsional, biasanya ditangani Sequelize)
       'created_at',
-      'updated_at'
+      'updated_at',
     ];
   }
 }

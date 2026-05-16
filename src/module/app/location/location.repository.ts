@@ -69,14 +69,14 @@ export default class Repository {
         {
           model: Model,
           as: 'parent',
-          attributes: ['id_lokasi', 'nama_lokasi'],
+          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi', 'parent_id'],
           required: false,
         },
         {
           model: Model,
           as: 'sub_lokasi', // Menampilkan list ruangan di dalamnya jika ada
           required: false,
-        }
+        },
       ],
       where: {
         ...condition,

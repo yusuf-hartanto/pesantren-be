@@ -332,7 +332,9 @@ export default class Controller {
         const district = row.kecamatan;
         const subdistrict = row.kelurahan;
 
-        const provinsiExist = await areaRepository.provinceDetail({ name: provinsi });
+        const provinsiExist = await areaRepository.provinceDetail({
+          name: provinsi,
+        });
         if (!provinsiExist) {
           errors.push(`Provinsi ${provinsi} tidak ditemukan`);
         }
@@ -342,12 +344,16 @@ export default class Controller {
           errors.push(`Kota/Kabupaten ${city} tidak ditemukan`);
         }
 
-        const districtExist = await areaRepository.provinceDetail({ name: district });
+        const districtExist = await areaRepository.provinceDetail({
+          name: district,
+        });
         if (!districtExist) {
           errors.push(`Kecamatan ${district} tidak ditemukan`);
         }
 
-        const subdistrictExist = await areaRepository.provinceDetail({ name: subdistrict });
+        const subdistrictExist = await areaRepository.provinceDetail({
+          name: subdistrict,
+        });
         if (!subdistrictExist) {
           errors.push(`Kelurahan ${subdistrict} tidak ditemukan`);
         }
@@ -388,13 +394,19 @@ export default class Controller {
         const existing = await repository.detail({ nama_wali });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx! });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         } else {
-          let newCreate = await OrangTuaWali.create({
-            ...payload,
-          }, { transaction: trx! });
+          let newCreate = await OrangTuaWali.create(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         }
       }
 
@@ -406,14 +418,9 @@ export default class Controller {
       };
 
       if (trx) {
-
         await trx.commit();
-        
-        return response.success(
-          'import orang tua wali berhasil',
-          dataRes,
-          res
-        );
+
+        return response.success('import orang tua wali berhasil', dataRes, res);
       }
 
       return response.success(
@@ -448,17 +455,23 @@ export default class Controller {
       let data = null;
       for (const payload of payloads) {
         const existing = await repository.detail({
-          nama_wali: payload.nama_wali
+          nama_wali: payload.nama_wali,
         });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         } else {
-          let newCreate = await OrangTuaWali.create({
-            ...payload,
-          }, { transaction: trx });
+          let newCreate = await OrangTuaWali.create(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         }
       }
 

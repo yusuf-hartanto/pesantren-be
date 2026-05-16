@@ -44,10 +44,10 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.SMALLINT,
       allowNull: true,
     },
-    is_active: { 
-      type: DataTypes.BOOLEAN, 
-      allowNull: true, 
-      defaultValue: false 
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false,
     },
     keterangan: {
       type: DataTypes.TEXT,

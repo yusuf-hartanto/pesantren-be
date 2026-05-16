@@ -8,7 +8,7 @@ export default {
   async up(queryInterface: QueryInterface, sequelize: Sequelize) {
     // Ambil minimal satu ID Cabang agar data valid (Referential Integrity)
     const [cabangs]: any = await queryInterface.sequelize.query(
-      "SELECT id_cabang FROM cabang LIMIT 1"
+      'SELECT id_cabang FROM cabang LIMIT 1'
     );
 
     // Jika belum ada cabang, buat ID dummy (pastikan cabang sudah ada di DB sebelumnya)
@@ -22,7 +22,7 @@ export default {
         keterangan: 'Lembaga pendidikan formal tingkat menengah pertama.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_lembaga: uuidv4(),
@@ -31,16 +31,16 @@ export default {
         keterangan: 'Lembaga pendidikan formal tingkat menengah atas.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_lembaga: uuidv4(),
-        nama_lembaga: 'Tahfidz Al-Qur\'an Putra',
+        nama_lembaga: "Tahfidz Al-Qur'an Putra",
         id_cabang: idCabang,
-        keterangan: 'Program khusus penghafal Al-Qur\'an untuk santri putra.',
+        keterangan: "Program khusus penghafal Al-Qur'an untuk santri putra.",
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
+        deleted_at: null,
       },
       {
         id_lembaga: uuidv4(),
@@ -49,12 +49,16 @@ export default {
         keterangan: 'Pusat pengembangan bahasa Arab dan Inggris.',
         created_at: new Date(),
         updated_at: new Date(),
-        deleted_at: null
-      }
+        deleted_at: null,
+      },
     ]);
   },
 
   async down(queryInterface: QueryInterface) {
-    return queryInterface.bulkDelete('lembaga_pendidikan_kepesantrenan', {}, {});
-  }
+    return queryInterface.bulkDelete(
+      'lembaga_pendidikan_kepesantrenan',
+      {},
+      {}
+    );
+  },
 };

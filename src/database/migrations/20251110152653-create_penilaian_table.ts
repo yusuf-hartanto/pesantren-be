@@ -3,7 +3,7 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface: QueryInterface) {
     await queryInterface.createTable('jenis_penilaian', {
       id_penilaian: {
@@ -11,7 +11,7 @@ module.exports = {
         primaryKey: true,
         allowNull: false,
         unique: true,
-      },                                                                                                                                                                                                         
+      },
       singkatan: {
         type: DataTypes.STRING(10),
         allowNull: true,
@@ -57,5 +57,5 @@ module.exports = {
 
   async down(queryInterface: QueryInterface) {
     await queryInterface.dropTable('jenis_penilaian');
-  }
+  },
 };

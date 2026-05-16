@@ -30,9 +30,9 @@ export function initMasterSlotWaktu(sequelize: Sequelize) {
       jam_selesai: {
         type: DataTypes.TIME,
       },
-      is_active: { 
+      is_active: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false 
+        defaultValue: false,
       },
       keterangan: {
         type: DataTypes.TEXT,
@@ -53,8 +53,6 @@ export function initMasterSlotWaktu(sequelize: Sequelize) {
   return MasterSlotWaktu;
 }
 
-export function associateMasterSlotWaktu() {
-
-}
+export function associateMasterSlotWaktu() {}
 
 export default MasterSlotWaktu;

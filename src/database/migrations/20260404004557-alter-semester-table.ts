@@ -4,9 +4,12 @@ import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-
     try {
-      await queryInterface.removeConstraint('semester', 'semester_nomor_urut_key', { transaction });
+      await queryInterface.removeConstraint(
+        'semester',
+        'semester_nomor_urut_key',
+        { transaction }
+      );
     } catch (error) {
       console.log('Constraint semester_nomor_urut_key deleted, skipping...');
     }

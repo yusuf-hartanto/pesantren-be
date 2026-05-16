@@ -27,7 +27,17 @@ import KelasFormal from './kelas.formal.model';
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Nama Kelas', 'Lembaga Formal', 'Tahun Ajaran', 'Tingkat', 'Wali Kelas', 'Status', 'Nomor Urut', 'Keterangan']);
+  sheet.addRow([
+    'No',
+    'Nama Kelas',
+    'Lembaga Formal',
+    'Tahun Ajaran',
+    'Tingkat',
+    'Wali Kelas',
+    'Status',
+    'Nomor Urut',
+    'Keterangan',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -335,7 +345,9 @@ export default class Controller {
         const nama_lengkap = row.nama_lengkap;
         const tingkat = row.tingkat;
 
-        const tahunAjaranExist = await tahunAjaranRepository.detail({ tahun_ajaran });
+        const tahunAjaranExist = await tahunAjaranRepository.detail({
+          tahun_ajaran,
+        });
         if (!tahunAjaranExist) {
           errors.push(`Tahun Ajaran ${tahun_ajaran} tidak ditemukan`);
         }
@@ -383,16 +395,26 @@ export default class Controller {
 
         if (mode === 'preview' || !valid) continue;
 
-        const existing = await repository.detail({ nama_kelas, id_tahunajaran: tahunAjaranExist?.id_tahunajaran, id_lembaga: lembagaExist?.id_lembaga });
+        const existing = await repository.detail({
+          nama_kelas,
+          id_tahunajaran: tahunAjaranExist?.id_tahunajaran,
+          id_lembaga: lembagaExist?.id_lembaga,
+        });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx! });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         } else {
-          let newCreate = await KelasFormal.create({
-            ...payload,
-          }, { transaction: trx! });
+          let newCreate = await KelasFormal.create(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         }
       }
 
@@ -404,14 +426,9 @@ export default class Controller {
       };
 
       if (trx) {
-
         await trx.commit();
-        
-        return response.success(
-          'import kelas formal berhasil',
-          dataRes,
-          res
-        );
+
+        return response.success('import kelas formal berhasil', dataRes, res);
       }
 
       return response.success(
@@ -448,17 +465,23 @@ export default class Controller {
         const existing = await repository.detail({
           nama_kelas: payload.nama_kelas,
           id_tahunajaran: payload.id_tahunajaran,
-          id_lembaga: payload.id_lembaga
+          id_lembaga: payload.id_lembaga,
         });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         } else {
-          let newCreate = await KelasFormal.create({
-            ...payload,
-          }, { transaction: trx });
+          let newCreate = await KelasFormal.create(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         }
       }
 
@@ -474,7 +497,6 @@ export default class Controller {
       return helper.catchError(`Import batch gagal: ${err.message}`, 500, res);
     }
   }
-
 }
 
 export const kelasFormal = new Controller();
