@@ -15,6 +15,7 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import moment from 'moment';
+import { appConfig } from '../../../config/config.app';
 
 const date: string = helper.date();
 
@@ -40,7 +41,7 @@ const generateDataExcel = (sheet: any, details: any) => {
       details[i]?.deskripsi || '',
       details[i]?.tingkat || '',
       details[i]?.perlu_tindak_lanjut ? 'Ya' : 'Tidak',
-      details[i]?.foto_path || '',
+      `${appConfig?.baseDomain}${details[i]?.foto_path}` || '',
     ]);
   }
 
@@ -114,15 +115,30 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const { id_inspeksi } = req?.body;
+      const {
+        id_inspeksi,
+        foto_path
+      } = req?.body;
 
       const idInspeksi = id_inspeksi?.value || null;
 
       const data: Object = helper.only(variable.fillable(), req?.body);
+
+      let checkFile = helper.checkExtentionBase64(foto_path);
+      if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+
+      let fotoPath = await helper.uploadBase64(
+        foto_path,
+        'temuan',
+        req?.user?.username,
+        appConfig?.assetType
+      );
+
       const result = await repository.create({
         payload: {
           ...data,
           id_inspeksi: idInspeksi,
+          foto_path: fotoPath,
         },
       });
 
@@ -140,17 +156,32 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const { id_inspeksi } = req?.body;
+      const {
+        id_inspeksi,
+        foto_path
+      } = req?.body;
       const idInspeksi = id_inspeksi?.value;
       const check = await repository.detail({ id_temuan: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       const data: Object = helper.only(variable.fillable(), req?.body, true);
 
+      let fotoPath = null;
+      let checkFile = helper.checkExtentionBase64(foto_path);
+      if (checkFile == 'allowed') {
+        fotoPath = await helper.uploadBase64(
+          foto_path,
+          'temuan',
+          req?.user?.username,
+          appConfig?.assetType
+        );
+      }
+
       await repository.update({
         payload: {
           ...data,
           id_inspeksi: idInspeksi || check?.getDataValue('id_inspeksi'),
+          foto_path: fotoPath || check?.getDataValue('foto_path'),
         },
         condition: { id_temuan: id },
       });

@@ -2,6 +2,9 @@
 
 import { Op, Sequelize } from 'sequelize';
 import Model from './kebersihan.temuan.model';
+import KebersihanInspeksi from '../kebersihan.inspeksi/kebersihan.inspeksi.model';
+import Cabang from '../cabang/cabang.model';
+import Lokasi from '../location/location.model';
 
 export default class Repository {
   public list(data: any) {
@@ -52,7 +55,28 @@ export default class Repository {
       where: {
         ...condition,
       },
-      include: [],
+      include: [
+        {
+          model: KebersihanInspeksi,
+          as: 'kebersihan_inspeksi',
+          required: false,
+          attributes: ['id_inspeksi', 'waktu', 'tanggal'],
+          include: [
+            {
+              model: Cabang,
+              as: 'cabang',
+              required: false,
+              attributes: ['id_cabang', 'nama_cabang'],
+            },
+            {
+              model: Lokasi,
+              as: 'lokasi',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            }
+          ]
+        },
+      ],
     });
   }
 
