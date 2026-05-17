@@ -106,6 +106,11 @@ router.get('/resource', auth.checkBearerToken, resource.index);
 router.get('/resource/check/:username', auth.checkBearerToken, resource.check);
 router.get('/resource/:id', auth.checkBearerToken, resource.detail);
 router.post('/resource', auth.checkBearerToken, resource.create);
+router.put(
+  '/resource/update-password/:id',
+  auth.checkBearerToken,
+  resource.updatePassword
+);
 router.put('/resource/:id', auth.checkBearerToken, resource.update);
 router.delete('/resource/:id', auth.checkBearerToken, resource.delete);
 
