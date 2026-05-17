@@ -301,23 +301,26 @@ export default class Controller {
       const query = `SELECT *
       FROM (
           SELECT 
-              id_lokasi,
-              nama_lokasi,
-              latitude,
-              longitude,
-              (
-                  6371000 * acos(
-                      cos(radians(?)) * 
-                      cos(radians(latitude)) *
-                      cos(radians(longitude) - radians(?)) +
-                      sin(radians(?)) * 
-                      sin(radians(latitude))
-                  )
-              ) AS distance
-          FROM lokasi
+            l1.id_lokasi,
+            l1.nama_lokasi,
+            l1.latitude,
+            l1.longitude,
+            l2.id_lokasi as id_lokasi_parent,
+            l2.nama_lokasi as nama_lokasi_parent,
+            (
+                6371000 * acos(
+                    cos(radians(?)) * 
+                    cos(radians(l1.latitude)) *
+                    cos(radians(l1.longitude) - radians(?)) +
+                    sin(radians(?)) * 
+                    sin(radians(l1.latitude))
+                )
+            ) AS distance
+          FROM lokasi l1
+          LEFT JOIN lokasi l2 ON l2.id_lokasi = l1.parent_id
           WHERE 
-              latitude BETWEEN ? AND ?
-              AND longitude BETWEEN ? AND ?
+            l1.latitude BETWEEN ? AND ?
+            AND l1.longitude BETWEEN ? AND ?
       ) AS nearby_locations
       WHERE distance <= ?
       ORDER BY distance ASC;`;
