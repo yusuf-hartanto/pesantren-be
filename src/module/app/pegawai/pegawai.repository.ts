@@ -172,13 +172,13 @@ export default class Repository {
   public async resolveAreaIds(raw: any) {
     const findArea = async (
       model: any,
-      name: string,
+      id: string,
       parentField?: string,
       parentId?: string
     ) => {
-      if (!name) return null;
+      if (!id) return null;
       const condition: any = {
-        name: { [Op.iLike]: name.trim() },
+        id: { [Op.iLike]: id.trim() },
       };
 
       if (parentField && parentId) {

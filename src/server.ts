@@ -48,15 +48,17 @@ async function bootstrap() {
     origin: '*',
     preflightContinue: false,
   };
+  app.use(bodyParser.json({ limit: '5mb' }));
+  app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 
   app.use(
     fileUpload({
       useTempFiles: true,
       tempFileDir: `./tmp/${day}/`,
+      limits: { fileSize: 5 * 1024 * 1024 },
     })
   );
-  app.use(bodyParser.json({ limit: '5mb' }));
-  app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
+  
   app.use(express.static('public'));
   app.use(
     xss({

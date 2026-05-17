@@ -19,7 +19,7 @@ import {
 } from '../../../utils/constant';
 import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
-import { Op } from 'sequelize';
+import { appConfig } from '../../../config/config.app';
 
 const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
   // Definisikan susunan teks header persis di baris pertama
@@ -138,7 +138,7 @@ const normalizeRow = (row: any) => ({
   bidang_ilmu: String(row['Bidang Ilmu'] || '').trim(),
   tmt: row['TMT'] || null,
   status_pegawai: String(row['Status'] || 'Aktif').trim(),
-  foto: String(row['Foto'] || '').trim(),
+  // foto: String(row['Foto'] || '').trim(),
   id_orgunit: String(row['Unit Kerja'] || '').trim(),
   id_jabatan: String(row['Jabatan'] || '').trim(),
   provinsi: String(row['Provinsi'] || '').trim(),
@@ -262,11 +262,17 @@ export default class Controller {
 
       for (const item of payloadArray) {
         // Validasi Schema Zod
-        const validItem = pegawaiSchema.parse(item);
+        let validItem = pegawaiSchema.parse(item);
+        
 
         // Validasi Logika Bisnis & Transformasi Data
-        let finalItem = await this.validateBusinessLogic(validItem);
+        let checkFile =  helper.checkExtentionBase64(item.foto);
+        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
 
+        validItem.foto = item.foto ? await helper.uploadBase64(item.foto, `foto-pegawai-${Date.now()}`, 'pegawai', req?.user?.username, appConfig?.assetType) : null;
+        let finalItem = await this.validateBusinessLogic(validItem);
+        
+        
         // Filter Fillable Fields
         validatedData.push(helper.only(variable.fillable(), finalItem));
       }
@@ -289,10 +295,16 @@ export default class Controller {
       const check = await repository.detail({ id_pegawai: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      // A. Validasi Schema Zod (Partial agar tidak wajib semua field diisi saat update)
+      // Validasi Schema Zod (Partial agar tidak wajib semua field diisi saat update)
       const validData = pegawaiSchema.partial().parse(req.body);
 
-      // B. Validasi Logika Bisnis & Duplikasi
+      if (req.body.foto) {
+        let checkFile =  helper.checkExtentionBase64(req.body.foto);
+        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+
+        validData.foto = validData.foto ? await helper.uploadBase64(validData.foto, `foto-pegawai-${Date.now()}`, 'pegawai', req?.user?.username, appConfig?.assetType) : null;
+      }
+      // Validasi Logika Bisnis & Duplikasi
       const finalUpdate = await this.validateBusinessLogic(
         { ...check.toJSON(), ...validData },
         id
@@ -379,6 +391,8 @@ export default class Controller {
         const row = normalizeRow(raw);
         const errors = validateRow(row);
 
+        console.log('Processing Row:', row);
+
         let id_orgunit = null,
           id_jabatan = null;
 
@@ -414,7 +428,7 @@ export default class Controller {
           bidang_ilmu: row.bidang_ilmu,
           tmt: row.tmt ? moment(row.tmt).format('YYYY-MM-DD') : null,
           status_pegawai: row.status_pegawai,
-          foto: row.foto,
+          // foto: row.foto,
           alamat: row.alamat,
           id_orgunit,
           id_jabatan,
