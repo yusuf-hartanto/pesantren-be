@@ -73,8 +73,8 @@ export default class Repository {
               as: 'lokasi',
               required: false,
               attributes: ['id_lokasi', 'nama_lokasi'],
-            }
-          ]
+            },
+          ],
         },
       ],
     });

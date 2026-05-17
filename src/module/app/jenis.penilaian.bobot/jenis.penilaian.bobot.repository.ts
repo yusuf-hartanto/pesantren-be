@@ -279,31 +279,42 @@ export default class Repository {
     });
   }
 
-  public listForExport(condition: any, limit?: number) {
+  public async listForExport(params: { q?: string; isTemplate?: boolean; limit?: number }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+      whereClause[Op.or] = [
+        { '$jenisPenilaian.jenis_pengujian$': { [Op.iLike]: keyword } },
+        { '$jenisPenilaian.singkatan$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('JenisPenilaianBobot.lembaga_type'), 'text'), 
+          { [Op.iLike]: keyword }
+        ),
+        { '$tingkat.tingkat$': { [Op.iLike]: keyword } },
+        { '$tahunAjaran.tahun_ajaran$': { [Op.iLike]: keyword } },
+      ];
+    }
+
     return Model.findAll({
-      where: condition,
-      limit: limit,
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
       include: [
+        { model: JenisPenilaian, as: 'jenisPenilaian', attributes: ['id_penilaian', 'jenis_pengujian', 'singkatan'] },
+        { model: Tingkat, as: 'tingkat', attributes: ['id_tingkat', 'tingkat'] },
+        { model: TahunAjaran, as: 'tahunAjaran', attributes: ['id_tahunajaran', 'tahun_ajaran'] },
         {
-          model: JenisPenilaian,
-          as: 'jenisPenilaian',
-          attributes: ['jenis_pengujian'],
-        },
-        { model: Tingkat, as: 'tingkat', attributes: ['tingkat'] },
-        { model: TahunAjaran, as: 'tahunAjaran', attributes: ['tahun_ajaran'] },
-        {
-          model:
-            require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model')
-              .default,
+          model: require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model').default,
           as: 'lembagaPendidikanFormal',
-          attributes: ['nama_lembaga'],
+          attributes: ['id_lembaga', 'nama_lembaga'],
         },
         {
-          model:
-            require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model')
-              .default,
+          model: require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model').default,
           as: 'lembagaPendidikanKepesantrenan',
-          attributes: ['nama_lembaga'],
+          attributes: ['id_lembaga', 'nama_lembaga'],
         },
       ],
       order: [['created_at', 'DESC']],
@@ -325,39 +336,32 @@ export default class Repository {
 
   public async insertImport(payloads: any[]) {
     const trx = await Model.sequelize?.transaction();
-
     try {
       for (const item of payloads) {
-        await this.upsertImport(item, trx);
-      }
+        const existing = await Model.findOne({
+          where: {
+            id_penilaian: item.id_penilaian,
+            id_tahunajaran: item.id_tahunajaran,
+            id_lembaga: item.id_lembaga,
+            id_tingkat: item.id_tingkat || null,
+            lembaga_type: item.lembaga_type,
+          },
+        });
 
-      if (trx) await trx.commit();
+        if (existing) {
+          await existing.update(item, { transaction: trx });
+        } else {
+          await Model.create(item, { transaction: trx });
+        }
+      }
+      await trx?.commit();
       return true;
     } catch (error) {
-      if (trx) await trx.rollback();
+      await trx?.rollback();
       throw error;
     }
   }
 
-  public async upsertImport(payload: any, transaction: any = null) {
-    const existing = await this.checkDuplicate(payload, payload.id_bobot);
-
-    if (existing) {
-      return await existing.update(
-        {
-          ...payload,
-        },
-        { transaction }
-      );
-    } else {
-      return await Model.create(
-        {
-          ...payload,
-        },
-        { transaction }
-      );
-    }
-  }
 }
 
 export const repository = new Repository();

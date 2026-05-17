@@ -34,8 +34,8 @@ export function initJenisPenilaianBobot(sequelize: Sequelize) {
     {
       id_bobot: {
         type: DataTypes.STRING,
-        allowNull: false,
         primaryKey: true,
+        unique: true,
       },
       id_penilaian: {
         type: DataTypes.STRING,
@@ -107,12 +107,12 @@ export function initJenisPenilaianBobot(sequelize: Sequelize) {
   );
 
   JenisPenilaianBobot.beforeCreate((instance) => {
-    if (!instance.id_bobot) instance.setDataValue('id_bobot', uuidv4());
+    instance?.setDataValue('id_bobot', uuidv4());
   });
 
   JenisPenilaianBobot.beforeBulkCreate((instances) => {
     instances.forEach((instance) => {
-      if (!instance.id_bobot) instance.setDataValue('id_bobot', uuidv4());
+      instance.setDataValue('id_bobot', uuidv4());
     });
   });
 
