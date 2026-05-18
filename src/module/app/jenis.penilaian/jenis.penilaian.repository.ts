@@ -4,12 +4,16 @@ import { Op, Sequelize } from 'sequelize';
 import Model from './jenis.penilaian.model';
 
 export default class Repository {
-
-  public async checkDuplicateCombination(singkatan: string | null, jenisPengujian: string, lembagaType: string, excludeId?: string) {
+  public async checkDuplicateCombination(
+    singkatan: string | null,
+    jenisPengujian: string,
+    lembagaType: string,
+    excludeId?: string
+  ) {
     const where: any = {
       singkatan: { [Op.iLike]: singkatan?.trim() },
       jenis_pengujian: { [Op.iLike]: jenisPengujian.trim() },
-      lembaga_type: lembagaType
+      lembaga_type: lembagaType,
     };
     if (excludeId) {
       where.id_penilaian = { [Op.ne]: excludeId };
@@ -51,11 +55,11 @@ export default class Repository {
         { jenis_pengujian: { [Op.iLike]: keyword } },
         { singkatan: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'), 
+          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'),
           { [Op.iLike]: keyword }
         ),
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'), 
+          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'),
           { [Op.iLike]: keyword }
         ),
       ];
@@ -97,7 +101,11 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean; limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
@@ -108,11 +116,11 @@ export default class Repository {
         { jenis_pengujian: { [Op.iLike]: keyword } },
         { singkatan: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'), 
+          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'),
           { [Op.iLike]: keyword }
         ),
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'), 
+          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'),
           { [Op.iLike]: keyword }
         ),
       ];

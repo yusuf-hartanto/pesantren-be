@@ -19,7 +19,11 @@ import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
 import { Op } from 'sequelize';
 
-const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
+const generateDataExcel = (
+  sheet: any,
+  details: any,
+  isTemplate: boolean = false
+) => {
   // Definisikan susunan teks header persis di baris pertama
   sheet.addRow([
     'No',
@@ -66,9 +70,9 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
 
   for (let row = 1; row <= (details?.length || 0) + 1; row++) {
     const currentRow = sheet.getRow(row);
-    
+
     for (let col = 1; col <= columnCount; col++) {
-      const cell = currentRow.getCell(col); 
+      const cell = currentRow.getCell(col);
       cell.border = {
         top: { style: 'thin', color: { argb: 'FF000000' } },
         left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -82,15 +86,24 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
 };
 
 const normalizeRow = (row: any) => {
-  const isUjianRaw = String(row['Apakah Ujian'] || '').toUpperCase().trim();
-  const statusRaw = String(row['Status'] || 'active').toLowerCase().trim();
+  const isUjianRaw = String(row['Apakah Ujian'] || '')
+    .toUpperCase()
+    .trim();
+  const statusRaw = String(row['Status'] || 'active')
+    .toLowerCase()
+    .trim();
 
   return {
     singkatan: row['Singkatan'] ? String(row['Singkatan']).trim() : null,
     jenis_pengujian: String(row['Jenis Pengujian'] || '').trim(),
-    lembaga_type: String(row['Tipe Lembaga'] || '').toUpperCase().trim(),
-    is_ujian: (isUjianRaw === 'YA' || isUjianRaw === '1') ? 1 : 0,
-    status: (statusRaw === 'inactive' || statusRaw === 'tidak aktif') ? 'inactive' : 'active',
+    lembaga_type: String(row['Tipe Lembaga'] || '')
+      .toUpperCase()
+      .trim(),
+    is_ujian: isUjianRaw === 'YA' || isUjianRaw === '1' ? 1 : 0,
+    status:
+      statusRaw === 'inactive' || statusRaw === 'tidak aktif'
+        ? 'inactive'
+        : 'active',
     keterangan: row['Keterangan'] ? String(row['Keterangan']).trim() : null,
     __row: row.__row,
   };
@@ -292,7 +305,7 @@ export default class Controller {
       const isTemplate: boolean = template && template == '1';
 
       // Mengambil data berdasarkan signature parameter listForExport dari repositori acuan
-      let result = await repository.listForExport({ q, isTemplate }); 
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `jenis-penilaian-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
@@ -364,12 +377,23 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
-        if (validPayloads.length > 0) await repository.insertImport(validPayloads);
-        return response.success('import jenis penilaian berhasil', dataRes, res);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
+        if (validPayloads.length > 0)
+          await repository.insertImport(validPayloads);
+        return response.success(
+          'import jenis penilaian berhasil',
+          dataRes,
+          res
+        );
       }
 
-      return response.success('preview import jenis penilaian', {...dataRes, data: results}, res);
+      return response.success(
+        'preview import jenis penilaian',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(
         `import excel jenis penilaian: ${err?.message}`,

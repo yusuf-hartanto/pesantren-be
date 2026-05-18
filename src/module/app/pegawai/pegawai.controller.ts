@@ -21,7 +21,11 @@ import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
 import { appConfig } from '../../../config/config.app';
 
-const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
+const generateDataExcel = (
+  sheet: any,
+  details: any,
+  isTemplate: boolean = false
+) => {
   // Definisikan susunan teks header persis di baris pertama
   sheet.addRow([
     'No',
@@ -89,18 +93,26 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
       details[i]?.no_hp || '',
       details[i]?.jenis_kelamin === 'Laki-laki' ? 'L' : 'P',
       details[i]?.tempat_lahir || '',
-      details[i]?.tanggal_lahir ? moment(details[i].tanggal_lahir).format('YYYY-MM-DD') : '',
-      (isTemplate ? details[i]?.organizationUnit?.id_orgunit : details[i]?.organizationUnit?.nama_orgunit || ''),
-      (isTemplate ? details[i]?.jabatan?.id_jabatan : details[i]?.jabatan?.nama_jabatan) || '',
+      details[i]?.tanggal_lahir
+        ? moment(details[i].tanggal_lahir).format('YYYY-MM-DD')
+        : '',
+      isTemplate
+        ? details[i]?.organizationUnit?.id_orgunit
+        : details[i]?.organizationUnit?.nama_orgunit || '',
+      (isTemplate
+        ? details[i]?.jabatan?.id_jabatan
+        : details[i]?.jabatan?.nama_jabatan) || '',
       details[i]?.pendidikan || '',
       details[i]?.bidang_ilmu || '',
       details[i]?.tmt ? moment(details[i].tmt).format('YYYY-MM-DD') : '',
       details[i]?.status_pegawai || '',
       // Logika Wilayah: Jika template, keluarkan ID wilayah untuk mempermudah import ulang. Jika bukan, keluarkan Nama.
-      (isTemplate ? details[i]?.province_id : details[i]?.province?.name || ''),
-      (isTemplate ? details[i]?.city_id : details[i]?.city?.name || ''),
-      (isTemplate ? details[i]?.district_id : details[i]?.district?.name || ''),
-      (isTemplate ? details[i]?.sub_district_id : details[i]?.subDistrict?.name || ''),
+      isTemplate ? details[i]?.province_id : details[i]?.province?.name || '',
+      isTemplate ? details[i]?.city_id : details[i]?.city?.name || '',
+      isTemplate ? details[i]?.district_id : details[i]?.district?.name || '',
+      isTemplate
+        ? details[i]?.sub_district_id
+        : details[i]?.subDistrict?.name || '',
       details[i]?.alamat || '',
     ]);
   }
@@ -110,9 +122,9 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
 
   for (let row = 1; row <= (details?.length || 0) + 1; row++) {
     const currentRow = sheet.getRow(row);
-    
+
     for (let col = 1; col <= columnCount; col++) {
-      const cell = currentRow.getCell(col); 
+      const cell = currentRow.getCell(col);
       cell.border = {
         top: { style: 'thin', color: { argb: 'FF000000' } },
         left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -263,16 +275,22 @@ export default class Controller {
       for (const item of payloadArray) {
         // Validasi Schema Zod
         let validItem = pegawaiSchema.parse(item);
-        
 
         // Validasi Logika Bisnis & Transformasi Data
-        let checkFile =  helper.checkExtentionBase64(item.foto);
+        let checkFile = helper.checkExtentionBase64(item.foto);
         if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
 
-        validItem.foto = item.foto ? await helper.uploadBase64(item.foto, `foto-pegawai-${Date.now()}`, 'pegawai', req?.user?.username, appConfig?.assetType) : null;
+        validItem.foto = item.foto
+          ? await helper.uploadBase64(
+              item.foto,
+              `foto-pegawai-${Date.now()}`,
+              'pegawai',
+              req?.user?.username,
+              appConfig?.assetType
+            )
+          : null;
         let finalItem = await this.validateBusinessLogic(validItem);
-        
-        
+
         // Filter Fillable Fields
         validatedData.push(helper.only(variable.fillable(), finalItem));
       }
@@ -299,10 +317,18 @@ export default class Controller {
       const validData = pegawaiSchema.partial().parse(req.body);
 
       if (req.body.foto) {
-        let checkFile =  helper.checkExtentionBase64(req.body.foto);
+        let checkFile = helper.checkExtentionBase64(req.body.foto);
         if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
 
-        validData.foto = validData.foto ? await helper.uploadBase64(validData.foto, `foto-pegawai-${Date.now()}`, 'pegawai', req?.user?.username, appConfig?.assetType) : null;
+        validData.foto = validData.foto
+          ? await helper.uploadBase64(
+              validData.foto,
+              `foto-pegawai-${Date.now()}`,
+              'pegawai',
+              req?.user?.username,
+              appConfig?.assetType
+            )
+          : null;
       }
       // Validasi Logika Bisnis & Duplikasi
       const finalUpdate = await this.validateBusinessLogic(
@@ -319,7 +345,10 @@ export default class Controller {
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      const msg = err instanceof z.ZodError ? `Update Gagal: ${err.issues[0].message}` : err.message;
+      const msg =
+        err instanceof z.ZodError
+          ? `Update Gagal: ${err.issues[0].message}`
+          : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
@@ -345,7 +374,7 @@ export default class Controller {
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
 
-      let result = await repository.listForExport({ q, isTemplate }); 
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
@@ -401,13 +430,18 @@ export default class Controller {
 
         // Resolve Unit Kerja & Jabatan IDs
         if (row.id_orgunit) {
-          const unit: any = await orgRepo.detail({ id_orgunit: row.id_orgunit });
+          const unit: any = await orgRepo.detail({
+            id_orgunit: row.id_orgunit,
+          });
           if (unit) id_orgunit = unit.id_orgunit;
-          else errors.push(`Unit organisasi "${row.id_orgunit}" tidak ditemukan`);
+          else
+            errors.push(`Unit organisasi "${row.id_orgunit}" tidak ditemukan`);
         }
 
         if (row.id_jabatan) {
-          const jab: any = await jabatanRepo.detail({ id_jabatan: row.id_jabatan });
+          const jab: any = await jabatanRepo.detail({
+            id_jabatan: row.id_jabatan,
+          });
           if (jab) id_jabatan = jab.id_jabatan;
           else errors.push(`Jabatan "${row.id_jabatan}" tidak ditemukan`);
         }
@@ -451,12 +485,19 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validPayloads = results.filter(r => r.valid).map(r => r.payload);
-        if (validPayloads.length > 0) await repository.insertImport(validPayloads);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
+        if (validPayloads.length > 0)
+          await repository.insertImport(validPayloads);
         return response.success('import pegawai berhasil', dataRes, res);
       }
 
-      return response.success('preview import pegawai', {...dataRes, data: results}, res);
+      return response.success(
+        'preview import pegawai',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(
         `import excel pegawai: ${err?.message}`,

@@ -279,7 +279,11 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean; limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
@@ -290,7 +294,10 @@ export default class Repository {
         { '$jenisPenilaian.jenis_pengujian$': { [Op.iLike]: keyword } },
         { '$jenisPenilaian.singkatan$': { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaianBobot.lembaga_type'), 'text'), 
+          Sequelize.cast(
+            Sequelize.col('JenisPenilaianBobot.lembaga_type'),
+            'text'
+          ),
           { [Op.iLike]: keyword }
         ),
         { '$tingkat.tingkat$': { [Op.iLike]: keyword } },
@@ -303,16 +310,32 @@ export default class Repository {
       limit: limit || (isTemplate ? 5 : undefined),
       subQuery: false,
       include: [
-        { model: JenisPenilaian, as: 'jenisPenilaian', attributes: ['id_penilaian', 'jenis_pengujian', 'singkatan'] },
-        { model: Tingkat, as: 'tingkat', attributes: ['id_tingkat', 'tingkat'] },
-        { model: TahunAjaran, as: 'tahunAjaran', attributes: ['id_tahunajaran', 'tahun_ajaran'] },
         {
-          model: require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model').default,
+          model: JenisPenilaian,
+          as: 'jenisPenilaian',
+          attributes: ['id_penilaian', 'jenis_pengujian', 'singkatan'],
+        },
+        {
+          model: Tingkat,
+          as: 'tingkat',
+          attributes: ['id_tingkat', 'tingkat'],
+        },
+        {
+          model: TahunAjaran,
+          as: 'tahunAjaran',
+          attributes: ['id_tahunajaran', 'tahun_ajaran'],
+        },
+        {
+          model:
+            require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model')
+              .default,
           as: 'lembagaPendidikanFormal',
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
         {
-          model: require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model').default,
+          model:
+            require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model')
+              .default,
           as: 'lembagaPendidikanKepesantrenan',
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
@@ -361,7 +384,6 @@ export default class Repository {
       throw error;
     }
   }
-
 }
 
 export const repository = new Repository();

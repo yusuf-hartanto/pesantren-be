@@ -90,7 +90,7 @@ export default class Repository {
         { nip: { [Op.iLike]: keyword } },
         { email: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'), 
+          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'),
           { [Op.iLike]: keyword }
         ),
         { '$organizationUnit.nama_orgunit$': { [Op.iLike]: keyword } },
@@ -131,7 +131,11 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean, limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
@@ -145,25 +149,37 @@ export default class Repository {
         { nip: { [Op.iLike]: keyword } },
         { email: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'), 
+          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'),
           { [Op.iLike]: keyword }
         ),
         { '$organizationUnit.nama_orgunit$': { [Op.iLike]: keyword } },
         { '$jabatan.nama_jabatan$': { [Op.iLike]: keyword } },
       ];
     }
-    
+
     return Model.findAll({
       where: whereClause,
       limit: limit || (isTemplate ? 5 : undefined),
       subQuery: false,
       include: [
-        { model: OrganizationUnit, as: 'organizationUnit', attributes: ['id_orgunit', 'nama_orgunit'] },
-        { model: Jabatan, as: 'jabatan', attributes: ['id_jabatan', 'nama_jabatan'] },
+        {
+          model: OrganizationUnit,
+          as: 'organizationUnit',
+          attributes: ['id_orgunit', 'nama_orgunit'],
+        },
+        {
+          model: Jabatan,
+          as: 'jabatan',
+          attributes: ['id_jabatan', 'nama_jabatan'],
+        },
         { model: AreaProvince, as: 'province', attributes: ['id', 'name'] },
         { model: AreaRegency, as: 'city', attributes: ['id', 'name'] },
         { model: AreaDistrict, as: 'district', attributes: ['id', 'name'] },
-        { model: AreaSubDistrict, as: 'subDistrict', attributes: ['id', 'name'] },
+        {
+          model: AreaSubDistrict,
+          as: 'subDistrict',
+          attributes: ['id', 'name'],
+        },
       ],
       order: [['nama_lengkap', 'ASC']],
     });

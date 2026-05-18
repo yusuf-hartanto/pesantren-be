@@ -254,10 +254,20 @@ export default class Controller {
         return response.success(`Password ${REQUIRED}`, null, res, false);
       }
       if (!current_password) {
-        return response.success(`Current Password ${REQUIRED}`, null, res, false);
+        return response.success(
+          `Current Password ${REQUIRED}`,
+          null,
+          res,
+          false
+        );
       }
       if (!confirm_password) {
-        return response.success(`Confirm Password ${REQUIRED}`, null, res, false);
+        return response.success(
+          `Confirm Password ${REQUIRED}`,
+          null,
+          res,
+          false
+        );
       }
 
       if (password !== confirm_password) {
@@ -270,7 +280,12 @@ export default class Controller {
       }
 
       if (password.length < 6) {
-        return response.success('Password minimal 6 karakter', null, res, false);
+        return response.success(
+          'Password minimal 6 karakter',
+          null,
+          res,
+          false
+        );
       }
 
       const { role_name } = req.user;

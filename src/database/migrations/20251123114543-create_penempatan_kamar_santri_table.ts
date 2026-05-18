@@ -23,22 +23,12 @@ export const up = async (queryInterface: QueryInterface) => {
           onUpdate: 'CASCADE',
           onDelete: 'SET NULL',
         },
-        id_asrama: {
+        id_lokasi: {
           type: DataTypes.STRING,
           allowNull: true,
           references: {
-            model: 'asrama',
-            key: 'id_asrama',
-          },
-          onUpdate: 'CASCADE',
-          onDelete: 'SET NULL',
-        },
-        id_kamar: {
-          type: DataTypes.STRING,
-          allowNull: true,
-          references: {
-            model: 'kamar',
-            key: 'id_kamar',
+            model: 'lokasi',
+            key: 'id_lokasi',
           },
           onUpdate: 'CASCADE',
           onDelete: 'SET NULL',
@@ -69,6 +59,10 @@ export const up = async (queryInterface: QueryInterface) => {
           type: DataTypes.TEXT,
           allowNull: true,
         },
+        is_deleted: {
+          type: DataTypes.BOOLEAN,
+          allowNull: true,
+        },
         created_at: {
           allowNull: false,
           type: DataTypes.DATE,
@@ -78,6 +72,10 @@ export const up = async (queryInterface: QueryInterface) => {
           allowNull: false,
           type: DataTypes.DATE,
           defaultValue: queryInterface.sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        deleted_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
         },
       },
       { transaction }

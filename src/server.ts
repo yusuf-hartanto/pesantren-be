@@ -58,7 +58,7 @@ async function bootstrap() {
       limits: { fileSize: 5 * 1024 * 1024 },
     })
   );
-  
+
   app.use(express.static('public'));
   app.use(
     xss({
