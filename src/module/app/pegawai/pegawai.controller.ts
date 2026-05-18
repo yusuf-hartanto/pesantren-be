@@ -19,81 +19,119 @@ import {
 } from '../../../utils/constant';
 import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
-import { Op } from 'sequelize';
+import { appConfig } from '../../../config/config.app';
 
-const generateDataExcel = (sheet: any, details: any) => {
+const generateDataExcel = (
+  sheet: any,
+  details: any,
+  isTemplate: boolean = false
+) => {
+  // Definisikan susunan teks header persis di baris pertama
+  sheet.addRow([
+    'No',
+    'NIK',
+    'NIP',
+    'Nama Lengkap',
+    'Email',
+    'No HP',
+    'L/P',
+    'Tempat Lahir',
+    'Tgl Lahir',
+    'Unit Kerja',
+    'Jabatan',
+    'Pendidikan',
+    'Bidang Ilmu',
+    'TMT',
+    'Status',
+    'Provinsi',
+    'Kota/Kabupaten',
+    'Kecamatan',
+    'Kelurahan',
+    'Alamat',
+  ]);
+
+  // Set property metadata kolom (width disesuaikan agar proporsional)
   sheet.columns = [
     { header: 'No', key: 'no', width: 5 },
-    { header: 'NIK', key: 'nik', width: 18 },
-    { header: 'NIP', key: 'nip', width: 18 },
-    { header: 'Nama Lengkap', key: 'nama_lengkap', width: 25 },
-    { header: 'Email', key: 'email', width: 20 },
-    { header: 'No HP', key: 'no_hp', width: 15 },
+    { header: 'NIK', key: 'nik', width: 20 },
+    { header: 'NIP', key: 'nip', width: 25 },
+    { header: 'Nama Lengkap', key: 'nama_lengkap', width: 30 },
+    { header: 'Email', key: 'email', width: 25 },
+    { header: 'No HP', key: 'no_hp', width: 18 },
     { header: 'L/P', key: 'jenis_kelamin', width: 8 },
-    { header: 'Tempat Lahir', key: 'tempat_lahir', width: 15 },
-    { header: 'Tgl Lahir', key: 'tanggal_lahir', width: 12 },
-    // { header: 'Unit Kerja', key: 'unit', width: 20 },
-    // { header: 'Jabatan', key: 'jabatan', width: 20 },
-    { header: 'Pendidikan', key: 'pendidikan', width: 15 },
-    { header: 'Bidang Ilmu', key: 'bidang_ilmu', width: 15 },
-    { header: 'TMT', key: 'tmt', width: 12 },
-    { header: 'Status', key: 'status_pegawai', width: 12 },
-    // Bagian Wilayah yang Diperbaiki
-    { header: 'Provinsi', key: 'provinsi', width: 20 },
-    { header: 'Kota/Kabupaten', key: 'kota', width: 20 },
-    { header: 'Kecamatan', key: 'kecamatan', width: 20 },
-    { header: 'Kelurahan', key: 'kelurahan', width: 20 },
-    { header: 'Alamat', key: 'alamat', width: 35 },
+    { header: 'Tempat Lahir', key: 'tempat_lahir', width: 20 },
+    { header: 'Tgl Lahir', key: 'tanggal_lahir', width: 15 },
+    { header: 'Unit Kerja', key: 'unit', width: 25 },
+    { header: 'Jabatan', key: 'jabatan', width: 25 },
+    { header: 'Pendidikan', key: 'pendidikan', width: 20 },
+    { header: 'Bidang Ilmu', key: 'bidang_ilmu', width: 20 },
+    { header: 'TMT', key: 'tmt', width: 15 },
+    { header: 'Status', key: 'status_pegawai', width: 15 },
+    { header: 'Provinsi', key: 'provinsi', width: 25 },
+    { header: 'Kota/Kabupaten', key: 'kota', width: 25 },
+    { header: 'Kecamatan', key: 'kecamatan', width: 25 },
+    { header: 'Kelurahan', key: 'kelurahan', width: 25 },
+    { header: 'Alamat', key: 'alamat', width: 40 },
   ];
 
+  // Styling Header Baris Pertama
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' },
-    };
+    // Jika ingin mempertahankan warna abu-abu dari kode pertama Anda, buka baris di bawah ini:
+    // cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
   });
 
-  details.forEach((item: any, i: number) => {
-    sheet.addRow({
-      no: i + 1,
-      nik: item.nik || '',
-      nip: item.nip || '',
-      nama_lengkap: item.nama_lengkap || '',
-      email: item.email || '',
-      no_hp: item.no_hp || '',
-      jenis_kelamin: item.jenis_kelamin === 'Laki-laki' ? 'L' : 'P',
-      tempat_lahir: item.tempat_lahir || '',
-      tanggal_lahir: item.tanggal_lahir
-        ? moment(item.tanggal_lahir).format('YYYY-MM-DD')
+  // Perulangan Data menggunakan gaya indeks array (for...in) & Logika IsTemplate
+  for (let i in details) {
+    sheet.addRow([
+      parseInt(i) + 1,
+      details[i]?.nik || '',
+      details[i]?.nip || '',
+      details[i]?.nama_lengkap || '',
+      details[i]?.email || '',
+      details[i]?.no_hp || '',
+      details[i]?.jenis_kelamin === 'Laki-laki' ? 'L' : 'P',
+      details[i]?.tempat_lahir || '',
+      details[i]?.tanggal_lahir
+        ? moment(details[i].tanggal_lahir).format('YYYY-MM-DD')
         : '',
-      // unit: item.organizationUnit?.nama_orgunit || '',
-      // jabatan: item.jabatan?.nama_jabatan || '',
-      pendidikan: item.pendidikan || '',
-      bidang_ilmu: item.bidang_ilmu || '',
-      tmt: item.tmt ? moment(item.tmt).format('YYYY-MM-DD') : '',
-      status_pegawai: item.status_pegawai || '',
-      // Mapping wilayah dari relasi include di repository
-      provinsi: item.province?.name || '',
-      kota: item.city?.name || '',
-      kecamatan: item.district?.name || '',
-      kelurahan: item.subDistrict?.name || '',
-      alamat: item.alamat || '',
-    });
-  });
+      isTemplate
+        ? details[i]?.organizationUnit?.id_orgunit
+        : details[i]?.organizationUnit?.nama_orgunit || '',
+      (isTemplate
+        ? details[i]?.jabatan?.id_jabatan
+        : details[i]?.jabatan?.nama_jabatan) || '',
+      details[i]?.pendidikan || '',
+      details[i]?.bidang_ilmu || '',
+      details[i]?.tmt ? moment(details[i].tmt).format('YYYY-MM-DD') : '',
+      details[i]?.status_pegawai || '',
+      // Logika Wilayah: Jika template, keluarkan ID wilayah untuk mempermudah import ulang. Jika bukan, keluarkan Nama.
+      isTemplate ? details[i]?.province_id : details[i]?.province?.name || '',
+      isTemplate ? details[i]?.city_id : details[i]?.city?.name || '',
+      isTemplate ? details[i]?.district_id : details[i]?.district?.name || '',
+      isTemplate
+        ? details[i]?.sub_district_id
+        : details[i]?.subDistrict?.name || '',
+      details[i]?.alamat || '',
+    ]);
+  }
 
-  // Tambahkan Border
+  // 5. Pemberian Border secara paksa ke seluruh cell yang aktif
+  const columnCount = sheet.columns.length;
+
   for (let row = 1; row <= (details?.length || 0) + 1; row++) {
-    sheet.getRow(row).eachCell((cell: any) => {
+    const currentRow = sheet.getRow(row);
+
+    for (let col = 1; col <= columnCount; col++) {
+      const cell = currentRow.getCell(col);
       cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } },
       };
-    });
+    }
   }
 
   return sheet;
@@ -112,9 +150,9 @@ const normalizeRow = (row: any) => ({
   bidang_ilmu: String(row['Bidang Ilmu'] || '').trim(),
   tmt: row['TMT'] || null,
   status_pegawai: String(row['Status'] || 'Aktif').trim(),
-  foto: String(row['Foto'] || '').trim(),
-  nama_orgunit: String(row['Unit Kerja'] || '').trim(),
-  nama_jabatan: String(row['Jabatan'] || '').trim(),
+  // foto: String(row['Foto'] || '').trim(),
+  id_orgunit: String(row['Unit Kerja'] || '').trim(),
+  id_jabatan: String(row['Jabatan'] || '').trim(),
   provinsi: String(row['Provinsi'] || '').trim(),
   kota_kabupaten: String(row['Kota/Kabupaten'] || '').trim(),
   kecamatan: String(row['Kecamatan'] || '').trim(),
@@ -236,9 +274,21 @@ export default class Controller {
 
       for (const item of payloadArray) {
         // Validasi Schema Zod
-        const validItem = pegawaiSchema.parse(item);
+        let validItem = pegawaiSchema.parse(item);
 
         // Validasi Logika Bisnis & Transformasi Data
+        let checkFile = helper.checkExtentionBase64(item.foto);
+        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+
+        validItem.foto = item.foto
+          ? await helper.uploadBase64(
+              item.foto,
+              `foto-pegawai-${Date.now()}`,
+              'pegawai',
+              req?.user?.username,
+              appConfig?.assetType
+            )
+          : null;
         let finalItem = await this.validateBusinessLogic(validItem);
 
         // Filter Fillable Fields
@@ -263,10 +313,24 @@ export default class Controller {
       const check = await repository.detail({ id_pegawai: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      // A. Validasi Schema Zod (Partial agar tidak wajib semua field diisi saat update)
+      // Validasi Schema Zod (Partial agar tidak wajib semua field diisi saat update)
       const validData = pegawaiSchema.partial().parse(req.body);
 
-      // B. Validasi Logika Bisnis & Duplikasi
+      if (req.body.foto) {
+        let checkFile = helper.checkExtentionBase64(req.body.foto);
+        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+
+        validData.foto = validData.foto
+          ? await helper.uploadBase64(
+              validData.foto,
+              `foto-pegawai-${Date.now()}`,
+              'pegawai',
+              req?.user?.username,
+              appConfig?.assetType
+            )
+          : null;
+      }
+      // Validasi Logika Bisnis & Duplikasi
       const finalUpdate = await this.validateBusinessLogic(
         { ...check.toJSON(), ...validData },
         id
@@ -310,16 +374,7 @@ export default class Controller {
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
 
-      if (q) {
-        condition = { nama_lengkap: { [Op.like]: `%${q}%` } };
-      }
-
-      const result = await repository.listForExport(
-        condition,
-        isTemplate ? 5 : undefined
-      );
-      if (!isTemplate && result?.length < 1)
-        return response.success(NOT_FOUND, null, res, false);
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
@@ -327,7 +382,7 @@ export default class Controller {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('DATA PEGAWAI');
 
-      generateDataExcel(sheet, result);
+      generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
       return response.success(
@@ -365,6 +420,8 @@ export default class Controller {
         const row = normalizeRow(raw);
         const errors = validateRow(row);
 
+        console.log('Processing Row:', row);
+
         let id_orgunit = null,
           id_jabatan = null;
 
@@ -372,16 +429,22 @@ export default class Controller {
         const areas = await repository.resolveAreaIds(row);
 
         // Resolve Unit Kerja & Jabatan IDs
-        // if (row.nama_orgunit) {
-        //   const unit = await orgRepo.findByName(row.nama_orgunit, );
-        //   if (unit) id_orgunit = unit.id_orgunit;
-        //   else errors.push(`Unit "${row.nama_orgunit}" tidak ditemukan`);
-        // }
-        // if (row.nama_jabatan) {
-        //   const jab = await jabatanRepo.detail({ nama_jabatan: row.nama_jabatan });
-        //   if (jab) id_jabatan = jab.id_jabatan;
-        //   else errors.push(`Jabatan "${row.nama_jabatan}" tidak ditemukan`);
-        // }
+        if (row.id_orgunit) {
+          const unit: any = await orgRepo.detail({
+            id_orgunit: row.id_orgunit,
+          });
+          if (unit) id_orgunit = unit.id_orgunit;
+          else
+            errors.push(`Unit organisasi "${row.id_orgunit}" tidak ditemukan`);
+        }
+
+        if (row.id_jabatan) {
+          const jab: any = await jabatanRepo.detail({
+            id_jabatan: row.id_jabatan,
+          });
+          if (jab) id_jabatan = jab.id_jabatan;
+          else errors.push(`Jabatan "${row.id_jabatan}" tidak ditemukan`);
+        }
 
         const valid = errors.length === 0;
         const payload = {
@@ -399,7 +462,7 @@ export default class Controller {
           bidang_ilmu: row.bidang_ilmu,
           tmt: row.tmt ? moment(row.tmt).format('YYYY-MM-DD') : null,
           status_pegawai: row.status_pegawai,
-          foto: row.foto,
+          // foto: row.foto,
           alamat: row.alamat,
           id_orgunit,
           id_jabatan,
@@ -414,22 +477,25 @@ export default class Controller {
         });
       }
 
+      const dataRes = {
+        mode,
+        total: results.length,
+        valid: results.filter((r) => r.valid).length,
+        invalid: results.filter((r) => !r.valid).length,
+      };
+
       if (mode === 'commit') {
         const validPayloads = results
           .filter((r) => r.valid)
           .map((r) => r.payload);
         if (validPayloads.length > 0)
           await repository.insertImport(validPayloads);
-        return response.success(
-          'import pegawai berhasil',
-          { total: validPayloads.length },
-          res
-        );
+        return response.success('import pegawai berhasil', dataRes, res);
       }
 
       return response.success(
         'preview import pegawai',
-        { total: results.length, data: results },
+        { ...dataRes, data: results },
         res
       );
     } catch (err: any) {

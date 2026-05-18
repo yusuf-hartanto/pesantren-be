@@ -15,7 +15,6 @@ import {
 } from '../../../utils/constant';
 import ExcelJS from 'exceljs';
 import moment from 'moment';
-import { Op } from 'sequelize';
 import fs from 'fs/promises';
 
 const date: string = helper.date();

@@ -66,23 +66,23 @@ class Lokasi
   extends Model<LokasiAttributes, LokasiCreationAttributes>
   implements LokasiAttributes
 {
-  public id_lokasi!: string;
-  public nama_lokasi!: string;
-  public jenis_lokasi!: LokasiAttributes['jenis_lokasi'];
-  public parent_id!: string | null;
-  public id_cabang!: string | null;
-  public latitude!: number | null;
-  public longitude!: number | null;
-  public map_zoom!: number | null;
-  public kode_lokasi!: string | null;
-  public qr_code!: string | null;
-  public kapasitas!: number | null;
-  public lantai!: number | null;
-  public keterangan!: string | null;
+  declare id_lokasi: string;
+  declare nama_lokasi: string;
+  declare jenis_lokasi: LokasiAttributes['jenis_lokasi'];
+  declare parent_id: string | null;
+  declare id_cabang: string | null;
+  declare latitude: number | null;
+  declare longitude: number | null;
+  declare map_zoom: number | null;
+  declare kode_lokasi: string | null;
+  declare qr_code: string | null;
+  declare kapasitas: number | null;
+  declare lantai: number | null;
+  declare keterangan: string | null;
 
   // timestamps
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 }
 
 // 4. Inisialisasi Model

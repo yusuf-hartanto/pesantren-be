@@ -10,14 +10,24 @@ import AreaRegency from '../../area/regencies.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 
 export default class Repository {
-  public list(condition: any = {}) {
-    return Model.findAll({
+  public list(data: any) {
+    let query: Object = {
       where: {
-        ...condition,
         status: { [Op.ne]: 9 },
       },
-      order: [['updated_at', 'DESC']],
-    });
+      order: [['created_at', 'DESC']],
+    };
+    if (data?.status != '') {
+      query = {
+        ...query,
+        where: {
+          status: {
+            [Op.eq]: data?.status
+          },
+        },
+      };
+    }
+    return Model.findAll(query);
   }
 
   public index(data: any) {
