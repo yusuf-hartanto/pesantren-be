@@ -55,10 +55,20 @@ export default class Controller {
 
   public async check(req: Request, res: Response) {
     try {
+      const { role_name } = req?.user;
+      const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const username: string = req?.params?.username || '';
-      const result: Object | any = await repository.detail({
-        username: username,
-      });
+      const type: any = req?.query?.type || '';
+      console.warn(username, type);
+      const result: Object | any = await repository.detail(
+        { username: username },
+        admin
+      );
+      if (type && type == 'data') {
+        if (!result) return response.success(NOT_FOUND, null, res, false);
+        const getUser: Object = await transformer.detail(result, false);
+        return response.success(SUCCESS_RETRIEVED, getUser, res);
+      }
       if (result)
         return response.success('Data already used', null, res, false);
       return response.success('Data can used', null, res);
@@ -233,6 +243,98 @@ export default class Controller {
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(`resource update: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async updatePassword(req: Request, res: Response) {
+    try {
+      const { current_password, password, confirm_password } = req.body;
+
+      if (!password) {
+        return response.success(`Password ${REQUIRED}`, null, res, false);
+      }
+      if (!current_password) {
+        return response.success(
+          `Current Password ${REQUIRED}`,
+          null,
+          res,
+          false
+        );
+      }
+      if (!confirm_password) {
+        return response.success(
+          `Confirm Password ${REQUIRED}`,
+          null,
+          res,
+          false
+        );
+      }
+
+      if (password !== confirm_password) {
+        return response.success(
+          'Password tidak sama dengan password konfirmasi',
+          null,
+          res,
+          false
+        );
+      }
+
+      if (password.length < 6) {
+        return response.success(
+          'Password minimal 6 karakter',
+          null,
+          res,
+          false
+        );
+      }
+
+      const { role_name } = req.user;
+      const id: string = req.params?.id || '';
+      const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
+      const check = await repository.check({ resource_id: id }, admin);
+      if (!check) {
+        return response.success(NOT_FOUND, null, res, false);
+      }
+
+      const isMatch: boolean = await helper.compareIt(
+        req?.body?.current_password,
+        check?.getDataValue('password')
+      );
+      if (!isMatch) {
+        return response.success('Password lama salah', null, res, false);
+      }
+
+      const isSamePassword: boolean = await helper.compareIt(
+        password,
+        check.getDataValue('password')
+      );
+      if (isSamePassword) {
+        return response.success(
+          'Password baru tidak boleh sama dengan password lama',
+          null,
+          res,
+          false
+        );
+      }
+
+      const hashedPassword = await helper.hashIt(password);
+
+      await repository.update({
+        payload: {
+          password: hashedPassword,
+        },
+        condition: {
+          resource_id: id,
+        },
+      });
+
+      return response.success(SUCCESS_UPDATED, null, res);
+    } catch (err: any) {
+      return helper.catchError(
+        `resource update password: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 

@@ -18,10 +18,14 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword}%` : null;
-
     if (keyword) {
       query.where = {
         nama_lokasi: { [Op.like]: keyword },
+      };
+    }
+    if (data?.jenis_lokasi && data?.data?.keyword != '') {
+      query.where = {
+        jenis_lokasi: data?.jenis_lokasi,
       };
     }
 

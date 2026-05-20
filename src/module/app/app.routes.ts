@@ -106,6 +106,11 @@ router.get('/resource', auth.checkBearerToken, resource.index);
 router.get('/resource/check/:username', auth.checkBearerToken, resource.check);
 router.get('/resource/:id', auth.checkBearerToken, resource.detail);
 router.post('/resource', auth.checkBearerToken, resource.create);
+router.put(
+  '/resource/update-password/:id',
+  auth.checkBearerToken,
+  resource.updatePassword
+);
 router.put('/resource/:id', auth.checkBearerToken, resource.update);
 router.delete('/resource/:id', auth.checkBearerToken, resource.delete);
 
@@ -720,34 +725,49 @@ router.put('/kamar/:id', auth.checkBearerToken, Kamar.update);
 router.delete('/kamar/:id', auth.checkBearerToken, Kamar.delete);
 
 router.get(
-  '/penempatan-kamar/all-data',
+  '/penempatan-kamar-santri/all-data',
   auth.checkBearerToken,
   PenempatanKamarSantri.list
 );
 router.get(
-  '/penempatan-kamar',
+  '/penempatan-kamar-santri',
   auth.checkBearerToken,
   PenempatanKamarSantri.index
 );
 router.get(
-  '/penempatan-kamar/:id',
+  '/penempatan-kamar-santri/:id',
   auth.checkBearerToken,
   PenempatanKamarSantri.detail
 );
 router.post(
-  '/penempatan-kamar',
+  '/penempatan-kamar-santri',
   auth.checkBearerToken,
   PenempatanKamarSantri.create
 );
 router.put(
-  '/penempatan-kamar/:id',
+  '/penempatan-kamar-santri/:id',
   auth.checkBearerToken,
   PenempatanKamarSantri.update
 );
 router.delete(
-  '/penempatan-kamar/:id',
+  '/penempatan-kamar-santri/:id',
   auth.checkBearerToken,
   PenempatanKamarSantri.delete
+);
+router.post(
+  '/penempatan-kamar-santri/export',
+  auth.checkBearerToken,
+  PenempatanKamarSantri.export
+);
+router.post(
+  '/penempatan-kamar-santri/import',
+  auth.checkBearerToken,
+  PenempatanKamarSantri.import
+);
+router.post(
+  '/penempatan-kamar-santri/insert',
+  auth.checkBearerToken,
+  PenempatanKamarSantri.insert
 );
 
 router.get(

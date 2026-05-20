@@ -1,32 +1,29 @@
 'use strict';
 
-import { Op, Sequelize } from 'sequelize';
+import { Op } from 'sequelize';
+import Santri from '../santri/santri.model';
 import Model from './penempatan.kamar.santri.model';
-import Asrama from '../asrama/asrama.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
-import Kamar from '../kamar/kamar.model';
+import Lokasi from '../location/location.model';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_penempatan', 'DESC']],
+      where: {
+        is_deleted: false,
+      },
+      order: [['updated_at', 'DESC']],
       include: [
-        // {
-        // 	model: Santri,
-        // 	as: 'santri',
-        // 	attributes: ['id_santri', 'nama_santri'],
-        // 	required: false,
-        // },
         {
-          model: Asrama,
-          as: 'asrama',
-          attributes: ['id_asrama', 'nama_asrama'],
+          model: Santri,
+          as: 'santri',
+          attributes: ['id_santri', 'fullname'],
           required: false,
         },
         {
-          model: Kamar,
-          as: 'kamar',
-          attributes: ['id_kamar', 'nama_kamar'],
+          model: Lokasi,
+          as: 'lokasi',
+          attributes: ['id_lokasi', 'nama_lokasi'],
           required: false,
         },
         {
@@ -39,11 +36,11 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword}%` : null;
-
     if (keyword) {
       query = {
         ...query,
         where: {
+          is_deleted: false,
           nama_kamar: { [Op.like]: keyword },
         },
       };
@@ -54,53 +51,54 @@ export default class Repository {
 
   public async index(data: any) {
     let query: Object = {
-      order: [['id_kamar', 'DESC']],
+      where: {
+        is_deleted: false,
+      },
+      order: [['updated_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
       distinct: true,
       subQuery: false,
       include: [
-        // {
-        // 	model: Santri,
-        // 	as: 'santri',
-        // 	attributes: ['id_santri', 'nama_santri'],
-        // 	required: false,
-        // },
         {
-          model: Asrama,
-          as: 'asrama',
-          attributes: ['id_asrama', 'nama_asrama'],
+          model: Santri,
+          as: 'santri',
+          attributes: ['id_santri', 'fullname', 'nis', 'nik'],
           required: false,
         },
         {
-          model: Kamar,
-          as: 'kamar',
-          attributes: ['id_kamar', 'nama_kamar'],
+          model: Lokasi,
+          as: 'lokasi',
+          attributes: ['id_lokasi', 'kode_lokasi', 'nama_lokasi', 'parent_id'],
           required: false,
+          include: [
+            {
+              model: Lokasi,
+              as: 'parent',
+              attributes: ['id_lokasi', 'kode_lokasi', 'nama_lokasi', 'parent_id'],
+              required: false,
+            },
+          ]
         },
         {
           model: TahunAjaran,
           as: 'tahunAjaran',
-          attributes: ['id_tahunajaran', 'tahun_ajaran'],
+          attributes: ['id_tahunajaran', 'tahun_ajaran', 'keterangan'],
           required: false,
         },
       ],
     };
 
     const keyword = data?.keyword ? `%${data.keyword}%` : null;
-
     if (keyword) {
       query = {
         ...query,
         where: {
+          is_deleted: false,
           [Op.or]: [
             { status: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { tanggal_masuk: { [Op.like]: keyword } },
-            { tanggal_keluar: { [Op.like]: keyword } },
-            { '$asrama.nama_asrama$': { [Op.like]: keyword } },
-            { '$kamar.nama_kamar$': { [Op.like]: keyword } },
-            { '$santri.nama_kamar$': { [Op.like]: keyword } },
+            { '$lokasi.nama_lokasi$': { [Op.like]: keyword } },
+            { '$santri.fullname$': { [Op.like]: keyword } },
             { '$tahunAjaran.tahun_ajaran$': { [Op.like]: keyword } },
           ],
         },
@@ -115,22 +113,16 @@ export default class Repository {
   public detail(condition: any) {
     return Model.findOne({
       include: [
-        // {
-        // 	model: Santri,
-        // 	as: 'santri',
-        // 	attributes: ['id_santri', 'nama_santri'],
-        // 	required: false,
-        // },
         {
-          model: Asrama,
-          as: 'asrama',
-          attributes: ['id_asrama', 'nama_asrama'],
+          model: Santri,
+          as: 'santri',
+          attributes: ['id_santri', 'fullname'],
           required: false,
         },
         {
-          model: Kamar,
-          as: 'kamar',
-          attributes: ['id_kamar', 'nama_kamar'],
+          model: Lokasi,
+          as: 'lokasi',
+          attributes: ['id_lokasi', 'nama_lokasi'],
           required: false,
         },
         {
@@ -142,6 +134,7 @@ export default class Repository {
       ],
       where: {
         ...condition,
+        is_deleted: false,
       },
     });
   }

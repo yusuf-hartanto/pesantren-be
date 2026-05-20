@@ -115,10 +115,7 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const {
-        id_inspeksi,
-        foto_path
-      } = req?.body;
+      const { id_inspeksi, foto_path } = req?.body;
 
       const idInspeksi = id_inspeksi?.value || null;
 
@@ -156,10 +153,7 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const {
-        id_inspeksi,
-        foto_path
-      } = req?.body;
+      const { id_inspeksi, foto_path } = req?.body;
       const idInspeksi = id_inspeksi?.value;
       const check = await repository.detail({ id_temuan: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);

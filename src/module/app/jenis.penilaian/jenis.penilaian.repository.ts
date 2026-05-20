@@ -1,26 +1,23 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './jenis.penilaian.model';
 
 export default class Repository {
-  /**
-   * Cek duplikasi jenis_pengujian berdasarkan lembaga_type
-   */
-  public async checkDuplicate(
-    jenis_pengujian: string,
-    lembaga_type: string,
+  public async checkDuplicateCombination(
+    singkatan: string | null,
+    jenisPengujian: string,
+    lembagaType: string,
     excludeId?: string
   ) {
     const where: any = {
-      jenis_pengujian,
-      lembaga_type,
+      singkatan: { [Op.iLike]: singkatan?.trim() },
+      jenis_pengujian: { [Op.iLike]: jenisPengujian.trim() },
+      lembaga_type: lembagaType,
     };
-
     if (excludeId) {
       where.id_penilaian = { [Op.ne]: excludeId };
     }
-
     return await Model.findOne({ where });
   }
 
@@ -41,23 +38,34 @@ export default class Repository {
     return Model.findAll(query);
   }
 
-  public index(data: any) {
-    let query: any = {
-      order: [['id_penilaian', 'DESC']],
+  public async index(data: any) {
+    const query: any = {
+      order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      distinct: true,
+      subQuery: false,
       where: {},
     };
-    console.log('KEYWORD', data);
-    if (data?.keyword) {
+
+    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+
+    if (keyword) {
       query.where[Op.or] = [
-        { singkatan: { [Op.iLike]: `%${data.keyword}%` } },
-        { jenis_pengujian: { [Op.iLike]: `%${data.keyword}%` } },
-        { keterangan: { [Op.iLike]: `%${data.keyword}%` } },
+        { jenis_pengujian: { [Op.iLike]: keyword } },
+        { singkatan: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'),
+          { [Op.iLike]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'),
+          { [Op.iLike]: keyword }
+        ),
       ];
     }
 
-    return Model.findAndCountAll(query);
+    return await Model.findAndCountAll(query);
   }
 
   public detail(condition: any) {
@@ -93,42 +101,62 @@ export default class Repository {
     });
   }
 
-  public async insertImport(payloads: any[]) {
-    const trx = await Model.sequelize?.transaction();
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
 
-    try {
-      for (const item of payloads) {
-        await this.upsertImport(item, trx);
-      }
+    let whereClause: any = {};
 
-      if (trx) await trx.commit();
-      return true;
-    } catch (error) {
-      if (trx) await trx.rollback();
-      throw error;
+    if (!isTemplate && keyword) {
+      whereClause[Op.or] = [
+        { jenis_pengujian: { [Op.iLike]: keyword } },
+        { singkatan: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'),
+          { [Op.iLike]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'),
+          { [Op.iLike]: keyword }
+        ),
+      ];
     }
+
+    return Model.findAll({
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
+      order: [['jenis_pengujian', 'ASC']],
+    });
   }
 
-  public async upsertImport(payload: any, transaction: any = null) {
-    const existing = await this.findByName(
-      payload.singkatan,
-      payload.lembaga_type
-    );
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+    try {
+      for (const item of payloads) {
+        const existing = await Model.findOne({
+          where: {
+            singkatan: { [Op.iLike]: item.singkatan.trim() },
+            jenis_pengujian: { [Op.iLike]: item.jenis_pengujian.trim() },
+            lembaga_type: item.lembaga_type,
+          },
+        });
 
-    if (existing) {
-      return await existing.update(
-        {
-          ...payload,
-        },
-        { transaction }
-      );
-    } else {
-      return await Model.create(
-        {
-          ...payload,
-        },
-        { transaction }
-      );
+        if (existing) {
+          await existing.update(item, { transaction: trx });
+        } else {
+          await Model.create(item, { transaction: trx });
+        }
+      }
+      await trx?.commit();
+      return true;
+    } catch (error) {
+      await trx?.rollback();
+      throw error;
     }
   }
 }

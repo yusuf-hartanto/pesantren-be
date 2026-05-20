@@ -450,7 +450,7 @@ export default class Controller {
 
   public async syncSantri(req: Request, res: Response) {
     try {
-      const { institution_id } = req.body;
+      const { institution_id, preview } = req.body;
       if (!institution_id)
         return response.failed(`institution_id ${REQUIRED}`, 422, res);
       const bodyOnly = helper.only(
@@ -460,6 +460,10 @@ export default class Controller {
 
       const result = await service.syncSantri(bodyOnly);
       const { code, data, message, error } = result;
+
+      if (preview && preview == '1') {
+        return response.success('sync santri', result, res);
+      }
 
       if (code == 200) {
         if (data && data.length > 0) {

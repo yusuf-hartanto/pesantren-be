@@ -29,76 +29,105 @@ import z from 'zod';
 
 const date: string = helper.date();
 
-const generateDataExcel = (sheet: any, details: any) => {
+const generateDataExcel = (
+  sheet: any,
+  details: any,
+  isTemplate: boolean = false
+) => {
+  // Susunan teks header persis di baris pertama
+  sheet.addRow([
+    'No',
+    'Jenis Penilaian',
+    'Tipe Lembaga',
+    'Lembaga',
+    'Tingkat',
+    'Tahun Ajaran',
+    'Bobot (%)',
+    'Status',
+  ]);
+
+  // Set property metadata kolom
   sheet.columns = [
     { header: 'No', key: 'no', width: 5 },
     { header: 'Jenis Penilaian', key: 'penilaian', width: 25 },
-    { header: 'Tipe Lembaga', key: 'tipe', width: 15 },
-    { header: 'Nama Lembaga', key: 'nama_lembaga', width: 30 },
+    { header: 'Tipe Lembaga', key: 'lembaga_type', width: 15 },
+    { header: 'Lembaga', key: 'nama_lembaga', width: 30 },
     { header: 'Tingkat', key: 'tingkat', width: 15 },
     { header: 'Tahun Ajaran', key: 'ta', width: 15 },
     { header: 'Bobot (%)', key: 'bobot', width: 12 },
     { header: 'Status', key: 'status', width: 12 },
   ];
 
+  // Styling Header Baris Pertama
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' },
-    };
   });
 
+  // Perulangan Data menggunakan gaya indeks array (for...in) & Logika IsTemplate (ID vs Nama)
   for (let i in details) {
     const item = details[i];
 
-    // Pola Organization Unit: Cek relasi mana yang memiliki data
-    const namaLembaga =
+    // Ambil data relasi lembaga (Pola formal / pesantren)
+    const namaLembagaReal =
       item.lembagaPendidikanFormal?.nama_lembaga ||
       item.lembagaPendidikanKepesantrenan?.nama_lembaga ||
       '';
 
-    sheet.addRow({
-      no: parseInt(i) + 1,
-      penilaian: item.jenisPenilaian?.jenis_pengujian || '',
-      tipe: item.lembaga_type || '',
-      nama_lembaga: namaLembaga,
-      tingkat: item.tingkat?.tingkat || '',
-      ta: item.tahunAjaran?.tahun_ajaran || '',
-      bobot: item.bobot || 0,
-      status: item.status || '',
-    });
+    sheet.addRow([
+      parseInt(i) + 1,
+      isTemplate
+        ? item.id_penilaian
+        : item.jenisPenilaian?.jenis_pengujian || '',
+      item.lembaga_type || '',
+      isTemplate ? item.id_lembaga : namaLembagaReal,
+      isTemplate ? item.id_tingkat : item.tingkat?.tingkat || '',
+      isTemplate ? item.id_tahunajaran : item.tahunAjaran?.tahun_ajaran || '',
+      item.bobot || 0,
+      item.status || 'Aktif',
+    ]);
   }
 
-  // Border styling
+  // Pemberian Border secara paksa ke seluruh cell yang aktif
+  const columnCount = sheet.columns.length;
   for (let row = 1; row <= (details?.length || 0) + 1; row++) {
-    sheet.getRow(row).eachCell((cell: any) => {
+    const currentRow = sheet.getRow(row);
+    for (let col = 1; col <= columnCount; col++) {
+      const cell = currentRow.getCell(col);
       cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' },
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } },
       };
-    });
+    }
   }
 
   return sheet;
 };
 
 const normalizeRow = (row: any) => ({
-  nama_penilaian: String(row['Jenis Penilaian'] || '').trim(),
+  id_penilaian: String(row['Jenis Penilaian'] || '').trim(),
   lembaga_type: String(row['Tipe Lembaga'] || '')
     .toUpperCase()
     .trim(),
-  nama_lembaga: String(row['Nama Lembaga'] || '').trim(),
-  nama_tingkat: String(row['Tingkat'] || '').trim(),
-  tahun_ajaran: String(row['Tahun Ajaran'] || '').trim(),
+  id_lembaga: String(row['Lembaga'] || '').trim(),
+  id_tingkat: String(row['Tingkat'] || '').trim(),
+  id_tahunajaran: String(row['Tahun Ajaran'] || '').trim(),
   bobot: parseFloat(row['Bobot (%)']) || 0,
   status: String(row['Status'] || 'Aktif').trim(),
   __row: row.__row,
 });
+
+const validateRow = (row: any) => {
+  const errors: string[] = [];
+  if (!row.id_penilaian) errors.push('Jenis Penilaian wajib diisi');
+  if (!row.id_lembaga || !row.lembaga_type)
+    errors.push('Tipe & Lembaga wajib diisi');
+  if (!row.id_tahunajaran) errors.push('Tahun Ajaran wajib diisi');
+  if (row.bobot <= 0) errors.push('Bobot (%) harus lebih besar dari 0');
+  return errors;
+};
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
@@ -207,13 +236,10 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      const { template } = req.body;
-      const isTemplate = template == '1';
+      const { q, template } = req?.body;
+      const isTemplate: boolean = template && template == '1';
 
-      const result = await repository.listForExport(
-        {},
-        isTemplate ? 5 : undefined
-      );
+      let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `bobot-penilaian-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
@@ -221,13 +247,20 @@ export default class Controller {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('BOBOT PENILAIAN');
 
-      // Gunakan await karena generateDataExcel sekarang async untuk fetch nama lembaga
-      await generateDataExcel(sheet, result);
-
+      generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      return response.success('export excel', `${dir}/${filename}`, res);
+
+      return response.success(
+        'export excel bobot penilaian',
+        `${dir}/${filename}`,
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(err.message, 500, res);
+      return helper.catchError(
+        `export excel bobot penilaian: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -250,85 +283,75 @@ export default class Controller {
 
       for (const raw of rows) {
         const row = normalizeRow(raw);
-        let errors: string[] = [];
+        const errors = validateRow(row);
+
+        console.log('Processing Row:', row);
+
         let id_penilaian = null,
           id_lembaga = null,
           id_tingkat = null,
           id_tahunajaran = null;
 
-        try {
-          // jenisPenilaianBobotSchema.parse(row);
-
-          // Resolve Jenis Penilaian
-          const penilaian = await penilaianRepo.findByName(row.nama_penilaian);
+        if (row.id_penilaian) {
+          const penilaian = await penilaianRepo.detail({
+            id_penilaian: row.id_penilaian,
+          });
           if (penilaian) id_penilaian = penilaian.id_penilaian;
           else
             errors.push(
-              `Jenis Penilaian "${row.nama_penilaian}" tidak ditemukan`
+              `ID Jenis Penilaian "${row.id_penilaian}" tidak ditemukan`
             );
-
-          // Resolve Lembaga (Pilih Repo sesuai Tipe)
-          if (row.nama_lembaga && row.lembaga_type) {
-            const repo =
-              row.lembaga_type === 'FORMAL' ? formalRepo : pesantrenRepo;
-            const lembaga = await repo.findByName(row.nama_lembaga);
-            if (lembaga) id_lembaga = lembaga.id_lembaga;
-            else
-              errors.push(
-                `Lembaga ${row.lembaga_type} "${row.nama_lembaga}" tidak ditemukan`
-              );
-          } else {
-            errors.push('Tipe & Nama Lembaga wajib diisi');
-          }
-
-          // Resolve Tingkat (Optional)
-          if (row.nama_tingkat) {
-            const tingkat = await tingkatRepo.detail({
-              nama_tingkat: row.nama_tingkat,
-            });
-            if (tingkat) id_tingkat = tingkat.id_tingkat;
-            else errors.push(`Tingkat "${row.nama_tingkat}" tidak ditemukan`);
-          }
-
-          // Resolve Tahun Ajaran
-          const ta = await tahunRepo.detail({ tahun_ajaran: row.tahun_ajaran });
-          if (ta) id_tahunajaran = ta.id_tahunajaran;
-          else
-            errors.push(`Tahun Ajaran "${row.tahun_ajaran}" tidak ditemukan`);
-
-          // Business Logic: Cek Duplikasi (Kombinasi Unik)
-          if (id_penilaian && id_lembaga && id_tahunajaran) {
-            const payloadCheck = {
-              id_penilaian,
-              id_lembaga,
-              id_tingkat,
-              id_tahunajaran,
-              lembaga_type: row.lembaga_type,
-            };
-            const isExist = await repository.checkDuplicate(payloadCheck);
-
-            // Jika mode commit, ini akan di-update (Upsert),
-            // namun di preview kita beri info jika data sudah ada
-            if (isExist && mode === 'preview') {
-              // Opsional: beri tanda bahwa ini akan mengupdate data lama
-            }
-          }
-        } catch (err: any) {
-          const msg =
-            err instanceof z.ZodError ? err.issues[0].message : err.message;
-          errors.push(msg);
         }
 
-        const valid = errors.length === 0;
+        if (row.id_lembaga && row.lembaga_type) {
+          const repo =
+            row.lembaga_type === 'FORMAL' ? formalRepo : pesantrenRepo;
+          const lembaga = await repo.detail({ id_lembaga: row.id_lembaga });
+          if (lembaga) id_lembaga = lembaga.id_lembaga;
+          else
+            errors.push(
+              `ID Lembaga ${row.lembaga_type} "${row.id_lembaga}" tidak ditemukan`
+            );
+        }
+
+        if (row.id_tingkat) {
+          const tingkat = await tingkatRepo.detail({
+            id_tingkat: row.id_tingkat,
+          });
+          if (tingkat) id_tingkat = tingkat.id_tingkat;
+          else errors.push(`ID Tingkat "${row.id_tingkat}" tidak ditemukan`);
+        }
+
+        if (row.id_tahunajaran) {
+          const ta = await tahunRepo.detail({
+            id_tahunajaran: row.id_tahunajaran,
+          });
+          if (ta) id_tahunajaran = ta.id_tahunajaran;
+          else
+            errors.push(
+              `ID Tahun Ajaran "${row.id_tahunajaran}" tidak ditemukan`
+            );
+        }
+
+        let valid = errors.length === 0;
         const payload = {
           id_penilaian,
           id_lembaga,
-          id_tingkat,
+          id_tingkat: id_tingkat || null, // Tingkat bersifat opsional
           id_tahunajaran,
           lembaga_type: row.lembaga_type,
           bobot: row.bobot,
           status: row.status,
         };
+
+        if (errors.length === 0) {
+          try {
+            await repository.validateBobotLogic(payload);
+          } catch (businessErr: any) {
+            valid = false;
+            errors.push(businessErr.message);
+          }
+        }
 
         results.push({
           row: row.__row,
@@ -338,6 +361,13 @@ export default class Controller {
         });
       }
 
+      const dataRes = {
+        mode,
+        total: results.length,
+        valid: results.filter((r) => r.valid).length,
+        invalid: results.filter((r) => !r.valid).length,
+      };
+
       if (mode === 'commit') {
         const validPayloads = results
           .filter((r) => r.valid)
@@ -345,19 +375,23 @@ export default class Controller {
         if (validPayloads.length > 0)
           await repository.insertImport(validPayloads);
         return response.success(
-          'Import bobot berhasil',
-          { total: validPayloads.length },
+          'import bobot penilaian berhasil',
+          dataRes,
           res
         );
       }
 
       return response.success(
-        'Preview Import Bobot',
-        { total: results.length, data: results },
+        'preview import bobot penilaian',
+        { ...dataRes, data: results },
         res
       );
     } catch (err: any) {
-      return helper.catchError(`Import error: ${err.message}`, 500, res);
+      return helper.catchError(
+        `import excel bobot penilaian: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -365,10 +399,13 @@ export default class Controller {
     const payloads = req.body?.data as any[];
     if (!payloads || payloads.length === 0)
       return response.success('Data kosong', null, res, false);
-
     try {
       await repository.insertImport(payloads);
-      return response.success(SUCCESS_SAVED, { count: payloads.length }, res);
+      return response.success(
+        'Import batch berhasil',
+        { count: payloads.length },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }
