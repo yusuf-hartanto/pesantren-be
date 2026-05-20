@@ -140,6 +140,13 @@ export default class Controller {
       const idGeo = id_geo?.value || null;
 
       const data: Object = helper.only(variable.fillable(), req?.body);
+
+      // 1. Get User Agent
+      const userAgent = req.get('User-Agent'); 
+
+      // 2. Get IP Address
+      const ip = req.ip; 
+
       const result = await repository.create({
         payload: {
           ...data,
@@ -147,6 +154,8 @@ export default class Controller {
           id_geo: idGeo,
           id_inspeksi: idInspeksi,
           id_petugas: idPetugas,
+          user_agent: userAgent,
+          ip_address: ip,
         },
       });
 
@@ -174,6 +183,12 @@ export default class Controller {
 
       const data: Object = helper.only(variable.fillable(), req?.body, true);
 
+      // 1. Get User Agent
+      const userAgent = req.get('User-Agent'); 
+
+      // 2. Get IP Address
+      const ip = req.ip; 
+
       await repository.update({
         payload: {
           ...data,
@@ -181,6 +196,8 @@ export default class Controller {
           id_lokasi: idLokasi || check?.getDataValue('id_lokasi'),
           id_geo: idGeo || check?.getDataValue('id_geo'),
           id_inspeksi: idInspeksi || check?.getDataValue('id_inspeksi'),
+          user_agent: userAgent,
+          ip_address: ip,
         },
         condition: { id_scan_log: id },
       });

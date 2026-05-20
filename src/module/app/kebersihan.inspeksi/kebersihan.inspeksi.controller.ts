@@ -172,7 +172,7 @@ export default class Controller {
 
       const details = await temuanRepository.insert(insert);
 
-      return response.success(SUCCESS_SAVED, null, res);
+      return response.success(SUCCESS_SAVED, result, res);
     } catch (err: any) {
       return helper.catchError(
         `kebersihan inspeksi create: ${err?.message}`,
