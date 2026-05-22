@@ -447,7 +447,7 @@ export default class Controller {
       // Jalankan single guard clause yang efisien. Jika santri tidak ada / kamar tidak cocok, auto return gagal
       if (!santriKamar || !penempatanAktif) {
         return response.failed(
-          `Gagal Scan: Santri dengan NIS [${validBody.nis}] tidak ditemukan atau tidak terdaftar di lokasi kamar aktif ini.`,
+          `Gagal Scan: Santri dengan [${validBody.nis}] tidak ditemukan atau tidak terdaftar di lokasi kamar aktif ini.`,
           422,
           res
         )

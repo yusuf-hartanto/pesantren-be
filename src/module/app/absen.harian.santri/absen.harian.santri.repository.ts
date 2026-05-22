@@ -240,7 +240,7 @@ export default class Repository {
         status: 1, // Santri aktif
         [Op.or]: [
           { nis: nis },
-          { id_santri: nis }
+          { kartu_santri_nomor: nis }
         ]
       },
       attributes: ['id_santri', 'fullname', 'nis'],
