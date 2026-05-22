@@ -57,12 +57,18 @@ export default class Repository {
         ...query,
         where: {
           [Op.or]: [
-            { nama_jabatan: { [Op.like]: keyword } },
-            { level_jabatan: { [Op.like]: keyword } },
-            { sifat_jabatan: { [Op.like]: keyword } },
-            { kode_jabatan: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { '$orgunit.nama_orgunit$': { [Op.like]: keyword } },
+            { nama_jabatan: { [Op.iLike]: keyword } },
+            Sequelize.where(
+              Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'),
+              { [Op.iLike]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'),
+              { [Op.iLike]: keyword }
+            ),
+            { kode_jabatan: { [Op.iLike]: keyword } },
+            { keterangan: { [Op.iLike]: keyword } },
+            { '$orgunit.nama_orgunit$': { [Op.iLike]: keyword } },
           ],
         },
       };
@@ -89,11 +95,16 @@ export default class Repository {
     });
   }
 
-  public async checkUniqueInOrgunit(id_orgunit: string, field: 'nama_jabatan' | 'kode_jabatan', value: string, excludeId?: string) {
-    const condition: any = { 
-      id_orgunit, 
+  public async checkUniqueInOrgunit(
+    id_orgunit: string,
+    field: 'nama_jabatan' | 'kode_jabatan',
+    value: string,
+    excludeId?: string
+  ) {
+    const condition: any = {
+      id_orgunit,
       [field]: value,
-      deleted_at: null
+      deleted_at: null,
     };
 
     if (excludeId) {
@@ -122,6 +133,105 @@ export default class Repository {
     return Model.destroy({
       where: data?.condition,
     });
+  }
+
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+      whereClause = {
+        [Op.and]: [
+          { deleted_at: null },
+          {
+            [Op.or]: [
+              { nama_jabatan: { [Op.iLike]: keyword } },
+              { kode_jabatan: { [Op.iLike]: keyword } },
+              { keterangan: { [Op.iLike]: keyword } },
+              Sequelize.where(
+                Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'),
+                { [Op.iLike]: keyword }
+              ),
+              Sequelize.where(
+                Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'),
+                { [Op.iLike]: keyword }
+              ),
+              { '$orgunit.nama_orgunit$': { [Op.iLike]: keyword } },
+            ],
+          },
+        ],
+      };
+    }
+
+    return Model.findAll({
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
+      include: [
+        {
+          model: OrganizationUnit,
+          as: 'orgunit',
+          attributes: ['nama_orgunit'],
+          required: false, // LEFT OUTER JOIN
+        },
+      ],
+      order: [
+        ['level_jabatan', 'ASC'],
+        ['nama_jabatan', 'ASC'],
+      ],
+    });
+  }
+
+  public findByName(name: string) {
+    return Model.findOne({
+      where: Model.sequelize?.where(
+        Model.sequelize.fn('LOWER', Model.sequelize.col('nama_jabatan')),
+        name.toLowerCase().trim()
+      ),
+    });
+  }
+
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
+      }
+
+      if (trx) await trx.commit();
+      return true;
+    } catch (error) {
+      if (trx) await trx.rollback();
+      throw error;
+    }
+  }
+
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.nama_jabatan);
+
+    if (existing) {
+      return await existing.update(
+        {
+          ...payload,
+        },
+        { transaction }
+      );
+    } else {
+      return await Model.create(
+        {
+          ...payload,
+          id_orgunit: '8de3cd2b-7f24-4870-b821-fd8cb5b3ba08',
+        },
+        { transaction }
+      );
+    }
   }
 }
 

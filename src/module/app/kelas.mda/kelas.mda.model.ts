@@ -8,13 +8,13 @@ import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import Tingkat from '../tingkat/tingkat.model';
 
 export class KelasMda extends Model {
-  public id_kelas_mda!: string;
-  public nama_kelas_mda!: string;
-  public nomor_urut!: number;
-  public keterangan!: string;
-  public status!: string;
-  public id_lembaga!: string;
-  public id_tahunajaran!: string;
+  declare id_kelas_mda: string;
+  declare nama_kelas_mda: string;
+  declare nomor_urut: number;
+  declare keterangan: string;
+  declare status: string;
+  declare id_lembaga: string;
+  declare id_tahunajaran: string;
 }
 
 export function initKelasMda(sequelize: Sequelize) {

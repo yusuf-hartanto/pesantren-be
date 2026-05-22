@@ -9,26 +9,33 @@ export const up = async (queryInterface: QueryInterface) => {
 
     // 2. Tambahkan kolom parent_id hanya jika belum ada
     if (!tableDesc.parent_id) {
-      await queryInterface.addColumn('kelompok_pelajaran', 'parent_id', {
-        type: DataTypes.STRING,
-        allowNull: true,
-        references: {
-          model: 'kelompok_pelajaran',
-          key: 'id_kelpelajaran',
+      await queryInterface.addColumn(
+        'kelompok_pelajaran',
+        'parent_id',
+        {
+          type: DataTypes.STRING,
+          allowNull: true,
+          references: {
+            model: 'kelompok_pelajaran',
+            key: 'id_kelpelajaran',
+          },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
-      }, { transaction });
+        { transaction }
+      );
     }
 
     // 3. Tambahkan index (Gunakan try-catch atau cek index manual)
     try {
       await queryInterface.addIndex('kelompok_pelajaran', ['parent_id'], {
         name: 'idx_kelompok_pelajaran_parent_id',
-        transaction
+        transaction,
       });
     } catch (error) {
-      console.log('Index idx_kelompok_pelajaran_parent_id already exists, skipping...');
+      console.log(
+        'Index idx_kelompok_pelajaran_parent_id already exists, skipping...'
+      );
     }
   });
 };
@@ -50,7 +57,9 @@ export const down = async (queryInterface: QueryInterface) => {
 
     // 2. Hapus kolom jika ada
     if (tableDesc.parent_id) {
-      await queryInterface.removeColumn('kelompok_pelajaran', 'parent_id', { transaction });
+      await queryInterface.removeColumn('kelompok_pelajaran', 'parent_id', {
+        transaction,
+      });
     }
   });
 };

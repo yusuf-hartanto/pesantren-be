@@ -6,15 +6,15 @@ import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
 
 export class Asrama extends Model {
-  public id_asrama!: string;
-  public nama_asrama!: string;
-  public jumlah_kamar!: number;
-  public keterangan!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  declare id_asrama: string;
+  declare nama_asrama: string;
+  declare jumlah_kamar: number;
+  declare keterangan: string;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   // Relasi
-  public cabang?: Cabang[];
+  declare cabang?: Cabang[];
 }
 
 export function initAsrama(sequelize: Sequelize) {

@@ -36,6 +36,10 @@ export default class Repository {
               Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
               { [Op.like]: `%${data?.keyword}%` }
             ),
+            Sequelize.where(
+              Sequelize.cast(Sequelize.col('tingkat_type'), 'TEXT'),
+              { [Op.iLike]: `%${data?.keyword}%` }
+            ),
             { keterangan: { [Op.like]: `%${data?.keyword}%` } },
           ],
         },

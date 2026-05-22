@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // config
-export const APP_NAME: string = process.env.APP || 'Skeleton Typescript API';
+export const APP_NAME: string = process.env.APP || 'SADA API';
 export const PRODUCTION: string = 'production';
 export const DEVELOPMENT: string = 'development';
 

@@ -11,36 +11,36 @@ import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 
 export class Pegawai extends Model {
-  public id_pegawai!: string;
-  public nik!: string;
-  public nip!: string;
-  public nama_lengkap!: string;
-  public email!: string;
-  public no_hp!: string;
-  public jenis_kelamin!: string;
-  public tempat_lahir!: string;
-  public tanggal_lahir!: Date;
-  public umur!: number;
-  public alamat!: string;
+  declare id_pegawai: string;
+  declare nik: string;
+  declare nip: string;
+  declare nama_lengkap: string;
+  declare email: string;
+  declare no_hp: string;
+  declare jenis_kelamin: string;
+  declare tempat_lahir: string;
+  declare tanggal_lahir: Date;
+  declare umur: number;
+  declare alamat: string;
   // Tambahan Wilayah
-  public province_id!: string;
-  public city_id!: string;
-  public district_id!: string;
-  public sub_district_id!: string;
-  
-  public pendidikan!: string;
-  public bidang_ilmu!: string;
-  public id_orgunit!: string;
-  public id_jabatan!: string;
-  public status_pegawai!: string;
-  public tmt!: string;
-  public foto!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  declare province_id: string;
+  declare city_id: string;
+  declare district_id: string;
+  declare sub_district_id: string;
+
+  declare pendidikan: string;
+  declare bidang_ilmu: string;
+  declare id_orgunit: string;
+  declare id_jabatan: string;
+  declare status_pegawai: string;
+  declare tmt: string;
+  declare foto: string;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   // Relasi (Disesuaikan menjadi objek tunggal karena belongsTo)
-  public organizationUnit?: OrganizationUnit;
-  public jabatan?: Jabatan;
+  declare organizationUnit?: OrganizationUnit;
+  declare jabatan?: Jabatan;
 }
 
 export function initPegawai(sequelize: Sequelize) {
@@ -161,7 +161,7 @@ export function initPegawai(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
         // set(value) {
         //   const formattedValue = value
         //     ? moment(value).format('YYYY-MM-DD HH:mm:ss')
@@ -174,7 +174,7 @@ export function initPegawai(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
         // set(value) {
         //   const formattedValue = value
         //     ? moment(value).format('YYYY-MM-DD HH:mm:ss')
@@ -189,7 +189,7 @@ export function initPegawai(sequelize: Sequelize) {
       tableName: 'pegawai',
       underscored: true, // Otomatis mengubah createdAt jadi created_at
       timestamps: true,
-      paranoid: true,    // Aktifkan Soft Delete
+      paranoid: true, // Aktifkan Soft Delete
       createdAt: 'created_at',
       updatedAt: 'updated_at',
       deletedAt: 'deleted_at',

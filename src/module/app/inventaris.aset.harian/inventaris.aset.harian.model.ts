@@ -6,18 +6,18 @@ import InventarisUmum from '../inventaris.umum/inventaris.umum.model';
 import Asrama from '../asrama/asrama.model';
 
 export class InventarisAsetHarian extends Model {
-  public id_laporan!: string;
-  public id_aset!: string;
-  public id_asrama!: string;
-  public id_kamar!: string;
-  public id_biro_aset!: string;
-  public id_rumah_tangga!: string;
-  public tanggal!: Date;
-  public kondisi!: string;
-  public foto_dokumentasi!: Date;
-  public status_progres!: Date;
-  public catatan!: string;
-  public jenis_input!: string;
+  declare id_laporan: string;
+  declare id_aset: string;
+  declare id_asrama: string;
+  declare id_kamar: string;
+  declare id_biro_aset: string;
+  declare id_rumah_tangga: string;
+  declare tanggal: Date;
+  declare kondisi: string;
+  declare foto_dokumentasi: Date;
+  declare status_progres: Date;
+  declare catatan: string;
+  declare jenis_input: string;
 }
 
 export function initInventarisAsetHarian(sequelize: Sequelize) {

@@ -1,7 +1,15 @@
 import { z } from 'zod';
 
-export const status = ['Aktif', 'Nonaktif', 'Arsip']
-export const hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Ahad']
+export const status = ['Aktif', 'Nonaktif', 'Arsip'];
+export const hari = [
+  'Senin',
+  'Selasa',
+  'Rabu',
+  'Kamis',
+  'Jumat',
+  'Sabtu',
+  'Ahad',
+];
 export const jadwalPelajaranSchema = z.object({
   id_kelas: z.any(),
   id_kelas_mda: z.any(),

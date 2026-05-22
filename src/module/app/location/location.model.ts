@@ -6,13 +6,42 @@ import Cabang from '../cabang/cabang.model';
 interface LokasiAttributes {
   id_lokasi: string;
   nama_lokasi: string;
-  jenis_lokasi: 'Cabang' | 'Asrama' | 'Kamar' | 'Masjid' | 'AreaMasjid' | 'SekolahFormal' |
-  'SekolahMDA' | 'RuangKelas' | 'RuangGuru' | 'RuangTU' | 'Perpustakaan' |
-  'Laboratorium' | 'GuestHouse' | 'Klinik' | 'UKS' | 'Dapur' | 'Kantin' |
-  'Koperasi' | 'Kantor' | 'Aula' | 'Gudang' | 'Lapangan' | 'Parkiran' |
-  'PosSatpam' | 'RuangRapat' | 'RuangSerbaguna' | 'Taman' | 'AreaUmum' |
-  'RuangMakan' | 'Lahan' | 'Workshop' | 'Studio' | 'RuangIT' | 'GedungLain' |
-  'AreaLain';
+  jenis_lokasi:
+    | 'Cabang'
+    | 'Asrama'
+    | 'Kamar'
+    | 'Masjid'
+    | 'AreaMasjid'
+    | 'SekolahFormal'
+    | 'SekolahMDA'
+    | 'RuangKelas'
+    | 'RuangGuru'
+    | 'RuangTU'
+    | 'Perpustakaan'
+    | 'Laboratorium'
+    | 'GuestHouse'
+    | 'Klinik'
+    | 'UKS'
+    | 'Dapur'
+    | 'Kantin'
+    | 'Koperasi'
+    | 'Kantor'
+    | 'Aula'
+    | 'Gudang'
+    | 'Lapangan'
+    | 'Parkiran'
+    | 'PosSatpam'
+    | 'RuangRapat'
+    | 'RuangSerbaguna'
+    | 'Taman'
+    | 'AreaUmum'
+    | 'RuangMakan'
+    | 'Lahan'
+    | 'Workshop'
+    | 'Studio'
+    | 'RuangIT'
+    | 'GedungLain'
+    | 'AreaLain';
   parent_id?: string | null;
   id_cabang?: string | null;
   latitude?: number | null;
@@ -28,27 +57,33 @@ interface LokasiAttributes {
 }
 
 // 2. Tentukan atribut mana yang opsional saat proses 'create' (seperti ID jika manual atau timestamps)
-interface LokasiCreationAttributes extends Optional<LokasiAttributes, 'created_at' | 'updated_at'> { }
+interface LokasiCreationAttributes extends Optional<
+  LokasiAttributes,
+  'created_at' | 'updated_at'
+> {}
 
 // 3. Class Model
-class Lokasi extends Model<LokasiAttributes, LokasiCreationAttributes> implements LokasiAttributes {
-  public id_lokasi!: string;
-  public nama_lokasi!: string;
-  public jenis_lokasi!: LokasiAttributes['jenis_lokasi'];
-  public parent_id!: string | null;
-  public id_cabang!: string | null;
-  public latitude!: number | null;
-  public longitude!: number | null;
-  public map_zoom!: number | null;
-  public kode_lokasi!: string | null;
-  public qr_code!: string | null;
-  public kapasitas!: number | null;
-  public lantai!: number | null;
-  public keterangan!: string | null;
+class Lokasi
+  extends Model<LokasiAttributes, LokasiCreationAttributes>
+  implements LokasiAttributes
+{
+  declare id_lokasi: string;
+  declare nama_lokasi: string;
+  declare jenis_lokasi: LokasiAttributes['jenis_lokasi'];
+  declare parent_id: string | null;
+  declare id_cabang: string | null;
+  declare latitude: number | null;
+  declare longitude: number | null;
+  declare map_zoom: number | null;
+  declare kode_lokasi: string | null;
+  declare qr_code: string | null;
+  declare kapasitas: number | null;
+  declare lantai: number | null;
+  declare keterangan: string | null;
 
   // timestamps
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 }
 
 // 4. Inisialisasi Model
@@ -65,12 +100,40 @@ export function initLokasi(sequelize: Sequelize) {
       },
       jenis_lokasi: {
         type: DataTypes.ENUM(
-          'Cabang', 'Asrama', 'Kamar', 'Masjid', 'AreaMasjid', 'SekolahFormal',
-          'SekolahMDA', 'RuangKelas', 'RuangGuru', 'RuangTU', 'Perpustakaan',
-          'Laboratorium', 'GuestHouse', 'Klinik', 'UKS', 'Dapur', 'Kantin',
-          'Koperasi', 'Kantor', 'Aula', 'Gudang', 'Lapangan', 'Parkiran',
-          'PosSatpam', 'RuangRapat', 'RuangSerbaguna', 'Taman', 'AreaUmum',
-          'RuangMakan', 'Lahan', 'Workshop', 'Studio', 'RuangIT', 'GedungLain',
+          'Cabang',
+          'Asrama',
+          'Kamar',
+          'Masjid',
+          'AreaMasjid',
+          'SekolahFormal',
+          'SekolahMDA',
+          'RuangKelas',
+          'RuangGuru',
+          'RuangTU',
+          'Perpustakaan',
+          'Laboratorium',
+          'GuestHouse',
+          'Klinik',
+          'UKS',
+          'Dapur',
+          'Kantin',
+          'Koperasi',
+          'Kantor',
+          'Aula',
+          'Gudang',
+          'Lapangan',
+          'Parkiran',
+          'PosSatpam',
+          'RuangRapat',
+          'RuangSerbaguna',
+          'Taman',
+          'AreaUmum',
+          'RuangMakan',
+          'Lahan',
+          'Workshop',
+          'Studio',
+          'RuangIT',
+          'GedungLain',
           'AreaLain'
         ),
         allowNull: false,

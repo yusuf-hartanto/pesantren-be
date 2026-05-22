@@ -11,7 +11,7 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
 import { locationSchema, locationUpdateSchema } from './location.schema';
 import QRCode from 'qrcode';
 import z from 'zod';
@@ -20,6 +20,7 @@ import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
 import { sequelize } from '../../../database/connection';
 import crypto from 'crypto';
+import { rawQuery } from '../../../helpers/rawQuery';
 
 
 const generateDataExcel = (sheet: any, details: any) => {
@@ -128,7 +129,8 @@ export default class Controller {
 
   public async list(req: Request, res: Response) {
     try {
-      const result = await repository.list({});
+      const jenis_lokasi: any = req?.query?.jenis_lokasi || '';
+      const result = await repository.list({ jenis_lokasi });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
@@ -156,7 +158,7 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      let result: any = (await repository.detail({ id_lokasi: id }));
+      let result: any = await repository.detail({ id_lokasi: id });
 
       if (!result) return response.success(NOT_FOUND, null, res, false);
 
@@ -165,7 +167,7 @@ export default class Controller {
       const qrBase64 = await QRCode.toDataURL(result.kode_lokasi, {
         errorCorrectionLevel: 'H',
         width: 300,
-        margin: 2
+        margin: 2,
       });
 
       result.qr_code_base64 = qrBase64;
@@ -176,12 +178,10 @@ export default class Controller {
     }
   }
 
-
-
   private generateInitial(name: string): string {
     return name
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
+      .map((word) => word.charAt(0).toUpperCase())
       .join('')
       .replace(/[^A-Z]/g, ''); // Pastikan hanya karakter alfabet
   }
@@ -192,16 +192,18 @@ export default class Controller {
     const parent: any = await repository.detail({ id_lokasi: parentId });
     if (!parent) return '';
 
-    const grandParentPath = await this.getParentCodes(parent.dataValues.parent_id);
-    const currentCode = parent.dataValues.kode_lokasi;;
+    const grandParentPath = await this.getParentCodes(
+      parent.dataValues.parent_id
+    );
+    const currentCode = parent.dataValues.kode_lokasi;
 
     return grandParentPath ? `${grandParentPath}_${currentCode}` : currentCode;
   }
 
   public async create(req: Request, res: Response) {
     try {
-      const payload = Array.isArray(req.body) 
-        ? z.array(locationSchema).parse(req.body) 
+      const payload = Array.isArray(req.body)
+        ? z.array(locationSchema).parse(req.body)
         : [locationSchema.parse(req.body)];
 
       const finalData = [];
@@ -209,7 +211,9 @@ export default class Controller {
       for (const item of payload) {
         //Logika Bisnis: Inherit ID Cabang dari Parent
         if (item.parent_id) {
-          const parent: any = await repository.detail({ id_lokasi: item.parent_id });
+          const parent: any = await repository.detail({
+            id_lokasi: item.parent_id,
+          });
           if (parent?.id_cabang) item.id_cabang = parent.id_cabang;
         }
 
@@ -228,11 +232,14 @@ export default class Controller {
           nama_lokasi: item.nama_lokasi,
         });
 
-        if (isDuplicate) throw new Error(`Lokasi "${item.nama_lokasi}" sudah ada di cabang ini.`);
-        
+        if (isDuplicate)
+          throw new Error(
+            `Lokasi "${item.nama_lokasi}" sudah ada di cabang ini.`
+          );
+
         finalData.push(item);
       }
-        
+
       await repository.create({ payload: finalData });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
@@ -244,12 +251,16 @@ export default class Controller {
       // Jika error berasal dari Zod (Validasi Field)
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
-        const fieldName = firstIssue.path.join('.'); 
+        const fieldName = firstIssue.path.join('.');
         errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
         errorCode = 400;
       }
 
-      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `Lokasi create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -269,7 +280,9 @@ export default class Controller {
 
       // Logika Bisnis: Inherit ID Cabang dari Parent (jika parent_id berubah)
       if (validatedData.parent_id) {
-        const parent: any = await repository.detail({ id_lokasi: validatedData.parent_id });
+        const parent: any = await repository.detail({
+          id_lokasi: validatedData.parent_id,
+        });
         if (parent?.id_cabang) {
           mergedData.id_cabang = parent.id_cabang;
         }
@@ -280,16 +293,18 @@ export default class Controller {
         id_cabang: mergedData.id_cabang || null,
         jenis_lokasi: mergedData.jenis_lokasi,
         nama_lokasi: mergedData.nama_lokasi,
-        id_lokasi: { [Op.ne]: id }
+        id_lokasi: { [Op.ne]: id },
       });
 
       if (isDuplicate) {
-        throw new Error(`Kombinasi Cabang, Jenis, dan Nama "${mergedData.nama_lokasi}" sudah digunakan oleh lokasi lain.`);
+        throw new Error(
+          `Kombinasi Cabang, Jenis, dan Nama "${mergedData.nama_lokasi}" sudah digunakan oleh lokasi lain.`
+        );
       }
 
       // Eksekusi Update
       await repository.update({
-        payload: mergedData, 
+        payload: mergedData,
         condition: { id_lokasi: id },
       });
 
@@ -303,12 +318,16 @@ export default class Controller {
       // Jika error berasal dari Zod (Validasi Field)
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
-        const fieldName = firstIssue.path.join('.'); 
+        const fieldName = firstIssue.path.join('.');
         errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
         errorCode = 400;
       }
 
-      return helper.catchError(`Lokasi create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `Lokasi create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -322,12 +341,12 @@ export default class Controller {
 
       // 2. Cek apakah lokasi ini memiliki child (sub-lokasi)
       const hasChild = await repository.detail({ parent_id: id });
-      
+
       if (hasChild) {
         return response.success(
-          `Gagal menghapus: Lokasi ini masih memiliki sub-lokasi di dalamnya. Silakan hapus atau pindahkan sub-lokasi terlebih dahulu.`, 
-          null, 
-          res, 
+          `Gagal menghapus: Lokasi ini masih memiliki sub-lokasi di dalamnya. Silakan hapus atau pindahkan sub-lokasi terlebih dahulu.`,
+          null,
+          res,
           false
         );
       }
@@ -507,6 +526,75 @@ export default class Controller {
     } catch (err: any) {
       if (trx) await trx.rollback();
       return helper.catchError(`Insert Batch Gagal: ${err.message}`, 500, res);
+    }
+  }
+  
+  public async findQrCode(req: Request, res: Response) {
+    try {
+      const { qr_code } = req?.body;
+
+      const result: any = await repository.detail({ qr_code });
+      if (!result) return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, result, res);
+    } catch (err: any) {
+      return helper.catchError(`Lokasi qrcode: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async findAllLocationByLatlong(req: Request, res: Response) {
+    try {
+      const { latitude, longitude } = req?.body;
+
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+
+      const radius = 50; // meter
+
+      const latDelta = radius / 111320;
+      const lngDelta = radius / (111320 * Math.cos((lat * Math.PI) / 180));
+
+      const minLat = lat - latDelta;
+      const maxLat = lat + latDelta;
+      const minLng = lng - lngDelta;
+      const maxLng = lng + lngDelta;
+
+      const query = `SELECT *
+      FROM (
+          SELECT 
+            l1.id_lokasi,
+            l1.nama_lokasi,
+            l1.latitude,
+            l1.longitude,
+            l2.id_lokasi as id_lokasi_parent,
+            l2.nama_lokasi as nama_lokasi_parent,
+            (
+                6371000 * acos(
+                    cos(radians(?)) * 
+                    cos(radians(l1.latitude)) *
+                    cos(radians(l1.longitude) - radians(?)) +
+                    sin(radians(?)) * 
+                    sin(radians(l1.latitude))
+                )
+            ) AS distance
+          FROM lokasi l1
+          LEFT JOIN lokasi l2 ON l2.id_lokasi = l1.parent_id
+          WHERE 
+            l1.latitude BETWEEN ? AND ?
+            AND l1.longitude BETWEEN ? AND ?
+      ) AS nearby_locations
+      WHERE distance <= ?
+      ORDER BY distance ASC;`;
+
+      const conn = await rawQuery.getConnection();
+      const result: any = await conn.query(query, {
+        type: QueryTypes.SELECT,
+        replacements: [lat, lng, lat, minLat, maxLat, minLng, maxLng, radius],
+      });
+
+      if (!result) return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, result, res);
+    } catch (err: any) {
+      return helper.catchError(`Lokasi latlong: ${err?.message}`, 500, res);
     }
   }
 }

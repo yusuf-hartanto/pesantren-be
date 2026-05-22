@@ -41,7 +41,10 @@ import {
   associateKelompokPelajaran,
 } from '../app/kelompok.pelajaran/kelompok.pelajaran.model';
 import { initJenisJamPelajaran } from '../app/jenis.jampel/jenis.jampel.model';
-import { initJenisGuru, associateJenisGuru } from '../app/jenis.guru/jenis.guru.model';
+import {
+  initJenisGuru,
+  associateJenisGuru,
+} from '../app/jenis.guru/jenis.guru.model';
 import {
   initMataPelajaran,
   associateMataPelajaran,
@@ -90,10 +93,7 @@ import {
   associatePenempatanKamarSantri,
   initPenempatanKamarSantri,
 } from '../app/penempatan.kamar.santri/penempatan.kamar.santri.model';
-import {
-  initInventarisUmum,
-  associateInventarisUmum,
-} from '../app/inventaris.umum/inventaris.umum.model';
+import { initInventarisUmum } from '../app/inventaris.umum/inventaris.umum.model';
 import {
   initInventarisAsetHarian,
   associateInventarisAsetHarian,
@@ -114,6 +114,29 @@ import { associateLokasi, initLokasi } from '../app/location/location.model';
 import { initJadwalPelajaran, associateJadwalPelajaran } from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
 import { initShiftPresensi, associateShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
 import { associateGeoArea, initGeoArea } from '../app/geo.areas/geo.areas.model';
+import { initMasterSlotWaktu } from '../app/master.slot.waktu/master.slot.waktu.model';
+import {
+  initJadwalInspeksiKebersihan,
+  associateJadwalInspeksiKebersihan,
+} from '../app/jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.model';
+import {
+  initKebersihanInspeksi,
+  associateKebersihanInspeksi,
+} from '../app/kebersihan.inspeksi/kebersihan.inspeksi.model';
+import {
+  initKebersihanTemuan,
+  associateKebersihanTemuan,
+} from '../app/kebersihan.temuan/kebersihan.temuan.model';
+import {
+  initKebersihanScanLog,
+  associateKebersihanScanLog,
+} from '../app/kebersihan.scan.log/kebersihan.scan.log.model';
+import {
+  initAppInstitution,
+  associateAppInstitution,
+} from '../app/institution/institution.model';
+import { initAppSantri, associateAppSantri } from '../app/santri/santri.model';
+import { associateAbsenHarianSantri, initAbsenHarianSantri } from '../app/absen.harian.santri/absen.harian.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -162,6 +185,15 @@ export function initializeModels(sequelize: Sequelize) {
   initJadwalPelajaran(sequelize);
   initShiftPresensi(sequelize);
   initGeoArea(sequelize);
+  initMasterSlotWaktu(sequelize);
+  initJadwalInspeksiKebersihan(sequelize);
+  initKebersihanInspeksi(sequelize);
+  initKebersihanTemuan(sequelize);
+  initKebersihanScanLog(sequelize);
+  initAppInstitution(sequelize);
+  initAppSantri(sequelize);
+  initAbsenHarianSantri(sequelize);
+
 
   // associate
   associateAppRole();
@@ -197,6 +229,14 @@ export function initializeModels(sequelize: Sequelize) {
   associateLokasi();
   associateJadwalPelajaran();
   associateGeoArea();
+  associateJadwalInspeksiKebersihan();
+  associateKebersihanInspeksi();
+  associateKebersihanTemuan();
+  associateKebersihanScanLog();
+  associateAppInstitution();
+  associateAppSantri();
+  associateShiftPresensi();
+  associateAbsenHarianSantri();
 
   addGlobalActivityHooks(sequelize);
 }

@@ -21,17 +21,17 @@ import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 
 const month: string = moment().format('YYYY-MM');
 const parseTimeToSeconds = (time: string): number => {
-  if (!time) return 0
+  if (!time) return 0;
 
-  const normalized = time.replace(/\./g, ':')
-  const parts = normalized.split(':').map(Number)
+  const normalized = time.replace(/\./g, ':');
+  const parts = normalized.split(':').map(Number);
 
-  const h = parts[0] ?? 0
-  const m = parts[1] ?? 0
-  const s = parts[2] ?? 0
+  const h = parts[0] ?? 0;
+  const m = parts[1] ?? 0;
+  const s = parts[2] ?? 0;
 
-  return h * 3600 + m * 60 + s
-}
+  return h * 3600 + m * 60 + s;
+};
 
 export default class Helper {
   public date() {
@@ -67,7 +67,7 @@ export default class Helper {
 
     keys.forEach((i) => {
       if (
-        (data[i] &&
+        ((typeof data[i] === 'boolean' ? true : data[i]) &&
           data[i] !== undefined &&
           data[i] !== '' &&
           data[i] != 'null') ||
@@ -344,16 +344,16 @@ export default class Helper {
   }
 
   public calDurationTime(start: string, end: string): number {
-    if (!start || !end) return 0
+    if (!start || !end) return 0;
 
-    const totalStart = parseTimeToSeconds(start)
-    const totalEnd = parseTimeToSeconds(end)
+    const totalStart = parseTimeToSeconds(start);
+    const totalEnd = parseTimeToSeconds(end);
 
-    let duration = (totalEnd - totalStart) / 3600
+    let duration = (totalEnd - totalStart) / 3600;
 
-    if (duration < 0) duration += 24
+    if (duration < 0) duration += 24;
 
-    return duration
+    return duration;
   }
 
   public getOriginUrl(req: Request) {
@@ -376,7 +376,7 @@ export default class Helper {
     }));
   }
 
-  public async parseImportFile(file: any) {
+  public async parseImportFile(file: any, formatKey?: boolean) {
     const ext = file.name.split('.').pop()?.toLowerCase();
 
     if (ext === 'csv') {
@@ -392,7 +392,12 @@ export default class Helper {
 
       const headers: string[] = [];
       sheet.getRow(1).eachCell((cell, col) => {
-        const header = String(cell.value ?? '').trim();
+        const header = formatKey
+          ? String(cell.value ?? '')
+              .trim()
+              .toLowerCase()
+              .replace(/[\s/]+/g, '_')
+          : String(cell.value ?? '').trim();
         if (header) headers[col - 1] = header;
       });
 
@@ -416,6 +421,149 @@ export default class Helper {
       return rows;
     }
     throw new Error('Format file tidak didukung');
+  }
+
+  public async uploadBase64(
+    base64: string,
+    filename: string,
+    folder: string = '',
+    username: string = 'system',
+    type: string = 'local'
+  ) {
+    try {
+      // hapus prefix kalau ada (data:image/png;base64,...)
+      const matches = base64.match(/^data:(.+);base64,(.+)$/);
+      let ext = 'png';
+      let data = base64;
+
+      if (matches) {
+        const mimeType = matches[1];
+        data = matches[2];
+        ext = mimeType.split('/')[1];
+      }
+
+      const cleanFilename = filename.replace(/ /g, '');
+      const finalName = `${Date.now()}_${cleanFilename}.${ext}`;
+
+      const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const upload_path = `./public/uploads/${folder}/${month}`;
+
+      if (!fs.existsSync(upload_path)) {
+        fs.mkdirSync(upload_path, { recursive: true });
+      }
+
+      const filePath = path.join(upload_path, finalName);
+
+      // decode base64 → buffer
+      const buffer = Buffer.from(data, 'base64');
+
+      // simpan file
+      fs.writeFileSync(filePath, buffer);
+
+      console.log(filePath, 'filePath');
+
+      return filePath.replace('public', '');
+    } catch (err: any) {
+      console.warn(`upload ${type} error: ${err?.message}`);
+
+      if (teleConfig?.token) {
+        const telegram = new TelegramBot(teleConfig?.token);
+        await telegram.send(teleConfig?.chatId, err?.message);
+      }
+
+      return err?.message;
+    }
+  }
+
+  public checkExtentionBase64(base64: string, type: string = 'image') {
+    if (!base64) return 'file tidak valid';
+
+    // ambil mime & data
+    const matches = base64.match(/^data:(.+);base64,(.+)$/);
+    if (!matches) return 'format base64 tidak valid';
+
+    const mimeType = matches[1]; // contoh: image/png
+    const data = matches[2];
+
+    const ext = mimeType.split('/')[1]?.toLowerCase();
+
+    const allowedExt: any = {
+      image: ['jpg', 'jpeg', 'png', 'gif'],
+      video: ['mp4', 'webm', 'avi', 'mkv', 'mov', 'flv', 'mts', 'wmv'],
+      file: ['pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'],
+    };
+
+    // validasi ekstensi
+    if (!allowedExt[type]?.includes(ext)) {
+      return `file extension allowed *${allowedExt[type]?.join(', ')}.`;
+    }
+
+    // hitung size dari base64 (byte)
+    const buffer = Buffer.from(data, 'base64');
+    const size = buffer.length;
+
+    // validasi size khusus image (2MB)
+    if (type === 'image' && size > 2048000) {
+      return 'file size maksimal *2MB.';
+    }
+
+    return 'allowed';
+  }
+
+  public generateTimestamp() {
+    return Math.floor(Date.now() / 1000).toString();
+  }
+
+  public waliData(val: string, type: string = '') {
+    const wali: any = {
+      hubungan: ['Ayah', 'Ibu', 'Wali'],
+      pendidikan: [
+        'Tidak Sekolah',
+        'SD / MI',
+        'SMP / MTs',
+        'SMA / MA',
+        'SMK',
+        'D1',
+        'D2',
+        'D3',
+        'S1',
+        'S2',
+        'S3',
+        'Lainnya',
+      ],
+      pekerjaan: [
+        'Tidak Bekerja',
+        'Ibu Rumah Tangga',
+        'Petani',
+        'Buruh Harian',
+        'Nelayan',
+        'Wiraswasta',
+        'Pedagang',
+        'Karyawan Swasta',
+        'PNS',
+        'TNI / POLRI',
+        'Guru / Dosen',
+        'Pekerja Migran',
+        'Pensiunan',
+        'Lainnya',
+      ],
+      penghasilan: [
+        '< 1 juta',
+        '1–2 juta',
+        '2–3 juta',
+        '3–5 juta',
+        '> 5 juta',
+        'Tidak berpenghasilan',
+      ],
+    };
+    if (!type) return null;
+
+    const w = wali[type] || null;
+    if (w) {
+      const r = w.find((wv: any) => wv == val);
+      if (r) return val;
+    }
+    return null;
   }
 }
 

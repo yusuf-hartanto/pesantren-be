@@ -23,7 +23,17 @@ import ShiftPresensi from './shift.presensi.model';
 const date: string = helper.date();
 
 const generateDataExcel = (sheet: any, details: any) => {
-  sheet.addRow(['No', 'Kode Shift', 'Nama Shift', 'Kategori', 'Jam (Mulai - Selesai)', 'Toleransi', 'Wajib', 'Status', 'Keterangan']);
+  sheet.addRow([
+    'No',
+    'Kode Shift',
+    'Nama Shift',
+    'Kategori',
+    'Jam (Mulai - Selesai)',
+    'Toleransi',
+    'Wajib',
+    'Status',
+    'Keterangan',
+  ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
@@ -62,8 +72,12 @@ const normalizeRow = (row: any) => ({
   kode_shift: String(row['Kode Shift'] || '').trim(),
   nama_shift: String(row['Nama Shift'] || '').trim(),
   kategori_shift: String(row['Kategori'] || '').trim(),
-  waktu_mulai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[0],
-  waktu_selesai: String(row['Jam (Mulai - Selesai)'] || '').trim().split(' - ')[1],
+  waktu_mulai: String(row['Jam (Mulai - Selesai)'] || '')
+    .trim()
+    .split(' - ')[0],
+  waktu_selesai: String(row['Jam (Mulai - Selesai)'] || '')
+    .trim()
+    .split(' - ')[1],
   toleransi_menit:
     row['Toleransi'] !== undefined ? Number(row['Toleransi']) : null,
   wajib: String(row['Wajib'] || '').trim(),
@@ -74,8 +88,6 @@ const normalizeRow = (row: any) => ({
 });
 
 const validateRow = (row: any) => {
-  console.log(row)
-  
   const errors: string[] = [];
 
   if (!['Ya', 'Tidak'].includes(row.wajib)) {
@@ -102,7 +114,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`shift presensi list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `shift presensi list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -118,7 +134,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`shift presensi index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `shift presensi index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -171,9 +191,7 @@ export default class Controller {
       const check = await repository.detail({ id_shift: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      if (
-        kode_shift !== check.kode_shift
-      ) {
+      if (kode_shift !== check.kode_shift) {
         const duplicate = await repository.detail({ kode_shift });
 
         if (duplicate) {
@@ -319,13 +337,19 @@ export default class Controller {
         const existing = await repository.detail({ kode_shift });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx! });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         } else {
-          let newCreate = await ShiftPresensi.create({
-            ...payload,
-          }, { transaction: trx! });
+          let newCreate = await ShiftPresensi.create(
+            {
+              ...payload,
+            },
+            { transaction: trx! }
+          );
         }
       }
 
@@ -337,14 +361,9 @@ export default class Controller {
       };
 
       if (trx) {
-
         await trx.commit();
-        
-        return response.success(
-          'import shift presensi berhasil',
-          dataRes,
-          res
-        );
+
+        return response.success('import shift presensi berhasil', dataRes, res);
       }
 
       return response.success(
@@ -383,13 +402,19 @@ export default class Controller {
         });
 
         if (existing) {
-          await existing.update({
-            ...payload,
-          }, { transaction: trx });
+          await existing.update(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         } else {
-          let newCreate = await ShiftPresensi.create({
-            ...payload,
-          }, { transaction: trx });
+          let newCreate = await ShiftPresensi.create(
+            {
+              ...payload,
+            },
+            { transaction: trx }
+          );
         }
       }
 
@@ -405,7 +430,6 @@ export default class Controller {
       return helper.catchError(`Import batch gagal: ${err.message}`, 500, res);
     }
   }
-
 }
 
 export const shiftPresensi = new Controller();

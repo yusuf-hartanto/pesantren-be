@@ -5,14 +5,14 @@ import Resource from '../app/resource/resource.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class ActivityLog extends Model {
-  public id!: string;
-  public username!: string;
-  public table_name!: string;
-  public record_id!: string;
-  public action!: string;
-  public before_data!: JSON;
-  public after_data!: number | null;
-  public created_at!: string;
+  declare id: string;
+  declare username: string;
+  declare table_name: string;
+  declare record_id: string;
+  declare action: string;
+  declare before_data: JSON;
+  declare after_data: number | null;
+  declare created_at: string;
 }
 
 export function initActivityLog(sequelize: Sequelize) {

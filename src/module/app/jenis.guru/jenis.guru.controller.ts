@@ -107,7 +107,11 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`jenis guru mata pelajaran list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jenis guru mata pelajaran list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -123,7 +127,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`jenis guru mata pelajaran index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jenis guru mata pelajaran index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -136,28 +144,37 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`jenis guru mata pelajaran detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jenis guru mata pelajaran detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async create(req: Request, res: Response) {
     try {
-      const { nama_jenis_guru, id_guru, id_lembaga, id_mapel, id_tingkat } = req?.body;
+      const { nama_jenis_guru, id_guru, id_lembaga, id_mapel, id_tingkat } =
+        req?.body;
       const check = await repository.detail({ nama_jenis_guru });
       if (check) return response.failed(ALREADY_EXIST, 400, res);
       const data: Object = helper.only(variable.fillable(), req?.body);
       await repository.create({
         payload: {
           ...data,
-          id_guru: id_guru?.value || null, 
-          id_lembaga: id_lembaga?.value || null, 
-          id_mapel: id_mapel?.value || null, 
-          id_tingkat: id_tingkat?.value || null, 
+          id_guru: id_guru?.value || null,
+          id_lembaga: id_lembaga?.value || null,
+          id_mapel: id_mapel?.value || null,
+          id_tingkat: id_tingkat?.value || null,
         },
       });
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      return helper.catchError(`jenis guru mata pelajaran create: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jenis guru mata pelajaran create: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -171,16 +188,20 @@ export default class Controller {
       await repository.update({
         payload: {
           ...data,
-          id_guru: id_guru?.value || null, 
-          id_lembaga: id_lembaga?.value || null, 
-          id_mapel: id_mapel?.value || null, 
-          id_tingkat: id_tingkat?.value || null, 
+          id_guru: id_guru?.value || null,
+          id_lembaga: id_lembaga?.value || null,
+          id_mapel: id_mapel?.value || null,
+          id_tingkat: id_tingkat?.value || null,
         },
         condition: { id_jenisguru: id },
       });
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(`jenis guru mata pelajaran update: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jenis guru mata pelajaran update: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -194,10 +215,14 @@ export default class Controller {
       });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`jenis guru mata pelajaran delete: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `jenis guru mata pelajaran delete: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
-  
+
   public async export(req: Request, res: Response) {
     try {
       let condition: any = {};
@@ -228,7 +253,11 @@ export default class Controller {
 
       generateDataExcel(sheet, result);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
-      return response.success('export excel guru mata pelajaran', urlExcel, res);
+      return response.success(
+        'export excel guru mata pelajaran',
+        urlExcel,
+        res
+      );
     } catch (err: any) {
       return helper.catchError(
         `export excel guru mata pelajaran: ${err?.message}`,
@@ -392,7 +421,11 @@ export default class Controller {
 
       if (trx) {
         await trx.commit();
-        return response.success('import guru mata pelajaran berhasil', dataRes, res);
+        return response.success(
+          'import guru mata pelajaran berhasil',
+          dataRes,
+          res
+        );
       }
 
       return response.success(

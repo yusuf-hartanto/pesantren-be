@@ -7,19 +7,19 @@ import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Pegawai from '../pegawai/pegawai.model';
 
 export class Jabatan extends Model {
-  public id_jabatan!: string;
-  public nama_jabatan!: string;
-  public id_orgunit!: string;
-  public level_jabatan!: number;
-  public sifat_jabatan!: string;
-  public kode_jabatan!: string;
-  public keterangan!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  declare id_jabatan: string;
+  declare nama_jabatan: string;
+  declare id_orgunit: string;
+  declare level_jabatan: number;
+  declare sifat_jabatan: string;
+  declare kode_jabatan: string;
+  declare keterangan: string;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   // Relasi
-  public orgunit?: OrganizationUnit;
-  public pegawai?: Pegawai;
+  declare orgunit?: OrganizationUnit;
+  declare pegawai?: Pegawai;
 }
 
 export function initJabatan(sequelize: Sequelize) {
@@ -87,7 +87,7 @@ export function initJabatan(sequelize: Sequelize) {
       tableName: 'jabatan',
       timestamps: true,
       underscored: true,
-      paranoid: true
+      paranoid: true,
     }
   );
 
@@ -114,10 +114,10 @@ export function associateJabatan() {
   });
 
   Jabatan.hasMany(Pegawai, {
-    foreignKey: 'id_jabatan', 
-    as: 'pegawai',            
+    foreignKey: 'id_jabatan',
+    as: 'pegawai',
     onUpdate: 'CASCADE',
-    onDelete: 'SET NULL'
+    onDelete: 'SET NULL',
   });
 }
 

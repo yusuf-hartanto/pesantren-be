@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "92b355a6-1ca7-42cf-83e0-1bbc4a4620a6",
-    "name": "Skeleton TS API",
+    "name": "SADA API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "1830746"
   },
@@ -941,7 +941,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"status\": true,\n    \"message\": \"Hello from the Skeleton Typescript API RESTful API  !!!!!\",\n    \"data\": null\n}"
+              "body": "{\n    \"status\": true,\n    \"message\": \"Hello from the SADA API RESTful API  !!!!!\",\n    \"data\": null\n}"
             }
           ]
         },

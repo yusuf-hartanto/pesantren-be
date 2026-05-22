@@ -90,11 +90,11 @@ export const getTotalBobot = async ({
     total_bobot: number;
   };
 
-  const result = await JenisPenilaianBobot.findOne({
+  const result = (await JenisPenilaianBobot.findOne({
     attributes: [[fn('COALESCE', fn('SUM', col('bobot')), 0), 'total_bobot']],
     where: whereCondition,
     raw: true,
-  }) as TotalBobotResult | null;
+  })) as TotalBobotResult | null;
 
   return Number(result?.total_bobot ?? 0);
 };

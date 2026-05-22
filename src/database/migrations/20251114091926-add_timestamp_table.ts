@@ -8,7 +8,7 @@ export const up = async (queryInterface: QueryInterface) => {
     'mata_pelajaran',
     'jenis_jam_pelajaran',
     'jam_pelajaran',
-    'jenis_guru'
+    'jenis_guru',
   ];
 
   for (const table of tables) {
@@ -42,14 +42,16 @@ export const down = async (queryInterface: QueryInterface) => {
     'mata_pelajaran',
     'jenis_jam_pelajaran',
     'jam_pelajaran',
-    'jenis_guru'
+    'jenis_guru',
   ];
 
   for (const table of tables) {
     try {
       const tableDefinition = await queryInterface.describeTable(table);
-      if (tableDefinition.created_at) await queryInterface.removeColumn(table, 'created_at');
-      if (tableDefinition.updated_at) await queryInterface.removeColumn(table, 'updated_at');
+      if (tableDefinition.created_at)
+        await queryInterface.removeColumn(table, 'created_at');
+      if (tableDefinition.updated_at)
+        await queryInterface.removeColumn(table, 'updated_at');
     } catch (error: any) {
       console.error(`Gagal menghapus kolom di tabel ${table}:`, error.message);
     }

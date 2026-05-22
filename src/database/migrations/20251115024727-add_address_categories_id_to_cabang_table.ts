@@ -54,8 +54,15 @@ export default {
 
   async down(queryInterface: QueryInterface): Promise<void> {
     const tableDefinition = await queryInterface.describeTable('cabang');
-    
-    const columnsToRemove = ['province_id', 'city_id', 'district_id', 'sub_district_id', 'contact', 'email'];
+
+    const columnsToRemove = [
+      'province_id',
+      'city_id',
+      'district_id',
+      'sub_district_id',
+      'contact',
+      'email',
+    ];
 
     for (const colName of columnsToRemove) {
       if (tableDefinition[colName]) {

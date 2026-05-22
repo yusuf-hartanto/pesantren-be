@@ -6,18 +6,18 @@ import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
 
 export class LembagaPendidikanFormal extends Model {
-  public id_lembaga!: string;
-  public nama_lembaga!: string;
-  public keterangan!: string;
-  public jenis_lembaga!: string;
-  public status_akreditasi!: string;
-  public nomor_npsn!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public deleted_at!: Date | null; // Tambahkan properti deleted_at
+  declare id_lembaga: string;
+  declare nama_lembaga: string;
+  declare keterangan: string;
+  declare jenis_lembaga: string;
+  declare status_akreditasi: string;
+  declare nomor_npsn: string;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare deleted_at: Date | null; // Tambahkan properti deleted_at
 
   // Relasi
-  public cabang?: Cabang;
+  declare cabang?: Cabang;
 }
 
 export function initLembagaPendidikanFormal(sequelize: Sequelize) {
@@ -68,14 +68,14 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('created_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
       updated_at: {
         type: DataTypes.DATE,
         get() {
           const value = this.getDataValue('updated_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
       // 1. Tambahkan kolom deleted_at
       deleted_at: {
@@ -84,7 +84,7 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
         get() {
           const value = this.getDataValue('deleted_at');
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        }
+        },
       },
     },
     {
@@ -92,7 +92,7 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
       modelName: 'LembagaPendidikanFormal',
       tableName: 'lembaga_pendidikan_formal',
       // 2. Aktifkan timestamps dan paranoid
-      timestamps: true, 
+      timestamps: true,
       paranoid: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at',

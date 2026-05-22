@@ -2,22 +2,17 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
-import Pegawai from '../pegawai/pegawai.model';
-import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
-import Tingkat from '../tingkat/tingkat.model';
-
 export class ShiftPresensi extends Model {
-  public id_shift!: string;
-  public kode_shift!: string;
-  public nama_shift!: string;
-  public kategori_shift!: string;
-  public waktu_mulai!: Date;
-  public waktu_selesai!: Date;
-  public toleransi_menit!: number;
-  public is_wajib!: boolean;
-  public keterangan!: string;
-  public status!: string;
+  declare id_shift: string;
+  declare kode_shift: string;
+  declare nama_shift: string;
+  declare kategori_shift: string;
+  declare waktu_mulai: Date;
+  declare waktu_selesai: Date;
+  declare toleransi_menit: number;
+  declare is_wajib: boolean;
+  declare keterangan: string;
+  declare status: string;
 }
 
 export function initShiftPresensi(sequelize: Sequelize) {
@@ -48,16 +43,16 @@ export function initShiftPresensi(sequelize: Sequelize) {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      is_wajib: { 
+      is_wajib: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false 
+        defaultValue: false,
       },
       keterangan: {
         type: DataTypes.TEXT,
       },
       status: {
         type: DataTypes.ENUM('Aktif', 'Nonaktif'),
-      }
+      },
     },
     {
       sequelize,
@@ -76,8 +71,6 @@ export function initShiftPresensi(sequelize: Sequelize) {
   return ShiftPresensi;
 }
 
-export function associateShiftPresensi() {
-
-}
+export function associateShiftPresensi() {}
 
 export default ShiftPresensi;

@@ -2,22 +2,28 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
-//import Santri from '../santri/santri.model';
 import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 
 export class OrangTuaWali extends Model {
-  public id_wali!: string;
-  public id_santri!: string;
-  public nama_wali!: string;
-  public hubungan!: string;
-  public nik!: string;
-  public pendidikan!: string;
-  public pekerjaan!: string;
-  public no_hp!: string;
-  public alamat!: string;
+  declare id_wali: string;
+  declare id_santri: string;
+  declare nama_wali: string;
+  declare hubungan: string;
+  declare nik: string;
+  declare pendidikan: string;
+  declare pekerjaan: string;
+  declare no_hp: string;
+  declare alamat: string;
+  declare keterangan: string;
+  declare penghasilan: string;
+  declare province_id: string;
+  declare city_id: string;
+  declare district_id: string;
+  declare sub_district_id: string;
+  declare id_wali_sitrendi: string;
 }
 
 export function initOrangTuaWali(sequelize: Sequelize) {
@@ -111,6 +117,10 @@ export function initOrangTuaWali(sequelize: Sequelize) {
       },
       deleted_at: {
         type: DataTypes.DATE,
+      },
+      id_wali_sitrendi: {
+        type: DataTypes.STRING,
+        unique: true,
       },
     },
     {

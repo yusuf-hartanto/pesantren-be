@@ -16,34 +16,58 @@ export default {
       );
 
       if (results.length > 0) {
-        await queryInterface.removeConstraint('orgunit', 'orgunit_id_lembaga_fkey', { transaction });
+        await queryInterface.removeConstraint(
+          'orgunit',
+          'orgunit_id_lembaga_fkey',
+          { transaction }
+        );
       }
 
       // 2. Deskripsi tabel untuk cek kolom baru
       const tableDesc = await queryInterface.describeTable('orgunit');
 
       // 3. Jalankan perubahan satu per satu (Sequential), bukan Promise.all
-      await queryInterface.changeColumn('orgunit', 'id_lembaga', {
-        type: DataTypes.STRING,
-        allowNull: true,
-      }, { transaction });
+      await queryInterface.changeColumn(
+        'orgunit',
+        'id_lembaga',
+        {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        { transaction }
+      );
 
       if (!tableDesc.lembaga_type) {
-        await queryInterface.addColumn('orgunit', 'lembaga_type', {
-          type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
-          allowNull: true,
-        }, { transaction });
+        await queryInterface.addColumn(
+          'orgunit',
+          'lembaga_type',
+          {
+            type: DataTypes.ENUM('FORMAL', 'PESANTREN'),
+            allowNull: true,
+          },
+          { transaction }
+        );
       }
 
-      await queryInterface.changeColumn('orgunit', 'jenis_orgunit', {
-        type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
-        allowNull: true,
-      }, { transaction });
+      await queryInterface.changeColumn(
+        'orgunit',
+        'jenis_orgunit',
+        {
+          type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
+          allowNull: true,
+        },
+        { transaction }
+      );
 
-      await queryInterface.changeColumn('orgunit', 'keterangan', {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      }, { transaction });
+      await queryInterface.changeColumn(
+        'orgunit',
+        'keterangan',
+        {
+          type: DataTypes.TEXT,
+          allowNull: true,
+        },
+        { transaction }
+      );
 
       await transaction.commit();
     } catch (error) {
@@ -58,13 +82,20 @@ export default {
       const tableDesc = await queryInterface.describeTable('orgunit');
 
       if (tableDesc.lembaga_type) {
-        await queryInterface.removeColumn('orgunit', 'lembaga_type', { transaction });
+        await queryInterface.removeColumn('orgunit', 'lembaga_type', {
+          transaction,
+        });
       }
 
-      await queryInterface.changeColumn('orgunit', 'jenis_orgunit', {
-        type: DataTypes.STRING,
-        allowNull: true,
-      }, { transaction });
+      await queryInterface.changeColumn(
+        'orgunit',
+        'jenis_orgunit',
+        {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        { transaction }
+      );
 
       // Hapus type ENUM khusus Postgres
       await queryInterface.sequelize.query(
@@ -76,10 +107,15 @@ export default {
         { transaction }
       );
 
-      await queryInterface.changeColumn('orgunit', 'keterangan', {
-        type: DataTypes.STRING,
-        allowNull: true,
-      }, { transaction });
+      await queryInterface.changeColumn(
+        'orgunit',
+        'keterangan',
+        {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        { transaction }
+      );
 
       await transaction.commit();
     } catch (error) {

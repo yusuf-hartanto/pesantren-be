@@ -1,29 +1,30 @@
 'use strict';
 
-import { v4 as uuidv4 } from 'uuid';
-import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
-import Asrama from '../asrama/asrama.model';
-import Kamar from '../kamar/kamar.model';
+import { v4 as uuidv4 } from 'uuid';
+import Santri from '../santri/santri.model';
+import Lokasi from '../location/location.model';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export class PenempatanKamarSantri extends Model {
-  public id_penempatan!: string;
-  public id_santri!: string;
-  public id_asrama!: string;
-  public id_kamar!: string;
-  public id_tahunajaran!: string;
-  public tanggal_masuk!: Date;
-  public tanggal_keluar!: Date;
-  public status!: string;
-  public keterangan!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
+  declare id_penempatan: string;
+  declare id_santri: string;
+  declare id_lokasi: string;
+  declare id_tahunajaran: string;
+  declare tanggal_masuk: Date;
+  declare tanggal_keluar: Date;
+  declare status: string;
+  declare keterangan: string;
+  declare is_deleted: boolean;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare deleted_at: Date;
 
   // Relasi
-  public asrama?: Asrama;
-  public kamar?: Kamar;
-  public tahunAjaran?: TahunAjaran;
+  declare santri?: Santri;
+  declare lokasi?: Lokasi;
+  declare tahunAjaran?: TahunAjaran;
 }
 
 export function initPenempatanKamarSantri(sequelize: Sequelize) {
@@ -38,11 +39,7 @@ export function initPenempatanKamarSantri(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      id_asrama: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      id_kamar: {
+      id_lokasi: {
         type: DataTypes.STRING,
         allowNull: true,
       },
@@ -51,64 +48,37 @@ export function initPenempatanKamarSantri(sequelize: Sequelize) {
         allowNull: true,
       },
       tanggal_masuk: {
-        type: DataTypes.DATE,
-        get() {
-          const value = this.getDataValue('tanggal_masuk');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('tanggal_masuk', formattedValue);
-        },
+        type: DataTypes.DATEONLY,
+        allowNull: true,
       },
       tanggal_keluar: {
-        type: DataTypes.DATE,
-        get() {
-          const value = this.getDataValue('tanggal_keluar');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('tanggal_keluar', formattedValue);
-        },
+        type: DataTypes.DATEONLY,
+        allowNull: true,
       },
       status: {
         type: DataTypes.ENUM('Aktif', 'Non-Aktif'),
-        allowNull: true,
+        defaultValue: 'Aktif',
       },
       keterangan: {
         type: DataTypes.TEXT,
         allowNull: true,
+        defaultValue: false,
+      },
+      is_deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
       created_at: {
         type: DataTypes.DATE,
-        get() {
-          const value = this.getDataValue('created_at');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('created_at', formattedValue);
-        },
+        defaultValue: DataTypes.NOW,
       },
       updated_at: {
         type: DataTypes.DATE,
-        get() {
-          const value = this.getDataValue('updated_at');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
-        },
-        set(value) {
-          const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          this.setDataValue('updated_at', formattedValue);
-        },
+        defaultValue: DataTypes.NOW,
+      },
+      deleted_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
     },
     {
@@ -134,23 +104,16 @@ export function initPenempatanKamarSantri(sequelize: Sequelize) {
 }
 
 export function associatePenempatanKamarSantri() {
-  // PenempatanKamarSantri.belongsTo(Santri, {
-  //   foreignKey: 'id_asrama',
-  //   as: 'asrama',
-  //   onUpdate: 'CASCADE',
-  //   onDelete: 'SET NULL'
-  // });
-
-  PenempatanKamarSantri.belongsTo(Asrama, {
-    foreignKey: 'id_asrama',
-    as: 'asrama',
+  PenempatanKamarSantri.belongsTo(Santri, {
+    foreignKey: 'id_santri',
+    as: 'santri',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });
 
-  PenempatanKamarSantri.belongsTo(Kamar, {
-    foreignKey: 'id_kamar',
-    as: 'kamar',
+  PenempatanKamarSantri.belongsTo(Lokasi, {
+    foreignKey: 'id_lokasi',
+    as: 'lokasi',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });

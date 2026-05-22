@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './lembaga.pendidikan.formal.model';
 import Cabang from '../cabang/cabang.model';
 
@@ -50,11 +50,19 @@ export default class Repository {
     if (keyword) {
       query.where = {
         [Op.or]: [
-          { nama_lembaga: { [Op.like]: keyword } },
-          { keterangan: { [Op.like]: keyword } },
-          { jenis_lembaga: { [Op.like]: keyword } },
-          { nomor_npsn: { [Op.like]: keyword } },
-          { '$cabang.nama_cabang$': { [Op.like]: keyword } },
+          { nama_lembaga: { [Op.iLike]: keyword } },
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { keterangan: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
         ],
       };
     }
@@ -88,7 +96,7 @@ export default class Repository {
   public update(data: any) {
     return Model.update(data?.payload, {
       where: data?.condition,
-      individualHooks: true // Penting jika ada hook beforeUpdate
+      individualHooks: true, // Penting jika ada hook beforeUpdate
     });
   }
 
@@ -96,6 +104,95 @@ export default class Repository {
     return Model.destroy({
       where: data?.condition,
     });
+  }
+
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+      whereClause = {
+        [Op.or]: [
+          { nama_lembaga: { [Op.iLike]: keyword } },
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { keterangan: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
+            { [Op.iLike]: keyword }
+          ),
+          { nomor_npsn: { [Op.iLike]: keyword } },
+          { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
+        ],
+      };
+    }
+
+    return Model.findAll({
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          attributes: ['nama_cabang'],
+        },
+      ],
+      order: [['nama_lembaga', 'ASC']],
+    });
+  }
+
+  public findByName(name: string) {
+    return Model.findOne({
+      where: Model.sequelize?.where(
+        Model.sequelize.fn('LOWER', Model.sequelize.col('nama_lembaga')),
+        name.toLowerCase().trim()
+      ),
+    });
+  }
+
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+
+    try {
+      for (const item of payloads) {
+        await this.upsertImport(item, trx);
+      }
+
+      if (trx) await trx.commit();
+      return true;
+    } catch (error) {
+      if (trx) await trx.rollback();
+      throw error;
+    }
+  }
+
+  public async upsertImport(payload: any, transaction: any = null) {
+    const existing = await this.findByName(payload.nama_lembaga);
+
+    if (existing) {
+      return await existing.update(
+        {
+          ...payload,
+        },
+        { transaction }
+      );
+    } else {
+      return await Model.create(
+        {
+          ...payload,
+        },
+        { transaction }
+      );
+    }
   }
 }
 

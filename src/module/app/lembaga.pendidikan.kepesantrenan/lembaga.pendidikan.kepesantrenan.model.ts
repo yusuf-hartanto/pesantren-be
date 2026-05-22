@@ -6,18 +6,18 @@ import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
 
 export class LembagaPendidikanKepesantrenan extends Model {
-  public id_lembaga!: string;
-  public nama_lembaga!: string;
-  public id_cabang!: string | null;
-  public keterangan!: string | null;
+  declare id_lembaga: string;
+  declare nama_lembaga: string;
+  declare id_cabang: string | null;
+  declare keterangan: string | null;
 
   // Timestamps otomatis
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at!: Date | null;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
+  declare readonly deleted_at: Date | null;
 
   // Relasi
-  public cabang?: Cabang;
+  declare cabang?: Cabang;
 }
 
 export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
@@ -40,7 +40,7 @@ export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
-      // Kita tetap gunakan Getters untuk format tampilan di API, 
+      // Kita tetap gunakan Getters untuk format tampilan di API,
       // tapi biarkan Sequelize yang mengelola datanya secara otomatis.
       created_at: {
         type: DataTypes.DATE,
@@ -69,9 +69,9 @@ export function initLembagaPendidikanKepesantrenan(sequelize: Sequelize) {
       tableName: 'lembaga_pendidikan_kepesantrenan',
 
       // KONFIGURASI OTOMATIS:
-      timestamps: true,   // Mengaktifkan created_at & updated_at otomatis
-      paranoid: true,     // Mengaktifkan deleted_at otomatis (Soft Delete)
-      underscored: true,  // Memastikan format snake_case di database
+      timestamps: true, // Mengaktifkan created_at & updated_at otomatis
+      paranoid: true, // Mengaktifkan deleted_at otomatis (Soft Delete)
+      underscored: true, // Memastikan format snake_case di database
 
       // Mapping nama kolom database ke properti model
       createdAt: 'created_at',

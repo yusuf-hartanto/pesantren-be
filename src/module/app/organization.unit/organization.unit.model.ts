@@ -10,24 +10,24 @@ import LembagaPendidikan, {
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
 export class OrganizationUnit extends Model {
-  public id_orgunit!: string;
-  public nama_orgunit!: string;
-  public parent_id!: string | null;
-  public level_orgunit!: number;
-  public id_cabang!: string;
-  public id_lembaga!: string | null;
-  public jenis_orgunit!: 'Biro' | 'Bagian' | 'Lembaga' | 'Sub-Unit' | 'Umum';
-  public lembaga_type!: 'FORMAL' | 'PESANTREN' | null;
-  public keterangan!: string;
+  declare id_orgunit: string;
+  declare nama_orgunit: string;
+  declare parent_id: string | null;
+  declare level_orgunit: number;
+  declare id_cabang: string;
+  declare id_lembaga: string | null;
+  declare jenis_orgunit: 'Biro' | 'Bagian' | 'Lembaga' | 'Sub-Unit' | 'Umum';
+  declare lembaga_type: 'FORMAL' | 'PESANTREN' | null;
+  declare keterangan: string;
 
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at!: Date | null;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
+  declare readonly deleted_at: Date | null;
 
   // Relasi
-  public cabang?: Cabang;
-  public parent?: OrganizationUnit;
-  public children?: OrganizationUnit;
+  declare cabang?: Cabang;
+  declare parent?: OrganizationUnit;
+  declare children?: OrganizationUnit;
 }
 
 export function initOrganizationUnit(sequelize: Sequelize) {
@@ -44,7 +44,7 @@ export function initOrganizationUnit(sequelize: Sequelize) {
       parent_id: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: { model: 'orgunit', key: 'id_orgunit' }
+        references: { model: 'orgunit', key: 'id_orgunit' },
       },
       level_orgunit: {
         type: DataTypes.INTEGER,
@@ -77,7 +77,7 @@ export function initOrganizationUnit(sequelize: Sequelize) {
       tableName: 'orgunit',
       underscored: true, // Otomatis mengubah createdAt jadi created_at
       timestamps: true,
-      paranoid: true,    // Aktifkan Soft Delete
+      paranoid: true, // Aktifkan Soft Delete
       createdAt: 'created_at',
       updatedAt: 'updated_at',
       deletedAt: 'deleted_at',

@@ -3,57 +3,75 @@
 import { Op, QueryTypes, Sequelize } from 'sequelize';
 import Model from './jenis.penilaian.bobot.model';
 import { rawQuery } from '../../../helpers/rawQuery';
+import JenisPenilaian from '../jenis.penilaian/jenis.penilaian.model';
+import Tingkat from '../tingkat/tingkat.model';
+import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export default class Repository {
-	public async validateBobotLogic(data: any, id_bobot?: string) {
-		const { id_penilaian, lembaga_type, id_lembaga, id_tingkat, id_tahunajaran, bobot, status } = data;
+  public async validateBobotLogic(data: any, id_bobot?: string) {
+    const {
+      id_penilaian,
+      lembaga_type,
+      id_lembaga,
+      id_tingkat,
+      id_tahunajaran,
+      bobot,
+      status,
+    } = data;
 
-		// 1. Validasi Unik: Kombinasi data tidak boleh ganda
-		const existingRecord = await Model.findOne({
-			where: {
-				id_penilaian,
-				lembaga_type,
-				id_lembaga,
-				id_tingkat: id_tingkat || null,
-				id_tahunajaran,
-				id_bobot: id_bobot ? { [Op.ne]: id_bobot } : { [Op.ne]: null }
-			}
-		});
+    // 1. Validasi Unik: Kombinasi data tidak boleh ganda
+    const existingRecord = await Model.findOne({
+      where: {
+        id_penilaian,
+        lembaga_type,
+        id_lembaga,
+        id_tingkat: id_tingkat || null,
+        id_tahunajaran,
+        id_bobot: id_bobot ? { [Op.ne]: id_bobot } : { [Op.ne]: null },
+      },
+    });
 
-		if (existingRecord) {
-			throw new Error('Kombinasi penilaian untuk lembaga, tingkat, dan tahun ajaran ini sudah ada.');
-		}
+    if (existingRecord) {
+      throw new Error(
+        'Kombinasi penilaian untuk lembaga, tingkat, dan tahun ajaran ini sudah ada.'
+      );
+    }
 
-		// 2. Validasi Total Bobot 100%
-		// Hanya validasi jika statusnya 'Aktif'
-		if (status === 'Aktif') {
-			// Ambil semua bobot aktif lainnya dalam kelompok yang sama
-			const otherBobots = await Model.findAll({
-				where: {
-					lembaga_type,
-					id_lembaga,
-					id_tingkat: id_tingkat || null,
-					id_tahunajaran,
-					status: 'Aktif',
-					id_bobot: id_bobot ? { [Op.ne]: id_bobot } : { [Op.ne]: null }
-				}
-			});
+    // 2. Validasi Total Bobot 100%
+    // Hanya validasi jika statusnya 'Aktif'
+    if (status === 'Aktif') {
+      // Ambil semua bobot aktif lainnya dalam kelompok yang sama
+      const otherBobots = await Model.findAll({
+        where: {
+          lembaga_type,
+          id_lembaga,
+          id_tingkat: id_tingkat || null,
+          id_tahunajaran,
+          status: 'Aktif',
+          id_bobot: id_bobot ? { [Op.ne]: id_bobot } : { [Op.ne]: null },
+        },
+      });
 
-			const currentTotal = otherBobots.reduce((sum, item) => sum + parseFloat(item.bobot.toString()), 0);
-			const newTotal = currentTotal + parseFloat(bobot);
+      const currentTotal = otherBobots.reduce(
+        (sum, item) => sum + parseFloat(item.bobot.toString()),
+        0
+      );
+      const newTotal = currentTotal + parseFloat(bobot);
 
-			if (newTotal > 100) {
-				throw new Error(`Total bobot melebihi 100% (Saat ini: ${currentTotal}%, Ditambah: ${bobot}% = ${newTotal}%).`);
-			}
-		}
-	}
+      if (newTotal > 100) {
+        throw new Error(
+          `Total bobot melebihi 100% (Saat ini: ${currentTotal}%, Ditambah: ${bobot}% = ${newTotal}%).`
+        );
+      }
+    }
+  }
 
-	public async list(data: any) {
-		const keyword = data?.keyword ? `%${data.keyword}%` : null;
+  public async list(data: any) {
+    const keyword = data?.keyword ? `%${data.keyword}%` : null;
 
-		const whereClause = keyword ? `WHERE jp.singkatan ILIKE :keyword` : '';
+    const whereClause = keyword ? `WHERE jp.singkatan ILIKE :keyword` : '';
 
-		const query = `
+    const query = `
 		SELECT 
 			jpb.id_bobot,
 			jp.id_penilaian,
@@ -83,32 +101,31 @@ export default class Repository {
 		ORDER BY jpb.id_bobot DESC
     `;
 
-		const conn = await rawQuery.getConnection();
-		const results = await conn.query(query, {
-			type: QueryTypes.SELECT,
-			replacements: {
-				keyword,
-			},
-		});
+    const conn = await rawQuery.getConnection();
+    const results = await conn.query(query, {
+      type: QueryTypes.SELECT,
+      replacements: {
+        keyword,
+      },
+    });
 
-		return results;
-	}
+    return results;
+  }
 
-	public async index(data: {
-		keyword?: string;
-		offset?: number;
-		limit?: number;
-	}) {
-		// 1. Persiapkan Parameter
-		const keyword = data?.keyword ? `%${data.keyword}%` : null;
-		const limit = data?.limit ? parseInt(data.limit.toString(), 10) : 10;
-		const offset = data?.offset ? parseInt(data.offset.toString(), 10) : 0;
+  public async index(data: {
+    keyword?: string;
+    offset?: number;
+    limit?: number;
+  }) {
+    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const limit = data?.limit ? parseInt(data.limit.toString(), 10) : 10;
+    const offset = data?.offset ? parseInt(data.offset.toString(), 10) : 0;
 
-		// 2. WHERE Clause Lengkap (Soft Delete + Keyword Filter)
-		// Gunakan casting ::TEXT pada ENUM (lembaga_type, status) dan DECIMAL (bobot)
-		const whereClause = `
+    const whereClause = `
         WHERE jpb.deleted_at IS NULL
-        ${keyword ? `AND (
+        ${
+          keyword
+            ? `AND (
             jp.singkatan ILIKE :keyword OR
             jpb.lembaga_type::TEXT ILIKE :keyword OR
             t.tingkat ILIKE :keyword OR
@@ -117,11 +134,12 @@ export default class Repository {
             jpb.status::TEXT ILIKE :keyword OR
             lf.nama_lembaga ILIKE :keyword OR
             lp.nama_lembaga ILIKE :keyword
-        )` : ''}
+        )`
+            : ''
+        }
     `;
 
-		// 3. Query Data Utama
-		const queryData = `
+    const queryData = `
         SELECT 
             jpb.id_bobot,
             jp.id_penilaian,
@@ -152,8 +170,7 @@ export default class Repository {
         LIMIT :limit OFFSET :offset
     `;
 
-		// 4. Query Count (Sama dengan WHERE Clause data utama)
-		const queryCount = `
+    const queryCount = `
         SELECT COUNT(*) AS total
         FROM jenis_penilaian_bobot jpb
         LEFT JOIN jenis_penilaian jp ON jpb.id_penilaian = jp.id_penilaian
@@ -166,45 +183,46 @@ export default class Repository {
         ${whereClause}
     `;
 
-		try {
-			const conn = await rawQuery.getConnection();
+    try {
+      const conn = await rawQuery.getConnection();
 
-			// 5. Eksekusi secara paralel untuk performa maksimal
-			const [dataResult, countResult]: [any[], any[]] = await Promise.all([
-				conn.query(queryData, {
-					type: QueryTypes.SELECT,
-					replacements: { keyword, limit, offset },
-				}),
-				conn.query(queryCount, {
-					type: QueryTypes.SELECT,
-					replacements: { keyword },
-				}),
-			]);
+      const [dataResult, countResult]: [any[], any[]] = await Promise.all([
+        conn.query(queryData, {
+          type: QueryTypes.SELECT,
+          replacements: { keyword, limit, offset },
+        }),
+        conn.query(queryCount, {
+          type: QueryTypes.SELECT,
+          replacements: { keyword },
+        }),
+      ]);
 
-			const total = parseInt(countResult[0]?.total || '0', 10);
+      const total = parseInt(countResult[0]?.total || '0', 10);
 
-			return {
-				rows: dataResult,
-				count: total,
-			};
-		} catch (error: any) {
-			throw new Error(`Repository Jenis Penilaian Bobot Index: ${error.message}`);
-		}
-	}
+      return {
+        rows: dataResult,
+        count: total,
+      };
+    } catch (error: any) {
+      throw new Error(
+        `Repository Jenis Penilaian Bobot Index: ${error.message}`
+      );
+    }
+  }
 
-	public async detail(condition: { id_bobot?: string }) {
-		let whereConditions: string[] = [];
+  public async detail(condition: { id_bobot?: string }) {
+    let whereConditions: string[] = [];
 
-		if (condition.id_bobot) {
-			whereConditions.push(`jpb.id_bobot::text = :id_bobot`);
-		}
+    if (condition.id_bobot) {
+      whereConditions.push(`jpb.id_bobot::text = :id_bobot`);
+    }
 
-		const whereClause =
-			whereConditions.length > 0
-				? `WHERE ${whereConditions.join(' AND ')}`
-				: '';
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
 
-		const queryData = `
+    const queryData = `
 			SELECT 
 				jpb.id_bobot,
 				jp.id_penilaian,
@@ -235,31 +253,137 @@ export default class Repository {
 			LIMIT 1
 		`;
 
-		const conn = await rawQuery.getConnection();
+    const conn = await rawQuery.getConnection();
 
-		const dataResult = await conn.query(queryData, {
-			type: QueryTypes.SELECT,
-			replacements: condition,
-		});
+    const dataResult = await conn.query(queryData, {
+      type: QueryTypes.SELECT,
+      replacements: condition,
+    });
 
-		return dataResult;
-	}
+    return dataResult;
+  }
 
-	public async create(data: any) {
-		return Model.bulkCreate(data.payload);
-	}
+  public async create(data: any) {
+    return Model.bulkCreate(data.payload);
+  }
 
-	public update(data: any) {
-		return Model.update(data?.payload, {
-			where: data?.condition,
-		});
-	}
+  public update(data: any) {
+    return Model.update(data?.payload, {
+      where: data?.condition,
+    });
+  }
 
-	public delete(data: any) {
-		return Model.destroy({
-			where: data?.condition,
-		});
-	}
+  public delete(data: any) {
+    return Model.destroy({
+      where: data?.condition,
+    });
+  }
+
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
+
+    let whereClause: any = {};
+
+    if (!isTemplate && keyword) {
+      whereClause[Op.or] = [
+        { '$jenisPenilaian.jenis_pengujian$': { [Op.iLike]: keyword } },
+        { '$jenisPenilaian.singkatan$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.cast(
+            Sequelize.col('JenisPenilaianBobot.lembaga_type'),
+            'text'
+          ),
+          { [Op.iLike]: keyword }
+        ),
+        { '$tingkat.tingkat$': { [Op.iLike]: keyword } },
+        { '$tahunAjaran.tahun_ajaran$': { [Op.iLike]: keyword } },
+      ];
+    }
+
+    return Model.findAll({
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
+      include: [
+        {
+          model: JenisPenilaian,
+          as: 'jenisPenilaian',
+          attributes: ['id_penilaian', 'jenis_pengujian', 'singkatan'],
+        },
+        {
+          model: Tingkat,
+          as: 'tingkat',
+          attributes: ['id_tingkat', 'tingkat'],
+        },
+        {
+          model: TahunAjaran,
+          as: 'tahunAjaran',
+          attributes: ['id_tahunajaran', 'tahun_ajaran'],
+        },
+        {
+          model:
+            require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model')
+              .default,
+          as: 'lembagaPendidikanFormal',
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
+        {
+          model:
+            require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model')
+              .default,
+          as: 'lembagaPendidikanKepesantrenan',
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
+      ],
+      order: [['created_at', 'DESC']],
+    });
+  }
+
+  public async checkDuplicate(payload: any, id?: string) {
+    const condition: any = {
+      id_penilaian: payload.id_penilaian,
+      id_tahunajaran: payload.id_tahunajaran,
+      id_lembaga: payload.id_lembaga,
+      id_tingkat: payload.id_tingkat || null,
+      lembaga_type: payload.lembaga_type,
+    };
+    if (id) condition.id_bobot = { [Op.ne]: id };
+
+    return Model.findOne({ where: condition });
+  }
+
+  public async insertImport(payloads: any[]) {
+    const trx = await Model.sequelize?.transaction();
+    try {
+      for (const item of payloads) {
+        const existing = await Model.findOne({
+          where: {
+            id_penilaian: item.id_penilaian,
+            id_tahunajaran: item.id_tahunajaran,
+            id_lembaga: item.id_lembaga,
+            id_tingkat: item.id_tingkat || null,
+            lembaga_type: item.lembaga_type,
+          },
+        });
+
+        if (existing) {
+          await existing.update(item, { transaction: trx });
+        } else {
+          await Model.create(item, { transaction: trx });
+        }
+      }
+      await trx?.commit();
+      return true;
+    } catch (error) {
+      await trx?.rollback();
+      throw error;
+    }
+  }
 }
 
 export const repository = new Repository();

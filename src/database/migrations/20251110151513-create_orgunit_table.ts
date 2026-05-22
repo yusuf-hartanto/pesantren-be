@@ -18,7 +18,7 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: 'orgunit', 
+        model: 'orgunit',
         key: 'id_orgunit',
       },
       onUpdate: 'CASCADE',
@@ -27,7 +27,7 @@ export const up = async (queryInterface: QueryInterface) => {
     level_orgunit: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: 0
+      defaultValue: 0,
     },
     id_cabang: {
       type: DataTypes.STRING,
@@ -47,7 +47,7 @@ export const up = async (queryInterface: QueryInterface) => {
       // Menggunakan ENUM agar sinkron dengan model
       type: DataTypes.ENUM('Biro', 'Bagian', 'Lembaga', 'Sub-Unit', 'Umum'),
       allowNull: false,
-      defaultValue: 'Umum'
+      defaultValue: 'Umum',
     },
     lembaga_type: {
       type: DataTypes.ENUM('FORMAL', 'PESANTREN'),

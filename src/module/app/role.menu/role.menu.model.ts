@@ -5,20 +5,20 @@ import AppMenu from '../menu/menu.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class AppRoleMenu extends Model {
-  public role_menu_id!: string;
-  public role_id!: string;
-  public menu_id!: string;
-  public create!: number;
-  public edit!: number;
-  public delete!: number;
-  public approve!: number;
-  public import!: number;
-  public export!: number;
-  public status!: number;
-  public created_by!: string;
-  public created_date!: Date;
-  public modified_by!: string;
-  public modified_date!: Date;
+  declare role_menu_id: string;
+  declare role_id: string;
+  declare menu_id: string;
+  declare create: number;
+  declare edit: number;
+  declare delete: number;
+  declare approve: number;
+  declare import: number;
+  declare export: number;
+  declare status: number;
+  declare created_by: string;
+  declare created_date: Date;
+  declare modified_by: string;
+  declare modified_date: Date;
 }
 
 export function initAppRoleMenu(sequelize: Sequelize) {

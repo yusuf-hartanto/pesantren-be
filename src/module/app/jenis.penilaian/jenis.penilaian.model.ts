@@ -5,16 +5,16 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
 
 export class JenisPenilaian extends Model {
-  public id_penilaian!: string;
-  public singkatan!: string;
-  public jenis_pengujian!: string;
-  public lembaga_type!: 'FORMAL' | 'PESANTREN';
-  public is_ujian!: number;
-  public status!: 'active' | 'inactive';
-  public keterangan!: string;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public deleted_at!: Date;
+  declare id_penilaian: string;
+  declare singkatan: string;
+  declare jenis_pengujian: string;
+  declare lembaga_type: 'FORMAL' | 'PESANTREN';
+  declare is_ujian: number;
+  declare status: 'active' | 'inactive';
+  declare keterangan: string;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare deleted_at: Date;
 }
 
 export function initJenisPenilaian(sequelize: Sequelize) {
@@ -83,7 +83,7 @@ export function initJenisPenilaian(sequelize: Sequelize) {
     }
   );
 
-JenisPenilaian.beforeCreate((jenisPenilaian) => {
+  JenisPenilaian.beforeCreate((jenisPenilaian) => {
     jenisPenilaian?.setDataValue('id_penilaian', uuidv4());
   });
 
