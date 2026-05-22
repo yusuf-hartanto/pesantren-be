@@ -63,6 +63,7 @@ import { kebersihanTemuanSchema } from './kebersihan.temuan/kebersihan.temuan.sc
 import { kebersihanScanLog } from './kebersihan.scan.log/kebersihan.scan.log.controller';
 import { kebersihanScanLogSchema } from './kebersihan.scan.log/kebersihan.scan.log.schema';
 import { santri } from '../app/santri/santri.controller';
+import { AbsenHarianSantriController } from './absen.harian.santri/absen.harian.santri.controller';
 
 const router: Router = Router();
 
@@ -769,6 +770,18 @@ router.post(
   auth.checkBearerToken,
   PenempatanKamarSantri.insert
 );
+
+
+router.get('/absen-harian-santri', auth.checkBearerToken, AbsenHarianSantriController.index);
+router.get('/absen-harian-santri/santri-kamar', auth.checkBearerToken, AbsenHarianSantriController.getSantriKamarReady);
+router.get('/absen-harian-santri/shift-presensi', auth.checkBearerToken, AbsenHarianSantriController.findAsramaShift);
+router.post('/absen-harian-santri', auth.checkBearerToken, AbsenHarianSantriController.saveKamarPresensi);
+router.post('/absen-harian-santri/scan-qr', auth.checkBearerToken, AbsenHarianSantriController.scanQrPresensi);
+router.post('/absen-harian-santri/export', auth.checkBearerToken, AbsenHarianSantriController.export);
+router.post('/absen-harian-santri/import', auth.checkBearerToken, AbsenHarianSantriController.import);
+router.post('/absen-harian-santri/insert', auth.checkBearerToken, AbsenHarianSantriController.insert);
+router.get('/absen-harian-santri/:id', auth.checkBearerToken, AbsenHarianSantriController.detail);
+router.put('/absen-harian-santri/:id', auth.checkBearerToken, AbsenHarianSantriController.update);
 
 router.get(
   '/kegiatan-akademik/all-data',

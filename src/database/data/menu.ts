@@ -309,6 +309,14 @@ export default class DataMenu {
         seq_number: 4,
         status: 1,
       },
+      {
+        parent_id: 3,
+        menu_name: 'Absen Harian Santri',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/absen-harian-santri/list',
+        seq_number: 5,
+        status: 1,
+      },
     ];
   }
 }
