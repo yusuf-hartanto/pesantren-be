@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './location.model';
 import { helper } from '../../../helpers/helper';
 import { number } from 'zod';
@@ -93,7 +93,10 @@ export default class Repository {
       query.where = {
         [Op.or]: [
           { nama_lokasi: { [Op.like]: keyword } },
-          { jenis_lokasi: { [Op.like]: keyword } },
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('Lokasi.jenis_lokasi'), 'text'),
+            { [Op.iLike]: keyword }
+          ),
           { kode_lokasi: { [Op.like]: keyword } },
           { keterangan: { [Op.like]: keyword } },
           { '$parent.nama_lokasi$': { [Op.like]: keyword } },

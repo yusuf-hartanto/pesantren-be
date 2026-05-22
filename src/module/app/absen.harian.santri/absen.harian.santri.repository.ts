@@ -105,6 +105,16 @@ export default class Repository {
     });
   }
 
+  public async checkExistingAbsen(criteria: { id_santri: string; tanggal: string; id_shift_presensi: string | null }) {
+    return await Model.findOne({
+      where: {
+        id_santri: criteria.id_santri,
+        tanggal: criteria.tanggal,
+        id_shift_presensi: criteria.id_shift_presensi
+      }
+    });
+  }
+
   public async detail(condition: { id_absen?: string }) {
     return await Model.findOne({
       where: condition,
@@ -206,29 +216,42 @@ export default class Repository {
     return await Model.findAndCountAll(query);
   }
 
-  public async findSantriAndRoomByNis(nis: string, tanggal: string) {
+  public async findSantriAndRoomByNis(nis: string, tanggal: string, id_lokasi?: string) {
     const targetDate = moment(tanggal).format('YYYY-MM-DD');
+
+    // Susun kondisi default untuk penempatan kamar
+    const penempatanWhere: any = {
+      status: 'Aktif',
+      is_deleted: false,
+      tanggal_masuk: { [Op.lte]: targetDate },
+      [Op.or]: [
+        { tanggal_keluar: null },
+        { tanggal_keluar: { [Op.gte]: targetDate } }
+      ]
+    };
+
+    // Jika id_lokasi dikirim dari controller, kunci langsung di query ini
+    if (id_lokasi) {
+      penempatanWhere.id_lokasi = id_lokasi;
+    }
 
     return await AppSantri.findOne({
       where: {
-        nis: nis,
-        status: 1 // Santri aktif
+        status: 1, // Santri aktif
+        [Op.or]: [
+          { nis: nis },
+          { id_santri: nis }
+        ]
       },
       attributes: ['id_santri', 'fullname', 'nis'],
       include: [
         {
           model: PenempatanKamarSantri,
           as: 'penempatanKamar',
-          where: {
-            status: 'Aktif',
-            is_deleted: false,
-            tanggal_masuk: { [Op.lte]: targetDate },
-            [Op.or]: [
-              { tanggal_keluar: null },
-              { tanggal_keluar: { [Op.gte]: targetDate } }
-            ]
-          },
-          required: false,
+          where: penempatanWhere,
+          // Ubah menjadi true agar jika kondisi kamar tidak terpenuhi, 
+          // query langsung mengembalikan null (tidak tanggung/setengah ketemu)
+          required: true, 
           attributes: ['id_lokasi']
         }
       ]

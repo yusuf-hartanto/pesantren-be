@@ -64,4 +64,7 @@ export const scanQrAbsenSchema = z.object({
   nis: z.string()
     .min(1, { message: 'NIS santri wajib dikirimkan' }).trim().min(1),
   waktu_custom: z.string().optional(), 
-  tanggal_custom: z.string().optional()})
+  tanggal_custom: z.string().optional(),
+  id_shift_presensi: z.string().optional(),
+  id_lokasi: z.string().optional()
+})
