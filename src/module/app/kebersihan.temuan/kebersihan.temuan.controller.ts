@@ -7,7 +7,6 @@ import { variable } from './kebersihan.temuan.variable';
 import { response } from '../../../helpers/response';
 import { repository } from './kebersihan.temuan.repository';
 import {
-  ALREADY_EXIST,
   NOT_FOUND,
   SUCCESS_DELETED,
   SUCCESS_RETRIEVED,
@@ -79,7 +78,19 @@ export default class Controller {
   public async index(req: Request, res: Response) {
     try {
       const query = helper.fetchQueryRequest(req);
-      const { count, rows } = await repository.index(query);
+      const id_cabang: any = req?.query?.id_cabang || '';
+      const id_lokasi: any = req?.query?.id_lokasi || '';
+      const id_petugas: any = req?.query?.id_petugas || '';
+      const tanggal_awal: any = req?.query?.tanggal_awal || '';
+      const tanggal_akhir: any = req?.query?.tanggal_akhir || '';
+      const { count, rows } = await repository.index({
+        ...query,
+        id_cabang,
+        id_lokasi,
+        id_petugas,
+        tanggal_awal,
+        tanggal_akhir,
+      });
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(
@@ -212,13 +223,25 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      let condition: any = {};
-      const { q, template } = req?.body;
+      const { q, template,
+        id_cabang,
+        id_lokasi,
+        id_petugas,
+        tanggal_awal,
+        tanggal_akhir
+      } = req?.body;
       const isTemplate: boolean = template && template == '1';
 
       let result: any = [];
       if (!isTemplate) {
-        result = await repository.list({ id_inspeksi: q });
+        result = await repository.list({
+          id_inspeksi: q,
+          id_cabang,
+          id_lokasi,
+          id_petugas,
+          tanggal_awal,
+          tanggal_akhir,
+        });
         if (result?.length < 1)
           return response.success(NOT_FOUND, null, res, false);
       }

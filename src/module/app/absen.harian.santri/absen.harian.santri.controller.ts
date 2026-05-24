@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './absen.harian.santri.repository';
-import { repository  as shiftPresensiRepo} from '../shift.presensi/shift.presensi.repository';
+import { repository as shiftPresensiRepo } from '../shift.presensi/shift.presensi.repository';
 import { absenHarianSantriSchema, bulkAbsenHarianSantriSchema, scanQrAbsenSchema } from './absen.harian.santri.schema';
 import moment from 'moment';
 import { any, z } from 'zod';
@@ -285,7 +285,6 @@ export default class Controller {
    */
   public async index(req: Request, res: Response) {
     try {
-      const { q, template, id_lokasi_kamar, id_shift_presensi, status, tanggal } = req.body;
       const query = helper.fetchQueryRequest(req);
       const filterData = {
         offset: query.offset,
@@ -606,7 +605,7 @@ export default class Controller {
         }
 
         const valid = errors.length === 0;
-        
+
         // Payload murni yang nantinya dilempar ke database saat commit
         const payload = {
           id_santri,
@@ -617,7 +616,7 @@ export default class Controller {
           status_kehadiran: row.status_kehadiran,
           keterangan: row.keterangan || 'Import Excel',
           id_petugas: row.id_petugas || id_petugas,
-          
+
           // Ditambahkan di payload agar bisa dibaca langsung di mapping baris frontend
           nis: row.nis,
           fullname: fullname_santri
