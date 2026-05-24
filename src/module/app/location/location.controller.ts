@@ -3,6 +3,7 @@ import { helper } from '../../../helpers/helper';
 import { variable } from './location.variable';
 import { response } from '../../../helpers/response';
 import { repository } from './location.repository';
+import { repository as cabangRepo } from '../cabang/cabang.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -23,14 +24,19 @@ import crypto from 'crypto';
 import { rawQuery } from '../../../helpers/rawQuery';
 
 
-const generateDataExcel = (sheet: any, details: any) => {
+const generateDataExcel = (
+  sheet: any,
+  details: any,
+  isTemplate: boolean = false
+) => {
+  // Definisikan susunan teks header persis di baris pertama
   sheet.addRow([
     'No',
     'Kode Lokasi',
     'Nama Lokasi',
     'Jenis Lokasi',
-    'Induk (Nama)',
-    'Cabang (Nama)',
+    'Induk (Nama/ID)',
+    'Cabang (Nama/ID)',
     'Latitude',
     'Longitude',
     'Map Zoom',
@@ -39,20 +45,47 @@ const generateDataExcel = (sheet: any, details: any) => {
     'Keterangan',
   ]);
 
+  // Set property metadata kolom (width disesuaikan agar proporsional)
+  sheet.columns = [
+    { header: 'No', key: 'no', width: 5 },
+    { header: 'Kode Lokasi', key: 'kode_lokasi', width: 18 },
+    { header: 'Nama Lokasi', key: 'nama_lokasi', width: 30 },
+    { header: 'Jenis Lokasi', key: 'jenis_lokasi', width: 15 },
+    { header: 'Induk (Nama/ID)', key: 'parent_id', width: 25 },
+    { header: 'Cabang (Nama/ID)', key: 'id_cabang', width: 25 },
+    { header: 'Latitude', key: 'latitude', width: 15 },
+    { header: 'Longitude', key: 'longitude', width: 15 },
+    { header: 'Map Zoom', key: 'map_zoom', width: 12 },
+    { header: 'Kapasitas', key: 'kapasitas', width: 12 },
+    { header: 'Lantai', key: 'lantai', width: 12 },
+    { header: 'Keterangan', key: 'keterangan', width: 35 },
+  ];
+
+  // Styling Header Baris Pertama
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    // Jika ingin memberikan warna abu-abu pada header, buka baris di bawah ini:
+    // cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
   });
 
+  // Perulangan Data menggunakan gaya indeks array (for...in) & Logika IsTemplate
   for (let i in details) {
-    let spacing: string = details[i].__level ? '    ' : '';
+    // Logika spacing/indentasi hierarki untuk nama lokasi (hanya berlaku jika bukan template)
+    let spacing: string = !isTemplate && details[i].__level ? '    '.repeat(details[i].__level) : '';
+    
     sheet.addRow([
       parseInt(i) + 1,
       details[i]?.kode_lokasi || '',
       spacing + (details[i]?.nama_lokasi || ''),
       details[i]?.jenis_lokasi || '',
-      details[i]?.parent?.nama_lokasi || '',
-      details[i]?.cabang?.nama_cabang || '',
+      // Logika Induk & Cabang: Jika template, keluarkan ID untuk mempermudah import ulang. Jika bukan, keluarkan Nama.
+      isTemplate 
+        ? details[i]?.parent_id || '' 
+        : details[i]?.parent?.nama_lokasi || '',
+      isTemplate 
+        ? details[i]?.id_cabang || '' 
+        : details[i]?.cabang?.nama_cabang || '',
       details[i]?.latitude || '',
       details[i]?.longitude || '',
       details[i]?.map_zoom || '',
@@ -62,6 +95,23 @@ const generateDataExcel = (sheet: any, details: any) => {
     ]);
   }
 
+  // Pemberian Border secara paksa ke seluruh cell yang aktif
+  const columnCount = sheet.columns.length;
+
+  for (let row = 1; row <= (details?.length || 0) + 1; row++) {
+    const currentRow = sheet.getRow(row);
+
+    for (let col = 1; col <= columnCount; col++) {
+      const cell = currentRow.getCell(col);
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } },
+      };
+    }
+  }
+
   return sheet;
 };
 
@@ -69,8 +119,8 @@ const normalizeRow = (row: any) => ({
   kode_lokasi: String(row['Kode Lokasi'] || '').trim(),
   nama_lokasi: String(row['Nama Lokasi'] || '').trim(),
   jenis_lokasi: String(row['Jenis Lokasi'] || '').trim(),
-  nama_parent: String(row['Induk (Nama)'] || '').trim(),
-  nama_cabang: String(row['Cabang (Nama)'] || '').trim(),
+  nama_parent: String(row['Induk (Nama/ID)'] || '').trim(),
+  nama_cabang: String(row['Cabang (Nama/ID)'] || '').trim(),
   latitude: row['Latitude'] ? String(row['Latitude']) : null,
   longitude: row['Longitude'] ? String(row['Longitude']) : null,
   map_zoom: row['Map Zoom'] ? Number(row['Map Zoom']) : 15,
@@ -367,21 +417,7 @@ export default class Controller {
       const { q, template } = req.body;
       const isTemplate = template == '1';
       
-      let condition: any = {};
-      let limit: number | undefined = undefined;
-
-      if (isTemplate) {
-        limit = 5;
-      } else if (q) {
-        condition = {
-          nama_lokasi: { [Op.like]: `%${q}%` }
-        };
-      }
-      const result = await repository.listForExport(condition, limit);
-
-      if (!isTemplate && result?.length < 1) {
-        return response.success(NOT_FOUND, null, res, false);
-      }
+      let result = await repository.listForExport({ q, isTemplate });
 
       const rawData = result.map((d: any) => (typeof d.get === 'function' ? d.get({ plain: true }) : d));
       const tree = buildLocationTree(rawData);
@@ -416,36 +452,48 @@ export default class Controller {
       
       for (const raw of rows) {
         const row = normalizeRow(raw);
-        
+  
         const errors: string[] = [];
         let parent_id = null, parent_nama = null;
         let id_cabang = null, cabang_nama = null;
 
         // Resolve Parent ID (Case-Insensitive)
         if (row.nama_parent) {
-          const parent = await repository.findParentByName(row.nama_parent);
+          const parent: any = await repository.findParentByName(row.nama_parent);
           if (parent) {
             parent_id = parent.dataValues.id_lokasi;
             id_cabang = parent.id_cabang;
             parent_nama = parent.dataValues.nama_lokasi;
-          } else errors.push(`Induk "${row.nama_parent}" tidak ditemukan`);
+            
+            // Ambil juga nama cabangnya dari data parent agar children kebagian data nama cabang
+            if (parent.cabang) { 
+              // Sesuaikan 'parent.cabang.nama_cabang' dengan relation/property yang ada di model parent Anda
+              cabang_nama = parent.cabang.nama_cabang; 
+            }
+          } else {
+            errors.push(`Induk "${row.nama_parent}" tidak ditemukan`);
+          }
         }
 
-        // Resolve Cabang ID
-       
-        if (row.nama_cabang && !id_cabang) {
+        // Resolve Cabang ID & Nama Cabang (Jika belum didapat dari parent ATAU jika nama_cabang diisi di excel)
+        if (row.nama_cabang) {
           const cabang = await repository.findCabangByName(row.nama_cabang);
           
           if (cabang) {
             id_cabang = cabang.dataValues.id_cabang; 
             cabang_nama = cabang.dataValues.nama_cabang;
+          } else {
+            errors.push(`Cabang "${row.nama_cabang}" tidak ditemukan`);
           }
-          else errors.push(`Cabang "${row.nama_cabang}" tidak ditemukan`);
+        } else if (id_cabang && !cabang_nama) {
+          const cabang: any = await repository.detail({id_cabang}); 
+          if (cabang) {
+            cabang_nama = cabang.dataValues.nama_cabang;
+          }
         }
 
         // Logic Generate Kode untuk keperluan Preview
         let finalKode = row.kode_lokasi;
-        console.log('PARENT ID', parent_id)
         if (!finalKode) {
           const parentPathCode = await this.getParentCodes(parent_id);
           const myInitial = this.generateInitial(row.nama_lokasi);
@@ -460,7 +508,6 @@ export default class Controller {
           kode_lokasi: finalKode // Penting: Agar tidak mendeteksi dirinya sendiri sebagai duplikat
         });
 
-        // console.log('RESULTS', finalKode, isDuplicate, id_cabang, row.jenis_lokasi, row.nama_lokasi, finalKode)
         if (isDuplicate) errors.push(`Lokasi "${row.nama_lokasi}" sudah ada di cabang ini.`);
 
         results.push({

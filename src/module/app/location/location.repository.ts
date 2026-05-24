@@ -42,33 +42,65 @@ export default class Repository {
   /**
    * Khusus untuk Export: Mengambil semua data dengan relasi induk dan cabang
    */
-  public listForExport(condition: any, limit?: number) {
-    return Model.findAll({
-      where: condition,
-      limit,
-      include: [
-        {
-          model: Model,
-          as: 'parent',
-          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
-          required: false,
-        },
-        {
-          model: Model,
-          as: 'sub_lokasi', 
-          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
-          required: false,
-        },
-        {
-          model: Cabang,
-          as: 'cabang',
-          attributes: ['id_cabang', 'nama_cabang'],
-          required: false,
-        }
+public async listForExport(params: {
+  q?: string;
+  isTemplate?: boolean;
+  limit?: number;
+}) {
+  const { q, isTemplate, limit } = params;
+  const keyword = q ? `%${q}%` : null;
+
+  let whereClause: any = {};
+
+  if (!isTemplate && keyword) {
+    whereClause = {
+      [Op.or]: [
+        // Pencarian di Tabel Utama
+        { nama_lokasi: { [Op.iLike]: keyword } },
+        { kode_lokasi: { [Op.iLike]: keyword } },
+        { keterangan: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('Model.jenis_lokasi'), 'text'), // Sesuaikan 'Model' dengan nama/alias registrasi model utama Anda jika perlu
+          { [Op.iLike]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('Model.kapasitas'), 'text'),
+          { [Op.iLike]: keyword }
+        ),
+
+        // Pencarian di Tabel Relasi (menggunakan alias yang didefinisikan di include)
+        { '$parent.nama_lokasi$': { [Op.iLike]: keyword } },
       ],
-      order: [['id_lokasi', 'ASC']]
-    });
+    };
   }
+
+  return Model.findAll({
+    where: whereClause,
+    limit: limit || (isTemplate ? 5 : undefined),
+    subQuery: false, 
+    include: [
+      {
+        model: Model,
+        as: 'parent',
+        attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
+        required: false,
+      },
+      {
+        model: Model,
+        as: 'sub_lokasi', 
+        attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
+        required: false,
+      },
+      {
+        model: Cabang,
+        as: 'cabang',
+        attributes: ['id_cabang', 'nama_cabang'],
+        required: false,
+      }
+    ],
+    order: [['id_lokasi', 'ASC']],
+  });
+}
 
   public async index(data: any) {
     let query: any = {
@@ -92,14 +124,18 @@ export default class Repository {
     if (keyword) {
       query.where = {
         [Op.or]: [
-          { nama_lokasi: { [Op.like]: keyword } },
+          { nama_lokasi: { [Op.iLike]: keyword } },
           Sequelize.where(
             Sequelize.cast(Sequelize.col('Lokasi.jenis_lokasi'), 'text'),
             { [Op.iLike]: keyword }
           ),
-          { kode_lokasi: { [Op.like]: keyword } },
-          { keterangan: { [Op.like]: keyword } },
-          { '$parent.nama_lokasi$': { [Op.like]: keyword } },
+          { kode_lokasi: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('Lokasi.kapasitas'), 'text'),
+            { [Op.iLike]: keyword }
+          ),
+          { keterangan: { [Op.iLike]: keyword } },
+          { '$parent.nama_lokasi$': { [Op.iLike]: keyword } },
         ],
       };
     }
@@ -150,7 +186,13 @@ export default class Repository {
         Model.sequelize.fn('LOWER', Model.sequelize.col('nama_lokasi')),
         name.toLowerCase().trim()
       ),
-      attributes: ['id_lokasi', 'nama_lokasi', 'id_cabang']
+      attributes: ['id_lokasi', 'nama_lokasi', 'id_cabang'], 
+      include: [
+        {
+          association: 'cabang',
+          attributes: ['nama_cabang']
+        }
+      ]
     });
   }
 
