@@ -10,4 +10,6 @@ export const kebersihanTemuanSchema = z.object({
     .max(3, 'Tingkat wajib diisi (1-3)'),
   perlu_tindak_lanjut: z.boolean().optional(),
   foto_path: z.any(),
+  foto_path_tindakan: z.any(),
+  status: z.number(),
 });

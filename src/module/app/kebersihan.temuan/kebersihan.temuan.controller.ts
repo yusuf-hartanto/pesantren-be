@@ -164,7 +164,7 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const { id_inspeksi, foto_path } = req?.body;
+      const { id_inspeksi, foto_path, foto_path_tindakan } = req?.body;
       const idInspeksi = id_inspeksi?.value;
       const check = await repository.detail({ id_temuan: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
@@ -182,11 +182,23 @@ export default class Controller {
         );
       }
 
+      let fotoPathTindakan = null;
+      let checkFileTindakan = helper.checkExtentionBase64(foto_path_tindakan);
+      if (checkFileTindakan == 'allowed') {
+        fotoPathTindakan = await helper.uploadBase64(
+          foto_path_tindakan,
+          'tindakan',
+          req?.user?.username,
+          appConfig?.assetType
+        );
+      }
+
       await repository.update({
         payload: {
           ...data,
           id_inspeksi: idInspeksi || check?.getDataValue('id_inspeksi'),
           foto_path: fotoPath || check?.getDataValue('foto_path'),
+          foto_path_tindakan: fotoPathTindakan || check?.getDataValue('foto_path_tindakan'),
         },
         condition: { id_temuan: id },
       });

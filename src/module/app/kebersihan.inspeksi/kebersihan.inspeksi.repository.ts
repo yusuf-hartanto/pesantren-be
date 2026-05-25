@@ -124,6 +124,8 @@ export default class Repository {
             'perlu_tindak_lanjut',
             'foto_path',
             'created_at',
+            'status',
+            'foto_path_tindakan',
           ],
         },
       ],

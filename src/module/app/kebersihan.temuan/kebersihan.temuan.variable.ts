@@ -9,6 +9,8 @@ export default class Variable {
       'tingkat',
       'perlu_tindak_lanjut',
       'foto_path',
+      'foto_path_tindakan',
+      'status',
     ];
     return field;
   }

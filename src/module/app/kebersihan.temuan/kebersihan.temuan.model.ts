@@ -46,6 +46,15 @@ export function initKebersihanTemuan(sequelize: Sequelize) {
         allowNull: true,
         defaultValue: DataTypes.NOW,
       },
+      status: {
+        type: DataTypes.SMALLINT,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      foto_path_tindakan: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
     },
     {
       sequelize,
