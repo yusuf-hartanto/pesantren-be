@@ -20,31 +20,40 @@ export default class Repository {
     return Model.findAll(query);
   }
 
-  public index(data: any) {
-    let query: Object = {
+  public  index(data: any) {
+    let where: any = {};
+
+    // Filter keyword
+    if (data?.keyword) {
+      where[Op.or] = [
+        { tingkat: { [Op.like]: `%${data.keyword}%` } },
+
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
+          { [Op.like]: `%${data.keyword}%` }
+        ),
+
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('tingkat_type'), 'TEXT'),
+          { [Op.iLike]: `%${data.keyword}%` }
+        ),
+
+        { keterangan: { [Op.like]: `%${data.keyword}%` } },
+      ];
+    }
+
+    // Filter type
+    if (data?.type) {
+      where.tingkat_type = data.type;
+    }
+
+    const query: any = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where,
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { tingkat: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('tingkat_type'), 'TEXT'),
-              { [Op.iLike]: `%${data?.keyword}%` }
-            ),
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-          ],
-        },
-      };
-    }
+
     return Model.findAndCountAll(query);
   }
 

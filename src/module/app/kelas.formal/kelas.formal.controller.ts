@@ -114,7 +114,11 @@ export default class Controller {
 
   public async index(req: Request, res: Response) {
     try {
-      const query = helper.fetchQueryRequest(req);
+      const query = {
+        ...helper.fetchQueryRequest(req),
+        status: req?.query?.status || '',
+      };
+      
       const { count, rows } = await repository.index(query);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);

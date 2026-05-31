@@ -107,19 +107,33 @@ export default class Repository {
   }
 
   public index(data: any) {
+    
+    let where: any = {};
+
+    // Filter keyword
+    if (data?.keyword) {
+      where[Op.or] = [
+        { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+      ];
+    }
+
+    // Filter status
+    if (data?.status) {
+      where.status = data.status;
+    }
+
+    // Filter lokasi
+    if (data?.id_lokasi) {
+      where.id_lokasi = data.id_lokasi;
+    }
+
     let query: Object = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [{ keterangan: { [Op.like]: `%${data?.keyword}%` } }],
-        },
-      };
-    }
+    
     return Model.findAndCountAll({
       ...query,
       include: [
