@@ -40,29 +40,36 @@ export default class Repository {
   }
 
   public index(data: any) {
+
+    let where: any = {};
+
+    // Filter keyword
+    if (data?.keyword) {
+      where[Op.or] = [
+        { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT'),
+          { [Op.like]: `%${data?.keyword}%` }
+        ),
+        { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+        Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
+          [Op.like]: `%${data?.keyword}%`,
+        }),
+      ]
+    }
+
+    // Filter status
+    if (data?.status) {
+      where.status = data.status;
+    }
+
     let query: Object = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
-          ],
-        },
-      };
-    }
+    
     return Model.findAndCountAll({
       ...query,
       include: [
