@@ -54,29 +54,38 @@ export default class Repository {
   }
 
   public index(data: any) {
+
+    let where: any = {};
+
+    // Filter keyword
+    if (data?.keyword) {
+      where[Op.or] = [
+        { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col('JadwalInspeksiKebersihan.hari'), 'TEXT'),
+          { [Op.like]: `%${data?.keyword}%` }
+        ),
+        { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+      ];
+    }
+
+    // Filter status
+    if (data?.status) {
+      where.is_active = data.status == 'Ya';
+    }
+
+    // Filter cabang
+    if (data?.id_cabang) {
+      where.id_cabang = data.id_cabang;
+    }
+
     let query: Object = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(
-              Sequelize.cast(
-                Sequelize.col('JadwalInspeksiKebersihan.hari'),
-                'TEXT'
-              ),
-              { [Op.like]: `%${data?.keyword}%` }
-            ),
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-          ],
-        },
-      };
-    }
+    
     return Model.findAndCountAll({
       ...query,
       include: [

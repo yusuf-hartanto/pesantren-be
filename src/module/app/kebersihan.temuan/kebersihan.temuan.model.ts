@@ -13,6 +13,8 @@ export class KebersihanTemuan extends Model {
   declare perlu_tindak_lanjut: boolean;
   declare foto_path: string;
   declare created_at: string;
+  declare status: number;
+  declare foto_path_tindakan: string;
 }
 
 export function initKebersihanTemuan(sequelize: Sequelize) {
