@@ -83,6 +83,7 @@ export default class Controller {
       const id_petugas: any = req?.query?.id_petugas || '';
       const tanggal_awal: any = req?.query?.tanggal_awal || '';
       const tanggal_akhir: any = req?.query?.tanggal_akhir || '';
+      const status: any = req?.query?.status || '';
       const { count, rows } = await repository.index({
         ...query,
         id_cabang,
@@ -90,6 +91,7 @@ export default class Controller {
         id_petugas,
         tanggal_awal,
         tanggal_akhir,
+        status
       });
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);

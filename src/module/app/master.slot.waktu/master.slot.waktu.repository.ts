@@ -25,22 +25,29 @@ export default class Repository {
   }
 
   public index(data: any) {
+
+    let where: any = {};
+
+    // Filter keyword
+    if (data?.keyword) {
+      where[Op.or] = [
+        { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
+        { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+      ];
+    }
+
+    // Filter status
+    if (data?.status) {
+      where.is_active = data.status == 'Ya';
+    }
+
     let query: Object = {
       order: [['kode_slot', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-          ],
-        },
-      };
-    }
+
     return Model.findAndCountAll({
       ...query,
       include: [],

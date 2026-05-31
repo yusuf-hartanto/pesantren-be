@@ -85,7 +85,13 @@ export default class Controller {
 
   public async index(req: Request, res: Response) {
     try {
-      const query = helper.fetchQueryRequest(req);
+      const query = {
+        ...helper.fetchQueryRequest(req),
+        status: req?.query?.status || '',
+        id_cabang: req?.query?.id_cabang || '',
+        id_lokasi: req?.query?.id_lokasi || '',
+      };
+
       const { count, rows } = await repository.index(query);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
@@ -231,6 +237,7 @@ export default class Controller {
       });
 
       let foto_path: any = null;
+      let foto_path_tindakan: any = null;
       let insert = [];
       for (const temuan of temuans) {
         let checkFile = helper.checkExtentionBase64(temuan.foto_path);
@@ -245,6 +252,18 @@ export default class Controller {
           foto_path = temuan.foto_path;
         }
 
+        let checkFileTindakan = helper.checkExtentionBase64(temuan.foto_path_tindakan);
+        if (checkFileTindakan == 'allowed') {
+          foto_path_tindakan = await helper.uploadBase64(
+            temuan.foto_path_tindakan,
+            'temuan',
+            req?.user?.username,
+            appConfig?.assetType
+          );
+        } else {
+          foto_path_tindakan = temuan.foto_path_tindakan;
+        }
+
         insert.push({
           id_inspeksi: id,
           kategori: temuan.kategori,
@@ -252,6 +271,8 @@ export default class Controller {
           tingkat: temuan.tingkat,
           perlu_tindak_lanjut: temuan.perlu_tindak_lanjut,
           foto_path,
+          foto_path_tindakan,
+          status: temuan.status,
         });
       }
 

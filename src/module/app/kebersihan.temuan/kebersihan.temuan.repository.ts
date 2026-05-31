@@ -30,6 +30,13 @@ export default class Repository {
       };
     }
 
+    if (data?.status && data?.status != '') {
+      query.where = {
+        ...query.where,
+        status: { [Op.eq]: data?.status },
+      };
+    }
+
     let inspeksiWhere: any = {};
     let isInspeksiRequired = false;
 
@@ -107,6 +114,7 @@ export default class Repository {
     const query = this.buildQuery(data);
     query.offset = data?.offset;
     query.limit = data?.limit;
+
     return Model.findAndCountAll(query);
   }
 

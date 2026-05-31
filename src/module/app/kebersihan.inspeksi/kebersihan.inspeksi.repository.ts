@@ -69,22 +69,39 @@ export default class Repository {
   }
 
   public index(data: any) {
+
+    let where: any = {};
+
+    // Filter keyword
+    if (data?.keyword) {
+      where[Op.or] = [
+        { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
+        { catatan_umum: { [Op.like]: `%${data?.keyword}%` } },
+      ];
+    }
+
+    // Filter status
+    if (data?.status) {
+      where.status_kondisi = data.status;
+    }
+
+    // Filter cabang
+    if (data?.id_cabang) {
+      where.id_cabang = data.id_cabang;
+    }
+
+    // Filter lokasi
+    if (data?.id_lokasi) {
+      where.id_lokasi = data.id_lokasi;
+    }
+
     let query: Object = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [
-            { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
-            { catatan_umum: { [Op.like]: `%${data?.keyword}%` } },
-          ],
-        },
-      };
-    }
+    
     return Model.findAndCountAll({
       ...query,
       include: [
@@ -174,6 +191,8 @@ export default class Repository {
             'perlu_tindak_lanjut',
             'foto_path',
             'created_at',
+            'status',
+            'foto_path_tindakan',
           ],
         },
       ],
