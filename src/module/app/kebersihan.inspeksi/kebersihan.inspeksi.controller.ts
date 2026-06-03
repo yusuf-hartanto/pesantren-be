@@ -131,6 +131,11 @@ export default class Controller {
       const { waktu, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans } =
         req?.body;
 
+      for (const temuan of temuans) {
+        let checkFile = helper.checkExtentionBase64(temuan.foto_path);
+        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+      }
+
       const idLokasi = id_lokasi?.value || null;
       const idPetugas = id_petugas?.value || null;
       const idCabang = id_cabang?.value || null;
@@ -156,8 +161,6 @@ export default class Controller {
       let foto_path: any = null;
       let insert = [];
       for (const temuan of temuans) {
-        let checkFile = helper.checkExtentionBase64(temuan.foto_path);
-        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
 
         foto_path = await helper.uploadBase64(
           temuan.foto_path,
