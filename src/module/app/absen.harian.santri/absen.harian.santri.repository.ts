@@ -136,7 +136,7 @@ export default class Repository {
         {
           model: AppSantri,
           as: 'santri',
-          attributes: ['id_santri', 'fullname', 'nis', 'gender'],
+          attributes: ['id_santri', 'fullname', 'nis', 'nik', 'gender'],
         },
         {
           model: Lokasi,
@@ -206,6 +206,15 @@ export default class Repository {
    * Ambil data history absensi (Standard Index API)
    */
   public async index(data: any) {
+    const santriAttributes = ['id_santri', 'fullname', 'nis', 'nik', 'gender'];
+    if (data?.isOpenApi) {
+      santriAttributes.push(
+        'id_santri_sitrendi',
+        'id_wali_sitrendi',
+        'institution_id_sitrendi'
+      );
+    }
+
     const query: any = {
       order: [
         ['tanggal', 'DESC'],
@@ -215,7 +224,11 @@ export default class Repository {
       limit: data?.limit,
       distinct: true,
       include: [
-        { model: AppSantri, as: 'santri', attributes: ['fullname', 'nis'] },
+        {
+          model: AppSantri,
+          as: 'santri',
+          attributes: santriAttributes,
+        },
         { model: Lokasi, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
         {
           model: ShiftPresensi,
@@ -249,7 +262,19 @@ export default class Repository {
       query.where.status_kehadiran = data.status;
     }
 
-    // 5. Filter Pencarian Global (Nama / NIS / Keyword)
+    // 5. Filter Santri (id_santri SiTrendi dari relasi santri)
+    if (data?.tanggal_awal && data?.tanggal_akhir) {
+      query.where.tanggal = {
+        [Op.between]: [data.tanggal_awal, data.tanggal_akhir],
+      };
+    }
+
+    // 6. Filter Santri (id_santri SiTrendi dari relasi santri)
+    if (data?.id_santri) {
+      query.where['$santri.id_santri_sitrendi$'] = data.id_santri;
+    }
+
+    // 6. Filter Pencarian Global (Nama / NIS / Keyword)
     if (data?.q) {
       const keyword = `%${data.q}%`;
       query.where[Op.or] = [

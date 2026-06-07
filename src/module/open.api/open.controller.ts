@@ -110,6 +110,10 @@ export default class Controller {
         status: req.query.status as string,
         id_lokasi_kamar: req.query.id_lokasi_kamar as string,
         id_shift_presensi: req.query.id_shift_presensi as string,
+        id_santri: req.query.id_santri as string,
+        tanggal_awal: req.query.tanggal_awal as string,
+        tanggal_akhir: req.query.tanggal_akhir as string,
+        isOpenApi: true,
       };
 
       const result = await absenRepository.index(filter);
