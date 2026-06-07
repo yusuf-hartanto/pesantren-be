@@ -78,13 +78,18 @@ export const up = async (queryInterface: QueryInterface) => {
 
 export const down = async (queryInterface: QueryInterface) => {
   // Hapus unique index terlebih dahulu
-  await queryInterface.removeIndex('absen_harian_santri', 'unique_absen_santri_shift_per_hari');
-  
+  await queryInterface.removeIndex(
+    'absen_harian_santri',
+    'unique_absen_santri_shift_per_hari'
+  );
+
   // Hapus tabel utama
   await queryInterface.dropTable('absen_harian_santri');
 
   // Perbaikan pemanggilan dialect menggunakan getDialect()
   if (queryInterface.sequelize.getDialect() === 'postgres') {
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_absen_harian_santri_status_kehadiran";');
+    await queryInterface.sequelize.query(
+      'DROP TYPE IF EXISTS "enum_absen_harian_santri_status_kehadiran";'
+    );
   }
 };

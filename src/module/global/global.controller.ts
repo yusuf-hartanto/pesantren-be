@@ -232,10 +232,11 @@ const generateHtmlPDF = (title: string, details: any) => {
         <td>${details[i]?.beneficiary_holder_name || ''}</td>
         <td>${details[i]?.issued_date || ''}</td>
         <td>
-          ${details[i]?.payment_term
-        ? `${details[i]?.payment_term} ${details[i]?.payment_term_unit}`
-        : details[i]?.payment_term_unit
-      }
+          ${
+            details[i]?.payment_term
+              ? `${details[i]?.payment_term} ${details[i]?.payment_term_unit}`
+              : details[i]?.payment_term_unit
+          }
         </td>
         <td>${details[i]?.premi_currency} ${helper.formatIDR(details[i]?.premi_value)}</td>
         <td>IDR ${helper.formatIDR(details[i]?.total_premi)}</td>

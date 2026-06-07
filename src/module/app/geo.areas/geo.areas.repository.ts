@@ -20,7 +20,7 @@ export default class GeoAreaRepository {
           required: false,
         },
       ],
-      where: {}
+      where: {},
     };
 
     if (data?.id_lokasi) {
@@ -50,7 +50,7 @@ export default class GeoAreaRepository {
           required: false,
         },
       ],
-      where: {}
+      where: {},
     };
 
     if (data?.keyword) {
@@ -69,7 +69,7 @@ export default class GeoAreaRepository {
   public detail(condition: any) {
     return Model.findOne({
       where: { ...condition },
-      include: [{ model: Lokasi, as: 'lokasi' }]
+      include: [{ model: Lokasi, as: 'lokasi' }],
     });
   }
 
@@ -82,7 +82,7 @@ export default class GeoAreaRepository {
    */
   public async create(data: any) {
     const payload = data.payload;
-    
+
     // Menggunakan transaksi agar proses update & insert konsisten
     const transaction: Transaction = await sequelize.transaction();
 
@@ -92,32 +92,34 @@ export default class GeoAreaRepository {
         where: { id_lokasi: payload.id_lokasi },
         order: [['versi', 'DESC']],
         transaction,
-        raw: true
+        raw: true,
       });
 
       const nextVersion = lastEntry ? (lastEntry.versi || 0) + 1 : 1;
       // 2. Nonaktifkan area geo lama yang masih aktif untuk lokasi ini
       await Model.update(
         { is_active: false },
-        { 
-          where: { 
-            id_lokasi: payload.id_lokasi, 
-            is_active: true 
+        {
+          where: {
+            id_lokasi: payload.id_lokasi,
+            is_active: true,
           },
-          transaction 
+          transaction,
         }
       );
 
       // 3. Buat entitas baru sebagai versi terbaru
-      const newArea = await Model.create({
-        ...payload,
-        versi: nextVersion,
-        is_active: true // Selalu aktif saat baru dibuat
-      }, { transaction });
+      const newArea = await Model.create(
+        {
+          ...payload,
+          versi: nextVersion,
+          is_active: true, // Selalu aktif saat baru dibuat
+        },
+        { transaction }
+      );
 
       await transaction.commit();
       return newArea;
-
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -134,20 +136,24 @@ export default class GeoAreaRepository {
 
     try {
       // 1. Ambil data yang akan diupdate untuk mendapatkan id_lokasi
-      const existing = await Model.findOne({ where: condition, transaction, raw: true });
-      if (!existing) throw new Error("Data tidak ditemukan");
+      const existing = await Model.findOne({
+        where: condition,
+        transaction,
+        raw: true,
+      });
+      if (!existing) throw new Error('Data tidak ditemukan');
 
       // 2. Jika payload mencoba mengaktifkan area (is_active: true)
       if (payload.is_active === true || payload.is_active === 1) {
         // Nonaktifkan semua area lain di lokasi yang sama
         await Model.update(
           { is_active: false },
-          { 
-            where: { 
+          {
+            where: {
               id_lokasi: existing.id_lokasi,
-              id_geo: { [Op.ne]: existing.id_geo } // Kecuali data ini sendiri
+              id_geo: { [Op.ne]: existing.id_geo }, // Kecuali data ini sendiri
             },
-            transaction 
+            transaction,
           }
         );
       }
@@ -155,7 +161,7 @@ export default class GeoAreaRepository {
       // 3. Jalankan update utama
       const result = await Model.update(payload, {
         where: condition,
-        transaction
+        transaction,
       });
 
       await transaction.commit();
@@ -182,8 +188,8 @@ export default class GeoAreaRepository {
     return Model.findOne({
       where: {
         id_lokasi,
-        is_active: true
-      }
+        is_active: true,
+      },
     });
   }
 }

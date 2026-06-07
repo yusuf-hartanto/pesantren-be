@@ -118,7 +118,7 @@ export default class Controller {
         ...helper.fetchQueryRequest(req),
         status: req?.query?.status || '',
       };
-      
+
       const { count, rows } = await repository.index(query);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);

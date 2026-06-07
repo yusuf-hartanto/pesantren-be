@@ -19,7 +19,7 @@ export default class Repository {
         },
       ],
     };
-    
+
     if (limit) {
       query.limit = limit;
     }
@@ -42,65 +42,65 @@ export default class Repository {
   /**
    * Khusus untuk Export: Mengambil semua data dengan relasi induk dan cabang
    */
-public async listForExport(params: {
-  q?: string;
-  isTemplate?: boolean;
-  limit?: number;
-}) {
-  const { q, isTemplate, limit } = params;
-  const keyword = q ? `%${q}%` : null;
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
+    const { q, isTemplate, limit } = params;
+    const keyword = q ? `%${q}%` : null;
 
-  let whereClause: any = {};
+    let whereClause: any = {};
 
-  if (!isTemplate && keyword) {
-    whereClause = {
-      [Op.or]: [
-        // Pencarian di Tabel Utama
-        { nama_lokasi: { [Op.iLike]: keyword } },
-        { kode_lokasi: { [Op.iLike]: keyword } },
-        { keterangan: { [Op.iLike]: keyword } },
-        Sequelize.where(
-          Sequelize.cast(Sequelize.col('Model.jenis_lokasi'), 'text'), // Sesuaikan 'Model' dengan nama/alias registrasi model utama Anda jika perlu
-          { [Op.iLike]: keyword }
-        ),
-        Sequelize.where(
-          Sequelize.cast(Sequelize.col('Model.kapasitas'), 'text'),
-          { [Op.iLike]: keyword }
-        ),
+    if (!isTemplate && keyword) {
+      whereClause = {
+        [Op.or]: [
+          // Pencarian di Tabel Utama
+          { nama_lokasi: { [Op.iLike]: keyword } },
+          { kode_lokasi: { [Op.iLike]: keyword } },
+          { keterangan: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('Model.jenis_lokasi'), 'text'), // Sesuaikan 'Model' dengan nama/alias registrasi model utama Anda jika perlu
+            { [Op.iLike]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.cast(Sequelize.col('Model.kapasitas'), 'text'),
+            { [Op.iLike]: keyword }
+          ),
 
-        // Pencarian di Tabel Relasi (menggunakan alias yang didefinisikan di include)
-        { '$parent.nama_lokasi$': { [Op.iLike]: keyword } },
+          // Pencarian di Tabel Relasi (menggunakan alias yang didefinisikan di include)
+          { '$parent.nama_lokasi$': { [Op.iLike]: keyword } },
+        ],
+      };
+    }
+
+    return Model.findAll({
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
+      include: [
+        {
+          model: Model,
+          as: 'parent',
+          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
+          required: false,
+        },
+        {
+          model: Model,
+          as: 'sub_lokasi',
+          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
+          required: false,
+        },
+        {
+          model: Cabang,
+          as: 'cabang',
+          attributes: ['id_cabang', 'nama_cabang'],
+          required: false,
+        },
       ],
-    };
+      order: [['id_lokasi', 'ASC']],
+    });
   }
-
-  return Model.findAll({
-    where: whereClause,
-    limit: limit || (isTemplate ? 5 : undefined),
-    subQuery: false, 
-    include: [
-      {
-        model: Model,
-        as: 'parent',
-        attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
-        required: false,
-      },
-      {
-        model: Model,
-        as: 'sub_lokasi', 
-        attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
-        required: false,
-      },
-      {
-        model: Cabang,
-        as: 'cabang',
-        attributes: ['id_cabang', 'nama_cabang'],
-        required: false,
-      }
-    ],
-    order: [['id_lokasi', 'ASC']],
-  });
-}
 
   public async index(data: any) {
     let query: any = {
@@ -150,8 +150,8 @@ public async listForExport(params: {
         jenis_lokasi: payload.jenis_lokasi,
         id_cabang: payload.id_cabang || null,
         // Jika kode_lokasi berbeda berarti ini adalah data lain yang duplikat
-        kode_lokasi: { [Op.ne]: payload.kode_lokasi }
-      }
+        kode_lokasi: { [Op.ne]: payload.kode_lokasi },
+      },
     });
   }
 
@@ -186,13 +186,13 @@ public async listForExport(params: {
         Model.sequelize.fn('LOWER', Model.sequelize.col('nama_lokasi')),
         name.toLowerCase().trim()
       ),
-      attributes: ['id_lokasi', 'nama_lokasi', 'id_cabang'], 
+      attributes: ['id_lokasi', 'nama_lokasi', 'id_cabang'],
       include: [
         {
           association: 'cabang',
-          attributes: ['nama_cabang']
-        }
-      ]
+          attributes: ['nama_cabang'],
+        },
+      ],
     });
   }
 
@@ -205,7 +205,7 @@ public async listForExport(params: {
         Cabang.sequelize.fn('LOWER', Cabang.sequelize.col('nama_cabang')), // Sesuaikan nama kolom di tabel cabang
         name.toLowerCase().trim()
       ),
-      attributes: ['id_cabang', 'nama_cabang']
+      attributes: ['id_cabang', 'nama_cabang'],
     });
   }
 
@@ -216,23 +216,23 @@ public async listForExport(params: {
   public async upsertImport(payload: any, transaction: any = null) {
     const existing = await Model.findOne({
       where: { kode_lokasi: payload.kode_lokasi },
-      transaction
+      transaction,
     });
 
     if (existing) {
       return await existing.update(
-        { 
-          ...payload, 
-          updated_at: helper.date() 
-        }, 
+        {
+          ...payload,
+          updated_at: helper.date(),
+        },
         { transaction }
       );
     } else {
       return await Model.create(
-        { 
-          ...payload, 
-          created_at: helper.date() 
-        }, 
+        {
+          ...payload,
+          created_at: helper.date(),
+        },
         { transaction }
       );
     }
@@ -240,7 +240,9 @@ public async listForExport(params: {
 
   public async create(data: any) {
     // payload bisa berupa single object atau array untuk bulkCreate
-    return Model.bulkCreate(Array.isArray(data.payload) ? data.payload : [data.payload]);
+    return Model.bulkCreate(
+      Array.isArray(data.payload) ? data.payload : [data.payload]
+    );
   }
 
   public update(data: any) {

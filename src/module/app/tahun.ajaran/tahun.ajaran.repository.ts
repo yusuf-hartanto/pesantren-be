@@ -26,12 +26,11 @@ export default class Repository {
     if (data?.keyword) {
       where[Op.or] = [
         { tahun_ajaran: { [Op.like]: `%${data?.keyword}%` } },
-        Sequelize.where(
-          Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
-          { [Op.like]: `%${data?.keyword}%` }
-        ),
+        Sequelize.where(Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'), {
+          [Op.like]: `%${data?.keyword}%`,
+        }),
         { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-      ]
+      ];
     }
 
     // Filter status
@@ -43,7 +42,7 @@ export default class Repository {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
-      where
+      where,
     };
 
     return Model.findAndCountAll(query);
