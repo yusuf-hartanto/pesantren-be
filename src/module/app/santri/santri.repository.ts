@@ -22,7 +22,7 @@ export default class Repository {
         ...query,
         where: {
           status: {
-            [Op.eq]: data?.status
+            [Op.eq]: data?.status,
           },
         },
       };

@@ -111,9 +111,18 @@ import {
   associateKelasFormal,
 } from '../app/kelas.formal/kelas.formal.model';
 import { associateLokasi, initLokasi } from '../app/location/location.model';
-import { initJadwalPelajaran, associateJadwalPelajaran } from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
-import { initShiftPresensi, associateShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
-import { associateGeoArea, initGeoArea } from '../app/geo.areas/geo.areas.model';
+import {
+  initJadwalPelajaran,
+  associateJadwalPelajaran,
+} from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
+import {
+  initShiftPresensi,
+  associateShiftPresensi,
+} from '../app/shift.presensi/shift.presensi.model';
+import {
+  associateGeoArea,
+  initGeoArea,
+} from '../app/geo.areas/geo.areas.model';
 import { initMasterSlotWaktu } from '../app/master.slot.waktu/master.slot.waktu.model';
 import {
   initJadwalInspeksiKebersihan,
@@ -136,7 +145,10 @@ import {
   associateAppInstitution,
 } from '../app/institution/institution.model';
 import { initAppSantri, associateAppSantri } from '../app/santri/santri.model';
-import { associateAbsenHarianSantri, initAbsenHarianSantri } from '../app/absen.harian.santri/absen.harian.santri.model';
+import {
+  associateAbsenHarianSantri,
+  initAbsenHarianSantri,
+} from '../app/absen.harian.santri/absen.harian.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -193,7 +205,6 @@ export function initializeModels(sequelize: Sequelize) {
   initAppInstitution(sequelize);
   initAppSantri(sequelize);
   initAbsenHarianSantri(sequelize);
-
 
   // associate
   associateAppRole();

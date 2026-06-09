@@ -3,8 +3,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
-import AppSantri from '../santri/santri.model'; 
-import Lokasi from '../location/location.model'; 
+import AppSantri from '../santri/santri.model';
+import Lokasi from '../location/location.model';
 import ShiftPresensi from '../shift.presensi/shift.presensi.model';
 import Pegawai from '../pegawai/pegawai.model';
 
@@ -57,7 +57,9 @@ export function initAbsenHarianSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD')
+            : null;
           this.setDataValue('tanggal', formattedValue);
         },
       },
@@ -110,10 +112,10 @@ export function initAbsenHarianSantri(sequelize: Sequelize) {
           unique: true,
           fields: ['id_santri', 'tanggal', 'id_shift_presensi'],
           where: {
-            deleted_at: null
-          }
-        }
-      ]
+            deleted_at: null,
+          },
+        },
+      ],
     }
   );
 

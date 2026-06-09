@@ -126,14 +126,22 @@ export default {
       // Disesuaikan dengan nama tabel di model Anda sebelumnya ('location')
       return queryInterface.bulkInsert('lokasi', validLocations);
     } else {
-      console.warn('⚠️ Gagal memuat seeder location. ID Cabang tidak ditemukan.');
+      console.warn(
+        '⚠️ Gagal memuat seeder location. ID Cabang tidak ditemukan.'
+      );
     }
   },
 
   down: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
     // Menghapus seluruh UUID lokasi yang didefinisikan di atas secara presisi
     return queryInterface.bulkDelete('location', {
-      id_lokasi: [ID_LOC_HQ, ID_LOC_ASR, ID_LOC_KMR_A, ID_LOC_KMR_B, ID_LOC_KMR_C],
+      id_lokasi: [
+        ID_LOC_HQ,
+        ID_LOC_ASR,
+        ID_LOC_KMR_A,
+        ID_LOC_KMR_B,
+        ID_LOC_KMR_C,
+      ],
     });
   },
 };

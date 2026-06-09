@@ -91,7 +91,7 @@ export default class Controller {
         id_petugas,
         tanggal_awal,
         tanggal_akhir,
-        status
+        status,
       });
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
@@ -200,7 +200,8 @@ export default class Controller {
           ...data,
           id_inspeksi: idInspeksi || check?.getDataValue('id_inspeksi'),
           foto_path: fotoPath || check?.getDataValue('foto_path'),
-          foto_path_tindakan: fotoPathTindakan || check?.getDataValue('foto_path_tindakan'),
+          foto_path_tindakan:
+            fotoPathTindakan || check?.getDataValue('foto_path_tindakan'),
         },
         condition: { id_temuan: id },
       });
@@ -237,12 +238,14 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      const { q, template,
+      const {
+        q,
+        template,
         id_cabang,
         id_lokasi,
         id_petugas,
         tanggal_awal,
-        tanggal_akhir
+        tanggal_akhir,
       } = req?.body;
       const isTemplate: boolean = template && template == '1';
 

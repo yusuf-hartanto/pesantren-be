@@ -20,9 +20,11 @@ export const REQUIRED: string = 'is required';
 export const NOT_FOUND: string = 'Data not found';
 export const ALREADY_EXIST: string = 'Data already exists';
 export const SUCCESS_SAVED: string = 'Data successfully saved';
+export const SUCCESS_SYNCED: string = 'Data successfully synced';
 export const SUCCESS_UPDATED: string = 'Data successfully updated';
 export const SUCCESS_DELETED: string = 'Data successfully deleted';
 export const SUCCESS_RETRIEVED: string = 'Data successfully retrieved';
+export const SUCCESS_GENERATED: string = 'Data successfully generated';
 
 // database
 export const MYSQL: string = 'mysql';

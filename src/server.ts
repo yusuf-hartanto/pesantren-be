@@ -48,7 +48,14 @@ async function bootstrap() {
     origin: '*',
     preflightContinue: false,
   };
-  app.use(bodyParser.json({ limit: '5mb' }));
+  app.use(
+    bodyParser.json({
+      limit: '5mb',
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf;
+      },
+    })
+  );
   app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 
   app.use(

@@ -142,10 +142,10 @@ export default class Controller {
       const data: Object = helper.only(variable.fillable(), req?.body);
 
       // 1. Get User Agent
-      const userAgent = req.get('User-Agent'); 
+      const userAgent = req.get('User-Agent');
 
       // 2. Get IP Address
-      const ip = req.ip; 
+      const ip = req.ip;
 
       const result = await repository.create({
         payload: {
@@ -184,10 +184,10 @@ export default class Controller {
       const data: Object = helper.only(variable.fillable(), req?.body, true);
 
       // 1. Get User Agent
-      const userAgent = req.get('User-Agent'); 
+      const userAgent = req.get('User-Agent');
 
       // 2. Get IP Address
-      const ip = req.ip; 
+      const ip = req.ip;
 
       await repository.update({
         payload: {

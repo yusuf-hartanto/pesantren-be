@@ -20,16 +20,18 @@ export default {
 
     // Antisipasi jika data cabang belum di-seed / tidak ditemukan
     if (!cabangList || cabangList.length === 0) {
-      console.warn('Gagal memuat data cabang. Pastikan seeder cabang sudah dijalankan.');
+      console.warn(
+        'Gagal memuat data cabang. Pastikan seeder cabang sudah dijalankan.'
+      );
       return;
     }
 
     //  Mapping hasil query cabang ke dalam struktur tabel institution
     const institutions = cabangList.map((cabang) => ({
-      id_institution: cabang.id_cabang,         // Diambil dari query
-      institution_name: cabang.nama_cabang,     // Diambil dari query
+      id_institution: cabang.id_cabang, // Diambil dari query
+      institution_name: cabang.nama_cabang, // Diambil dari query
       status: 1,
-      keterangan: cabang.keterangan,            // Diambil dari query
+      keterangan: cabang.keterangan, // Diambil dari query
       created_at: new Date(),
       updated_at: new Date(),
     }));
@@ -47,7 +49,7 @@ export default {
 
     if (cabangList && cabangList.length > 0) {
       const idsToDelete = cabangList.map((c) => c.id_cabang);
-      
+
       return queryInterface.bulkDelete('institution', {
         id_institution: idsToDelete,
       });

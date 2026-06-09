@@ -21,7 +21,7 @@ export default {
     const lokasiKamarList = await queryInterface.sequelize.query<DynamicRow>(
       `SELECT id_lokasi FROM lokasi 
        WHERE jenis_lokasi = 'Kamar' 
-       LIMIT 3`, 
+       LIMIT 3`,
       { type: QueryTypes.SELECT }
     );
 
@@ -31,8 +31,14 @@ export default {
     );
 
     // Validasi ketersediaan data master
-    if (!santriList.length || !lokasiKamarList.length || !tahunAjaranList.length) {
-      console.warn('⚠️ Gagal memuat seeder. Pastikan data master santri, tahun_ajaran, dan lokasi (Kamar) sudah terisi.');
+    if (
+      !santriList.length ||
+      !lokasiKamarList.length ||
+      !tahunAjaranList.length
+    ) {
+      console.warn(
+        '⚠️ Gagal memuat seeder. Pastikan data master santri, tahun_ajaran, dan lokasi (Kamar) sudah terisi.'
+      );
       return;
     }
 
@@ -63,9 +69,14 @@ export default {
     }
 
     if (penempatanData.length > 0) {
-      return queryInterface.bulkInsert('penempatan_kamar_santri', penempatanData);
+      return queryInterface.bulkInsert(
+        'penempatan_kamar_santri',
+        penempatanData
+      );
     } else {
-      console.warn('⚠️ Tidak ada data penempatan yang berhasil dibuat. Periksa kembali jumlah baris pada tabel santri.');
+      console.warn(
+        '⚠️ Tidak ada data penempatan yang berhasil dibuat. Periksa kembali jumlah baris pada tabel santri.'
+      );
     }
   },
 

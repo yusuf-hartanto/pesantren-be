@@ -40,9 +40,9 @@ export default class Repository {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
-      where
+      where,
     };
-    
+
     return Model.findAndCountAll(query);
   }
 
