@@ -43,7 +43,6 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const { status } = req?.body;
       const check = await repository.detail({ id_notification: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
