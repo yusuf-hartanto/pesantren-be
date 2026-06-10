@@ -45,7 +45,21 @@ export default class Repository {
     return Model.findOne({
       where: {
         ...condition,
-      }
+      },
+      include: [
+        {
+          model: AppResource,
+          as: 'sender',
+          required: false,
+          attributes: ['resource_id', 'username', 'fullname'],
+        },
+        {
+          model: AppResource,
+          as: 'receiver',
+          required: false,
+          attributes: ['resource_id', 'username', 'fullname'],
+        },
+      ],
     });
   }
 

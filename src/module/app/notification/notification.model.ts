@@ -68,11 +68,13 @@ export function associateNotification() {
   Notification.belongsTo(AppResource, {
     as: 'sender',
     foreignKey: 'from',
+    targetKey: 'resource_id',
   });
 
   Notification.belongsTo(AppResource, {
     as: 'receiver',
     foreignKey: 'to',
+    targetKey: 'resource_id',
   });
 }
 

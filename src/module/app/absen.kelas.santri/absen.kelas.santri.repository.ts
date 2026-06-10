@@ -2,76 +2,42 @@
 
 import { Op } from 'sequelize';
 import moment from 'moment';
-import Model from './absen.harian.santri.model';
-import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model'; // Sesuaikan path asli Anda
+import Model from './absen.kelas.santri.model';
 import AppSantri from '../santri/santri.model';
 import Lokasi from '../location/location.model';
-import ShiftPresensi from '../shift.presensi/shift.presensi.model';
 import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
+import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
+import Cabang from '../cabang/cabang.model';
 
 export default class Repository {
-  /**
-   * Mengambil daftar santri yang aktif di kamar tertentu pada tanggal tertentu
-   */
-  public async getActiveSantriByKamar(
-    id_lokasi_kamar: string,
-    tanggal: string
-  ) {
-    const targetDate = moment(tanggal).format('YYYY-MM-DD');
-    console.log(targetDate);
-    return await PenempatanKamarSantri.findAll({
-      where: {
-        id_lokasi: id_lokasi_kamar,
-        status: 'Aktif',
-        is_deleted: false,
-        tanggal_masuk: { [Op.lte]: targetDate },
-        [Op.or]: [
-          { tanggal_keluar: null },
-          { tanggal_keluar: { [Op.gte]: targetDate } },
-        ],
-      },
-      include: [
-        {
-          model: AppSantri,
-          as: 'santri',
-          where: { status: 1 }, // Santri dengan status aktif
-          attributes: ['id_santri', 'fullname', 'nis', 'gender'],
-        },
-      ],
-      order: [[{ model: AppSantri, as: 'santri' }, 'fullname', 'ASC']],
-    });
-  }
-
-  /**
-   * Mencari Shift Presensi kategori ASRAMA berdasarkan window waktu_absen.
-   * Jika ada > 1 shift cocok, dipilih yang memiliki durasi paling kecil (prioritas).
-   */
-  public async findMatchingAsramaShift(waktu_absen: string) {
+  public async findMatchingJamPelajaran(waktu_absen: string) {
     const time = moment(waktu_absen, 'HH:mm:ss').format('HH:mm:ss');
 
-    const matchingShifts = await ShiftPresensi.findAll({
+    const result = await JamPelajaran.findAll({
       where: {
-        kategori_shift: 'ASRAMA',
-        status: 'Aktif',
-        waktu_mulai: { [Op.lte]: time },
-        waktu_selesai: { [Op.gte]: time },
+        status: 'A',
+        mulai: {
+          [Op.lte]: time,
+        },
+        selesai: {
+          [Op.gte]: time,
+        },
       },
     });
 
-    if (matchingShifts.length === 0) return null;
-    if (matchingShifts.length === 1) return matchingShifts[0];
+    if (result.length === 0) return null;
+    if (result.length === 1) return result[0];
 
-    // Jika lebih dari 1 shift cocok, hitung durasi terkecil (waktu_selesai - waktu_mulai)
-    return matchingShifts.reduce((shortest, current) => {
-      const startShortest = moment(shortest.waktu_mulai, 'HH:mm:ss');
-      const endShortest = moment(shortest.waktu_selesai, 'HH:mm:ss');
+    return result.reduce((shortest, current) => {
+      const startShortest = moment(shortest.mulai, 'HH:mm:ss');
+      const endShortest = moment(shortest.selesai, 'HH:mm:ss');
       const durationShortest = moment
         .duration(endShortest.diff(startShortest))
         .asMinutes();
 
-      const startCurrent = moment(current.waktu_mulai, 'HH:mm:ss');
-      const endCurrent = moment(current.waktu_selesai, 'HH:mm:ss');
+      const startCurrent = moment(current.mulai, 'HH:mm:ss');
+      const endCurrent = moment(current.selesai, 'HH:mm:ss');
       const durationCurrent = moment
         .duration(endCurrent.diff(startCurrent))
         .asMinutes();
@@ -80,52 +46,26 @@ export default class Repository {
     });
   }
 
-  public async findAllAsramaShift() {
-    const allActiveAsramaShifts = await ShiftPresensi.findAll({
+  public async findAllJamPelajaran() {
+    const result = await JamPelajaran.findAll({
       where: {
-        kategori_shift: 'ASRAMA',
-        status: 'Aktif',
+        status: 'A',
       },
     });
 
-    return allActiveAsramaShifts;
-  }
-
-  /**
-   * Validasi apakah santri memiliki penempatan aktif di kamar & tanggal yang dimaksud
-   */
-  public async checkSantriKamarValidity(
-    id_santri: string,
-    id_lokasi_kamar: string,
-    tanggal: string
-  ) {
-    const targetDate = moment(tanggal).format('YYYY-MM-DD');
-
-    return await PenempatanKamarSantri.findOne({
-      where: {
-        id_santri,
-        id_lokasi: id_lokasi_kamar,
-        status: 'Aktif',
-        is_deleted: false,
-        tanggal_masuk: { [Op.lte]: targetDate },
-        [Op.or]: [
-          { tanggal_keluar: null },
-          { tanggal_keluar: { [Op.gte]: targetDate } },
-        ],
-      },
-    });
+    return result;
   }
 
   public async checkExistingAbsen(criteria: {
     id_santri: string;
     tanggal: string;
-    id_shift_presensi: string | null;
+    id_jam_pelajaran: string | null;
   }) {
     return await Model.findOne({
       where: {
         id_santri: criteria.id_santri,
         tanggal: criteria.tanggal,
-        id_shift_presensi: criteria.id_shift_presensi,
+        id_jam_pelajaran: criteria.id_jam_pelajaran,
       },
     });
   }
@@ -141,18 +81,13 @@ export default class Repository {
         },
         {
           model: Lokasi,
-          as: 'lokasiKamar',
+          as: 'lokasi',
           attributes: ['id_lokasi', 'nama_lokasi'],
         },
         {
-          model: ShiftPresensi,
-          as: 'shiftPresensi',
-          attributes: [
-            'id_shift',
-            'nama_shift',
-            'waktu_mulai',
-            'waktu_selesai',
-          ],
+          model: JamPelajaran,
+          as: 'jamPelajaran',
+          attributes: ['id_jampel', 'nama_jampel', 'mulai', 'selesai'],
         },
         {
           model: Pegawai,
@@ -177,9 +112,6 @@ export default class Repository {
     });
   }
 
-  /**
-   * Simpan atau update presensi secara massal (Upsert berdasarkan Unique Constraint DB)
-   */
   public async upsertBulkAbsen(payloads: any[]) {
     const trx = await Model.sequelize?.transaction();
     try {
@@ -188,7 +120,7 @@ export default class Repository {
           where: {
             id_santri: item.id_santri,
             tanggal: item.tanggal,
-            id_shift_presensi: item.id_shift_presensi,
+            id_jam_pelajaran: item.id_jam_pelajaran,
             is_deleted: false,
           },
           transaction: trx,
@@ -208,9 +140,6 @@ export default class Repository {
     }
   }
 
-  /**
-   * Ambil data history absensi (Standard Index API)
-   */
   public async index(data: any) {
     const santriAttributes = ['id_santri', 'fullname', 'nis', 'nik', 'gender'];
     if (data?.isOpenApi) {
@@ -235,11 +164,11 @@ export default class Repository {
           as: 'santri',
           attributes: santriAttributes,
         },
-        { model: Lokasi, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
+        { model: Lokasi, as: 'lokasi', attributes: ['nama_lokasi'] },
         {
-          model: ShiftPresensi,
-          as: 'shiftPresensi',
-          attributes: ['nama_shift'],
+          model: JamPelajaran,
+          as: 'jamPelajaran',
+          attributes: ['nama_jampel'],
         },
         { model: Pegawai, as: 'petugas', attributes: ['nama_lengkap'] },
         {
@@ -258,9 +187,9 @@ export default class Repository {
       query.where.tanggal = data.tanggal;
     }
 
-    // 2. Filter Shift Presensi (id_shift)
-    if (data?.id_shift_presensi) {
-      query.where.id_shift_presensi = data.id_shift_presensi;
+    // 2. Filter Jam Pelajaran (id_jam_pelajaran)
+    if (data?.id_jam_pelajaran) {
+      query.where.id_jam_pelajaran = data.id_jam_pelajaran;
     }
 
     // 3. Filter Lokasi Kamar (id_lokasi)
@@ -297,46 +226,13 @@ export default class Repository {
     return await Model.findAndCountAll(query);
   }
 
-  public async findSantriAndRoomByNis(
-    nis: string,
-    tanggal: string,
-    id_lokasi?: string
-  ) {
-    const targetDate = moment(tanggal).format('YYYY-MM-DD');
-
-    // Susun kondisi default untuk penempatan kamar
-    const penempatanWhere: any = {
-      status: 'Aktif',
-      is_deleted: false,
-      tanggal_masuk: { [Op.lte]: targetDate },
-      [Op.or]: [
-        { tanggal_keluar: null },
-        { tanggal_keluar: { [Op.gte]: targetDate } },
-      ],
-    };
-
-    // Jika id_lokasi dikirim dari controller, kunci langsung di query ini
-    if (id_lokasi) {
-      penempatanWhere.id_lokasi = id_lokasi;
-    }
-
+  public async findSantriByNis(nis: string) {
     return await AppSantri.findOne({
       where: {
         status: 1, // Santri aktif
         [Op.or]: [{ nis: nis }, { kartu_santri_nomor: nis }],
       },
       attributes: ['id_santri', 'fullname', 'nis'],
-      include: [
-        {
-          model: PenempatanKamarSantri,
-          as: 'penempatanKamar',
-          where: penempatanWhere,
-          // Ubah menjadi true agar jika kondisi kamar tidak terpenuhi,
-          // query langsung mengembalikan null (tidak tanggung/setengah ketemu)
-          required: true,
-          attributes: ['id_lokasi'],
-        },
-      ],
     });
   }
 
@@ -345,7 +241,7 @@ export default class Repository {
       where: {
         id_santri: payload.id_santri,
         tanggal: payload.tanggal,
-        id_shift_presensi: payload.id_shift_presensi,
+        id_jam_pelajaran: payload.id_jam_pelajaran,
         is_deleted: false,
       },
     });
@@ -362,13 +258,10 @@ export default class Repository {
     return await Model.create(payload);
   }
 
-  /**
-   * Tarik data log absensi untuk keperluan Export Excel biasa
-   */
   public async listForExport(params: {
     q?: string;
-    id_lokasi_kamar?: string;
-    id_shift_presensi?: string;
+    id_lokasi?: string;
+    id_jam_pelajaran?: string;
     tanggal?: string;
     status?: string;
     isTemplate?: boolean;
@@ -378,14 +271,14 @@ export default class Repository {
   }) {
     const {
       q,
-      id_lokasi_kamar,
-      id_shift_presensi,
+      id_lokasi,
+      id_jam_pelajaran,
       tanggal,
       status,
       isTemplate,
       limit,
       tanggal_awal,
-      tanggal_akhir,
+      tanggal_akhir
     } = params;
 
     let whereClause: any = {
@@ -398,21 +291,21 @@ export default class Repository {
         whereClause.tanggal = tanggal;
       }
 
-      // 2. Filter Shift Presensi
-      if (id_shift_presensi) {
-        whereClause.id_shift_presensi = id_shift_presensi;
+      // 2. Filter Jam Pelajaran
+      if (id_jam_pelajaran) {
+        whereClause.id_jam_pelajaran = id_jam_pelajaran;
       }
 
-      // 3. Filter Lokasi Kamar
-      if (id_lokasi_kamar) {
-        whereClause.id_lokasi_kamar = id_lokasi_kamar;
+      // 3. Filter Lokasi
+      if (id_lokasi) {
+        whereClause.id_lokasi = id_lokasi;
       }
 
       // 4. Filter Status Kehadiran
       if (status) {
         whereClause.status_kehadiran = status;
       }
-
+      
       // 5. Filter Date Range (tanggal_awal & tanggal_akhir)
       if (tanggal_awal && tanggal_akhir) {
         whereClause.tanggal = {
@@ -438,13 +331,13 @@ export default class Repository {
         { model: AppSantri, as: 'santri', attributes: ['fullname', 'nis'] },
         {
           model: Lokasi,
-          as: 'lokasiKamar',
+          as: 'lokasi',
           attributes: ['id_lokasi', 'nama_lokasi'],
         },
         {
-          model: ShiftPresensi,
-          as: 'shiftPresensi',
-          attributes: ['id_shift', 'nama_shift'],
+          model: JamPelajaran,
+          as: 'jamPelajaran',
+          attributes: ['id_jampel', 'nama_jampel'],
         },
         {
           model: Pegawai,
@@ -464,49 +357,57 @@ export default class Repository {
     });
   }
 
-  /**
-   * Menyediakan data penempatan kamar aktif saat admin mengunduh opsi "Template Kosongan"
-   */
-  public async listSantriActiveForTemplate(params: {
-    id_lokasi_kamar?: string;
-    tanggal?: string;
-  }) {
-    const targetDate = params.tanggal
-      ? moment(params.tanggal).format('YYYY-MM-DD')
-      : moment().format('YYYY-MM-DD');
+  public async listSantriActiveForTemplate(params: { id_cabang?: string }) {
     let condition: any = {
-      status: 'Aktif',
-      is_deleted: false,
-      tanggal_masuk: { [Op.lte]: targetDate },
-      [Op.or]: [
-        { tanggal_keluar: null },
-        { tanggal_keluar: { [Op.gte]: targetDate } },
-      ],
+      status: 1,
+      id_cabang: params.id_cabang,
     };
 
-    if (params.id_lokasi_kamar) condition.id_lokasi = params.id_lokasi_kamar;
-
-    return await PenempatanKamarSantri.findAll({
+    return await AppSantri.findAll({
       where: condition,
+      attributes: ['id_santri', 'fullname', 'nis', 'nik'],
       include: [
         {
-          model: AppSantri,
-          as: 'santri',
-          where: { status: 1 },
-          attributes: ['fullname', 'nis'],
+          model: Cabang,
+          as: 'cabang',
+          attributes: ['id_cabang', 'nama_cabang'],
         },
-        { model: Lokasi, as: 'lokasi', attributes: ['nama_lokasi'] },
       ],
     });
   }
 
-  /**
-   * Membantu mencari data santri murni berbasis NIS saja saat proses pembacaan file Import
-   */
   public async findSantriByNisOnly(nis: string) {
     return await AppSantri.findOne({
       where: { nis: nis, status: 1 },
       attributes: ['id_santri', 'fullname', 'nis'],
+    });
+  }
+
+  public async findSantriByCabang(id_cabang: string, id_lokasi: string) {
+    let where: any = {
+      status: 1
+    }
+    if(id_cabang) where.id_cabang = id_cabang
+    if(id_lokasi) {
+      const lokasi = await Lokasi.findOne({
+        where: {
+          id_lokasi
+        }
+      });
+      if (lokasi) {
+        where.id_cabang = lokasi.getDataValue("id_cabang")
+      }
+    }
+    return await AppSantri.findAll({
+      where: where,
+      attributes: ['id_santri', 'fullname', 'nis'],
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          attributes: ['id_cabang', 'nama_cabang'],
+        },
+      ]
     });
   }
 }

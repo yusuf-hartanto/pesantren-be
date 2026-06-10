@@ -65,6 +65,7 @@ import { kebersihanScanLog } from './kebersihan.scan.log/kebersihan.scan.log.con
 import { kebersihanScanLogSchema } from './kebersihan.scan.log/kebersihan.scan.log.schema';
 import { santri } from '../app/santri/santri.controller';
 import { AbsenHarianSantriController } from './absen.harian.santri/absen.harian.santri.controller';
+import { AbsenKelasSantriController } from './absen.kelas.santri/absen.kelas.santri.controller';
 import { notification } from './notification/notification.controller';
 import { notificationSchema } from './notification/notification.schema';
 
@@ -413,6 +414,29 @@ router.post('/absen-harian-santri/import', AbsenHarianSantriController.import);
 router.post('/absen-harian-santri/insert', AbsenHarianSantriController.insert);
 router.get('/absen-harian-santri/:id', AbsenHarianSantriController.detail);
 router.put('/absen-harian-santri/:id', AbsenHarianSantriController.update);
+
+router.get('/absen-kelas-santri', AbsenKelasSantriController.index);
+router.get(
+  '/absen-kelas-santri/jam-pelajaran',
+  AbsenKelasSantriController.findJamPelajaran
+);
+router.get(
+  '/absen-kelas-santri/santri-cabang',
+  AbsenKelasSantriController.findSantriCabang
+);
+router.get('/absen-kelas-santri/:id', AbsenKelasSantriController.detail);
+router.post(
+  '/absen-kelas-santri',
+  AbsenKelasSantriController.saveKelasPresensi
+);
+router.post(
+  '/absen-kelas-santri/scan-qr',
+  AbsenKelasSantriController.scanQrPresensi
+);
+router.post('/absen-kelas-santri/export', AbsenKelasSantriController.export);
+router.post('/absen-kelas-santri/import', AbsenKelasSantriController.import);
+router.post('/absen-kelas-santri/insert', AbsenKelasSantriController.insert);
+router.put('/absen-kelas-santri/:id', AbsenKelasSantriController.update);
 
 router.get('/kegiatan-akademik/all-data', kegiatanAkademik.list);
 router.get('/kegiatan-akademik', kegiatanAkademik.index);
