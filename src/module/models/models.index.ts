@@ -153,6 +153,7 @@ import {
   initAbsenKelasSantri,
   associateAbsenKelasSantri,
 } from '../app/absen.kelas.santri/absen.kelas.santri.model';
+import { initNotification, associateNotification } from '../app/notification/notification.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -210,6 +211,7 @@ export function initializeModels(sequelize: Sequelize) {
   initAppSantri(sequelize);
   initAbsenHarianSantri(sequelize);
   initAbsenKelasSantri(sequelize);
+  initNotification(sequelize);
 
   // associate
   associateAppRole();
@@ -254,6 +256,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateShiftPresensi();
   associateAbsenHarianSantri();
   associateAbsenKelasSantri();
+  associateNotification();
 
   addGlobalActivityHooks(sequelize);
 }

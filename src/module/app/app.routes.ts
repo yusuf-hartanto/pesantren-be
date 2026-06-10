@@ -66,6 +66,8 @@ import { kebersihanScanLogSchema } from './kebersihan.scan.log/kebersihan.scan.l
 import { santri } from '../app/santri/santri.controller';
 import { AbsenHarianSantriController } from './absen.harian.santri/absen.harian.santri.controller';
 import { AbsenKelasSantriController } from './absen.kelas.santri/absen.kelas.santri.controller';
+import { notification } from './notification/notification.controller';
+import { notificationSchema } from './notification/notification.schema';
 
 const router: Router = Router();
 
@@ -703,5 +705,13 @@ router.get('/santri', santri.index);
 router.get('/santri/:id', santri.detail);
 router.put('/santri/:id', sanitizeBody, santri.update);
 router.post('/santri/export', santri.export);
+
+router.get('/notification', notification.index);
+router.put(
+  '/notification/:id',
+  sanitizeBody,
+  validate(notificationSchema),
+  notification.update
+);
 
 export default router;
