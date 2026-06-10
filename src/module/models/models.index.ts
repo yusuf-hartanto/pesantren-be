@@ -149,6 +149,10 @@ import {
   associateAbsenHarianSantri,
   initAbsenHarianSantri,
 } from '../app/absen.harian.santri/absen.harian.santri.model';
+import {
+  initAbsenKelasSantri,
+  associateAbsenKelasSantri,
+} from '../app/absen.kelas.santri/absen.kelas.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -205,6 +209,7 @@ export function initializeModels(sequelize: Sequelize) {
   initAppInstitution(sequelize);
   initAppSantri(sequelize);
   initAbsenHarianSantri(sequelize);
+  initAbsenKelasSantri(sequelize);
 
   // associate
   associateAppRole();
@@ -248,6 +253,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateAppSantri();
   associateShiftPresensi();
   associateAbsenHarianSantri();
+  associateAbsenKelasSantri();
 
   addGlobalActivityHooks(sequelize);
 }

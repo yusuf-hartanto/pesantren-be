@@ -5,15 +5,15 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
 import AppSantri from '../santri/santri.model';
 import Lokasi from '../location/location.model';
-import ShiftPresensi from '../shift.presensi/shift.presensi.model';
+import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
 import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
 
-export class AbsenHarianSantri extends Model {
+export class AbsenKelasSantri extends Model {
   declare id_absen: string;
   declare id_santri: string;
-  declare id_lokasi_kamar: string;
-  declare id_shift_presensi: string;
+  declare id_lokasi: string;
+  declare id_jam_pelajaran: string;
   declare tanggal: Date | string;
   declare waktu_absen: string;
   declare status_kehadiran: 'Hadir' | 'Izin' | 'Sakit' | 'Alfa';
@@ -24,14 +24,14 @@ export class AbsenHarianSantri extends Model {
 
   // Relasi Ke Model Lain
   declare santri?: AppSantri;
-  declare lokasiKamar?: Lokasi;
-  declare shiftPresensi?: ShiftPresensi;
+  declare lokasi?: Lokasi;
+  declare jamPelajaran?: JamPelajaran;
   declare petugas?: Pegawai;
   declare resource?: AppResource;
 }
 
-export function initAbsenHarianSantri(sequelize: Sequelize) {
-  AbsenHarianSantri.init(
+export function initAbsenKelasSantri(sequelize: Sequelize) {
+  AbsenKelasSantri.init(
     {
       id_absen: {
         type: DataTypes.STRING,
@@ -42,11 +42,11 @@ export function initAbsenHarianSantri(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      id_lokasi_kamar: {
+      id_lokasi: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      id_shift_presensi: {
+      id_jam_pelajaran: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -100,19 +100,19 @@ export function initAbsenHarianSantri(sequelize: Sequelize) {
     },
     {
       sequelize,
-      modelName: 'AbsenHarianSantri',
-      tableName: 'absen_harian_santri',
+      modelName: 'AbsenKelasSantri',
+      tableName: 'absen_kelas_santri',
       underscored: true,
       timestamps: true,
-      paranoid: true, // Otomatis mengelola soft delete melalui kolom deleted_at
+      paranoid: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at',
       deletedAt: 'deleted_at',
       indexes: [
         {
-          name: 'unique_absen_santri_shift_per_hari',
+          name: 'unique_absen_kelas_pelajaran',
           unique: true,
-          fields: ['id_santri', 'tanggal', 'id_shift_presensi'],
+          fields: ['id_santri', 'tanggal', 'id_jam_pelajaran'],
           where: {
             deleted_at: null,
           },
@@ -121,53 +121,52 @@ export function initAbsenHarianSantri(sequelize: Sequelize) {
     }
   );
 
-  // Otomatisasi UUID sebelum entitas disimpan ke database
-  AbsenHarianSantri.beforeCreate((absen) => {
+  AbsenKelasSantri.beforeCreate((absen) => {
     absen?.setDataValue('id_absen', uuidv4());
   });
 
-  AbsenHarianSantri.beforeBulkCreate((absenInstances) => {
+  AbsenKelasSantri.beforeBulkCreate((absenInstances) => {
     absenInstances.forEach((absen) => {
       absen.setDataValue('id_absen', uuidv4());
     });
   });
 
-  return AbsenHarianSantri;
+  return AbsenKelasSantri;
 }
 
-export function associateAbsenHarianSantri() {
-  AbsenHarianSantri.belongsTo(AppSantri, {
+export function associateAbsenKelasSantri() {
+  AbsenKelasSantri.belongsTo(AppSantri, {
     foreignKey: 'id_santri',
     as: 'santri',
-    onUpdate: 'CASCADE',
-    onDelete: 'RESTRICT', // Menjaga integritas data jika data santri tidak sengaja terhapus
-  });
-
-  AbsenHarianSantri.belongsTo(Lokasi, {
-    foreignKey: 'id_lokasi_kamar',
-    as: 'lokasiKamar',
-    onUpdate: 'CASCADE',
-    onDelete: 'SET NULL',
-  });
-
-  AbsenHarianSantri.belongsTo(ShiftPresensi, {
-    foreignKey: 'id_shift_presensi',
-    as: 'shiftPresensi',
     onUpdate: 'CASCADE',
     onDelete: 'RESTRICT',
   });
 
-  AbsenHarianSantri.belongsTo(Pegawai, {
+  AbsenKelasSantri.belongsTo(Lokasi, {
+    foreignKey: 'id_lokasi',
+    as: 'lokasi',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  AbsenKelasSantri.belongsTo(JamPelajaran, {
+    foreignKey: 'id_jam_pelajaran',
+    as: 'jamPelajaran',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT',
+  });
+
+  AbsenKelasSantri.belongsTo(Pegawai, {
     foreignKey: 'id_petugas',
     as: 'petugas',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });
 
-  AbsenHarianSantri.belongsTo(AppResource, {
+  AbsenKelasSantri.belongsTo(AppResource, {
     foreignKey: 'id_petugas',
     as: 'resource',
   });
 }
 
-export default AbsenHarianSantri;
+export default AbsenKelasSantri;
