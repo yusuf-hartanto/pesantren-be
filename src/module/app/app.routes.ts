@@ -689,5 +689,6 @@ router.put(
   validate(notificationSchema),
   notification.update
 );
+router.delete('/notification/:id', notification.delete);
 
 export default router;

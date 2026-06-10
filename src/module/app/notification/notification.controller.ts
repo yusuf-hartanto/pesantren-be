@@ -14,6 +14,8 @@ import {
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
 import moment from 'moment';
+import { rawQuery } from '../../../helpers/rawQuery';
+import { QueryTypes } from 'sequelize';
 
 const date: string = helper.date();
 
@@ -23,11 +25,17 @@ export default class Controller {
     try {
       const query = helper.fetchQueryRequest(req);
       const { count, rows } = await repository.index(query);
+      const q = `SELECT COUNT(*) FROM notifications WHERE status = 0`;
+        const conn = await rawQuery.getConnection();
+        const result: any =await conn.query(q, {
+          type: QueryTypes.SELECT,
+        });
+
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(
         SUCCESS_RETRIEVED,
-        { total: count, values: rows },
+        { total: count, values: rows, total_new: parseInt(result[0]?.count) },
         res
       );
     } catch (err: any) {

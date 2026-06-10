@@ -66,12 +66,12 @@ export function initNotification(sequelize: Sequelize) {
 
 export function associateNotification() {
   Notification.belongsTo(AppResource, {
-    as: 'from',
+    as: 'sender',
     foreignKey: 'from',
   });
 
   Notification.belongsTo(AppResource, {
-    as: 'to',
+    as: 'receiver',
     foreignKey: 'to',
   });
 }

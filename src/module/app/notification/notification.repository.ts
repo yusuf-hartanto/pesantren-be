@@ -27,15 +27,15 @@ export default class Repository {
       include: [
         {
           model: AppResource,
-          as: 'from',
+          as: 'sender',
           required: false,
-          attributes: ['resource_id', 'username', 'fullname'],
+          attributes: ['resource_id', 'username', 'full_name'],
         },
         {
           model: AppResource,
-          as: 'to',
+          as: 'receiver',
           required: false,
-          attributes: ['resource_id', 'username', 'fullname'],
+          attributes: ['resource_id', 'username', 'full_name'],
         },
       ],
     });
