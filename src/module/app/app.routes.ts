@@ -414,7 +414,6 @@ router.get('/absen-harian-santri/:id', AbsenHarianSantriController.detail);
 router.put('/absen-harian-santri/:id', AbsenHarianSantriController.update);
 
 router.get('/absen-kelas-santri', AbsenKelasSantriController.index);
-router.get('/absen-kelas-santri/:id', AbsenKelasSantriController.detail);
 router.get(
   '/absen-kelas-santri/jam-pelajaran',
   AbsenKelasSantriController.findJamPelajaran
@@ -423,6 +422,7 @@ router.get(
   '/absen-kelas-santri/santri-cabang',
   AbsenKelasSantriController.findSantriCabang
 );
+router.get('/absen-kelas-santri/:id', AbsenKelasSantriController.detail);
 router.post(
   '/absen-kelas-santri',
   AbsenKelasSantriController.saveKelasPresensi

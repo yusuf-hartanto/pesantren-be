@@ -69,9 +69,9 @@ const generateDataExcel = (
       details[i]?.id_lokasi || '', // ID Lokasi
       details[i]?.lokasi?.nama_lokasi || '', // Nama Lokasi
       details[i]?.id_jam_pelajaran || '', // ID Jam Pelajaran
-      details[i]?.jamPelajaran?.nama_pelajaran || '', // Nama Jam Pelajaran
+      details[i]?.jamPelajaran?.nama_jampel || '', // Nama Jam Pelajaran
       details[i]?.id_petugas || '', // ID Petugas
-      details[i]?.petugas?.nama_lengkap || '', // Nama Petugas
+      details[i]?.petugas?.nama_lengkap || details[i]?.resource?.full_name || '', // Nama Petugas
       details[i]?.status_kehadiran || 'Hadir', // Status Kehadiran
       details[i]?.keterangan || '', // Keterangan
     ]);
