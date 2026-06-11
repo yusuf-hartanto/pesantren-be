@@ -137,6 +137,9 @@ import {
 } from '../app/institution/institution.model';
 import { initAppSantri, associateAppSantri } from '../app/santri/santri.model';
 import { associateAbsenHarianSantri, initAbsenHarianSantri } from '../app/absen.harian.santri/absen.harian.santri.model';
+import { associatePerizinanSantri, initPerizinanSantri } from '../app/perizinan.santri/perizinan.santri.model';
+import { associateSuratPerizinanSantri, initSuratPerizinanSantri } from '../app/surat.perizinan.santri/surat.perizinan.santri.model';
+import { associateLogGateSantri, initLogGateSantri } from '../app/log.gate.santri/log.gate.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -193,6 +196,9 @@ export function initializeModels(sequelize: Sequelize) {
   initAppInstitution(sequelize);
   initAppSantri(sequelize);
   initAbsenHarianSantri(sequelize);
+  initPerizinanSantri(sequelize);
+  initSuratPerizinanSantri(sequelize);
+  initLogGateSantri(sequelize);
 
 
   // associate
@@ -237,6 +243,9 @@ export function initializeModels(sequelize: Sequelize) {
   associateAppSantri();
   associateShiftPresensi();
   associateAbsenHarianSantri();
+  associatePerizinanSantri();
+  associateSuratPerizinanSantri();
+  associateLogGateSantri();
 
   addGlobalActivityHooks(sequelize);
 }

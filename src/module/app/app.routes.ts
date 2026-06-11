@@ -65,6 +65,8 @@ import { kebersihanScanLog } from './kebersihan.scan.log/kebersihan.scan.log.con
 import { kebersihanScanLogSchema } from './kebersihan.scan.log/kebersihan.scan.log.schema';
 import { santri } from '../app/santri/santri.controller';
 import { AbsenHarianSantriController } from './absen.harian.santri/absen.harian.santri.controller';
+import { PerizinanSantriController } from './perizinan.santri/perizinan.santri.controller';
+import { LogGateSantriController } from './log.gate.santri/log.gate.santri.controller';
 
 const router: Router = Router();
 
@@ -1320,5 +1322,27 @@ router.get('/santri', auth.checkBearerToken, santri.index);
 router.get('/santri/:id', auth.checkBearerToken, santri.detail);
 router.put('/santri/:id', auth.checkBearerToken, sanitizeBody, santri.update);
 router.post('/santri/export', auth.checkBearerToken, santri.export);
+
+router.get('/perizinan-santri', auth.checkBearerToken, PerizinanSantriController.index);
+router.post('/perizinan-santri', auth.checkBearerToken, PerizinanSantriController.create);
+router.post('/perizinan-santri/approve/:id', auth.checkBearerToken, PerizinanSantriController.approve);
+router.post('/perizinan-santri/cancel/:id', auth.checkBearerToken, PerizinanSantriController.cancel);
+router.post('/perizinan-santri/request-cancellation/:id', auth.checkBearerToken, PerizinanSantriController.requestPembatalan);
+router.post('/perizinan-santri/scan-qr-gate', auth.checkBearerToken, PerizinanSantriController.scanQrGate);
+router.post('/perizinan-santri/export', auth.checkBearerToken, PerizinanSantriController.export);
+router.post('/perizinan-santri/import', auth.checkBearerToken, PerizinanSantriController.import);
+router.post('/perizinan-santri/insert', auth.checkBearerToken, PerizinanSantriController.insert);
+router.get('/perizinan-santri/:id', auth.checkBearerToken, PerizinanSantriController.detail);
+router.put('/perizinan-santri/:id', auth.checkBearerToken, PerizinanSantriController.update);
+
+router.get('/log-gate-santri/all-data', auth.checkBearerToken, LogGateSantriController.list);
+router.get('/log-gate-santri', auth.checkBearerToken, LogGateSantriController.index);
+router.get('/log-gate-santri/:id', auth.checkBearerToken, LogGateSantriController.detail);
+router.post('/log-gate-santri', auth.checkBearerToken, LogGateSantriController.create);
+router.put('/log-gate-santri/:id', auth.checkBearerToken, LogGateSantriController.update);
+router.delete('/log-gate-santri/:id', auth.checkBearerToken, LogGateSantriController.delete);
+router.post('/log-gate-santri/export', auth.checkBearerToken, LogGateSantriController.export);
+router.post('/log-gate-santri/import', auth.checkBearerToken, LogGateSantriController.import);
+router.post('/log-gate-santri/insert', auth.checkBearerToken, LogGateSantriController.insert);
 
 export default router;

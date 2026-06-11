@@ -15,7 +15,7 @@ export default class Repository {
    */
   public async getActiveSantriByKamar(id_lokasi_kamar: string, tanggal: string) {
     const targetDate = moment(tanggal).format('YYYY-MM-DD');
-    console.log(targetDate)
+   
     return await PenempatanKamarSantri.findAll({
       where: {
         id_lokasi: id_lokasi_kamar,
