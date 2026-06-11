@@ -40,7 +40,12 @@ export default class Repository {
     let inspeksiWhere: any = {};
     let isInspeksiRequired = false;
 
-    if (data?.tanggal_awal && data?.tanggal_awal != '' && data?.tanggal_akhir && data?.tanggal_akhir != '') {
+    if (
+      data?.tanggal_awal &&
+      data?.tanggal_awal != '' &&
+      data?.tanggal_akhir &&
+      data?.tanggal_akhir != ''
+    ) {
       inspeksiWhere.tanggal = {
         [Op.between]: [data?.tanggal_awal, data?.tanggal_akhir],
       };

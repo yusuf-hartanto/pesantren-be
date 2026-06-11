@@ -161,7 +161,6 @@ export default class Controller {
       let foto_path: any = null;
       let insert = [];
       for (const temuan of temuans) {
-
         foto_path = await helper.uploadBase64(
           temuan.foto_path,
           'temuan',
@@ -255,7 +254,9 @@ export default class Controller {
           foto_path = temuan.foto_path;
         }
 
-        let checkFileTindakan = helper.checkExtentionBase64(temuan.foto_path_tindakan);
+        let checkFileTindakan = helper.checkExtentionBase64(
+          temuan.foto_path_tindakan
+        );
         if (checkFileTindakan == 'allowed') {
           foto_path_tindakan = await helper.uploadBase64(
             temuan.foto_path_tindakan,

@@ -7,6 +7,7 @@ import auth from './module/auth/auth.routes';
 import area from './module/area/area.routes';
 import global from './module/global/global.routes';
 import notif from './module/notif/notif.routes';
+import openApi from './module/open.api/open.routes';
 
 const router: Router = Router();
 
@@ -15,6 +16,7 @@ router.use('/auth', auth);
 router.use('/app', apps);
 router.use('/area', area);
 router.use('/notif', notif);
+router.use('/open-api', openApi);
 router.use(exception);
 
 export default router;

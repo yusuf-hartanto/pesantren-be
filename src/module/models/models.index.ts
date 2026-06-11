@@ -111,9 +111,18 @@ import {
   associateKelasFormal,
 } from '../app/kelas.formal/kelas.formal.model';
 import { associateLokasi, initLokasi } from '../app/location/location.model';
-import { initJadwalPelajaran, associateJadwalPelajaran } from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
-import { initShiftPresensi, associateShiftPresensi } from '../app/shift.presensi/shift.presensi.model';
-import { associateGeoArea, initGeoArea } from '../app/geo.areas/geo.areas.model';
+import {
+  initJadwalPelajaran,
+  associateJadwalPelajaran,
+} from '../app/jadwal.pelajaran/jadwal.pelajaran.model';
+import {
+  initShiftPresensi,
+  associateShiftPresensi,
+} from '../app/shift.presensi/shift.presensi.model';
+import {
+  associateGeoArea,
+  initGeoArea,
+} from '../app/geo.areas/geo.areas.model';
 import { initMasterSlotWaktu } from '../app/master.slot.waktu/master.slot.waktu.model';
 import {
   initJadwalInspeksiKebersihan,
@@ -140,6 +149,11 @@ import { associateAbsenHarianSantri, initAbsenHarianSantri } from '../app/absen.
 import { associatePerizinanSantri, initPerizinanSantri } from '../app/perizinan.santri/perizinan.santri.model';
 import { associateSuratPerizinanSantri, initSuratPerizinanSantri } from '../app/surat.perizinan.santri/surat.perizinan.santri.model';
 import { associateLogGateSantri, initLogGateSantri } from '../app/log.gate.santri/log.gate.santri.model';
+import {
+  initAbsenKelasSantri,
+  associateAbsenKelasSantri,
+} from '../app/absen.kelas.santri/absen.kelas.santri.model';
+import { initNotification, associateNotification } from '../app/notification/notification.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -200,6 +214,8 @@ export function initializeModels(sequelize: Sequelize) {
   initSuratPerizinanSantri(sequelize);
   initLogGateSantri(sequelize);
 
+  initAbsenKelasSantri(sequelize);
+  initNotification(sequelize);
 
   // associate
   associateAppRole();
@@ -246,6 +262,8 @@ export function initializeModels(sequelize: Sequelize) {
   associatePerizinanSantri();
   associateSuratPerizinanSantri();
   associateLogGateSantri();
+  associateAbsenKelasSantri();
+  associateNotification();
 
   addGlobalActivityHooks(sequelize);
 }

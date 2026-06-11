@@ -3,7 +3,7 @@
 import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
-  await queryInterface.createTable('absen_harian_santri', {
+  await queryInterface.createTable('absen_kelas_santri', {
     id_absen: {
       type: DataTypes.STRING,
       primaryKey: true,
@@ -14,11 +14,11 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    id_lokasi_kamar: {
+    id_lokasi: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    id_shift_presensi: {
+    id_jam_pelajaran: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -64,11 +64,10 @@ export const up = async (queryInterface: QueryInterface) => {
     },
   });
 
-  // Membuat Unique Index Gabungan
-  await queryInterface.addIndex('absen_harian_santri', {
-    fields: ['id_santri', 'tanggal', 'id_shift_presensi'],
+  await queryInterface.addIndex('absen_kelas_santri', {
+    fields: ['id_santri', 'tanggal', 'id_jam_pelajaran'],
     unique: true,
-    name: 'unique_absen_santri_shift_per_hari',
+    name: 'unique_absen_kelas_pelajaran',
     where: {
       is_deleted: false,
       deleted_at: null,
@@ -77,19 +76,16 @@ export const up = async (queryInterface: QueryInterface) => {
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  // Hapus unique index terlebih dahulu
   await queryInterface.removeIndex(
-    'absen_harian_santri',
-    'unique_absen_santri_shift_per_hari'
+    'absen_kelas_santri',
+    'unique_absen_kelas_pelajaran'
   );
 
-  // Hapus tabel utama
-  await queryInterface.dropTable('absen_harian_santri');
+  await queryInterface.dropTable('absen_kelas_santri');
 
-  // Perbaikan pemanggilan dialect menggunakan getDialect()
   if (queryInterface.sequelize.getDialect() === 'postgres') {
     await queryInterface.sequelize.query(
-      'DROP TYPE IF EXISTS "enum_absen_harian_santri_status_kehadiran";'
+      'DROP TYPE IF EXISTS "enum_absen_kelas_santri_status_kehadiran";'
     );
   }
 };

@@ -75,10 +75,15 @@ export default class Repository {
             {
               model: Lokasi,
               as: 'parent',
-              attributes: ['id_lokasi', 'kode_lokasi', 'nama_lokasi', 'parent_id'],
+              attributes: [
+                'id_lokasi',
+                'kode_lokasi',
+                'nama_lokasi',
+                'parent_id',
+              ],
               required: false,
             },
-          ]
+          ],
         },
         {
           model: TahunAjaran,

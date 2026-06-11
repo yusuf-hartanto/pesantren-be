@@ -2,20 +2,21 @@
 
 import { z } from 'zod';
 
-export const absenHarianSantriSchema = z.object({
+export const absenKelasSantriSchema = z.object({
   id_santri: z
     .string()
     .min(1, { message: 'ID Santri tidak boleh kosong' })
     .uuid({ message: 'Format ID Santri harus berupa UUID' }),
 
-  id_lokasi_kamar: z
+  id_lokasi: z
     .string()
-    .min(1, { message: 'ID Lokasi Kamar tidak boleh kosong' })
-    .uuid({ message: 'Format ID Lokasi Kamar harus berupa UUID' }),
+    .min(1, { message: 'ID Lokasi tidak boleh kosong' })
+    .uuid({ message: 'Format ID Lokasi harus berupa UUID' }),
 
-  id_shift_presensi: z
+  id_jam_pelajaran: z
     .string()
-    .uuid({ message: 'Format ID Kamar harus berupa UUID' }),
+    .min(1, { message: 'ID Jam Pelajaran tidak boleh kosong' })
+    .uuid({ message: 'Format ID Jam Pelajaran harus berupa UUID' }),
 
   tanggal: z
     .string()
@@ -31,18 +32,18 @@ export const absenHarianSantriSchema = z.object({
   keterangan: z.string().nullable().optional(),
 });
 
-// Schema untuk memproses presensi kolektif dari form kamar/asrama
-export const bulkAbsenHarianSantriSchema = z.object({
+export const bulkAbsenKelasSantriSchema = z.object({
   tanggal: z.string().min(1, { message: 'Tanggal absensi tidak boleh kosong' }),
 
-  id_lokasi_kamar: z
+  id_lokasi: z
     .string()
-    .min(1, { message: 'ID Kamar tidak boleh kosong' })
-    .uuid({ message: 'Format ID Kamar harus berupa UUID' }),
+    .min(1, { message: 'ID Lokasi tidak boleh kosong' })
+    .uuid({ message: 'Format ID Lokasi harus berupa UUID' }),
 
-  id_shift_presensi: z
+  id_jam_pelajaran: z
     .string()
-    .uuid({ message: 'Format ID Kamar harus berupa UUID' }),
+    .min(1, { message: 'ID Jam Pelajaran tidak boleh kosong' })
+    .uuid({ message: 'Format ID Jam Pelajaran harus berupa UUID' }),
 
   waktu_absen: z.string().optional(),
 
@@ -68,6 +69,6 @@ export const scanQrAbsenSchema = z.object({
     .min(1),
   waktu_custom: z.string().optional(),
   tanggal_custom: z.string().optional(),
-  id_shift_presensi: z.string().optional(),
+  id_jam_pelajaran: z.string().optional(),
   id_lokasi: z.string().optional(),
 });

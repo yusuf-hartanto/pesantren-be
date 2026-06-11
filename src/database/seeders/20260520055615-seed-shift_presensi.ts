@@ -59,7 +59,8 @@ export default {
         toleransi_menit: 15,
         is_wajib: true,
         status: 'Aktif',
-        keterangan: 'Sesi mengulang pelajaran sekolah/kuliah didampingi musyrif',
+        keterangan:
+          'Sesi mengulang pelajaran sekolah/kuliah didampingi musyrif',
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -73,7 +74,8 @@ export default {
         toleransi_menit: 20,
         is_wajib: false,
         status: 'Aktif',
-        keterangan: 'Program perbaikan bacaan Quran terbuka untuk santri umum/non-reguler',
+        keterangan:
+          'Program perbaikan bacaan Quran terbuka untuk santri umum/non-reguler',
         created_at: new Date(),
         updated_at: new Date(),
       },

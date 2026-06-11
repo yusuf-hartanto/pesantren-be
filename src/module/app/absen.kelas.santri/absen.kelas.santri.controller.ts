@@ -3,15 +3,15 @@
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
-import { repository } from './absen.harian.santri.repository';
-import { repository as shiftPresensiRepo } from '../shift.presensi/shift.presensi.repository';
+import { repository } from './absen.kelas.santri.repository';
+import { repository as repoJamPelajaran } from '../jam.pelajaran/jam.pelajaran.repository';
 import {
-  absenHarianSantriSchema,
-  bulkAbsenHarianSantriSchema,
+  absenKelasSantriSchema,
+  bulkAbsenKelasSantriSchema,
   scanQrAbsenSchema,
-} from './absen.harian.santri.schema';
+} from './absen.kelas.santri.schema';
 import moment from 'moment';
-import { any, z } from 'zod';
+import { z } from 'zod';
 import {
   NOT_FOUND,
   SUCCESS_RETRIEVED,
@@ -26,17 +26,16 @@ const generateDataExcel = (
   details: any,
   isTemplate: boolean = false
 ) => {
-  // Susunan teks header absensi harian santri
   sheet.addRow([
     'No', // Kolom 1 (A)
     'NIS Santri', // Kolom 2 (B)
     'Nama Lengkap Santri', // Kolom 3 (C)
     'Tanggal Absen', // Kolom 4 (D)
     'Waktu Absen', // Kolom 5 (E)
-    'ID Lokasi Kamar', // Kolom 6 (F)
-    'Nama Kamar', // Kolom 7 (G)
-    'ID Shift Presensi', // Kolom 8 (H)
-    'Nama Shift', // Kolom 9 (I)
+    'ID Lokasi', // Kolom 6 (F)
+    'Nama Lokasi', // Kolom 7 (G)
+    'ID Jam Pelajaran', // Kolom 8 (H)
+    'Nama Jam Pelajaran', // Kolom 9 (I)
     'ID Petugas', // Kolom 10 (J) -> Dipertegas posisi kolomnya
     'Nama Petugas', // Kolom 11 (K) -> Dipertegas posisi kolomnya
     'Status Kehadiran', // Kolom 12 (L)
@@ -48,7 +47,6 @@ const generateDataExcel = (
     sheet.getColumn(index + 1).width = width;
   });
 
-  // Styling Header Baris Pertama
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -59,7 +57,6 @@ const generateDataExcel = (
     };
   });
 
-  // Perulangan Data
   for (let i in details) {
     sheet.addRow([
       parseInt(i) + 1, // No
@@ -69,18 +66,17 @@ const generateDataExcel = (
         ? moment(details[i].tanggal).format('YYYY-MM-DD')
         : '', // Tanggal Absen
       details[i]?.waktu_absen || '', // Waktu Absen
-      details[i]?.id_lokasi_kamar || '', // ID Lokasi Kamar
-      details[i]?.lokasiKamar?.nama_lokasi || '', // Nama Kamar
-      details[i]?.id_shift_presensi || '', // ID Shift Presensi
-      details[i]?.shiftPresensi?.nama_shift || '', // Nama Shift
-      details[i]?.id_petugas || '', // ID Petugas (DI SINI PERBAIKANNYA)
-      details[i]?.petugas?.nama_lengkap || details[i]?.resource?.full_name || '', // Nama Petugas (DI SINI PERBAIKANNYA)
+      details[i]?.id_lokasi || '', // ID Lokasi
+      details[i]?.lokasi?.nama_lokasi || '', // Nama Lokasi
+      details[i]?.id_jam_pelajaran || '', // ID Jam Pelajaran
+      details[i]?.jamPelajaran?.nama_jampel || '', // Nama Jam Pelajaran
+      details[i]?.id_petugas || '', // ID Petugas
+      details[i]?.petugas?.nama_lengkap || details[i]?.resource?.full_name || '', // Nama Petugas
       details[i]?.status_kehadiran || 'Hadir', // Status Kehadiran
       details[i]?.keterangan || '', // Keterangan
     ]);
   }
 
-  // Pemberian Border ke seluruh cell yang aktif
   const columnCount = sheet.columns.length;
   for (let row = 1; row <= (details?.length || 0) + 1; row++) {
     const currentRow = sheet.getRow(row);
@@ -103,8 +99,8 @@ const normalizeRow = (row: any) => ({
   nama_lengkap: String(row['Nama Lengkap Santri'] || '').trim(),
   tanggal: row['Tanggal Absen'] || null,
   waktu_absen: row['Waktu Absen'] || null,
-  id_lokasi_kamar: String(row['ID Lokasi Kamar'] || '').trim(),
-  id_shift_presensi: String(row['ID Shift Presensi'] || '').trim(),
+  id_lokasi: String(row['ID Lokasi'] || '').trim(),
+  id_jam_pelajaran: String(row['ID Jam Pelajaran'] || '').trim(),
   id_petugas: String(row['ID Petugas'] || '').trim(),
   status_kehadiran: String(row['Status Kehadiran'] || 'Hadir').trim(),
   keterangan: String(row['Keterangan'] || '').trim(),
@@ -114,7 +110,8 @@ const normalizeRow = (row: any) => ({
 const validateRow = (row: any) => {
   const errors: string[] = [];
   if (!row.nis) errors.push('NIS Santri wajib diisi');
-  if (!row.id_lokasi_kamar) errors.push('ID Lokasi Kamar wajib diisi');
+  if (!row.id_lokasi) errors.push('ID Lokasi wajib diisi');
+  if (!row.id_jam_pelajaran) errors.push('ID Jam Pelajaran wajib diisi');
   if (!row.id_petugas) errors.push('ID Petugas wajib diisi');
 
   const validStatus = ['Hadir', 'Izin', 'Sakit', 'Alfa'];
@@ -128,62 +125,11 @@ const validateRow = (row: any) => {
 
 export default class Controller {
   constructor() {
-    // this.getSantriKamarReady = this.getSantriKamarReady.bind(this);
-    this.saveKamarPresensi = this.saveKamarPresensi.bind(this);
+    this.saveKelasPresensi = this.saveKelasPresensi.bind(this);
     this.index = this.index.bind(this);
   }
 
-  /**
-   * Mengambil daftar santri aktif di kamar tertentu untuk dimuat ke dalam form absensi
-   */
-  public async getSantriKamarReady(req: Request, res: Response) {
-    try {
-      const id_lokasi_kamar = req.query.id_lokasi_kamar as string;
-      const tanggal =
-        (req.query.tanggal as string) || moment().format('YYYY-MM-DD');
-
-      if (!id_lokasi_kamar) {
-        return response.failed(
-          'Parameter id_lokasi_kamar wajib disertakan',
-          400,
-          res
-        );
-      }
-
-      const activePenempatan = await repository.getActiveSantriByKamar(
-        id_lokasi_kamar,
-        tanggal
-      );
-
-      const listSantri = activePenempatan.map((p: any) => ({
-        id_santri: p.santri?.id_santri,
-        fullname: p.santri?.fullname,
-        nis: p.santri?.nis,
-        gender: p.santri?.gender,
-        id_lokasi_kamar: p.id_lokasi,
-        status_kehadiran_default: 'Hadir',
-      }));
-
-      if (listSantri.length === 0) {
-        return response.success(
-          'Tidak ada santri aktif di kamar ini pada tanggal tersebut',
-          [],
-          res,
-          false
-        );
-      }
-
-      return response.success(SUCCESS_RETRIEVED, listSantri, res);
-    } catch (err: any) {
-      return helper.catchError(
-        `AbsenSantri readyList: ${err?.message}`,
-        500,
-        res
-      );
-    }
-  }
-
-  public async findAsramaShift(req: Request, res: Response) {
+  public async findJamPelajaran(req: Request, res: Response) {
     try {
       const { waktu_absen } = req.query;
 
@@ -194,26 +140,26 @@ export default class Controller {
         });
       }
 
-      let result: any = await repository.findMatchingAsramaShift(
+      let result: any = await repository.findMatchingJamPelajaran(
         waktu_absen as string
       );
 
       let isFallbackToAll = false;
 
       if (!result) {
-        result = await repository.findAllAsramaShift();
+        result = await repository.findAllJamPelajaran();
         isFallbackToAll = true;
       }
 
       return res.status(200).json({
         status: true,
         message: isFallbackToAll
-          ? 'Tidak ada shift yang cocok dengan waktu tersebut. Menampilkan semua shift asrama aktif.'
-          : 'Berhasil menemukan shift asrama yang cocok.',
+          ? 'Tidak ada jam pelajaran yang cocok dengan waktu tersebut. Menampilkan semua jam pelajaran aktif.'
+          : 'Berhasil menemukan jam pelajaran yang cocok.',
         data: isFallbackToAll ? result : [result],
       });
     } catch (error: any) {
-      console.error('Error pada findAsramaShift:', error);
+      console.error('Error pada findJamPelajaran:', error);
       return res.status(500).json({
         status: false,
         message: 'Terjadi kesalahan internal server',
@@ -222,51 +168,60 @@ export default class Controller {
     }
   }
 
-  /**
-   * PROSES SAVE / COMMIT BULK PRESENSI KAMAR
-   */
-  public async saveKamarPresensi(req: Request, res: Response) {
+  public async findSantriCabang(req: Request, res: Response) {
     try {
-      const validBody = bulkAbsenHarianSantriSchema.parse(req.body);
+      const { id_cabang, id_lokasi } = req.query;
+
+      if (!id_cabang && !id_lokasi) {
+        return res.status(400).json({
+          status: false,
+          message: 'Parameter id_cabang atau id_lokasi wajib diisi',
+        });
+      }
+
+      let result: any = await repository.findSantriByCabang(id_cabang as string, id_lokasi as string);
+
+      return res.status(200).json({
+        status: true,
+        message: 'Berhasil menemukan santri',
+        data: result,
+      });
+    } catch (error: any) {
+      console.error('Error pada findSantriCabang:', error);
+      return res.status(500).json({
+        status: false,
+        message: 'Terjadi kesalahan internal server',
+        error: error.message,
+      });
+    }
+  }
+
+  public async saveKelasPresensi(req: Request, res: Response) {
+    try {
+      const validBody = bulkAbsenKelasSantriSchema.parse(req.body);
 
       const targetTanggal = moment(validBody.tanggal).format('YYYY-MM-DD');
       const targetWaktu = validBody.waktu_absen || moment().format('HH:mm:ss');
 
       const id_petugas = req.user?.id || null;
 
-      const shiftDoc = await repository.findMatchingAsramaShift(targetWaktu);
-      if (!shiftDoc) {
+      const jamPelajaran = await repository.findMatchingJamPelajaran(targetWaktu);
+      if (!jamPelajaran) {
         return response.failed(
-          `Tidak ada shift presensi kategori 'ASRAMA' yang aktif untuk rentang waktu [${targetWaktu}].`,
+          `Tidak ada jam pelajaran yang aktif untuk rentang waktu [${targetWaktu}].`,
           422,
           res
         );
       }
 
-      const id_shift_presensi = shiftDoc.getDataValue('id_shift');
-
+      const id_jam_pelajaran = jamPelajaran.getDataValue('id_jampel');
       const validatedPayloads = [];
 
       for (const item of validBody.data_absen) {
-        const isKamarValid = await repository.checkSantriKamarValidity(
-          item.id_santri,
-          validBody.id_lokasi_kamar,
-          targetTanggal
-        );
-
-        if (!isKamarValid) {
-          return response.failed(
-            `Santri dengan ID [${item.id_santri}] tidak memiliki penempatan aktif di lokasi kamar tersebut untuk tanggal yang dipilih.`,
-            422,
-            res
-          );
-        }
-
-        // Siapkan struktur payload database lengkap
         validatedPayloads.push({
           id_santri: item.id_santri,
-          id_lokasi_kamar: validBody.id_lokasi_kamar,
-          id_shift_presensi: validBody.id_shift_presensi || id_shift_presensi,
+          id_lokasi: validBody.id_lokasi,
+          id_jam_pelajaran: validBody.id_jam_pelajaran || id_jam_pelajaran,
           tanggal: targetTanggal,
           waktu_absen: targetWaktu,
           status_kehadiran: item.status_kehadiran,
@@ -281,7 +236,7 @@ export default class Controller {
         SUCCESS_SAVED,
         {
           processed: validatedPayloads.length,
-          shift_applied: shiftDoc.getDataValue('nama_shift'),
+          jampel_applied: jamPelajaran.getDataValue('nama_jampel'),
         },
         res
       );
@@ -294,9 +249,6 @@ export default class Controller {
     }
   }
 
-  /**
-   * Mengambil data history index absensi harian santri
-   */
   public async index(req: Request, res: Response) {
     try {
       const query = helper.fetchQueryRequest(req);
@@ -309,8 +261,8 @@ export default class Controller {
       const additionalFilter = {
         ...filterData,
         tanggal: req.query.tanggal,
-        id_lokasi_kamar: req.query.id_lokasi_kamar,
-        id_shift_presensi: req.query.id_shift_presensi,
+        id_lokasi: req.query.id_lokasi,
+        id_jam_pelajaran: req.query.id_jam_pelajaran,
         status: req.query.status,
         tanggal_awal: req.query.tanggal_awal,
         tanggal_akhir: req.query.tanggal_akhir,
@@ -325,7 +277,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`AbsenSantri index: ${err?.message}`, 500, res);
+      return helper.catchError(`AbsenKelasSantri index: ${err?.message}`, 500, res);
     }
   }
 
@@ -340,7 +292,7 @@ export default class Controller {
 
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`AbsenSantri detail: ${err?.message}`, 500, res);
+      return helper.catchError(`AbsenKelasSantri detail: ${err?.message}`, 500, res);
     }
   }
 
@@ -348,16 +300,13 @@ export default class Controller {
     try {
       const id = req.params.id;
 
-      // Cek apakah data absen yang mau di-update ada di database
       const checkAbsen = await repository.detail({ id_absen: id });
       if (!checkAbsen) {
         return response.success(NOT_FOUND, null, res, false);
       }
 
-      // alidasi schema input menggunakan Zod secara Partial (agar field yang tidak dikirim tidak error)
-      const validData = absenHarianSantriSchema.partial().parse(req.body);
+      const validData = absenKelasSantriSchema.partial().parse(req.body);
 
-      // Gabungkan data lama dengan data baru untuk keperluan validasi aturan bisnis
       const currentData = checkAbsen.toJSON() as any;
       const finalData = { ...currentData, ...validData };
 
@@ -365,55 +314,31 @@ export default class Controller {
       const targetWaktu = finalData.waktu_absen;
       const id_petugas = req.user?.id || currentData.id_petugas;
 
-      // ATURAN BISNIS: Jika ada perubahan pada Santri/Kamar/Tanggal, validasi ulang penempatan kamarnya
-      if (
-        validData.id_santri ||
-        validData.id_lokasi_kamar ||
-        validData.tanggal
-      ) {
-        const isKamarValid = await repository.checkSantriKamarValidity(
-          finalData.id_santri,
-          finalData.id_lokasi_kamar,
-          targetTanggal
-        );
-
-        if (!isKamarValid) {
-          return response.failed(
-            `Validasi Gagal: Santri tidak memiliki penempatan kamar aktif di lokasi tersebut pada tanggal ${targetTanggal}.`,
-            422,
-            res
-          );
-        }
-      }
-
-      // ATURAN BISNIS: Jika ada perubahan waktu/tanggal, hitung ulang Shift Asrama yang cocok
-      let final_id_shift = currentData.id_shift_presensi;
+      let final_id_jampel = currentData.id_jam_pelajaran;
       if (validData.waktu_absen || validData.tanggal) {
-        const shiftDoc = await repository.findMatchingAsramaShift(targetWaktu);
-        if (!shiftDoc) {
+        const jamPelajaran = await repository.findMatchingJamPelajaran(targetWaktu);
+        if (!jamPelajaran) {
           return response.failed(
-            `Validasi Gagal: Waktu absen [${targetWaktu}] tidak masuk dalam window shift ASRAMA manapun.`,
+            `Validasi Gagal: Waktu absen [${targetWaktu}] tidak masuk dalam window jam pelajaran manapun.`,
             422,
             res
           );
         }
-        final_id_shift = shiftDoc.getDataValue('id_shift');
+        final_id_jampel = jamPelajaran.getDataValue('id_jampel');
       }
 
-      // Susun payload final untuk disimpan ke database
       const payload = {
         id_santri: finalData.id_santri,
-        id_lokasi_kamar: finalData.id_lokasi_kamar,
-        id_shift_presensi: final_id_shift,
+        id_lokasi: finalData.id_lokasi,
+        id_jam_pelajaran: final_id_jampel,
         tanggal: targetTanggal,
         waktu_absen: targetWaktu,
         status_kehadiran: finalData.status_kehadiran,
         keterangan: finalData.keterangan,
         id_petugas,
-        updated_at: helper.date(), // Timestamp update manual jika underscored & hooks membutuhkan
+        updated_at: helper.date(),
       };
 
-      // Eksekusi update data ke repository
       await repository.update({
         payload,
         condition: { id_absen: id },
@@ -438,97 +363,73 @@ export default class Controller {
       const targetWaktu = validBody.waktu_custom || moment().format('HH:mm:ss');
       const id_petugas = req.user?.id || null;
 
-      let shiftDoc: any = null;
-      let id_shift_presensi = validBody.id_shift_presensi || null;
+      let jamPelajaran: any = null;
+      let id_jam_pelajaran = validBody.id_jam_pelajaran || null;
 
-      // Tentukan Shift Presensi ASRAMA yang sedang berjalan berdasarkan waktu scan saat ini
-      shiftDoc = await repository.findMatchingAsramaShift(targetWaktu);
-
-      // Fallback: Jika tidak ditemukan berdasarkan kecocokan waktu, gunakan id_shift_presensi dari payload
-      if (!shiftDoc && id_shift_presensi) {
-        shiftDoc = await shiftPresensiRepo.detail({
-          id_shift: id_shift_presensi,
+      jamPelajaran = await repository.findMatchingJamPelajaran(targetWaktu);
+      if (!jamPelajaran && id_jam_pelajaran) {
+        jamPelajaran = await repoJamPelajaran.detail({
+          id_jampel: id_jam_pelajaran,
         });
       }
 
-      // Jika setelah dilakukan fallback tetap tidak ditemukan dokumen master shift yang valid
-      if (!shiftDoc) {
+      if (!jamPelajaran) {
         return response.failed(
-          `Gagal Scan: Waktu saat ini [${targetWaktu}] tidak masuk dalam window shift ASRAMA manapun yang aktif.`,
+          `Gagal Scan: Waktu saat ini [${targetWaktu}] tidak masuk dalam window jam pelajaran manapun yang aktif.`,
           422,
           res
         );
       }
+      id_jam_pelajaran = jamPelajaran.getDataValue('id_jampel');
 
-      // Ambil ID Shift murni dari hasil pencarian database
-      id_shift_presensi = shiftDoc.getDataValue('id_shift');
-
-      // Mencari data santri aktif berdasar NIS, Tanggal Hari Ini, dan Lokasi Kamar secara ketat (REQUIRED / INNER JOIN)
-      const santriKamar: any = await repository.findSantriAndRoomByNis(
-        validBody.nis,
-        targetTanggal,
-        validBody.id_lokasi
-      );
-
-      // Mengambil baris pertama data penempatan kamar santri
-      const penempatanAktif = santriKamar?.penempatanKamar?.[0];
-
-      // Jalankan single guard clause yang efisien. Jika santri tidak ada / kamar tidak cocok, auto return gagal
-      if (!santriKamar || !penempatanAktif) {
+      const santri = await repository.findSantriByNis(validBody.nis);
+      if (!santri) {
         return response.failed(
-          `Gagal Scan: Santri dengan [${validBody.nis}] tidak ditemukan atau tidak terdaftar di lokasi kamar aktif ini.`,
+          `Gagal Scan: Santri NIS [${validBody.nis}] tidak ditemukan.`,
           422,
           res
         );
       }
-
-      const idLokasiSantri = penempatanAktif.id_lokasi;
 
       // ========================================================
       // KONDISI TAMBAHAN: CEK JIKA SUDAH MELAKUKAN PRESENSI
       // ========================================================
       const existingAbsen = await repository.checkExistingAbsen({
-        id_santri: santriKamar.id_santri,
+        id_santri: santri.getDataValue('id_santri'),
         tanggal: targetTanggal,
-        id_shift_presensi: id_shift_presensi,
+        id_jam_pelajaran,
       });
 
       if (existingAbsen) {
         return response.failed(
-          `Gagal Scan: Santri [${santriKamar.fullname}] sudah melakukan presensi untuk shift ${shiftDoc.getDataValue('nama_shift')} hari ini.`,
+          `Gagal Scan: Santri [${santri.getDataValue('fullname')}] sudah melakukan presensi untuk jam pelajaran ${jamPelajaran.getDataValue('nama_jampel')} hari ini.`,
           422,
           res
         );
       }
 
       // ========================================================
-      // LOGIKA VALIDASI BATAS TOLERANSI KETERLAMBATAN WAKTU SHIFT
+      // LOGIKA VALIDASI BATAS TOLERANSI KETERLAMBATAN WAKTU
       // ========================================================
       let status_kehadiran = 'Hadir';
       let keterangan = 'Hadir via Pindai QR Code';
 
-      // Mengambil property batas toleransi (biasanya field 'waktu_akhir' atau 'batas_toleransi' di DB)
-      const batasToleransi =
-        shiftDoc.getDataValue('batas_toleransi') ||
-        shiftDoc.getDataValue('waktu_akhir');
-
+      const batasToleransi = jamPelajaran.getDataValue('selesai');
       if (batasToleransi) {
         const formatWaktu = 'HH:mm:ss';
         const waktuScanMoment = moment(targetWaktu, formatWaktu);
         const batasMoment = moment(batasToleransi, formatWaktu);
 
-        // Jika waktu scan santri ternyata melewati batas toleransi yang ditentukan pada master shift
         if (waktuScanMoment.isAfter(batasMoment)) {
           status_kehadiran = 'Alfa';
           keterangan = 'Tidak hadir, waktu scan melewati batas toleransi';
         }
       }
 
-      // Susun susunan Payload terstruktur untuk di-Upsert otomatis ke database log presensi
       const payload = {
-        id_santri: santriKamar.id_santri,
-        id_lokasi_kamar: idLokasiSantri,
-        id_shift_presensi,
+        id_santri: santri.getDataValue('id_santri'),
+        id_lokasi: validBody.id_lokasi,
+        id_jam_pelajaran,
         tanggal: targetTanggal,
         waktu_absen: targetWaktu,
         status_kehadiran,
@@ -536,19 +437,17 @@ export default class Controller {
         id_petugas,
       };
 
-      // Jalankan eksekusi Upsert data ke Database Log Presensi
       await repository.upsertSingleAbsen(payload);
 
-      // Berikan data response sukses balik yang informatif untuk dipajang di layar monitor frontend scanner
       return response.success(
         status_kehadiran === 'Alfa'
           ? 'Presensi dicatat Terlambat (Alfa)!'
           : 'Presensi berhasil dicatat!',
         {
-          nis: santriKamar.nis,
-          nama_lengkap: santriKamar.fullname,
+          nis: santri.getDataValue('nis'),
+          nama_lengkap: santri.getDataValue('fullname'),
           waktu_scan: targetWaktu,
-          shift: shiftDoc.getDataValue('nama_shift'),
+          jampel: jamPelajaran.getDataValue('nama_jampel'),
           status_kehadiran,
           keterangan,
         },
@@ -556,7 +455,6 @@ export default class Controller {
       );
     } catch (err: any) {
       console.log(err);
-      // Penanganan error runtime atau kegagalan parsing skema Zod
       const msg =
         err instanceof z.ZodError
           ? `Scan Gagal: ${err.issues[0].message}`
@@ -570,8 +468,8 @@ export default class Controller {
       const {
         q,
         template,
-        id_lokasi_kamar,
-        id_shift_presensi,
+        id_lokasi,
+        id_jam_pelajaran,
         status,
         tanggal,
         tanggal_awal,
@@ -582,8 +480,8 @@ export default class Controller {
       let result = await repository.listForExport({
         q,
         isTemplate,
-        id_lokasi_kamar,
-        id_shift_presensi,
+        id_lokasi,
+        id_jam_pelajaran,
         status,
         tanggal,
         tanggal_awal,
@@ -591,15 +489,15 @@ export default class Controller {
       });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `absen-santri-${isTemplate ? 'template-' + moment().format('HHmmss') : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename = `absen-kelas-santri-${isTemplate ? 'template-' + moment().format('HHmmss') : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
       const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet('ABSEN HARIAN SANTRI');
+      const sheet = workbook.addWorksheet('ABSEN KELAS SANTRI');
 
       generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
       return response.success(
-        'export excel absensi santri',
+        'export excel absensi kelas santri',
         `${dir}/${filename}`,
         res
       );
@@ -637,67 +535,49 @@ export default class Controller {
         const errors = validateRow(row);
 
         let id_santri = null;
-        let fullname_santri = '-'; // Default jika data santri tidak ditemukan
-        let final_id_shift = row.id_shift_presensi;
+        let fullname_santri = '-';
+        let final_id_jampel = row.id_jam_pelajaran;
         const targetTanggal = row.tanggal
           ? moment(row.tanggal).format('YYYY-MM-DD')
           : moment().format('YYYY-MM-DD');
         const targetWaktu = row.waktu_absen || moment().format('HH:mm:ss');
 
-        // Resolve ID & Nama Santri berdasarkan NIS
         const santriDoc: any = await repository.findSantriByNisOnly(row.nis);
         if (santriDoc) {
-          id_santri = santriDoc.id_santri;
-          fullname_santri = santriDoc.fullname || santriDoc.nama_lengkap; // Ambil properti nama dari model DB Anda
+          id_santri = santriDoc.getDataValue('id_santri');
+          fullname_santri = santriDoc.getDataValue('fullname') || '-';
         } else {
           errors.push(`Santri dengan NIS "${row.nis}" tidak ditemukan`);
         }
 
-        // Validasi Aturan Kamar Aktif Santri di tanggal tersebut
-        if (id_santri && row.id_lokasi_kamar) {
-          const isKamarValid = await repository.checkSantriKamarValidity(
-            id_santri,
-            row.id_lokasi_kamar,
-            targetTanggal
-          );
-          if (!isKamarValid) {
-            errors.push(
-              `Santri tidak memiliki penempatan aktif di lokasi kamar tersebut untuk tanggal yang dipilih`
-            );
-          }
-        }
-
-        // Resolve Shift Otomatis jika kolom ID Shift di Excel kosong
         if (
-          !final_id_shift ||
-          final_id_shift === 'undefined' ||
-          final_id_shift === ''
+          !final_id_jampel ||
+          final_id_jampel === 'undefined' ||
+          final_id_jampel === ''
         ) {
-          const autoShift =
-            await repository.findMatchingAsramaShift(targetWaktu);
-          if (autoShift) {
-            final_id_shift = autoShift.getDataValue('id_shift');
+          const autoJamPel =
+            await repository.findMatchingJamPelajaran(targetWaktu);
+          if (autoJamPel) {
+            final_id_jampel = autoJamPel.getDataValue('id_jampel');
           } else {
             errors.push(
-              `Tidak ada shift ASRAMA aktif yang memayungi waktu [${targetWaktu}]`
+              `Tidak ada jam pelajaran aktif yang memayungi waktu [${targetWaktu}]`
             );
           }
         }
 
         const valid = errors.length === 0;
 
-        // Payload murni yang nantinya dilempar ke database saat commit
         const payload = {
           id_santri,
-          id_lokasi_kamar: row.id_lokasi_kamar,
-          id_shift_presensi: final_id_shift,
+          id_lokasi: row.id_lokasi,
+          id_jam_pelajaran: final_id_jampel,
           tanggal: targetTanggal,
           waktu_absen: targetWaktu,
           status_kehadiran: row.status_kehadiran,
           keterangan: row.keterangan || 'Import Excel',
           id_petugas: row.id_petugas || id_petugas,
 
-          // Ditambahkan di payload agar bisa dibaca langsung di mapping baris frontend
           nis: row.nis,
           fullname: fullname_santri,
         };
@@ -721,7 +601,6 @@ export default class Controller {
         const validPayloads = results
           .filter((r) => r.valid)
           .map((r) => {
-            // Bersihkan metadata frontend (nis & fullname) jika query bulkinsert database Anda menolak kolom luar
             const { nis, fullname, ...purePayload } = r.payload;
             return purePayload;
           });
@@ -729,17 +608,17 @@ export default class Controller {
         if (validPayloads.length > 0) {
           await repository.upsertBulkAbsen(validPayloads);
         }
-        return response.success('import absensi santri berhasil', dataRes, res);
+        return response.success('import absensi kelas santri berhasil', dataRes, res);
       }
 
       return response.success(
-        'preview import absensi santri',
+        'preview import absensi kelas santri',
         { ...dataRes, data: results },
         res
       );
     } catch (err: any) {
       return helper.catchError(
-        `import excel absensi santri: ${err?.message}`,
+        `import excel absensi kelas santri: ${err?.message}`,
         500,
         res
       );
@@ -764,4 +643,4 @@ export default class Controller {
   };
 }
 
-export const AbsenHarianSantriController = new Controller();
+export const AbsenKelasSantriController = new Controller();

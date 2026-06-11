@@ -20,7 +20,7 @@ export default class Controller {
    */
   public async list(req: Request, res: Response) {
     try {
-      console.log('PARAMS', req.query)
+      console.log('PARAMS', req.query);
       const result = await repository.list(req.query);
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
@@ -65,7 +65,7 @@ export default class Controller {
 
   /**
    * Menyimpan Area Baru
-   * Rules: 
+   * Rules:
    * - Menaikkan versi secara otomatis
    * - Menonaktifkan area lama di lokasi yang sama (diatur di repository)
    */
@@ -87,12 +87,16 @@ export default class Controller {
 
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
-        const fieldName = firstIssue.path.join('.'); 
+        const fieldName = firstIssue.path.join('.');
         errorMessage = `Field [${fieldName}]: ${firstIssue.message}`;
         errorCode = 400;
       }
 
-      return helper.catchError(`GeoArea create: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `GeoArea create: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -108,11 +112,11 @@ export default class Controller {
 
       const existingData: any = await repository.detail({ id_geo: id });
       if (!existingData) return response.success(NOT_FOUND, null, res, false);
-      console.log('body', req.body)
+      console.log('body', req.body);
       const validatedData = geoAreaUpdateSchema.parse(req.body);
 
       await repository.update({
-        payload: validatedData, 
+        payload: validatedData,
         condition: { id_geo: id },
       });
 
@@ -127,7 +131,11 @@ export default class Controller {
         errorCode = 400;
       }
 
-      return helper.catchError(`GeoArea update: ${errorMessage}`, errorCode, res);
+      return helper.catchError(
+        `GeoArea update: ${errorMessage}`,
+        errorCode,
+        res
+      );
     }
   }
 
@@ -158,9 +166,15 @@ export default class Controller {
     try {
       const { id_lokasi } = req.params;
       const result = await repository.findActiveByLokasi(id_lokasi);
-      
-      if (!result) return response.success('Tidak ada area aktif untuk lokasi ini', null, res, false);
-      
+
+      if (!result)
+        return response.success(
+          'Tidak ada area aktif untuk lokasi ini',
+          null,
+          res,
+          false
+        );
+
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
       return helper.catchError(`GeoArea getActive: ${err?.message}`, 500, res);

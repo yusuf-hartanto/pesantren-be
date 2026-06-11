@@ -152,7 +152,7 @@ export function associateAppSantri() {
   AppSantri.hasMany(PenempatanKamarSantri, {
     as: 'penempatanKamar',
     foreignKey: 'id_santri',
-    sourceKey: 'id_santri'
+    sourceKey: 'id_santri',
   });
 }
 

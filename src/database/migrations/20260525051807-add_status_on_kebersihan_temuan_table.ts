@@ -5,7 +5,8 @@ import { QueryInterface, DataTypes } from 'sequelize';
 export const up = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
     // Gunakan casting 'any' pada tableDesc agar akses properti dinamis diizinkan
-    const tableDesc: any = await queryInterface.describeTable('kebersihan_temuan');
+    const tableDesc: any =
+      await queryInterface.describeTable('kebersihan_temuan');
 
     if (!tableDesc.status) {
       await queryInterface.addColumn(
@@ -36,7 +37,8 @@ export const up = async (queryInterface: QueryInterface) => {
 
 export const down = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-    const tableDesc: any = await queryInterface.describeTable('kebersihan_temuan');
+    const tableDesc: any =
+      await queryInterface.describeTable('kebersihan_temuan');
     const columnsToRemove = ['status', 'foto_path_tindakan'];
 
     for (const columnName of columnsToRemove) {

@@ -54,7 +54,6 @@ export default class Repository {
   }
 
   public index(data: any) {
-
     let where: any = {};
 
     // Filter keyword
@@ -62,7 +61,10 @@ export default class Repository {
       where[Op.or] = [
         { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JadwalInspeksiKebersihan.hari'), 'TEXT'),
+          Sequelize.cast(
+            Sequelize.col('JadwalInspeksiKebersihan.hari'),
+            'TEXT'
+          ),
           { [Op.like]: `%${data?.keyword}%` }
         ),
         { keterangan: { [Op.like]: `%${data?.keyword}%` } },
@@ -83,9 +85,9 @@ export default class Repository {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
-      where
+      where,
     };
-    
+
     return Model.findAndCountAll({
       ...query,
       include: [

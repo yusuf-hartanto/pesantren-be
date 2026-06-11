@@ -25,10 +25,11 @@ export default {
 
     // Set fallback id_wali jika tabel wali ternyata masih kosong
     const targetWaliId = walis.length > 0 ? walis[0].id_wali : uuidv4();
-    
+
     // Ambil data institusi untuk disamakan ke id_cabang
     const targetInstitutionId = institutions[0].id_institution;
-    const targetInstitutionName = institutions[0].institution_name || 'Pondok Pesantren Pusat';
+    const targetInstitutionName =
+      institutions[0].institution_name || 'Pondok Pesantren Pusat';
 
     // Masukkan 10 data santri dummy ke tabel 'santri'
     return queryInterface.bulkInsert('santri', [
@@ -311,7 +312,7 @@ export default {
         id_santri_sitrendi: uuidv4(),
         id_wali_sitrendi: uuidv4(),
         institution_id_sitrendi: uuidv4(),
-      }
+      },
     ]);
   },
 

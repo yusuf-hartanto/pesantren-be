@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, where } from 'sequelize';
 import Model from './santri.model';
 import Cabang from '../cabang/cabang.model';
 import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
@@ -22,7 +22,7 @@ export default class Repository {
         ...query,
         where: {
           status: {
-            [Op.eq]: data?.status
+            [Op.eq]: data?.status,
           },
         },
       };
@@ -31,7 +31,7 @@ export default class Repository {
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       where: {
         status: { [Op.ne]: 9 },
       },
@@ -47,6 +47,24 @@ export default class Repository {
           [Op.or]: [{ fullname: { [Op.like]: `%${data?.keyword}%` } }],
         },
       };
+    }
+    if (data?.parent) {
+      query.where = {
+        ...query.where,
+        id_wali: data?.parent
+      }
+    }
+    if (data?.status != '') {
+      query.where = {
+        ...query.where,
+        status: data?.status
+      }
+    }
+    if (data?.id_cabang != '') {
+      query.where = {
+        ...query.where,
+        id_cabang: data?.id_cabang
+      }
     }
     return Model.findAndCountAll({
       ...query,

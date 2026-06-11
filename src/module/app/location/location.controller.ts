@@ -23,7 +23,6 @@ import { sequelize } from '../../../database/connection';
 import crypto from 'crypto';
 import { rawQuery } from '../../../helpers/rawQuery';
 
-
 const generateDataExcel = (
   sheet: any,
   details: any,
@@ -72,19 +71,22 @@ const generateDataExcel = (
   // Perulangan Data menggunakan gaya indeks array (for...in) & Logika IsTemplate
   for (let i in details) {
     // Logika spacing/indentasi hierarki untuk nama lokasi (hanya berlaku jika bukan template)
-    let spacing: string = !isTemplate && details[i].__level ? '    '.repeat(details[i].__level) : '';
-    
+    let spacing: string =
+      !isTemplate && details[i].__level
+        ? '    '.repeat(details[i].__level)
+        : '';
+
     sheet.addRow([
       parseInt(i) + 1,
       details[i]?.kode_lokasi || '',
       spacing + (details[i]?.nama_lokasi || ''),
       details[i]?.jenis_lokasi || '',
       // Logika Induk & Cabang: Jika template, keluarkan ID untuk mempermudah import ulang. Jika bukan, keluarkan Nama.
-      isTemplate 
-        ? details[i]?.parent_id || '' 
+      isTemplate
+        ? details[i]?.parent_id || ''
         : details[i]?.parent?.nama_lokasi || '',
-      isTemplate 
-        ? details[i]?.id_cabang || '' 
+      isTemplate
+        ? details[i]?.id_cabang || ''
         : details[i]?.cabang?.nama_cabang || '',
       details[i]?.latitude || '',
       details[i]?.longitude || '',
@@ -155,10 +157,14 @@ const flattenLocationTree = (datas: any[], level = 0): any[] => {
   return result;
 };
 
-export const generateRandomString = (_input: string, length: number = 12): string => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+export const generateRandomString = (
+  _input: string,
+  length: number = 12
+): string => {
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
-  
+
   const randomBytes = crypto.randomBytes(length);
 
   for (let i = 0; i < length; i++) {
@@ -267,11 +273,15 @@ export default class Controller {
           if (parent?.id_cabang) item.id_cabang = parent.id_cabang;
         }
 
-        if (!item.kode_lokasi || item.kode_lokasi === "") {
-          const parentPathCode = await this.getParentCodes(item?.parent_id || null);
+        if (!item.kode_lokasi || item.kode_lokasi === '') {
+          const parentPathCode = await this.getParentCodes(
+            item?.parent_id || null
+          );
           const myInitial = this.generateInitial(item.nama_lokasi);
-          
-          item.kode_lokasi = parentPathCode ? `${parentPathCode}-${myInitial}` : myInitial;
+
+          item.kode_lokasi = parentPathCode
+            ? `${parentPathCode}-${myInitial}`
+            : myInitial;
           item.qr_code = generateRandomString(item.kode_lokasi, 16);
         }
 
@@ -322,11 +332,14 @@ export default class Controller {
       const existingData: any = await repository.detail({ id_lokasi: id });
       if (!existingData) return response.success(NOT_FOUND, null, res, false);
 
-      // Validasi input menggunakan partial schema 
+      // Validasi input menggunakan partial schema
       const validatedData = locationUpdateSchema.parse(req.body);
 
       // Gabungkan data lama dan data baru untuk keperluan logika bisnis
-      const mergedData = { ...existingData.get({ plain: true }), ...validatedData };
+      const mergedData = {
+        ...existingData.get({ plain: true }),
+        ...validatedData,
+      };
 
       // Logika Bisnis: Inherit ID Cabang dari Parent (jika parent_id berubah)
       if (validatedData.parent_id) {
@@ -416,10 +429,12 @@ export default class Controller {
     try {
       const { q, template } = req.body;
       const isTemplate = template == '1';
-      
+
       let result = await repository.listForExport({ q, isTemplate });
 
-      const rawData = result.map((d: any) => (typeof d.get === 'function' ? d.get({ plain: true }) : d));
+      const rawData = result.map((d: any) =>
+        typeof d.get === 'function' ? d.get({ plain: true }) : d
+      );
       const tree = buildLocationTree(rawData);
       const flatValues = flattenLocationTree(tree);
 
@@ -431,7 +446,7 @@ export default class Controller {
       const sheet = workbook.addWorksheet('LOKASI');
 
       generateDataExcel(sheet, flatValues);
-      
+
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
       return response.success('Export excel berhasil', urlExcel, res);
@@ -442,33 +457,43 @@ export default class Controller {
 
   public async import(req: Request, res: Response) {
     const uploaded = req.files?.file_import;
-    if (!uploaded) return response.success('File tidak ditemukan', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak ditemukan', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
       const results: any[] = [];
-      
+
       for (const raw of rows) {
         const row = normalizeRow(raw);
-  
+
         const errors: string[] = [];
-        let parent_id = null, parent_nama = null;
-        let id_cabang = null, cabang_nama = null;
+        let parent_id = null,
+          parent_nama = null;
+        let id_cabang = null,
+          cabang_nama = null;
 
         // Resolve Parent ID (Case-Insensitive)
         if (row.nama_parent) {
-          const parent: any = await repository.findParentByName(row.nama_parent);
+          const parent: any = await repository.findParentByName(
+            row.nama_parent
+          );
           if (parent) {
             parent_id = parent.dataValues.id_lokasi;
             id_cabang = parent.id_cabang;
             parent_nama = parent.dataValues.nama_lokasi;
-            
+
             // Ambil juga nama cabangnya dari data parent agar children kebagian data nama cabang
-            if (parent.cabang) { 
+            if (parent.cabang) {
               // Sesuaikan 'parent.cabang.nama_cabang' dengan relation/property yang ada di model parent Anda
-              cabang_nama = parent.cabang.nama_cabang; 
+              cabang_nama = parent.cabang.nama_cabang;
             }
           } else {
             errors.push(`Induk "${row.nama_parent}" tidak ditemukan`);
@@ -478,15 +503,15 @@ export default class Controller {
         // Resolve Cabang ID & Nama Cabang (Jika belum didapat dari parent ATAU jika nama_cabang diisi di excel)
         if (row.nama_cabang) {
           const cabang = await repository.findCabangByName(row.nama_cabang);
-          
+
           if (cabang) {
-            id_cabang = cabang.dataValues.id_cabang; 
+            id_cabang = cabang.dataValues.id_cabang;
             cabang_nama = cabang.dataValues.nama_cabang;
           } else {
             errors.push(`Cabang "${row.nama_cabang}" tidak ditemukan`);
           }
         } else if (id_cabang && !cabang_nama) {
-          const cabang: any = await repository.detail({id_cabang}); 
+          const cabang: any = await repository.detail({ id_cabang });
           if (cabang) {
             cabang_nama = cabang.dataValues.nama_cabang;
           }
@@ -497,7 +522,9 @@ export default class Controller {
         if (!finalKode) {
           const parentPathCode = await this.getParentCodes(parent_id);
           const myInitial = this.generateInitial(row.nama_lokasi);
-          finalKode = parentPathCode ? `${parentPathCode}-${myInitial}` : myInitial;
+          finalKode = parentPathCode
+            ? `${parentPathCode}-${myInitial}`
+            : myInitial;
         }
 
         // Cek Duplikasi Nama
@@ -505,10 +532,11 @@ export default class Controller {
           nama_lokasi: row.nama_lokasi,
           jenis_lokasi: row.jenis_lokasi,
           id_cabang: id_cabang,
-          kode_lokasi: finalKode // Penting: Agar tidak mendeteksi dirinya sendiri sebagai duplikat
+          kode_lokasi: finalKode, // Penting: Agar tidak mendeteksi dirinya sendiri sebagai duplikat
         });
 
-        if (isDuplicate) errors.push(`Lokasi "${row.nama_lokasi}" sudah ada di cabang ini.`);
+        if (isDuplicate)
+          errors.push(`Lokasi "${row.nama_lokasi}" sudah ada di cabang ini.`);
 
         results.push({
           row: row.__row,
@@ -520,7 +548,7 @@ export default class Controller {
             nama_lokasi: row.nama_lokasi,
             jenis_lokasi: row.jenis_lokasi,
             latitude: row.latitude ? +row.latitude : 0,
-            longitude: row.longitude ? +row.longitude: 0,
+            longitude: row.longitude ? +row.longitude : 0,
             map_zoom: row.map_zoom,
             kapasitas: row.kapasitas,
             lantai: row.lantai ? +row.lantai : 0,
@@ -528,17 +556,21 @@ export default class Controller {
             parent_id,
             parent_nama,
             id_cabang,
-            cabang_nama
-          }
+            cabang_nama,
+          },
         });
       }
 
-      return response.success('Preview import lokasi', {
-        total: results.length,
-        valid: results.filter(r => r.valid).length,
-        invalid: results.filter(r => !r.valid).length,
-        data: results
-      }, res);
+      return response.success(
+        'Preview import lokasi',
+        {
+          total: results.length,
+          valid: results.filter((r) => r.valid).length,
+          invalid: results.filter((r) => !r.valid).length,
+          data: results,
+        },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(`Import Preview: ${err.message}`, 500, res);
     }
@@ -560,22 +592,28 @@ export default class Controller {
         if (!item.kode_lokasi) {
           const parentPathCode = await this.getParentCodes(item.parent_id);
           const myInitial = this.generateInitial(item.nama_lokasi);
-          item.kode_lokasi = parentPathCode ? `${parentPathCode}-${myInitial}` : myInitial;
+          item.kode_lokasi = parentPathCode
+            ? `${parentPathCode}-${myInitial}`
+            : myInitial;
         }
         item.qr_code = generateRandomString(item.kode_lokasi, 16);
 
         // Gunakan repository upsertImport untuk eksekusi
         await repository.upsertImport(item, trx);
       }
-      
+
       await trx.commit();
-      return response.success('Import batch lokasi berhasil', { total: payloads.length }, res);
+      return response.success(
+        'Import batch lokasi berhasil',
+        { total: payloads.length },
+        res
+      );
     } catch (err: any) {
       if (trx) await trx.rollback();
       return helper.catchError(`Insert Batch Gagal: ${err.message}`, 500, res);
     }
   }
-  
+
   public async findQrCode(req: Request, res: Response) {
     try {
       const { qr_code } = req?.body;
