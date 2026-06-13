@@ -51,13 +51,13 @@ export default class Repository {
           model: AppResource,
           as: 'sender',
           required: false,
-          attributes: ['resource_id', 'username', 'fullname'],
+          attributes: ['resource_id', 'username', 'full_name'],
         },
         {
           model: AppResource,
           as: 'receiver',
           required: false,
-          attributes: ['resource_id', 'username', 'fullname'],
+          attributes: ['resource_id', 'username', 'full_name'],
         },
       ],
     });
