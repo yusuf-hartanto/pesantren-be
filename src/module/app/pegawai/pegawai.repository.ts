@@ -8,6 +8,10 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
+import AppResource from '../resource/resource.model';
+import AppRole from '../role/role.model';
+import { v4 as uuidv4 } from 'uuid';
+import { helper } from '../../../helpers/helper';
 
 export default class Repository {
   public list(data: any) {
@@ -113,7 +117,60 @@ export default class Repository {
   }
 
   public async create(data: any) {
-    return Model.bulkCreate(data.payload);
+    const trx = data.transaction;
+    
+    const pegawais = await Model.bulkCreate(data.payload, { transaction: trx });
+
+    for (const item of data.rawPayload || []) {
+      if (item.email) {
+        const username = item.email.split('@')[0];
+
+        const existingResource = await AppResource.findOne({
+          where: {
+            [Op.or]: [
+              { username },
+              { email: item.email }
+            ]
+          },
+          transaction: trx
+        });
+
+        if (existingResource) {
+          throw new Error(`Username [${username}] atau Email [${item.email}] sudah terdaftar pada resource logins.`);
+        }
+
+        let role = await AppRole.findOne({ where: { role_name: 'pegawai' }, transaction: trx });
+        if (!role) {
+          role = await AppRole.create({
+            role_name: 'pegawai',
+            status: 1,
+            restrict_level_area: 0,
+            created_by: data.userId || 'system',
+            created_date: new Date(),
+          }, { transaction: trx });
+        }
+
+        const rawPassword = item.password || 'sada@123';
+        const hashedPassword = await helper.hashIt(rawPassword);
+        const confirm_hash = await helper.hashIt(username, 6);
+
+        await AppResource.create({
+          resource_id: uuidv4(),
+          role_id: role.role_id,
+          username,
+          email: item.email,
+          password: hashedPassword,
+          full_name: item.nama_lengkap,
+          telepon: item.no_hp || null,
+          status: 'A',
+          confirm_hash,
+          created_by: data.userId || null,
+          created_date: new Date(),
+        }, { transaction: trx });
+      }
+    }
+
+    return pegawais;
   }
 
   public update(data: any) {
@@ -246,6 +303,51 @@ export default class Repository {
           await existing.update(item, { transaction: trx });
         } else {
           await Model.create(item, { transaction: trx });
+        }
+
+        if (item.email) {
+          const username = item.email.split('@')[0];
+
+          const existingResource = await AppResource.findOne({
+            where: {
+              [Op.or]: [
+                { username },
+                { email: item.email }
+              ]
+            },
+            transaction: trx
+          });
+
+          if (!existingResource) {
+            let role = await AppRole.findOne({ where: { role_name: 'pegawai' }, transaction: trx });
+            if (!role) {
+              role = await AppRole.create({
+                role_name: 'pegawai',
+                status: 1,
+                restrict_level_area: 0,
+                created_by: 'system',
+                created_date: new Date(),
+              }, { transaction: trx });
+            }
+
+            const rawPassword = item.password || 'sada@123';
+            const hashedPassword = await helper.hashIt(rawPassword);
+            const confirm_hash = await helper.hashIt(username, 6);
+
+            await AppResource.create({
+              resource_id: uuidv4(),
+              role_id: role.role_id,
+              username,
+              email: item.email,
+              password: hashedPassword,
+              full_name: item.nama_lengkap,
+              telepon: item.no_hp || null,
+              status: 'A',
+              confirm_hash,
+              created_by: 'system',
+              created_date: new Date(),
+            }, { transaction: trx });
+          }
         }
       }
       await trx?.commit();

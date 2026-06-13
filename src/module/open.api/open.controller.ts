@@ -7,10 +7,15 @@ import { helper } from '../../helpers/helper';
 import { service as globalService } from '../global/global.service';
 import { repository as absenRepository } from '../app/absen.harian.santri/absen.harian.santri.repository';
 import { repository as kebersihanRepository } from '../app/kebersihan.temuan/kebersihan.temuan.repository';
+import { repository as perizinanRepository } from '../app/perizinan.santri/perizinan.santri.repository';
+import AppResource from '../app/resource/resource.model';
+import moment from 'moment';
 import {
   SUCCESS_GENERATED,
   SUCCESS_RETRIEVED,
   SUCCESS_SYNCED,
+  SUCCESS_SAVED,
+  NOT_FOUND,
 } from '../../utils/constant';
 
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || 'pesantren_key';
@@ -73,25 +78,47 @@ export default class Controller {
 
   public async syncPerizinan(req: Request, res: Response) {
     try {
-      let data = req.body;
-      if (!Array.isArray(data) && req.body && Array.isArray(req.body.data)) {
-        data = req.body.data;
+      const {
+        id_santri,
+        id_lokasi_kamar,
+        sumber_pengajuan,
+        jenis_izin,
+        tanggal_mulai,
+        tanggal_selesai,
+        alasan
+      } = req.body;
+
+      if (!id_santri) return response.failed('id_santri is required', 422, res);
+      if (!id_lokasi_kamar) return response.failed('id_lokasi_kamar is required', 422, res);
+      if (!sumber_pengajuan) return response.failed('sumber_pengajuan is required', 422, res);
+      if (!jenis_izin) return response.failed('jenis_izin is required', 422, res);
+      if (!tanggal_mulai) return response.failed('tanggal_mulai is required', 422, res);
+      if (!tanggal_selesai) return response.failed('tanggal_selesai is required', 422, res);
+      if (!alasan) return response.failed('alasan is required', 422, res);
+
+      const hasActive = await perizinanRepository.checkActiveLicense(id_santri);
+      if (hasActive) {
+        return response.failed('Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.', 400, res);
       }
 
-      if (!Array.isArray(data)) {
-        return response.failed('Payload must be an array', 422, res);
-      }
+      const admin = await AppResource.findOne({ where: { username: 'admin@user' } });
+      const createdBy = admin ? admin.resource_id : '00000000-0000-0000-0000-000000000000';
 
-      // TODO: integration database perizinan
-      return response.success(
-        `${SUCCESS_SYNCED} (Perizinan)`,
-        {
-          synced_count: Array.isArray(data) ? data.length : 1,
-          processed_at: new Date().toISOString(),
-          body: data,
-        },
-        res
-      );
+      const payload = {
+        id_santri,
+        id_lokasi_kamar,
+        sumber_pengajuan,
+        jenis_izin,
+        tanggal_mulai: moment(tanggal_mulai).format('YYYY-MM-DD'),
+        tanggal_selesai: moment(tanggal_selesai).format('YYYY-MM-DD'),
+        alasan,
+        tanggal_pengajuan: new Date(),
+        status_approval: 'Menunggu',
+        created_by: createdBy
+      };
+
+      const result = await perizinanRepository.create(payload);
+      return response.success(SUCCESS_SAVED, result, res);
     } catch (err: any) {
       return helper.catchError(
         `sync perizinan (Open API): ${err?.message}`,
@@ -152,18 +179,22 @@ export default class Controller {
 
   public async perizinan(req: Request, res: Response) {
     try {
-      return response.success(
-        `${SUCCESS_RETRIEVED} (Perizinan)`,
-        {
-          count: 1,
-          rows: [
-            {
-              perizinan: 'To Do',
-            },
-          ],
-        },
-        res
-      );
+      const queryParams = helper.fetchQueryRequest(req);
+      const filter = {
+        ...queryParams,
+        status_approval: req.query.status_approval,
+        jenis_izin: req.query.jenis_izin,
+        start_date: req.query.start_date,
+        end_date: req.query.end_date,
+        is_request_canceled: req.query.is_request_canceled,
+        is_canceled: req.query.is_canceled,
+        id_santri: req.query.id_santri
+      };
+
+      const { count, rows } = await perizinanRepository.index(filter);
+      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
+
+      return response.success(SUCCESS_RETRIEVED, rows, res);
     } catch (err: any) {
       return helper.catchError(
         `fetch perizinan (Open API): ${err?.message}`,

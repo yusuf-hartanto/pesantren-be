@@ -20,6 +20,7 @@ import {
 import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
 import { appConfig } from '../../../config/config.app';
+import { sequelize } from '../../../database/connection';
 
 const generateDataExcel = (
   sheet: any,
@@ -267,18 +268,20 @@ export default class Controller {
   }
 
   public async create(req: Request, res: Response) {
+    const trx = await sequelize.transaction();
     try {
       const body = req.body;
       const payloadArray = Array.isArray(body) ? body : [body];
       const validatedData = [];
 
       for (const item of payloadArray) {
-        // Validasi Schema Zod
         let validItem = pegawaiSchema.parse(item);
 
-        // Validasi Logika Bisnis & Transformasi Data
         let checkFile = helper.checkExtentionBase64(item.foto);
-        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+        if (checkFile != 'allowed') {
+          if (trx) await trx.rollback();
+          return response.failed(checkFile, 422, res);
+        }
 
         validItem.foto = item.foto
           ? await helper.uploadBase64(
@@ -291,14 +294,25 @@ export default class Controller {
           : null;
         let finalItem = await this.validateBusinessLogic(validItem);
 
-        // Filter Fillable Fields
         validatedData.push(helper.only(variable.fillable(), finalItem));
       }
 
-      await repository.create({ payload: validatedData });
+      await repository.create({
+        payload: validatedData,
+        rawPayload: payloadArray,
+        transaction: trx,
+        userId: req?.user?.id
+      });
+
+      if (trx) await trx.commit();
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      // Menangani error Zod secara spesifik agar pesan lebih user-friendly
+      if (trx && !(trx as any).finished) {
+        try {
+          await trx.rollback();
+        } catch (e) {
+        }
+      }
       const msg =
         err instanceof z.ZodError
           ? `Validasi Gagal: ${err.issues[0].message}`

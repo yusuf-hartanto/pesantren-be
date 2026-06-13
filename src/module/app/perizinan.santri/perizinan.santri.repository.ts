@@ -55,6 +55,11 @@ export class PerizinanSantriRepository {
       query.where.jenis_izin = data.jenis_izin;
     }
 
+    // Filter Santri (id_santri)
+    if (data?.id_santri) {
+      query.where.id_santri = data.id_santri;
+    }
+
     // Filter Date Range Picker (Berdasarkan tanggal_mulai dan tanggal_selesai)
     if (data?.start_date && data?.end_date) {
       query.where[Op.and] = [
