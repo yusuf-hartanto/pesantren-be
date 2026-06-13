@@ -5,6 +5,12 @@ import { repository as repoCabang } from '../app/cabang/cabang.repository';
 import { repository as repoSantri } from '../app/santri/santri.repository';
 import { repository as repoWali } from '../app/orang.tua.wali/orang.tua.wali.repository';
 import { repository as repoInstitution } from '../app/institution/institution.repository';
+import AppSantri from '../app/santri/santri.model';
+import AbsenHarianSantri from '../app/absen.harian.santri/absen.harian.santri.model';
+import KebersihanTemuan from '../app/kebersihan.temuan/kebersihan.temuan.model';
+import PerizinanSantri from '../app/perizinan.santri/perizinan.santri.model';
+import { Op } from 'sequelize';
+import moment from 'moment';
 
 const BASE_URL = process.env.SITRENDI_URL || '';
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || '';
@@ -183,6 +189,63 @@ export default class Service {
       institution: institution.length,
       wali: wali.length,
       santri: santri.length,
+    };
+  }
+
+  public async getSummary(tanggal?: string) {
+    const targetDate = tanggal || moment().format('YYYY-MM-DD');
+
+    const activeSantri = await AppSantri.count({
+      where: { status: 1 },
+    });
+    const totalSantri = await AppSantri.count({
+      where: { status: { [Op.ne]: 9 } },
+    });
+    const persentaseActive = totalSantri > 0
+      ? parseFloat(((activeSantri / totalSantri) * 100).toFixed(1))
+      : 0;
+
+    const totalHadir = await AbsenHarianSantri.count({
+      where: {
+        tanggal: targetDate,
+        status_kehadiran: 'Hadir',
+      },
+      distinct: true,
+      col: 'id_santri',
+    });
+    const persentaseAbsensi = activeSantri > 0
+      ? parseFloat(((totalHadir / activeSantri) * 100).toFixed(1))
+      : 0;
+
+    const total_temuan = await KebersihanTemuan.count({
+      where: {
+        status: { [Op.in]: [0, 1] },
+      },
+    });
+
+    const total_perizinan = await PerizinanSantri.count({
+      where: {
+        status_approval: { [Op.in]: ['Menunggu', 'Disetujui'] },
+        is_canceled: false,
+        [Op.or]: [
+          { kondisi: { [Op.notIn]: ['Closed', 'Arsip'] } },
+          { kondisi: null },
+        ],
+      },
+    });
+
+    return {
+      total_santri: {
+        aktif: activeSantri,
+        keseluruhan: totalSantri,
+        persentase: persentaseActive,
+      },
+      total_absensi: {
+        hadir: totalHadir,
+        persentase: persentaseAbsensi,
+      },
+      total_temuan,
+      total_perizinan,
     };
   }
 }

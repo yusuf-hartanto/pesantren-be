@@ -11,6 +11,7 @@ router.get('/health', global.health);
 router.post('/sendmail', global.sendmail);
 router.post('/sendtele', global.sendtele);
 router.get('/navigation', auth.checkToken, global.navigation);
+router.get('/summary', auth.checkBearerToken, global.summary);
 router.post('/sync-santri', global.syncSantri);
 
 export default router;

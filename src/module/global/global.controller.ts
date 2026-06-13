@@ -478,6 +478,16 @@ export default class Controller {
       return helper.catchError(`sync santri: ${err?.message}`, 500, res);
     }
   }
+
+  public async summary(req: Request, res: Response) {
+    try {
+      const tanggal: any = req?.query?.tanggal || '';
+      const data = await service.getSummary(tanggal);
+      return response.success(SUCCESS_RETRIEVED, data, res);
+    } catch (err: any) {
+      return helper.catchError(`summary: ${err?.message}`, 500, res);
+    }
+  }
 }
 
 export const global = new Controller();
