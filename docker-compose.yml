@@ -6,6 +6,8 @@ services:
     image: pesantren-be:${IMAGE_TAG:-latest}
     restart: unless-stopped
     user: '${UID}:${GID}'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - '127.0.0.1:${PORT}:${PORT}'
     volumes:
