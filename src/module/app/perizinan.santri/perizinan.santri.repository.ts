@@ -14,6 +14,15 @@ export class PerizinanSantriRepository {
    * Mengambil data paginasi + filter untuk list/index utama
    */
   public async index(data: any) {
+    const santriAttributes = ['id_santri', 'fullname', 'nis', 'nik', 'gender'];
+    if (data?.isOpenApi) {
+      santriAttributes.push(
+        'id_santri_sitrendi',
+        'id_wali_sitrendi',
+        'institution_id_sitrendi'
+      );
+    }
+
     const query: any = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
@@ -24,7 +33,7 @@ export class PerizinanSantriRepository {
         {
           model: Santri,
           as: 'santri',
-          attributes: ['id_santri', 'fullname', 'nis']
+          attributes: santriAttributes
         },
         {
           model: Lokasi,

@@ -8,6 +8,7 @@ import { service as globalService } from '../global/global.service';
 import { repository as absenRepository } from '../app/absen.harian.santri/absen.harian.santri.repository';
 import { repository as kebersihanRepository } from '../app/kebersihan.temuan/kebersihan.temuan.repository';
 import { repository as perizinanRepository } from '../app/perizinan.santri/perizinan.santri.repository';
+import { repository as rapotRepository } from '../app/rapot.santri/rapot.santri.repository';
 import Santri from '../app/santri/santri.model';
 import PenempatanKamarSantri from '../app/penempatan.kamar.santri/penempatan.kamar.santri.model';
 import moment from 'moment';
@@ -222,16 +223,39 @@ export default class Controller {
         end_date: req.query.end_date,
         is_request_canceled: req.query.is_request_canceled,
         is_canceled: req.query.is_canceled,
-        id_santri: req.query.id_santri
+        id_santri: req.query.id_santri,
+        isOpenApi: true,
       };
 
-      const { count, rows } = await perizinanRepository.index(filter);
+      const { rows } = await perizinanRepository.index(filter);
       if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
 
       return response.success(SUCCESS_RETRIEVED, rows, res);
     } catch (err: any) {
       return helper.catchError(
         `fetch perizinan (Open API): ${err?.message}`,
+        500,
+        res
+      );
+    }
+  }
+
+  public async rapotSantri(req: Request, res: Response) {
+    try {
+      const queryParams = helper.fetchQueryRequest(req);
+      const filter = {
+        ...queryParams,
+        id_santri_sitrendi: req.query.id_santri,
+        isOpenApi: true,
+      };
+
+      const { rows } = await rapotRepository.index(filter);
+      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
+
+      return response.success(SUCCESS_RETRIEVED, rows, res);
+    } catch (err: any) {
+      return helper.catchError(
+        `fetch rapot santri (Open API): ${err?.message}`,
         500,
         res
       );

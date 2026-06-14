@@ -16,5 +16,6 @@ router.post('/perizinan', controller.syncPerizinan);
 router.get('/absensi-harian-santri', controller.absensiHarian);
 router.get('/kebersihan-temuan', controller.kebersihanTemuan);
 router.get('/perizinan', controller.perizinan);
+router.get('/rapot-santri', controller.rapotSantri);
 
 export default router;

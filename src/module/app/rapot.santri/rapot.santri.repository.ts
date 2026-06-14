@@ -31,10 +31,22 @@ export default class Repository {
   }
 
   public index(data: any) {
-    const where: any = {};
+    const santriAttributes = ['id_santri', 'fullname', 'nis', 'nik', 'gender'];
+    if (data?.isOpenApi) {
+      santriAttributes.push(
+        'id_santri_sitrendi',
+        'id_wali_sitrendi',
+        'institution_id_sitrendi'
+      );
+    }
 
+    const where: any = {};
     if (data?.id_santri) {
       where.id_santri = data.id_santri;
+    }
+
+    if (data?.id_santri_sitrendi) {
+      where['$santri.id_santri_sitrendi$'] = data.id_santri_sitrendi;
     }
 
     if (data?.status) {
@@ -61,7 +73,7 @@ export default class Repository {
         {
           model: Santri,
           as: 'santri',
-          attributes: ['id_santri', 'fullname', 'nis'],
+          attributes: santriAttributes,
         },
         {
           model: AppResource,
