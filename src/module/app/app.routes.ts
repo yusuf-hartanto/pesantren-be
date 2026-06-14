@@ -70,6 +70,7 @@ import { LogGateSantriController } from './log.gate.santri/log.gate.santri.contr
 import { AbsenKelasSantriController } from './absen.kelas.santri/absen.kelas.santri.controller';
 import { notification } from './notification/notification.controller';
 import { notificationSchema } from './notification/notification.schema';
+import { controller as rapotSantriController } from './rapot.santri/rapot.santri.controller';
 
 const router: Router = Router();
 
@@ -738,5 +739,12 @@ router.delete('/log-gate-santri/:id', auth.checkBearerToken, LogGateSantriContro
 router.post('/log-gate-santri/export', auth.checkBearerToken, LogGateSantriController.export);
 router.post('/log-gate-santri/import', auth.checkBearerToken, LogGateSantriController.import);
 router.post('/log-gate-santri/insert', auth.checkBearerToken, LogGateSantriController.insert);
+
+router.get('/rapot-santri/all-data', auth.checkBearerToken, rapotSantriController.list);
+router.get('/rapot-santri', auth.checkBearerToken, rapotSantriController.index);
+router.get('/rapot-santri/:id', auth.checkBearerToken, rapotSantriController.detail);
+router.post('/rapot-santri', auth.checkBearerToken, rapotSantriController.create);
+router.put('/rapot-santri/:id', auth.checkBearerToken, rapotSantriController.update);
+router.delete('/rapot-santri/:id', auth.checkBearerToken, rapotSantriController.delete);
 
 export default router;

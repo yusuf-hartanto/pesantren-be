@@ -50,6 +50,15 @@ export default class DataMenu {
       },
       {
         id: 6,
+        menu_name: 'Perizinan',
+        menu_icon: 'tabler-door-exit',
+        module_name: '#',
+        seq_number: 6,
+        parent_id: '00000000-0000-0000-0000-000000000000',
+        status: 1,
+      },
+      {
+        id: 7,
         menu_name: 'Laporan',
         menu_icon: 'tabler-report',
         module_name: '#',
@@ -208,6 +217,14 @@ export default class DataMenu {
         status: 1,
       },
       {
+        parent_id: 2,
+        menu_name: 'Rapot Santri',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/rapot-santri/list',
+        seq_number: 18,
+        status: 1,
+      },
+      {
         parent_id: 3,
         menu_name: 'Cabang',
         menu_icon: 'tabler-circle',
@@ -249,7 +266,7 @@ export default class DataMenu {
       },
       {
         parent_id: 3,
-        menu_name: 'Penempatan Santri',
+        menu_name: 'Penempatan Kamar Santri',
         menu_icon: 'tabler-circle',
         module_name: '/app/penempatan-kamar-santri/list',
         seq_number: 6,
@@ -257,10 +274,18 @@ export default class DataMenu {
       },
       {
         parent_id: 3,
+        menu_name: 'Penempatan Kelas Santri',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/penempatan-kelas-santri/list',
+        seq_number: 7,
+        status: 1,
+      },
+      {
+        parent_id: 3,
         menu_name: 'Orang Tua / Wali',
         menu_icon: 'tabler-circle',
         module_name: '/app/orang-tua-wali/list',
-        seq_number: 7,
+        seq_number: 8,
         status: 1,
       },
       {
@@ -268,7 +293,7 @@ export default class DataMenu {
         menu_name: 'Pegawai',
         menu_icon: 'tabler-circle',
         module_name: '/app/pegawai/list',
-        seq_number: 8,
+        seq_number: 9,
         status: 1,
       },
       {
@@ -276,7 +301,7 @@ export default class DataMenu {
         menu_name: 'Shift Presensi',
         menu_icon: 'tabler-circle',
         module_name: '/app/shift-presensi/list',
-        seq_number: 9,
+        seq_number: 10,
         status: 1,
       },
       {
@@ -284,7 +309,7 @@ export default class DataMenu {
         menu_name: 'Master Slot Waktu',
         menu_icon: 'tabler-circle',
         module_name: '/app/master-slot-waktu/list',
-        seq_number: 10,
+        seq_number: 11,
         status: 1,
       },
       {
@@ -292,7 +317,7 @@ export default class DataMenu {
         menu_name: 'Jadwal Inspeksi Kebersihan',
         menu_icon: 'tabler-circle',
         module_name: '/app/jadwal-inspeksi-kebersihan/list',
-        seq_number: 10,
+        seq_number: 12,
         status: 1,
       },
       {
@@ -337,6 +362,30 @@ export default class DataMenu {
       },
       {
         parent_id: 6,
+        menu_name: 'Perizinan Santri',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/perizinan-santri/kewaliasuhan',
+        seq_number: 1,
+        status: 1,
+      },
+      {
+        parent_id: 6,
+        menu_name: 'Surat Izin',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/perizinan-santri/kedisiplinan',
+        seq_number: 2,
+        status: 1,
+      },
+      {
+        parent_id: 6,
+        menu_name: 'Scan QR Gate',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/log-gate/list',
+        seq_number: 3,
+        status: 1,
+      },
+      {
+        parent_id: 7,
         menu_name: 'Inspeksi Temuan',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/kebersihan-temuan/list',
@@ -344,7 +393,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 6,
+        parent_id: 7,
         menu_name: 'Absensi Kamar',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/absen-harian-santri/list',
@@ -352,7 +401,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 6,
+        parent_id: 7,
         menu_name: 'Absensi Kelas',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/absen-kelas-santri/list',
