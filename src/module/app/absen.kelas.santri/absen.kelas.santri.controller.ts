@@ -67,7 +67,7 @@ const generateDataExcel = (
         : '', // Tanggal Absen
       details[i]?.waktu_absen || '', // Waktu Absen
       details[i]?.id_lokasi || '', // ID Lokasi
-      details[i]?.lokasi?.nama_lokasi || '', // Nama Lokasi
+      details[i]?.lokasi?.nama_kelas || details[i]?.kelasFormal?.nama_kelas || details[i]?.kelasMda?.nama_kelas_mda || '', // Nama Lokasi
       details[i]?.id_jam_pelajaran || '', // ID Jam Pelajaran
       details[i]?.jamPelajaran?.nama_jampel || '', // Nama Jam Pelajaran
       details[i]?.id_petugas || '', // ID Petugas
@@ -156,7 +156,7 @@ export default class Controller {
       return res.status(200).json({
         status: true,
         message: isFallbackToAll
-          ? 'Tidak ada jam pelajaran yang cocok dengan waktu tersebut. Menampilkan semua jam pelajaran aktif.'
+          ? 'Tidak ada jam pelajaran dengan waktu tersebut. Menampilkan semua jam pelajaran aktif.'
           : 'Berhasil menemukan jam pelajaran yang cocok.',
         data: isFallbackToAll ? result : [result],
       });
@@ -170,21 +170,18 @@ export default class Controller {
     }
   }
 
-  public async findSantriCabang(req: Request, res: Response) {
+  public async findKelasSantri(req: Request, res: Response) {
     try {
-      const { id_cabang, id_lokasi } = req.query;
+      const { id_kelas } = req.query;
 
-      if (!id_cabang && !id_lokasi) {
+      if (!id_kelas) {
         return res.status(400).json({
           status: false,
-          message: 'Parameter id_cabang atau id_lokasi wajib diisi',
+          message: 'Parameter id_kelas wajib diisi',
         });
       }
 
-      let result: any = await repository.findSantriByCabang(
-        id_cabang as string,
-        id_lokasi as string
-      );
+      let result: any = await repository.findKelasSantri(id_kelas as string);
 
       return res.status(200).json({
         status: true,
@@ -192,7 +189,25 @@ export default class Controller {
         data: result,
       });
     } catch (error: any) {
-      console.error('Error pada findSantriCabang:', error);
+      console.error('Error pada findKelasSantri:', error);
+      return res.status(500).json({
+        status: false,
+        message: 'Terjadi kesalahan internal server',
+        error: error.message,
+      });
+    }
+  }
+
+  public async findKelasList(req: Request, res: Response) {
+    try {
+      const result = await repository.findAllClasses();
+      return res.status(200).json({
+        status: true,
+        message: 'Berhasil menemukan kelas',
+        data: result,
+      });
+    } catch (error: any) {
+      console.error('Error pada findKelasList:', error);
       return res.status(500).json({
         status: false,
         message: 'Terjadi kesalahan internal server',
@@ -224,6 +239,20 @@ export default class Controller {
       const validatedPayloads = [];
 
       for (const item of validBody.data_absen) {
+        const isKelasValid = await repository.checkSantriKelasValidity(
+          item.id_santri,
+          validBody.id_lokasi,
+          targetTanggal
+        );
+
+        if (!isKelasValid) {
+          return response.failed(
+            `Santri dengan ID [${item.id_santri}] tidak memiliki penempatan aktif di lokasi kelas tersebut untuk tanggal yang dipilih.`,
+            422,
+            res
+          );
+        }
+
         validatedPayloads.push({
           id_santri: item.id_santri,
           id_lokasi: validBody.id_lokasi,
@@ -342,6 +371,26 @@ export default class Controller {
         final_id_jampel = jamPelajaran.getDataValue('id_jampel');
       }
 
+      if (
+        validData.id_santri ||
+        validData.id_lokasi ||
+        validData.tanggal
+      ) {
+        const isKelasValid = await repository.checkSantriKelasValidity(
+          finalData.id_santri,
+          finalData.id_lokasi,
+          targetTanggal
+        );
+
+        if (!isKelasValid) {
+          return response.failed(
+            `Validasi Gagal: Santri tidak memiliki penempatan kelas aktif di lokasi tersebut pada tanggal ${targetTanggal}.`,
+            422,
+            res
+          );
+        }
+      }
+
       const payload = {
         id_santri: finalData.id_santri,
         id_lokasi: finalData.id_lokasi,
@@ -404,6 +453,22 @@ export default class Controller {
           422,
           res
         );
+      }
+
+      if (validBody.id_lokasi) {
+        const isKelasValid = await repository.checkSantriKelasValidity(
+          santri.getDataValue('id_santri'),
+          validBody.id_lokasi,
+          targetTanggal
+        );
+
+        if (!isKelasValid) {
+          return response.failed(
+            `Gagal Scan: Santri tidak memiliki penempatan aktif di lokasi kelas tersebut untuk tanggal ${targetTanggal}.`,
+            422,
+            res
+          );
+        }
       }
 
       // ========================================================
@@ -563,6 +628,20 @@ export default class Controller {
           fullname_santri = santriDoc.getDataValue('fullname') || '-';
         } else {
           errors.push(`Santri dengan NIS "${row.nis}" tidak ditemukan`);
+        }
+
+        // Validasi Aturan Kelas Aktif Santri di tanggal tersebut
+        if (id_santri && row.id_lokasi) {
+          const isKelasValid = await repository.checkSantriKelasValidity(
+            id_santri,
+            row.id_lokasi,
+            targetTanggal
+          );
+          if (!isKelasValid) {
+            errors.push(
+              `Santri tidak memiliki penempatan aktif di lokasi kelas tersebut untuk tanggal yang dipilih`
+            );
+          }
         }
 
         if (

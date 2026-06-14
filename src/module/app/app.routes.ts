@@ -425,8 +425,12 @@ router.get(
   AbsenKelasSantriController.findJamPelajaran
 );
 router.get(
-  '/absen-kelas-santri/santri-cabang',
-  AbsenKelasSantriController.findSantriCabang
+  '/absen-kelas-santri/kelas-santri',
+  AbsenKelasSantriController.findKelasSantri
+);
+router.get(
+  '/absen-kelas-santri/kelas-list',
+  AbsenKelasSantriController.findKelasList
 );
 router.get('/absen-kelas-santri/:id', AbsenKelasSantriController.detail);
 router.post(

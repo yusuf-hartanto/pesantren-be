@@ -8,6 +8,8 @@ import Lokasi from '../location/location.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
 import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
+import KelasFormal from '../kelas.formal/kelas.formal.model';
+import KelasMda from '../kelas.mda/kelas.mda.model';
 
 export class AbsenKelasSantri extends Model {
   declare id_absen: string;
@@ -28,6 +30,17 @@ export class AbsenKelasSantri extends Model {
   declare jamPelajaran?: JamPelajaran;
   declare petugas?: Pegawai;
   declare resource?: AppResource;
+  declare kelasFormal?: KelasFormal;
+  declare kelasMda?: KelasMda;
+
+  public toJSON(): any {
+    const values = super.toJSON() as any;
+    values.lokasi = {
+      id_lokasi: this.id_lokasi,
+      nama_lokasi: this.kelasFormal?.nama_kelas || this.kelasMda?.nama_kelas_mda || '-'
+    };
+    return values;
+  }
 }
 
 export function initAbsenKelasSantri(sequelize: Sequelize) {
@@ -145,6 +158,20 @@ export function associateAbsenKelasSantri() {
   AbsenKelasSantri.belongsTo(Lokasi, {
     foreignKey: 'id_lokasi',
     as: 'lokasi',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  AbsenKelasSantri.belongsTo(KelasFormal, {
+    foreignKey: 'id_lokasi',
+    as: 'kelasFormal',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+
+  AbsenKelasSantri.belongsTo(KelasMda, {
+    foreignKey: 'id_lokasi',
+    as: 'kelasMda',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
   });

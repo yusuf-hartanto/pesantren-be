@@ -9,6 +9,9 @@ import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
 import Cabang from '../cabang/cabang.model';
+import PenempatanKelasSantri from '../penempatan.kelas.santri/penempatan.kelas.santri.model';
+import KelasFormal from '../kelas.formal/kelas.formal.model';
+import KelasMda from '../kelas.mda/kelas.mda.model';
 
 export default class Repository {
   public async findMatchingJamPelajaran(waktu_absen: string) {
@@ -80,9 +83,14 @@ export default class Repository {
           attributes: ['id_santri', 'fullname', 'nis', 'nik', 'gender'],
         },
         {
-          model: Lokasi,
-          as: 'lokasi',
-          attributes: ['id_lokasi', 'nama_lokasi'],
+          model: KelasFormal,
+          as: 'kelasFormal',
+          attributes: ['id_kelas', 'nama_kelas'],
+        },
+        {
+          model: KelasMda,
+          as: 'kelasMda',
+          attributes: ['id_kelas_mda', 'nama_kelas_mda'],
         },
         {
           model: JamPelajaran,
@@ -164,7 +172,8 @@ export default class Repository {
           as: 'santri',
           attributes: santriAttributes,
         },
-        { model: Lokasi, as: 'lokasi', attributes: ['nama_lokasi'] },
+        { model: KelasFormal, as: 'kelasFormal', attributes: ['nama_kelas'] },
+        { model: KelasMda, as: 'kelasMda', attributes: ['nama_kelas_mda'] },
         {
           model: JamPelajaran,
           as: 'jamPelajaran',
@@ -192,9 +201,9 @@ export default class Repository {
       query.where.id_jam_pelajaran = data.id_jam_pelajaran;
     }
 
-    // 3. Filter Lokasi Kamar (id_lokasi)
-    if (data?.id_lokasi_kamar) {
-      query.where.id_lokasi_kamar = data.id_lokasi_kamar;
+    // 3. Filter Lokasi (id_lokasi)
+    if (data?.id_lokasi) {
+      query.where.id_lokasi = data.id_lokasi;
     }
 
     // 4. Filter Status Kehadiran (Hadir, Izin, Sakit, Alfa)
@@ -330,9 +339,14 @@ export default class Repository {
       include: [
         { model: AppSantri, as: 'santri', attributes: ['fullname', 'nis'] },
         {
-          model: Lokasi,
-          as: 'lokasi',
-          attributes: ['id_lokasi', 'nama_lokasi'],
+          model: KelasFormal,
+          as: 'kelasFormal',
+          attributes: ['id_kelas', 'nama_kelas'],
+        },
+        {
+          model: KelasMda,
+          as: 'kelasMda',
+          attributes: ['id_kelas_mda', 'nama_kelas_mda'],
         },
         {
           model: JamPelajaran,
@@ -383,21 +397,39 @@ export default class Repository {
     });
   }
 
-  public async findSantriByCabang(id_cabang: string, id_lokasi: string) {
+  public async findKelasSantri(id_kelas: string) {
     let where: any = {
       status: 1,
     };
-    if (id_cabang) where.id_cabang = id_cabang;
-    if (id_lokasi) {
-      const lokasi = await Lokasi.findOne({
+
+    if (id_kelas) {
+      const targetDate = moment().format('YYYY-MM-DD');
+      const placements = await PenempatanKelasSantri.findAll({
         where: {
-          id_lokasi,
+          status: 'Aktif',
+          tanggal_masuk: { [Op.lte]: targetDate },
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { tanggal_keluar: null },
+                { tanggal_keluar: { [Op.gte]: targetDate } },
+              ],
+            },
+            {
+              [Op.or]: [
+                { id_kelas_formal: id_kelas },
+                { id_kelas_mda: id_kelas },
+              ],
+            },
+          ],
         },
+        attributes: ['id_santri'],
       });
-      if (lokasi) {
-        where.id_cabang = lokasi.getDataValue('id_cabang');
-      }
+
+      const studentIds = placements.map((p) => p.getDataValue('id_santri'));
+      where.id_santri = { [Op.in]: studentIds };
     }
+
     return await AppSantri.findAll({
       where: where,
       attributes: ['id_santri', 'fullname', 'nis'],
@@ -409,6 +441,69 @@ export default class Repository {
         },
       ],
     });
+  }
+
+  public async checkSantriKelasValidity(
+    id_santri: string,
+    id_kelas: string,
+    tanggal: string
+  ) {
+    const targetDate = moment(tanggal).format('YYYY-MM-DD');
+
+    const placement = await PenempatanKelasSantri.findOne({
+      where: {
+        id_santri,
+        status: 'Aktif',
+        tanggal_masuk: { [Op.lte]: targetDate },
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { tanggal_keluar: null },
+              { tanggal_keluar: { [Op.gte]: targetDate } },
+            ],
+          },
+          {
+            [Op.or]: [
+              { id_kelas_formal: id_kelas },
+              { id_kelas_mda: id_kelas },
+            ],
+          },
+        ],
+      },
+    });
+
+    return !!placement;
+  }
+
+  public async findAllClasses() {
+    const formal = await KelasFormal.findAll({
+      where: { status: 'Aktif' },
+      attributes: ['id_kelas', 'nama_kelas'],
+    });
+
+    const mda = await KelasMda.findAll({
+      where: { status: 'Aktif' },
+      attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+    });
+
+    const list: any[] = [];
+    formal.forEach((c) => {
+      list.push({
+        id_kelas: c.getDataValue('id_kelas'),
+        nama_kelas: c.getDataValue('nama_kelas'),
+        type: 'Formal',
+      });
+    });
+
+    mda.forEach((c) => {
+      list.push({
+        id_kelas: c.getDataValue('id_kelas_mda'),
+        nama_kelas: c.getDataValue('nama_kelas_mda'),
+        type: 'MDA',
+      });
+    });
+
+    return list.sort((a, b) => a.nama_kelas.localeCompare(b.nama_kelas));
   }
 }
 
