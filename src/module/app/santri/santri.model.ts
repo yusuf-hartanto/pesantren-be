@@ -8,6 +8,7 @@ import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
 
 export class AppSantri extends Model {
+  declare id_santri: string;
   declare id_wali: string;
   declare fullname: string;
   declare nis: string;

@@ -8,7 +8,8 @@ import { service as globalService } from '../global/global.service';
 import { repository as absenRepository } from '../app/absen.harian.santri/absen.harian.santri.repository';
 import { repository as kebersihanRepository } from '../app/kebersihan.temuan/kebersihan.temuan.repository';
 import { repository as perizinanRepository } from '../app/perizinan.santri/perizinan.santri.repository';
-import AppResource from '../app/resource/resource.model';
+import Santri from '../app/santri/santri.model';
+import PenempatanKamarSantri from '../app/penempatan.kamar.santri/penempatan.kamar.santri.model';
 import moment from 'moment';
 import {
   SUCCESS_GENERATED,
@@ -77,49 +78,82 @@ export default class Controller {
   }
 
   public async syncPerizinan(req: Request, res: Response) {
+    const trx = await Santri.sequelize?.transaction();
     try {
-      const {
-        id_santri,
-        id_lokasi_kamar,
-        sumber_pengajuan,
-        jenis_izin,
-        tanggal_mulai,
-        tanggal_selesai,
-        alasan
-      } = req.body;
-
-      if (!id_santri) return response.failed('id_santri is required', 422, res);
-      if (!id_lokasi_kamar) return response.failed('id_lokasi_kamar is required', 422, res);
-      if (!sumber_pengajuan) return response.failed('sumber_pengajuan is required', 422, res);
-      if (!jenis_izin) return response.failed('jenis_izin is required', 422, res);
-      if (!tanggal_mulai) return response.failed('tanggal_mulai is required', 422, res);
-      if (!tanggal_selesai) return response.failed('tanggal_selesai is required', 422, res);
-      if (!alasan) return response.failed('alasan is required', 422, res);
-
-      const hasActive = await perizinanRepository.checkActiveLicense(id_santri);
-      if (hasActive) {
-        return response.failed('Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.', 400, res);
+      let data = req.body;
+      if (!Array.isArray(data) && req.body && Array.isArray(req.body.data)) {
+        data = req.body.data;
       }
 
-      const admin = await AppResource.findOne({ where: { username: 'admin@user' } });
-      const createdBy = admin ? admin.resource_id : '00000000-0000-0000-0000-000000000000';
+      if (!Array.isArray(data)) {
+        if (trx) await trx.rollback();
+        return response.failed('Payload must be an array', 422, res);
+      }
 
-      const payload = {
-        id_santri,
-        id_lokasi_kamar,
-        sumber_pengajuan,
-        jenis_izin,
-        tanggal_mulai: moment(tanggal_mulai).format('YYYY-MM-DD'),
-        tanggal_selesai: moment(tanggal_selesai).format('YYYY-MM-DD'),
-        alasan,
-        tanggal_pengajuan: new Date(),
-        status_approval: 'Menunggu',
-        created_by: createdBy
-      };
+      const results = [];
 
-      const result = await perizinanRepository.create(payload);
-      return response.success(SUCCESS_SAVED, result, res);
+      for (const item of data) {
+        const {
+          id_santri: idSantriSitrendi,
+          jenis_izin,
+          tanggal_mulai,
+          tanggal_selesai,
+          alasan
+        } = item;
+
+        if (!idSantriSitrendi) throw new Error('id_santri is required');
+        if (!jenis_izin) throw new Error('jenis_izin is required');
+        if (!tanggal_mulai) throw new Error('tanggal_mulai is required');
+        if (!tanggal_selesai) throw new Error('tanggal_selesai is required');
+        if (!alasan) throw new Error('alasan is required');
+
+        const student = await Santri.findOne({
+          where: { id_santri_sitrendi: idSantriSitrendi },
+          transaction: trx
+        });
+        if (!student) {
+          throw new Error(`Santri dengan id_santri_sitrendi [${idSantriSitrendi}] tidak ditemukan.`);
+        }
+
+        const placement = await PenempatanKamarSantri.findOne({
+          where: { id_santri: student.id_santri, status: 'Aktif' },
+          transaction: trx
+        });
+        if (!placement || !placement.id_lokasi) {
+          throw new Error(`Penempatan kamar aktif untuk santri [${student.fullname}] tidak ditemukan.`);
+        }
+
+        const hasActive = await perizinanRepository.checkActiveLicense(student.id_santri, trx);
+        if (hasActive) {
+          throw new Error(`Santri [${student.fullname}] masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.`);
+        }
+
+        const payload = {
+          id_santri: student.id_santri,
+          id_lokasi_kamar: placement.id_lokasi,
+          sumber_pengajuan: item.sumber_pengajuan || 'Orang Tua',
+          jenis_izin,
+          tanggal_mulai: moment(tanggal_mulai).format('YYYY-MM-DD'),
+          tanggal_selesai: moment(tanggal_selesai).format('YYYY-MM-DD'),
+          alasan,
+          tanggal_pengajuan: new Date(),
+          status_approval: 'Menunggu',
+          created_by: '00000000-0000-0000-0000-000000000000' // dari SiTrendi
+        };
+
+        const result = await perizinanRepository.create(payload, trx);
+        results.push(result);
+      }
+
+      if (trx) await trx.commit();
+      return response.success(SUCCESS_SAVED, results, res);
     } catch (err: any) {
+      if (trx && !(trx as any).finished) {
+        try {
+          await trx.rollback();
+        } catch (e) {
+        }
+      }
       return helper.catchError(
         `sync perizinan (Open API): ${err?.message}`,
         500,

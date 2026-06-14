@@ -55,9 +55,9 @@ export class PerizinanSantriRepository {
       query.where.jenis_izin = data.jenis_izin;
     }
 
-    // Filter Santri (id_santri)
+    // Filter Santri (id_santri SiTrendi)
     if (data?.id_santri) {
-      query.where.id_santri = data.id_santri;
+      query.where['$santri.id_santri_sitrendi$'] = data.id_santri;
     }
 
     // Filter Date Range Picker (Berdasarkan tanggal_mulai dan tanggal_selesai)
@@ -92,7 +92,7 @@ export class PerizinanSantriRepository {
   /**
    * Cek aturan overlap izin santri aktif
    */
-  public async checkActiveLicense(id_santri: string) {
+  public async checkActiveLicense(id_santri: string, transaction?: any) {
     const today = moment().format('YYYY-MM-DD');
 
     return await PerizinanSantri.findOne({
@@ -111,7 +111,8 @@ export class PerizinanSantriRepository {
             tanggal_selesai: { [Op.gte]: today }
           }
         ]
-      }
+      },
+      transaction
     });
   }
 
