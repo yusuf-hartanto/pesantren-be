@@ -92,7 +92,7 @@ export default class Controller {
         parent: req?.query?.parent || '',
         status: req?.query?.status || '',
         id_cabang: req?.query?.id_cabang || '',
-      }
+      };
       const { count, rows } = await repository.index(filter);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);

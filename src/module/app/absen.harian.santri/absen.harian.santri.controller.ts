@@ -74,7 +74,9 @@ const generateDataExcel = (
       details[i]?.id_shift_presensi || '', // ID Shift Presensi
       details[i]?.shiftPresensi?.nama_shift || '', // Nama Shift
       details[i]?.id_petugas || '', // ID Petugas (DI SINI PERBAIKANNYA)
-      details[i]?.petugas?.nama_lengkap || details[i]?.resource?.full_name || '', // Nama Petugas (DI SINI PERBAIKANNYA)
+      details[i]?.petugas?.nama_lengkap ||
+        details[i]?.resource?.full_name ||
+        '', // Nama Petugas (DI SINI PERBAIKANNYA)
       details[i]?.status_kehadiran || 'Hadir', // Status Kehadiran
       details[i]?.keterangan || '', // Keterangan
     ]);

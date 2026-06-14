@@ -145,16 +145,38 @@ import {
   associateAppInstitution,
 } from '../app/institution/institution.model';
 import { initAppSantri, associateAppSantri } from '../app/santri/santri.model';
-import { associateAbsenHarianSantri, initAbsenHarianSantri } from '../app/absen.harian.santri/absen.harian.santri.model';
-import { associatePerizinanSantri, initPerizinanSantri } from '../app/perizinan.santri/perizinan.santri.model';
-import { associateSuratPerizinanSantri, initSuratPerizinanSantri } from '../app/surat.perizinan.santri/surat.perizinan.santri.model';
-import { associateLogGateSantri, initLogGateSantri } from '../app/log.gate.santri/log.gate.santri.model';
+import {
+  associateAbsenHarianSantri,
+  initAbsenHarianSantri,
+} from '../app/absen.harian.santri/absen.harian.santri.model';
+import {
+  associatePerizinanSantri,
+  initPerizinanSantri,
+} from '../app/perizinan.santri/perizinan.santri.model';
+import {
+  associateSuratPerizinanSantri,
+  initSuratPerizinanSantri,
+} from '../app/surat.perizinan.santri/surat.perizinan.santri.model';
+import {
+  associateLogGateSantri,
+  initLogGateSantri,
+} from '../app/log.gate.santri/log.gate.santri.model';
 import {
   initAbsenKelasSantri,
   associateAbsenKelasSantri,
 } from '../app/absen.kelas.santri/absen.kelas.santri.model';
-import { initNotification, associateNotification } from '../app/notification/notification.model';
-import { initRapotSantri, associateRapotSantri } from '../app/rapot.santri/rapot.santri.model';
+import {
+  initNotification,
+  associateNotification,
+} from '../app/notification/notification.model';
+import {
+  initRapotSantri,
+  associateRapotSantri,
+} from '../app/rapot.santri/rapot.santri.model';
+import {
+  initPenempatanKelasSantri,
+  associatePenempatanKelasSantri,
+} from '../app/penempatan.kelas.santri/penempatan.kelas.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -218,6 +240,7 @@ export function initializeModels(sequelize: Sequelize) {
   initAbsenKelasSantri(sequelize);
   initNotification(sequelize);
   initRapotSantri(sequelize);
+  initPenempatanKelasSantri(sequelize);
 
   // associate
   associateAppRole();
@@ -267,6 +290,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateAbsenKelasSantri();
   associateNotification();
   associateRapotSantri();
+  associatePenempatanKelasSantri();
 
   addGlobalActivityHooks(sequelize);
 }

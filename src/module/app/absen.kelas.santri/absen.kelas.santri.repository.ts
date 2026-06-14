@@ -278,7 +278,7 @@ export default class Repository {
       isTemplate,
       limit,
       tanggal_awal,
-      tanggal_akhir
+      tanggal_akhir,
     } = params;
 
     let whereClause: any = {
@@ -305,7 +305,7 @@ export default class Repository {
       if (status) {
         whereClause.status_kehadiran = status;
       }
-      
+
       // 5. Filter Date Range (tanggal_awal & tanggal_akhir)
       if (tanggal_awal && tanggal_akhir) {
         whereClause.tanggal = {
@@ -385,17 +385,17 @@ export default class Repository {
 
   public async findSantriByCabang(id_cabang: string, id_lokasi: string) {
     let where: any = {
-      status: 1
-    }
-    if(id_cabang) where.id_cabang = id_cabang
-    if(id_lokasi) {
+      status: 1,
+    };
+    if (id_cabang) where.id_cabang = id_cabang;
+    if (id_lokasi) {
       const lokasi = await Lokasi.findOne({
         where: {
-          id_lokasi
-        }
+          id_lokasi,
+        },
       });
       if (lokasi) {
-        where.id_cabang = lokasi.getDataValue("id_cabang")
+        where.id_cabang = lokasi.getDataValue('id_cabang');
       }
     }
     return await AppSantri.findAll({
@@ -407,7 +407,7 @@ export default class Repository {
           as: 'cabang',
           attributes: ['id_cabang', 'nama_cabang'],
         },
-      ]
+      ],
     });
   }
 }

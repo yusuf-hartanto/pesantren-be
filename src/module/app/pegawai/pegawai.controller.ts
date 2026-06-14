@@ -301,7 +301,7 @@ export default class Controller {
         payload: validatedData,
         rawPayload: payloadArray,
         transaction: trx,
-        userId: req?.user?.id
+        userId: req?.user?.id,
       });
 
       if (trx) await trx.commit();
@@ -310,8 +310,7 @@ export default class Controller {
       if (trx && !(trx as any).finished) {
         try {
           await trx.rollback();
-        } catch (e) {
-        }
+        } catch (e) {}
       }
       const msg =
         err instanceof z.ZodError

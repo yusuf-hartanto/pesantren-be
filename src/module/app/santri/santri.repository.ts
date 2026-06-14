@@ -51,20 +51,20 @@ export default class Repository {
     if (data?.parent) {
       query.where = {
         ...query.where,
-        id_wali: data?.parent
-      }
+        id_wali: data?.parent,
+      };
     }
     if (data?.status != '') {
       query.where = {
         ...query.where,
-        status: data?.status
-      }
+        status: data?.status,
+      };
     }
     if (data?.id_cabang != '') {
       query.where = {
         ...query.where,
-        id_cabang: data?.id_cabang
-      }
+        id_cabang: data?.id_cabang,
+      };
     }
     return Model.findAndCountAll({
       ...query,

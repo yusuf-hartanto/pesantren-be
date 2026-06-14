@@ -118,7 +118,7 @@ export default class Repository {
 
   public async create(data: any) {
     const trx = data.transaction;
-    
+
     const pegawais = await Model.bulkCreate(data.payload, { transaction: trx });
 
     for (const item of data.rawPayload || []) {
@@ -127,46 +127,54 @@ export default class Repository {
 
         const existingResource = await AppResource.findOne({
           where: {
-            [Op.or]: [
-              { username },
-              { email: item.email }
-            ]
+            [Op.or]: [{ username }, { email: item.email }],
           },
-          transaction: trx
+          transaction: trx,
         });
 
         if (existingResource) {
-          throw new Error(`Username [${username}] atau Email [${item.email}] sudah terdaftar pada resource logins.`);
+          throw new Error(
+            `Username [${username}] atau Email [${item.email}] sudah terdaftar pada resource logins.`
+          );
         }
 
-        let role = await AppRole.findOne({ where: { role_name: 'pegawai' }, transaction: trx });
+        let role = await AppRole.findOne({
+          where: { role_name: 'pegawai' },
+          transaction: trx,
+        });
         if (!role) {
-          role = await AppRole.create({
-            role_name: 'pegawai',
-            status: 1,
-            restrict_level_area: 0,
-            created_by: data.userId || 'system',
-            created_date: new Date(),
-          }, { transaction: trx });
+          role = await AppRole.create(
+            {
+              role_name: 'pegawai',
+              status: 1,
+              restrict_level_area: 0,
+              created_by: data.userId || 'system',
+              created_date: new Date(),
+            },
+            { transaction: trx }
+          );
         }
 
         const rawPassword = item.password || 'sada@123';
         const hashedPassword = await helper.hashIt(rawPassword);
         const confirm_hash = await helper.hashIt(username, 6);
 
-        await AppResource.create({
-          resource_id: uuidv4(),
-          role_id: role.role_id,
-          username,
-          email: item.email,
-          password: hashedPassword,
-          full_name: item.nama_lengkap,
-          telepon: item.no_hp || null,
-          status: 'A',
-          confirm_hash,
-          created_by: data.userId || null,
-          created_date: new Date(),
-        }, { transaction: trx });
+        await AppResource.create(
+          {
+            resource_id: uuidv4(),
+            role_id: role.role_id,
+            username,
+            email: item.email,
+            password: hashedPassword,
+            full_name: item.nama_lengkap,
+            telepon: item.no_hp || null,
+            status: 'A',
+            confirm_hash,
+            created_by: data.userId || null,
+            created_date: new Date(),
+          },
+          { transaction: trx }
+        );
       }
     }
 
@@ -310,43 +318,49 @@ export default class Repository {
 
           const existingResource = await AppResource.findOne({
             where: {
-              [Op.or]: [
-                { username },
-                { email: item.email }
-              ]
+              [Op.or]: [{ username }, { email: item.email }],
             },
-            transaction: trx
+            transaction: trx,
           });
 
           if (!existingResource) {
-            let role = await AppRole.findOne({ where: { role_name: 'pegawai' }, transaction: trx });
+            let role = await AppRole.findOne({
+              where: { role_name: 'pegawai' },
+              transaction: trx,
+            });
             if (!role) {
-              role = await AppRole.create({
-                role_name: 'pegawai',
-                status: 1,
-                restrict_level_area: 0,
-                created_by: 'system',
-                created_date: new Date(),
-              }, { transaction: trx });
+              role = await AppRole.create(
+                {
+                  role_name: 'pegawai',
+                  status: 1,
+                  restrict_level_area: 0,
+                  created_by: 'system',
+                  created_date: new Date(),
+                },
+                { transaction: trx }
+              );
             }
 
             const rawPassword = item.password || 'sada@123';
             const hashedPassword = await helper.hashIt(rawPassword);
             const confirm_hash = await helper.hashIt(username, 6);
 
-            await AppResource.create({
-              resource_id: uuidv4(),
-              role_id: role.role_id,
-              username,
-              email: item.email,
-              password: hashedPassword,
-              full_name: item.nama_lengkap,
-              telepon: item.no_hp || null,
-              status: 'A',
-              confirm_hash,
-              created_by: 'system',
-              created_date: new Date(),
-            }, { transaction: trx });
+            await AppResource.create(
+              {
+                resource_id: uuidv4(),
+                role_id: role.role_id,
+                username,
+                email: item.email,
+                password: hashedPassword,
+                full_name: item.nama_lengkap,
+                telepon: item.no_hp || null,
+                status: 'A',
+                confirm_hash,
+                created_by: 'system',
+                created_date: new Date(),
+              },
+              { transaction: trx }
+            );
           }
         }
       }

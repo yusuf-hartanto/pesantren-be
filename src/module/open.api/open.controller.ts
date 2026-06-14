@@ -99,7 +99,7 @@ export default class Controller {
           jenis_izin,
           tanggal_mulai,
           tanggal_selesai,
-          alasan
+          alasan,
         } = item;
 
         if (!idSantriSitrendi) throw new Error('id_santri is required');
@@ -110,23 +110,32 @@ export default class Controller {
 
         const student = await Santri.findOne({
           where: { id_santri_sitrendi: idSantriSitrendi },
-          transaction: trx
+          transaction: trx,
         });
         if (!student) {
-          throw new Error(`Santri dengan id_santri_sitrendi [${idSantriSitrendi}] tidak ditemukan.`);
+          throw new Error(
+            `Santri dengan id_santri_sitrendi [${idSantriSitrendi}] tidak ditemukan.`
+          );
         }
 
         const placement = await PenempatanKamarSantri.findOne({
           where: { id_santri: student.id_santri, status: 'Aktif' },
-          transaction: trx
+          transaction: trx,
         });
         if (!placement || !placement.id_lokasi) {
-          throw new Error(`Penempatan kamar aktif untuk santri [${student.fullname}] tidak ditemukan.`);
+          throw new Error(
+            `Penempatan kamar aktif untuk santri [${student.fullname}] tidak ditemukan.`
+          );
         }
 
-        const hasActive = await perizinanRepository.checkActiveLicense(student.id_santri, trx);
+        const hasActive = await perizinanRepository.checkActiveLicense(
+          student.id_santri,
+          trx
+        );
         if (hasActive) {
-          throw new Error(`Santri [${student.fullname}] masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.`);
+          throw new Error(
+            `Santri [${student.fullname}] masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.`
+          );
         }
 
         const payload = {
@@ -139,7 +148,7 @@ export default class Controller {
           alasan,
           tanggal_pengajuan: new Date(),
           status_approval: 'Menunggu',
-          created_by: '00000000-0000-0000-0000-000000000000' // dari SiTrendi
+          created_by: '00000000-0000-0000-0000-000000000000', // dari SiTrendi
         };
 
         const result = await perizinanRepository.create(payload, trx);
@@ -152,8 +161,7 @@ export default class Controller {
       if (trx && !(trx as any).finished) {
         try {
           await trx.rollback();
-        } catch (e) {
-        }
+        } catch (e) {}
       }
       return helper.catchError(
         `sync perizinan (Open API): ${err?.message}`,
@@ -228,7 +236,8 @@ export default class Controller {
       };
 
       const { rows } = await perizinanRepository.index(filter);
-      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
 
       return response.success(SUCCESS_RETRIEVED, rows, res);
     } catch (err: any) {
@@ -250,7 +259,8 @@ export default class Controller {
       };
 
       const { rows } = await rapotRepository.index(filter);
-      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
 
       return response.success(SUCCESS_RETRIEVED, rows, res);
     } catch (err: any) {

@@ -13,7 +13,9 @@ export default {
     );
 
     if (perizinans.length === 0) {
-      console.error('Gagal Seeder Gate: Tabel perizinan_santri kosong atau data master belum siap.');
+      console.error(
+        'Gagal Seeder Gate: Tabel perizinan_santri kosong atau data master belum siap.'
+      );
       return;
     }
 
@@ -27,14 +29,15 @@ export default {
     `);
 
     // Fallback ID jika data tabel app_resource kosong saat pengujian lokal isolation
-    const petugasKeluarId = petugass.length > 0 ? petugass[0].resource_id : uuidv4();
-    const petugasMasukId = petugass.length > 1 ? petugass[1].resource_id : petugasKeluarId;
+    const petugasKeluarId =
+      petugass.length > 0 ? petugass[0].resource_id : uuidv4();
+    const petugasMasukId =
+      petugass.length > 1 ? petugass[1].resource_id : petugasKeluarId;
 
     const logSeeds: any[] = [];
 
     // Pemetaan variasi log gate logis dari data perizinan yang ada
     perizinans.forEach((izin: any, index: number) => {
-      
       // Kasus 1: Perizinan Pertama (Status Menunggu) -> Belum lewat gate, tidak dibuatkan log
       if (izin.status_approval === 'Menunggu' && index === 0) {
         return;
@@ -45,10 +48,18 @@ export default {
         logSeeds.push({
           id_gate: uuidv4(),
           id_izin: izin.id_izin,
-          waktu_keluar: moment().subtract(2, 'days').hours(8).minutes(0).toDate(),
+          waktu_keluar: moment()
+            .subtract(2, 'days')
+            .hours(8)
+            .minutes(0)
+            .toDate(),
           petugas_keluar: petugasKeluarId, // Menggunakan resource_id valid
-          waktu_masuk: moment().subtract(1, 'days').hours(16).minutes(30).toDate(),
-          petugas_masuk: petugasMasukId,   // Menggunakan resource_id valid
+          waktu_masuk: moment()
+            .subtract(1, 'days')
+            .hours(16)
+            .minutes(30)
+            .toDate(),
+          petugas_masuk: petugasMasukId, // Menggunakan resource_id valid
           status_gate: 'Kembali',
           keterangan: 'Santri kembali tepat waktu dan sehat.',
           created_at: new Date(),
@@ -67,9 +78,17 @@ export default {
         logSeeds.push({
           id_gate: uuidv4(),
           id_izin: izin.id_izin,
-          waktu_keluar: moment().subtract(4, 'days').hours(9).minutes(15).toDate(),
+          waktu_keluar: moment()
+            .subtract(4, 'days')
+            .hours(9)
+            .minutes(15)
+            .toDate(),
           petugas_keluar: petugasKeluarId,
-          waktu_masuk: moment().subtract(2, 'days').hours(10).minutes(0).toDate(),
+          waktu_masuk: moment()
+            .subtract(2, 'days')
+            .hours(10)
+            .minutes(0)
+            .toDate(),
           petugas_masuk: petugasMasukId,
           status_gate: 'Kembali',
           keterangan: 'Santri kembali lebih cepat dari estimasi.',

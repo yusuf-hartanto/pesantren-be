@@ -24,7 +24,9 @@ export default {
     `);
 
     if (santris.length === 0 || kamars.length === 0 || approvers.length === 0) {
-      console.error('Gagal: Pastikan data master santri, lokasi Kamar, dan app_resource ber-role pegawai sudah tersedia.');
+      console.error(
+        'Gagal: Pastikan data master santri, lokasi Kamar, dan app_resource ber-role pegawai sudah tersedia.'
+      );
       return;
     }
 
@@ -69,11 +71,13 @@ export default {
         tanggal_pengajuan: moment().subtract(3, 'days').toDate(),
         tanggal_mulai: moment().subtract(2, 'days').format('YYYY-MM-DD'),
         tanggal_selesai: moment().add(1, 'days').format('YYYY-MM-DD'),
-        alasan: 'Santri mengalami demam tinggi berdarah dan direkomendasikan istirahat di rumah',
+        alasan:
+          'Santri mengalami demam tinggi berdarah dan direkomendasikan istirahat di rumah',
         status_approval: 'Disetujui',
         id_approver: activePegawaiId,
         tanggal_approval: moment().subtract(2, 'days').toDate(),
-        catatan_approval: 'Disetujui, harap membawa surat keterangan dokter saat kembali ke asrama',
+        catatan_approval:
+          'Disetujui, harap membawa surat keterangan dokter saat kembali ke asrama',
         is_canceled: false,
         canceled_at: null,
         canceled_by: null,
@@ -96,11 +100,13 @@ export default {
         status_approval: 'Ditolak',
         id_approver: activePegawaiId,
         tanggal_approval: moment().subtract(1, 'days').toDate(),
-        catatan_approval: 'Mohon maaf, perizinan tidak mendesak di hari efektif sekolah tidak diperkenankan',
+        catatan_approval:
+          'Mohon maaf, perizinan tidak mendesak di hari efektif sekolah tidak diperkenankan',
         is_canceled: false,
         canceled_at: null,
         canceled_by: null,
-        alasan_penutupan: 'Pengajuan tidak memenuhi syarat urgensi kepesantrenan',
+        alasan_penutupan:
+          'Pengajuan tidak memenuhi syarat urgensi kepesantrenan',
         created_by: activePegawaiId, // Mengisi log user pembuat
         created_at: new Date(),
         updated_at: new Date(),
@@ -123,7 +129,8 @@ export default {
         is_canceled: true,
         canceled_at: moment().subtract(1, 'days').toDate(),
         canceled_by: activePegawaiId,
-        alasan_penutupan: 'Santri sudah dinyatakan sembuh total oleh tim medis lebih cepat dari jadwal',
+        alasan_penutupan:
+          'Santri sudah dinyatakan sembuh total oleh tim medis lebih cepat dari jadwal',
         created_by: activePegawaiId, // Mengisi log user pembuat
         created_at: new Date(),
         updated_at: new Date(),
@@ -138,7 +145,8 @@ export default {
         tanggal_pengajuan: moment().toDate(),
         tanggal_mulai: moment().format('YYYY-MM-DD'),
         tanggal_selesai: moment().add(1, 'days').format('YYYY-MM-DD'),
-        alasan: 'Izin pergi ke RS Daerah untuk kontrol rutin kesehatan gigi pasca operasi',
+        alasan:
+          'Izin pergi ke RS Daerah untuk kontrol rutin kesehatan gigi pasca operasi',
         status_approval: 'Menunggu',
         id_approver: null,
         tanggal_approval: null,

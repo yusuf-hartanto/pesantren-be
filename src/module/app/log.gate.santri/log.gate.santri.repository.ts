@@ -21,8 +21,12 @@ export default class Repository {
       return {
         ...kondisiDasar,
         [Op.and]: [
-          where(fn('DATE', col('waktu_masuk')), '=', fn('DATE', col('perizinanSantri.tanggal_selesai')))
-        ]
+          where(
+            fn('DATE', col('waktu_masuk')),
+            '=',
+            fn('DATE', col('perizinanSantri.tanggal_selesai'))
+          ),
+        ],
       };
     }
 
@@ -30,8 +34,12 @@ export default class Repository {
       return {
         ...kondisiDasar,
         [Op.and]: [
-          where(fn('DATE', col('waktu_masuk')), '<', fn('DATE', col('perizinanSantri.tanggal_selesai')))
-        ]
+          where(
+            fn('DATE', col('waktu_masuk')),
+            '<',
+            fn('DATE', col('perizinanSantri.tanggal_selesai'))
+          ),
+        ],
       };
     }
 
@@ -39,8 +47,12 @@ export default class Repository {
       return {
         ...kondisiDasar,
         [Op.and]: [
-          where(fn('DATE', col('waktu_masuk')), '>', fn('DATE', col('perizinanSantri.tanggal_selesai')))
-        ]
+          where(
+            fn('DATE', col('waktu_masuk')),
+            '>',
+            fn('DATE', col('perizinanSantri.tanggal_selesai'))
+          ),
+        ],
       };
     }
 
@@ -56,9 +68,15 @@ export default class Repository {
       let kondisiDisplay = '-';
 
       // Kondisi hanya dihitung jika santri telah kembali (waktu_masuk terisi)
-      if (raw.status_gate === 'Kembali' && raw.waktu_masuk && raw.perizinanSantri?.tanggal_selesai) {
+      if (
+        raw.status_gate === 'Kembali' &&
+        raw.waktu_masuk &&
+        raw.perizinanSantri?.tanggal_selesai
+      ) {
         const tglMasuk = new Date(raw.waktu_masuk).setHours(0, 0, 0, 0);
-        const tglSelesai = new Date(raw.perizinanSantri.tanggal_selesai).setHours(0, 0, 0, 0);
+        const tglSelesai = new Date(
+          raw.perizinanSantri.tanggal_selesai
+        ).setHours(0, 0, 0, 0);
 
         if (tglMasuk === tglSelesai) kondisiDisplay = 'Normal';
         else if (tglMasuk < tglSelesai) kondisiDisplay = 'Closed';
@@ -71,7 +89,7 @@ export default class Repository {
         nis: raw.perizinanSantri?.santri?.nis || '-',
         kamar: raw.perizinanSantri?.lokasiKamar?.nama_lokasi || '-',
         jenis_izin: raw.perizinanSantri?.jenis_izin || '-',
-        kondisi: kondisiDisplay
+        kondisi: kondisiDisplay,
       };
     });
   }
@@ -85,16 +103,20 @@ export default class Repository {
           as: 'perizinanSantri',
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] }
-          ]
-        }
+            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
+          ],
+        },
       ],
     };
     const rows = await Model.findAll(query);
     return this.mapTransformRows(rows);
   }
 
-  public async checkDuplicate(field: string, value: string, excludeId?: string) {
+  public async checkDuplicate(
+    field: string,
+    value: string,
+    excludeId?: string
+  ) {
     const where: any = { [field]: value };
     if (excludeId) {
       where.id_gate = { [Op.ne]: excludeId };
@@ -118,9 +140,9 @@ export default class Repository {
           required: true,
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] }
-          ]
-        }
+            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
+          ],
+        },
       ],
       where: {},
     };
@@ -128,9 +150,17 @@ export default class Repository {
     if (data?.date) {
       andConditions.push({
         [Op.or]: [
-          { waktu_keluar: { [Op.between]: [`${data.date} 00:00:00`, `${data.date} 23:59:59`] } },
-          { waktu_masuk: { [Op.between]: [`${data.date} 00:00:00`, `${data.date} 23:59:59`] } }
-        ]
+          {
+            waktu_keluar: {
+              [Op.between]: [`${data.date} 00:00:00`, `${data.date} 23:59:59`],
+            },
+          },
+          {
+            waktu_masuk: {
+              [Op.between]: [`${data.date} 00:00:00`, `${data.date} 23:59:59`],
+            },
+          },
+        ],
       });
     }
 
@@ -144,9 +174,13 @@ export default class Repository {
         [Op.or]: [
           { '$perizinanSantri.santri.fullname$': { [Op.iLike]: keyword } },
           { '$perizinanSantri.santri.nis$': { [Op.iLike]: keyword } },
-          { '$perizinanSantri.lokasiKamar.nama_lokasi$': { [Op.iLike]: keyword } },
-          { keterangan: { [Op.iLike]: keyword } }
-        ]
+          {
+            '$perizinanSantri.lokasiKamar.nama_lokasi$': {
+              [Op.iLike]: keyword,
+            },
+          },
+          { keterangan: { [Op.iLike]: keyword } },
+        ],
       });
     }
 
@@ -158,7 +192,7 @@ export default class Repository {
 
     return {
       count: result.count,
-      rows: this.mapTransformRows(result.rows)
+      rows: this.mapTransformRows(result.rows),
     };
   }
 
@@ -168,9 +202,23 @@ export default class Repository {
     if (filters?.date) {
       andConditions.push({
         [Op.or]: [
-          { waktu_keluar: { [Op.between]: [`${filters.date} 00:00:00`, `${filters.date} 23:59:59`] } },
-          { waktu_masuk: { [Op.between]: [`${filters.date} 00:00:00`, `${filters.date} 23:59:59`] } }
-        ]
+          {
+            waktu_keluar: {
+              [Op.between]: [
+                `${filters.date} 00:00:00`,
+                `${filters.date} 23:59:59`,
+              ],
+            },
+          },
+          {
+            waktu_masuk: {
+              [Op.between]: [
+                `${filters.date} 00:00:00`,
+                `${filters.date} 23:59:59`,
+              ],
+            },
+          },
+        ],
       });
     }
 
@@ -178,14 +226,17 @@ export default class Repository {
       andConditions.push(this.buildKondisiFilter(filters.status));
     }
 
-    const baseWhereClause = andConditions.length > 0 ? { [Op.and]: andConditions } : {};
+    const baseWhereClause =
+      andConditions.length > 0 ? { [Op.and]: andConditions } : {};
 
-    const baseInclude = [{ model: PerizinanSantri, as: 'perizinanSantri', required: true }];
+    const baseInclude = [
+      { model: PerizinanSantri, as: 'perizinanSantri', required: true },
+    ];
     const needsInclude = !!(filters?.status && filters?.status !== 'Semua');
 
-    const totalScan = await Model.count({ 
+    const totalScan = await Model.count({
       where: baseWhereClause,
-      include: needsInclude ? baseInclude : undefined
+      include: needsInclude ? baseInclude : undefined,
     });
 
     const totalKeluar = await Model.count({
@@ -194,21 +245,18 @@ export default class Repository {
           baseWhereClause,
           {
             waktu_keluar: { [Op.ne]: null },
-            waktu_masuk: null
-          }
-        ]
+            waktu_masuk: null,
+          },
+        ],
       },
-      include: needsInclude ? baseInclude : undefined
+      include: needsInclude ? baseInclude : undefined,
     });
 
     const totalMasuk = await Model.count({
       where: {
-        [Op.and]: [
-          baseWhereClause,
-          { waktu_masuk: { [Op.ne]: null } }
-        ]
+        [Op.and]: [baseWhereClause, { waktu_masuk: { [Op.ne]: null } }],
       },
-      include: needsInclude ? baseInclude : undefined
+      include: needsInclude ? baseInclude : undefined,
     });
 
     // Kondisi pembantu khusus untuk kalkulasi ketepatan waktu (wajib sudah masuk pondok)
@@ -222,10 +270,14 @@ export default class Repository {
         [Op.and]: [
           baseWhereClause,
           kondisiSudahMasuk,
-          where(fn('DATE', col('waktu_masuk')), '=', fn('DATE', col('perizinanSantri.tanggal_selesai')))
-        ]
+          where(
+            fn('DATE', col('waktu_masuk')),
+            '=',
+            fn('DATE', col('perizinanSantri.tanggal_selesai'))
+          ),
+        ],
       },
-      include: baseInclude
+      include: baseInclude,
     });
 
     const closed = await Model.count({
@@ -233,10 +285,14 @@ export default class Repository {
         [Op.and]: [
           baseWhereClause,
           kondisiSudahMasuk,
-          where(fn('DATE', col('waktu_masuk')), '<', fn('DATE', col('perizinanSantri.tanggal_selesai')))
-        ]
+          where(
+            fn('DATE', col('waktu_masuk')),
+            '<',
+            fn('DATE', col('perizinanSantri.tanggal_selesai'))
+          ),
+        ],
       },
-      include: baseInclude
+      include: baseInclude,
     });
 
     const overdue = await Model.count({
@@ -244,10 +300,14 @@ export default class Repository {
         [Op.and]: [
           baseWhereClause,
           kondisiSudahMasuk,
-          where(fn('DATE', col('waktu_masuk')), '>', fn('DATE', col('perizinanSantri.tanggal_selesai')))
-        ]
+          where(
+            fn('DATE', col('waktu_masuk')),
+            '>',
+            fn('DATE', col('perizinanSantri.tanggal_selesai'))
+          ),
+        ],
       },
-      include: baseInclude
+      include: baseInclude,
     });
 
     return { totalScan, totalKeluar, totalMasuk, normal, closed, overdue };
@@ -261,9 +321,9 @@ export default class Repository {
           as: 'perizinanSantri',
           include: [
             { model: Santri, as: 'santri' },
-            { model: Location, as: 'lokasiKamar' }
-          ]
-        }
+            { model: Location, as: 'lokasiKamar' },
+          ],
+        },
       ],
       where: condition,
     });
@@ -285,7 +345,13 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean; limit?: number; date?: string; status?: string }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+    date?: string;
+    status?: string;
+  }) {
     const { q, isTemplate, limit, date, status } = params;
 
     // Samakan struktur andConditions dengan fungsi index agar hasil export sinkron dengan tabel UI
@@ -300,20 +366,28 @@ export default class Repository {
           as: 'perizinanSantri',
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] }
-          ]
-        }
+            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
+          ],
+        },
       ],
       order: [['created_at', 'DESC']],
-      where: {}
+      where: {},
     };
 
     if (date) {
       andConditions.push({
         [Op.or]: [
-          { waktu_keluar: { [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`] } },
-          { waktu_masuk: { [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`] } }
-        ]
+          {
+            waktu_keluar: {
+              [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`],
+            },
+          },
+          {
+            waktu_masuk: {
+              [Op.between]: [`${date} 00:00:00`, `${date} 23:59:59`],
+            },
+          },
+        ],
       });
     }
 
@@ -327,8 +401,12 @@ export default class Repository {
         [Op.or]: [
           { '$perizinanSantri.santri.fullname$': { [Op.iLike]: keyword } },
           { '$perizinanSantri.santri.nis$': { [Op.iLike]: keyword } },
-          { '$perizinanSantri.lokasiKamar.nama_lokasi$': { [Op.iLike]: keyword } }
-        ]
+          {
+            '$perizinanSantri.lokasiKamar.nama_lokasi$': {
+              [Op.iLike]: keyword,
+            },
+          },
+        ],
       });
     }
 

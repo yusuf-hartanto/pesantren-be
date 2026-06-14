@@ -19,7 +19,7 @@ export default class Repository {
     tanggal: string
   ) {
     const targetDate = moment(tanggal).format('YYYY-MM-DD');
-   
+
     return await PenempatanKamarSantri.findAll({
       where: {
         id_lokasi: id_lokasi_kamar,

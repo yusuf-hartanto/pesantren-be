@@ -5,7 +5,6 @@ import Model from './notification.model';
 import AppResource from '../resource/resource.model';
 
 export default class Repository {
-
   public index(data: any) {
     let query: Object = {
       order: [['created_at', 'DESC']],
@@ -16,9 +15,7 @@ export default class Repository {
       query = {
         ...query,
         where: {
-          [Op.or]: [
-            { title: { [Op.like]: `%${data?.keyword}%` } },
-          ],
+          [Op.or]: [{ title: { [Op.like]: `%${data?.keyword}%` } }],
         },
       };
     }

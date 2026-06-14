@@ -44,7 +44,9 @@ export function initLogGateSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('waktu_keluar', formattedValue);
         },
       },
@@ -60,7 +62,9 @@ export function initLogGateSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('waktu_masuk', formattedValue);
         },
       },

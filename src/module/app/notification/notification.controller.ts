@@ -20,16 +20,15 @@ import { QueryTypes } from 'sequelize';
 const date: string = helper.date();
 
 export default class Controller {
-
   public async index(req: Request, res: Response) {
     try {
       const query = helper.fetchQueryRequest(req);
       const { count, rows } = await repository.index(query);
       const q = `SELECT COUNT(*) FROM notifications WHERE status = 0`;
-        const conn = await rawQuery.getConnection();
-        const result: any =await conn.query(q, {
-          type: QueryTypes.SELECT,
-        });
+      const conn = await rawQuery.getConnection();
+      const result: any = await conn.query(q, {
+        type: QueryTypes.SELECT,
+      });
 
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);

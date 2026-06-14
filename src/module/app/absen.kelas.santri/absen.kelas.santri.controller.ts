@@ -71,7 +71,9 @@ const generateDataExcel = (
       details[i]?.id_jam_pelajaran || '', // ID Jam Pelajaran
       details[i]?.jamPelajaran?.nama_jampel || '', // Nama Jam Pelajaran
       details[i]?.id_petugas || '', // ID Petugas
-      details[i]?.petugas?.nama_lengkap || details[i]?.resource?.full_name || '', // Nama Petugas
+      details[i]?.petugas?.nama_lengkap ||
+        details[i]?.resource?.full_name ||
+        '', // Nama Petugas
       details[i]?.status_kehadiran || 'Hadir', // Status Kehadiran
       details[i]?.keterangan || '', // Keterangan
     ]);
@@ -179,7 +181,10 @@ export default class Controller {
         });
       }
 
-      let result: any = await repository.findSantriByCabang(id_cabang as string, id_lokasi as string);
+      let result: any = await repository.findSantriByCabang(
+        id_cabang as string,
+        id_lokasi as string
+      );
 
       return res.status(200).json({
         status: true,
@@ -205,7 +210,8 @@ export default class Controller {
 
       const id_petugas = req.user?.id || null;
 
-      const jamPelajaran = await repository.findMatchingJamPelajaran(targetWaktu);
+      const jamPelajaran =
+        await repository.findMatchingJamPelajaran(targetWaktu);
       if (!jamPelajaran) {
         return response.failed(
           `Tidak ada jam pelajaran yang aktif untuk rentang waktu [${targetWaktu}].`,
@@ -277,7 +283,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`AbsenKelasSantri index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `AbsenKelasSantri index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -292,7 +302,11 @@ export default class Controller {
 
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`AbsenKelasSantri detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `AbsenKelasSantri detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -316,7 +330,8 @@ export default class Controller {
 
       let final_id_jampel = currentData.id_jam_pelajaran;
       if (validData.waktu_absen || validData.tanggal) {
-        const jamPelajaran = await repository.findMatchingJamPelajaran(targetWaktu);
+        const jamPelajaran =
+          await repository.findMatchingJamPelajaran(targetWaktu);
         if (!jamPelajaran) {
           return response.failed(
             `Validasi Gagal: Waktu absen [${targetWaktu}] tidak masuk dalam window jam pelajaran manapun.`,
@@ -608,7 +623,11 @@ export default class Controller {
         if (validPayloads.length > 0) {
           await repository.upsertBulkAbsen(validPayloads);
         }
-        return response.success('import absensi kelas santri berhasil', dataRes, res);
+        return response.success(
+          'import absensi kelas santri berhasil',
+          dataRes,
+          res
+        );
       }
 
       return response.success(

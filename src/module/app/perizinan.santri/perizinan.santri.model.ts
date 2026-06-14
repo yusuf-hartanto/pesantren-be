@@ -80,7 +80,9 @@ export function initPerizinanSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('tanggal_pengajuan', formattedValue);
         },
       },
@@ -113,7 +115,9 @@ export function initPerizinanSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('tanggal_approval', formattedValue);
         },
       },
@@ -143,7 +147,9 @@ export function initPerizinanSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('request_canceled_at', formattedValue);
         },
       },
@@ -155,7 +161,9 @@ export function initPerizinanSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('canceled_at', formattedValue);
         },
       },

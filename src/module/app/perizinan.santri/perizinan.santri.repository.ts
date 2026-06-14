@@ -33,23 +33,23 @@ export class PerizinanSantriRepository {
         {
           model: Santri,
           as: 'santri',
-          attributes: santriAttributes
+          attributes: santriAttributes,
         },
         {
           model: Lokasi,
           as: 'lokasiKamar',
-          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi']
+          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
         },
         {
           model: AppResource,
           as: 'approver',
-          attributes: ['resource_id', 'username']
+          attributes: ['resource_id', 'username'],
         },
         {
           model: AppResource,
           as: 'creator',
-          attributes: ['resource_id', 'full_name']
-        }
+          attributes: ['resource_id', 'full_name'],
+        },
       ],
       where: {},
     };
@@ -73,7 +73,7 @@ export class PerizinanSantriRepository {
     if (data?.start_date && data?.end_date) {
       query.where[Op.and] = [
         { tanggal_mulai: { [Op.gte]: data.start_date } },
-        { tanggal_selesai: { [Op.lte]: data.end_date } }
+        { tanggal_selesai: { [Op.lte]: data.end_date } },
       ];
     }
 
@@ -91,7 +91,7 @@ export class PerizinanSantriRepository {
       query.where[Op.or] = [
         { '$santri.fullname$': { [Op.iLike]: keyword } },
         { '$santri.nis$': { [Op.iLike]: keyword } },
-        { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: keyword } }
+        { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: keyword } },
       ];
     }
 
@@ -111,17 +111,17 @@ export class PerizinanSantriRepository {
         [Op.or]: [
           {
             status_approval: 'Menunggu',
-            tanggal_mulai: { [Op.gt]: today }
+            tanggal_mulai: { [Op.gt]: today },
           },
           {
             status_approval: 'Disetujui',
             is_canceled: false,
             tanggal_mulai: { [Op.lte]: today },
-            tanggal_selesai: { [Op.gte]: today }
-          }
-        ]
+            tanggal_selesai: { [Op.gte]: today },
+          },
+        ],
       },
-      transaction
+      transaction,
     });
   }
 
@@ -133,10 +133,22 @@ export class PerizinanSantriRepository {
       include: [
         { model: Santri, as: 'santri' },
         { model: Lokasi, as: 'lokasiKamar' },
-        { model: AppResource, as: 'approver', attributes: ['resource_id', 'username'] },
-        { model: AppResource, as: 'canceler', attributes: ['resource_id', 'username'] },
-        { model: AppResource, as: 'creator', attributes: ['resource_id', 'username'] },
-        { model: SuratPerizinanSantri, as: 'suratPerizinan' }
+        {
+          model: AppResource,
+          as: 'approver',
+          attributes: ['resource_id', 'username'],
+        },
+        {
+          model: AppResource,
+          as: 'canceler',
+          attributes: ['resource_id', 'username'],
+        },
+        {
+          model: AppResource,
+          as: 'creator',
+          attributes: ['resource_id', 'username'],
+        },
+        { model: SuratPerizinanSantri, as: 'suratPerizinan' },
       ],
       where: condition,
     });
@@ -147,7 +159,10 @@ export class PerizinanSantriRepository {
   }
 
   public async update(payload: any, condition: any, transaction?: any) {
-    return await PerizinanSantri.update(payload, { where: condition, transaction });
+    return await PerizinanSantri.update(payload, {
+      where: condition,
+      transaction,
+    });
   }
 
   // --- OPRASIONAL TABEL SURAT ---
@@ -161,32 +176,35 @@ export class PerizinanSantriRepository {
   }
 
   public async updateSurat(payload: any, condition: any, transaction?: any) {
-    return await SuratPerizinanSantri.update(payload, { where: condition, transaction });
+    return await SuratPerizinanSantri.update(payload, {
+      where: condition,
+      transaction,
+    });
   }
 
-public async findSuratByToken(token: string) {
+  public async findSuratByToken(token: string) {
     return await SuratPerizinanSantri.findOne({
       where: { qrcode_token: token, status_surat: 'Aktif' },
       include: [
-        { 
-          model: PerizinanSantri, 
+        {
+          model: PerizinanSantri,
           as: 'perizinanSantri',
           include: [
             // Load data profile santri untuk mengambil fullname & nis
-            { 
-              model: Santri, 
-              as: 'santri', 
-              attributes: ['fullname', 'nis'] 
+            {
+              model: Santri,
+              as: 'santri',
+              attributes: ['fullname', 'nis'],
             },
             // Load data lokasi untuk mengambil nama_lokasi kamar
-            { 
-              model: Lokasi, 
-              as: 'lokasiKamar', 
-              attributes: ['nama_lokasi'] 
-            }
-          ]
-        }
-      ]
+            {
+              model: Lokasi,
+              as: 'lokasiKamar',
+              attributes: ['nama_lokasi'],
+            },
+          ],
+        },
+      ],
     });
   }
 
@@ -200,7 +218,10 @@ public async findSuratByToken(token: string) {
   }
 
   public async updateLogGate(payload: any, condition: any, transaction?: any) {
-    return await LogGateSantri.update(payload, { where: condition, transaction });
+    return await LogGateSantri.update(payload, {
+      where: condition,
+      transaction,
+    });
   }
 
   // --- HANDLING EXPORT / IMPORT TEMPLATE ---
@@ -217,7 +238,15 @@ public async findSuratByToken(token: string) {
     isTemplate?: boolean;
     limit?: number;
   }) {
-    const { keyword, status_approval, jenis_izin, start_date, end_date, isTemplate, limit } = params;
+    const {
+      keyword,
+      status_approval,
+      jenis_izin,
+      start_date,
+      end_date,
+      isTemplate,
+      limit,
+    } = params;
     const q = keyword ? `%${keyword}%` : null;
 
     let whereClause: any = {};
@@ -234,7 +263,7 @@ public async findSuratByToken(token: string) {
       if (start_date && end_date) {
         whereClause[Op.and] = [
           { tanggal_mulai: { [Op.gte]: start_date } },
-          { tanggal_selesai: { [Op.lte]: end_date } }
+          { tanggal_selesai: { [Op.lte]: end_date } },
         ];
       }
 
@@ -242,7 +271,7 @@ public async findSuratByToken(token: string) {
         whereClause[Op.or] = [
           { '$santri.fullname$': { [Op.iLike]: q } },
           { '$santri.nis$': { [Op.iLike]: q } },
-          { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: q } }
+          { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: q } },
         ];
       }
     }
@@ -255,15 +284,15 @@ public async findSuratByToken(token: string) {
         {
           model: Santri,
           as: 'santri',
-          attributes: ['id_santri', 'nis', 'fullname']
+          attributes: ['id_santri', 'nis', 'fullname'],
         },
         {
           model: Lokasi,
           as: 'lokasiKamar',
-          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi']
-        }
+          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
+        },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
   }
 

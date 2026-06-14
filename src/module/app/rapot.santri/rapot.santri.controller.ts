@@ -24,11 +24,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(
-        `rapot santri list: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`rapot santri list: ${err?.message}`, 500, res);
     }
   }
 
@@ -49,11 +45,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(
-        `rapot santri index: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`rapot santri index: ${err?.message}`, 500, res);
     }
   }
 
@@ -102,7 +94,9 @@ export default class Controller {
         return response.failed('semester is required', 422, res);
       }
 
-      const studentExists = await Santri.findByPk(id_santri, { transaction: trx });
+      const studentExists = await Santri.findByPk(id_santri, {
+        transaction: trx,
+      });
       if (!studentExists) {
         if (trx) await trx.rollback();
         return response.failed('Santri not found', 404, res);
@@ -156,7 +150,9 @@ export default class Controller {
 
       if (req.files?.file_rapot) {
         const uploadedFile = req.files.file_rapot;
-        const file = Array.isArray(uploadedFile) ? uploadedFile[0] : uploadedFile;
+        const file = Array.isArray(uploadedFile)
+          ? uploadedFile[0]
+          : uploadedFile;
         const checkFile = helper.checkExtention(file, 'file');
         if (checkFile !== 'allowed') {
           if (trx) await trx.rollback();
@@ -176,7 +172,8 @@ export default class Controller {
         await repository.archivePreviousRapots(check.id_santri, trx);
       }
 
-      payload.updated_by = req?.user?.id || '00000000-0000-0000-0000-000000000000';
+      payload.updated_by =
+        req?.user?.id || '00000000-0000-0000-0000-000000000000';
 
       await repository.update(
         {

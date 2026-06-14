@@ -68,7 +68,9 @@ export function initSuratPerizinanSantri(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('tanggal_cetak', formattedValue);
         },
       },

@@ -56,7 +56,11 @@ const generateDataExcel = (
   sheet.getRow(1).eachCell((cell: any) => {
     cell.font = { bold: true };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
   });
 
   for (let i in details) {
@@ -67,8 +71,12 @@ const generateDataExcel = (
       details[i]?.nis || '',
       details[i]?.kamar || '',
       details[i]?.jenis_izin || '',
-      details[i]?.waktu_keluar ? moment(details[i].waktu_keluar).format('YYYY-MM-DD HH:mm:ss') : '-',
-      details[i]?.waktu_masuk ? moment(details[i].waktu_masuk).format('YYYY-MM-DD HH:mm:ss') : '-',
+      details[i]?.waktu_keluar
+        ? moment(details[i].waktu_keluar).format('YYYY-MM-DD HH:mm:ss')
+        : '-',
+      details[i]?.waktu_masuk
+        ? moment(details[i].waktu_masuk).format('YYYY-MM-DD HH:mm:ss')
+        : '-',
       details[i]?.status_gate || '',
       details[i]?.kondisi || '',
       details[i]?.keterangan || '',
@@ -97,7 +105,9 @@ const normalizeRow = (row: any) => ({
   waktu_keluar: row['Waktu Keluar'] || null,
   petugas_keluar: String(row['Petugas Keluar'] || 'SYSTEM').trim(),
   waktu_masuk: row['Waktu Masuk'] || null,
-  petugas_masuk: row['Petugas Masuk'] ? String(row['Petugas Masuk']).trim() : null,
+  petugas_masuk: row['Petugas Masuk']
+    ? String(row['Petugas Masuk']).trim()
+    : null,
   status_gate: String(row['Status Gate'] || 'Keluar').trim(),
   keterangan: row['Keterangan'] ? String(row['Keterangan']).trim() : null,
   __row: row.__row,
@@ -105,7 +115,8 @@ const normalizeRow = (row: any) => ({
 
 const validateRow = (row: any) => {
   const errors: string[] = [];
-  if (!row.id_izin) errors.push('ID Izin (FK) wajib diisi untuk sinkronisasi data perizinan');
+  if (!row.id_izin)
+    errors.push('ID Izin (FK) wajib diisi untuk sinkronisasi data perizinan');
   if (!row.waktu_keluar) errors.push('Waktu Keluar wajib terdefinisi');
   if (row.status_gate !== 'Keluar' && row.status_gate !== 'Kembali') {
     errors.push('Status Gate harus bernilai "Keluar" atau "Kembali"');
@@ -123,7 +134,9 @@ export default class Controller {
     if (item.id_izin) {
       const perizinan = await perizinanRepo.detail({ id_izin: item.id_izin });
       if (!perizinan) {
-        throw new Error(`Data referensi Perizinan dengan ID [${item.id_izin}] tidak ditemukan.`);
+        throw new Error(
+          `Data referensi Perizinan dengan ID [${item.id_izin}] tidak ditemukan.`
+        );
       }
     }
     return item;
@@ -143,7 +156,7 @@ export default class Controller {
   public async index(req: Request, res: Response) {
     try {
       const query = helper.fetchQueryRequest(req);
-      
+
       const additionalFilters = {
         date: req.query.date ? String(req.query.date) : undefined,
         status: req.query.status ? String(req.query.status) : undefined,
@@ -151,7 +164,7 @@ export default class Controller {
 
       const [dataPage, summary] = await Promise.all([
         repository.index({ ...query, ...additionalFilters }),
-        repository.getSummary({ date: additionalFilters.date })
+        repository.getSummary({ date: additionalFilters.date }),
       ]);
 
       if (dataPage.rows?.length < 1)
@@ -159,16 +172,20 @@ export default class Controller {
 
       return response.success(
         SUCCESS_RETRIEVED,
-        { 
-          summary, 
-          total: dataPage.count, 
-          values: dataPage.rows 
+        {
+          summary,
+          total: dataPage.count,
+          values: dataPage.rows,
         },
         res
       );
     } catch (err: any) {
-      console.log(err)
-      return helper.catchError(`LogGateSantri index: ${err?.message}`, 500, res);
+      console.log(err);
+      return helper.catchError(
+        `LogGateSantri index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -180,7 +197,11 @@ export default class Controller {
 
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`LogGateSantri detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `LogGateSantri detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -215,7 +236,10 @@ export default class Controller {
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       const validData = logGateSantriSchema.partial().parse(req.body);
-      const finalUpdate = await this.validateBusinessLogic({ ...check.toJSON(), ...validData });
+      const finalUpdate = await this.validateBusinessLogic({
+        ...check.toJSON(),
+        ...validData,
+      });
 
       const payload = helper.only(variable.fillable(), finalUpdate, true);
       await repository.update({
@@ -251,7 +275,12 @@ export default class Controller {
       const { q, template, date, status } = req.body;
       const isTemplate: boolean = template && template == '1';
 
-      let result = await repository.listForExport({ q, isTemplate, date, status });
+      let result = await repository.listForExport({
+        q,
+        isTemplate,
+        date,
+        status,
+      });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `log-gate-santri-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
@@ -268,7 +297,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`export excel log gate santri: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel log gate santri: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -280,8 +313,13 @@ export default class Controller {
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
       const results: any[] = [];
 
       for (const raw of rows) {
@@ -289,18 +327,26 @@ export default class Controller {
         const errors = validateRow(row);
 
         if (row.id_izin) {
-          const checkIzin = await perizinanRepo.detail({ id_izin: row.id_izin });
+          const checkIzin = await perizinanRepo.detail({
+            id_izin: row.id_izin,
+          });
           if (!checkIzin) {
-            errors.push(`Referensi ID Izin "${row.id_izin}" tidak ditemukan di database`);
+            errors.push(
+              `Referensi ID Izin "${row.id_izin}" tidak ditemukan di database`
+            );
           }
         }
 
         const valid = errors.length === 0;
         const payload = {
           id_izin: row.id_izin,
-          waktu_keluar: row.waktu_keluar ? moment(row.waktu_keluar).format('YYYY-MM-DD HH:mm:ss') : null,
+          waktu_keluar: row.waktu_keluar
+            ? moment(row.waktu_keluar).format('YYYY-MM-DD HH:mm:ss')
+            : null,
           petugas_keluar: row.petugas_keluar,
-          waktu_masuk: row.waktu_masuk ? moment(row.waktu_masuk).format('YYYY-MM-DD HH:mm:ss') : null,
+          waktu_masuk: row.waktu_masuk
+            ? moment(row.waktu_masuk).format('YYYY-MM-DD HH:mm:ss')
+            : null,
           petugas_masuk: row.petugas_masuk,
           status_gate: row.status_gate,
           keterangan: row.keterangan,
@@ -322,10 +368,16 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validPayloads = results.filter((r) => r.valid).map((r) => r.payload);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
         if (validPayloads.length > 0)
           await repository.insertImport(validPayloads);
-        return response.success('import log gate santri berhasil', dataRes, res);
+        return response.success(
+          'import log gate santri berhasil',
+          dataRes,
+          res
+        );
       }
 
       return response.success(
@@ -334,7 +386,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`import excel log gate santri: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `import excel log gate santri: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -345,7 +401,11 @@ export default class Controller {
 
     try {
       await repository.insertImport(payloads);
-      return response.success('Import batch berhasil', { count: payloads.length }, res);
+      return response.success(
+        'Import batch berhasil',
+        { count: payloads.length },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }

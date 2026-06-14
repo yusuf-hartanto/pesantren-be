@@ -201,9 +201,10 @@ export default class Service {
     const totalSantri = await AppSantri.count({
       where: { status: { [Op.ne]: 9 } },
     });
-    const persentaseActive = totalSantri > 0
-      ? parseFloat(((activeSantri / totalSantri) * 100).toFixed(1))
-      : 0;
+    const persentaseActive =
+      totalSantri > 0
+        ? parseFloat(((activeSantri / totalSantri) * 100).toFixed(1))
+        : 0;
 
     const totalHadir = await AbsenHarianSantri.count({
       where: {
@@ -213,9 +214,10 @@ export default class Service {
       distinct: true,
       col: 'id_santri',
     });
-    const persentaseAbsensi = activeSantri > 0
-      ? parseFloat(((totalHadir / activeSantri) * 100).toFixed(1))
-      : 0;
+    const persentaseAbsensi =
+      activeSantri > 0
+        ? parseFloat(((totalHadir / activeSantri) * 100).toFixed(1))
+        : 0;
 
     const total_temuan = await KebersihanTemuan.count({
       where: {
