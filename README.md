@@ -8,6 +8,10 @@
     * npm install
     * development (npm run dev)
     * production (npm run build => npm run start)
+    * docker (docker-dev)
+        - docker build -t pesantren-be:latest .
+        - docker network create pesantren-network
+        - docker compose up -d --build
 
 ## Migration and Seeder
 
