@@ -61,7 +61,7 @@ async function bootstrap() {
   app.use(
     fileUpload({
       useTempFiles: true,
-      tempFileDir: `./tmp/${day}/`,
+      tempFileDir: `/tmp/${day}/`,
       limits: { fileSize: 5 * 1024 * 1024 },
     })
   );
