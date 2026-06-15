@@ -121,6 +121,7 @@ export default class Repository {
     
     const pegawais = await Model.bulkCreate(data.payload, { transaction: trx });
 
+    let idx = 0;
     for (const item of data.rawPayload || []) {
       if (item.email) {
         const username = item.email.split('@')[0];
@@ -166,8 +167,11 @@ export default class Repository {
           confirm_hash,
           created_by: data.userId || null,
           created_date: new Date(),
+          id_eksternal: pegawais[idx].id_pegawai,
         }, { transaction: trx });
       }
+
+      idx++;
     }
 
     return pegawais;

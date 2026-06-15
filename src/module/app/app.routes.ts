@@ -78,6 +78,15 @@ router.get('/param-global/all-data', auth.checkToken, paramGlobal.list);
 router.get('/param-global', auth.checkToken, paramGlobal.index);
 router.get('/param-global/detail', auth.checkToken, paramGlobal.detail);
 
+router.get('/notification', auth.checkToken, notification.index);
+router.put(
+  '/notification/:id',
+  sanitizeBody,
+  validate(notificationSchema),
+  notification.update
+);
+router.delete('/notification/:id', notification.delete);
+
 // required token
 router.use(auth.checkBearerToken);
 
@@ -707,15 +716,6 @@ router.get('/santri', santri.index);
 router.get('/santri/:id', santri.detail);
 router.put('/santri/:id', sanitizeBody, santri.update);
 router.post('/santri/export', santri.export);
-
-router.get('/notification', notification.index);
-router.put(
-  '/notification/:id',
-  sanitizeBody,
-  validate(notificationSchema),
-  notification.update
-);
-router.delete('/notification/:id', notification.delete);
 
 router.get('/perizinan-santri', auth.checkBearerToken, PerizinanSantriController.index);
 router.post('/perizinan-santri', auth.checkBearerToken, PerizinanSantriController.create);
