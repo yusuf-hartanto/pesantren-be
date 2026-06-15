@@ -99,6 +99,37 @@ export class PerizinanSantriRepository {
   }
 
   /**
+   * Menemukan perizinan santri aktif berdasarkan nomor kartu santri
+   * Aturan: Status wajib 'Disetujui', belum dibatalkan, dan hari ini berada di dalam rentang izin.
+   */
+  public async findActiveIzinByCardNumber(nomorKartu: string) {
+    const today = moment().format('YYYY-MM-DD');
+
+    return await PerizinanSantri.findOne({
+      where: {
+        status_approval: 'Disetujui',
+        is_canceled: false,
+        deleted_at: null,
+        tanggal_mulai: { [Op.lte]: today },
+        tanggal_selesai: { [Op.gte]: today },
+      },
+      include: [
+        {
+          model: Santri,
+          as: 'santri',
+          where: { kartu_santri_nomor: nomorKartu }, // Sesuai nama kolom nomor kartu di database Anda
+          attributes: ['fullname', 'nis'],
+        },
+        {
+          model: Lokasi,
+          as: 'lokasiKamar',
+          attributes: ['nama_lokasi'],
+        },
+      ],
+    });
+  }
+
+  /**
    * Cek aturan overlap izin santri aktif
    */
   public async checkActiveLicense(id_santri: string, transaction?: any) {

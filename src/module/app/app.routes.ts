@@ -754,6 +754,11 @@ router.post(
   PerizinanSantriController.scanQrGate
 );
 router.post(
+  '/perizinan-santri/scan-card-gate',
+  auth.checkBearerToken,
+  PerizinanSantriController.scanCardGate
+);
+router.post(
   '/perizinan-santri/export',
   auth.checkBearerToken,
   PerizinanSantriController.export
