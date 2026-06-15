@@ -52,7 +52,7 @@ export function initKebersihanInspeksi(sequelize: Sequelize) {
         type: DataTypes.ENUM('PAGI', 'SIANG', 'SORE', 'MALAM'),
       },
       status_kondisi: {
-        type: DataTypes.ENUM('BERSIH', 'KOTOR'),
+        type: DataTypes.ENUM('BERSIH', 'KOTOR', 'RUSAK'),
       },
       catatan_umum: {
         type: DataTypes.TEXT,

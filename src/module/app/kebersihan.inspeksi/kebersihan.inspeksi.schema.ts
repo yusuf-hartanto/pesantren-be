@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { kebersihanTemuanSchema } from '../kebersihan.temuan/kebersihan.temuan.schema';
 
-export const status = ['BERSIH', 'KOTOR'];
+export const status = ['BERSIH', 'KOTOR', 'RUSAK'];
 export const kodeSlot = ['PAGI', 'SIANG', 'SORE', 'MALAM'];
 export const kebersihanInspeksiSchema = z.object({
   id_cabang: z.any(),
