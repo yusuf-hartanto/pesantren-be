@@ -121,6 +121,7 @@ export default class Repository {
 
     const pegawais = await Model.bulkCreate(data.payload, { transaction: trx });
 
+    let idx = 0;
     for (const item of data.rawPayload || []) {
       if (item.email) {
         const username = item.email.split('@')[0];
@@ -159,23 +160,23 @@ export default class Repository {
         const hashedPassword = await helper.hashIt(rawPassword);
         const confirm_hash = await helper.hashIt(username, 6);
 
-        await AppResource.create(
-          {
-            resource_id: uuidv4(),
-            role_id: role.role_id,
-            username,
-            email: item.email,
-            password: hashedPassword,
-            full_name: item.nama_lengkap,
-            telepon: item.no_hp || null,
-            status: 'A',
-            confirm_hash,
-            created_by: data.userId || null,
-            created_date: new Date(),
-          },
-          { transaction: trx }
-        );
+        await AppResource.create({
+          resource_id: uuidv4(),
+          role_id: role.role_id,
+          username,
+          email: item.email,
+          password: hashedPassword,
+          full_name: item.nama_lengkap,
+          telepon: item.no_hp || null,
+          status: 'A',
+          confirm_hash,
+          created_by: data.userId || null,
+          created_date: new Date(),
+          id_eksternal: pegawais[idx].id_pegawai,
+        }, { transaction: trx });
       }
+
+      idx++;
     }
 
     return pegawais;

@@ -6,19 +6,26 @@ import AppResource from '../resource/resource.model';
 
 export default class Repository {
   public index(data: any) {
+    let where: any = {};
+    
+    if (data?.resource_id) {
+      where.to = data.resource_id;
+    }
+
+    if (data?.keyword) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${data?.keyword}%` } },
+        { message: { [Op.like]: `%${data?.keyword}%` } },
+      ];
+    }
+
     let query: Object = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      where,
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      query = {
-        ...query,
-        where: {
-          [Op.or]: [{ title: { [Op.like]: `%${data?.keyword}%` } }],
-        },
-      };
-    }
+    
     return Model.findAndCountAll({
       ...query,
       include: [

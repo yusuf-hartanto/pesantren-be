@@ -6,6 +6,9 @@ import AppRole from '../role/role.model';
 import AreaRegency from '../../area/regencies.model';
 import { ROLE_ADMIN } from '../../../utils/constant';
 import AreaProvince from '../../area/provinces.model';
+import Pegawai from '../pegawai/pegawai.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
+import Cabang from '../cabang/cabang.model';
 
 export default class Repository {
   public list(data: any) {
@@ -99,6 +102,28 @@ export default class Repository {
           as: 'regency',
           required: false,
         },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          required: false,
+          attributes: ['id_pegawai', 'nama_lengkap'],
+          include: [
+            {
+              model: OrganizationUnit,
+              as: 'organizationUnit',
+              attributes: ['id_orgunit', 'nama_orgunit'],
+              required: false,
+              include: [
+                {
+                  model: Cabang,
+                  as: 'cabang',
+                  attributes: ['id_cabang', 'nama_cabang'],
+                  required: false,
+                }
+              ]
+            },
+          ],
+        }
       ],
     });
   }

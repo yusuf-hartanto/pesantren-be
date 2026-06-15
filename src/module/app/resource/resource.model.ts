@@ -5,6 +5,7 @@ import AppRole from '../role/role.model';
 import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
+import Pegawai from '../pegawai/pegawai.model';
 
 export class AppResource extends Model {
   declare resource_id: string;
@@ -29,6 +30,7 @@ export class AppResource extends Model {
   declare created_date: Date;
   declare modified_by: string;
   declare modified_date: Date;
+  declare id_eksternal: string;
 }
 
 export function initAppResourceModel(sequelize: Sequelize) {
@@ -106,6 +108,9 @@ export function initAppResourceModel(sequelize: Sequelize) {
       modified_date: {
         type: DataTypes.DATE,
       },
+      id_eksternal: {
+        type: DataTypes.STRING,
+      }
     },
     {
       sequelize,
@@ -131,6 +136,10 @@ export function associateAppResource() {
     as: 'regency',
     foreignKey: 'area_regencies_id',
   });
+  AppResource.belongsTo(Pegawai, {
+    as: 'pegawai',
+    foreignKey: 'id_eksternal',
+  })
 }
 
 export default AppResource;
