@@ -13,6 +13,7 @@ import { sequelize } from '../../database/connection';
 import { repository as RepoMenu } from '../app/menu/menu.repository';
 import { repository as RoleMenu } from '../app/role.menu/role.menu.repository';
 import { NOT_FOUND, REQUIRED, SUCCESS_RETRIEVED } from '../../utils/constant';
+import { transformer as resourceTransformer } from '../app/resource/resource.transformer';
 
 const nestedChildren = (
   data: any,
@@ -263,6 +264,7 @@ export default class Controller {
   public async navigation(req: Request, res: Response) {
     try {
       let navigation: any;
+      let ability: any = [];
 
       const role_name: string = req?.user?.role_name;
       if (role_name && role_name != undefined) {
@@ -271,6 +273,11 @@ export default class Controller {
         });
         if (!result) return response.success(NOT_FOUND, null, res, false);
         navigation = formatNavigationRole(result);
+
+        const getUser: any = await resourceTransformer.detail(req?.user);
+        if (getUser?.ability?.length) {
+          ability = getUser?.ability;
+        }
       } else {
         const result = await RepoMenu.list();
         if (result?.length < 1)
@@ -279,7 +286,7 @@ export default class Controller {
       }
 
       sortRecursive(navigation);
-      return response.success(SUCCESS_RETRIEVED, navigation, res);
+      return response.success(SUCCESS_RETRIEVED, navigation, res, true, ability);
     } catch (err: any) {
       return helper.catchError(`navigation: ${err?.message}`, 500, res);
     }
