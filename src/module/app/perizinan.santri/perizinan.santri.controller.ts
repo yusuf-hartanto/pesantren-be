@@ -290,9 +290,25 @@ export default class Controller {
         );
       }
 
+      let file_izin: any = null;
+      if (req?.files && req?.files.file_izin) {
+        const fileIzin = req?.files?.file_izin;
+        const checkFileIzin = helper.checkExtention(fileIzin, 'all');
+        if (checkFileIzin != 'allowed')
+          return response.failed(checkFileIzin, 422, res);
+
+        file_izin = await helper.upload(
+          fileIzin,
+          'perizinan-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
+      }
+
       const payload = {
         ...validData,
         tanggal_pengajuan: new Date(),
+        file_izin,
         status_approval: 'Menunggu',
         created_by: req?.user?.id || 'SYSTEM',
       };
@@ -335,9 +351,24 @@ export default class Controller {
         }
       }
 
+      let file_izin: any = null;
+      if (req?.files && req?.files.file_izin) {
+        const fileIzin = req?.files?.file_izin;
+        const checkFileIzin = helper.checkExtention(fileIzin, 'all');
+        if (checkFileIzin != 'allowed')
+          return response.failed(checkFileIzin, 422, res);
+
+        file_izin = await helper.upload(
+          fileIzin,
+          'perizinan-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
+      }
+
       const finalPayload = helper.only(
         variable.fillable(),
-        { ...check.toJSON(), ...validData },
+        { ...check.toJSON(), ...validData, ...(file_izin ? { file_izin } : {}) },
         true
       );
       await repository.update(
@@ -520,6 +551,7 @@ export default class Controller {
         petugas_yang_membatalkan: result.canceler?.username || '-',
         catatan_pembatalan: result.alasan_penutupan || '-',
         surat_izin: result?.suratPerizinan || '',
+        file_izin: result?.file_izin || '',
         is_request_canceled: result.is_request_canceled || false,
         request_canceled_at: result.request_canceled_at
           ? moment(result.request_canceled_at).format('DD-MMM-YYYY HH:mm:ss')

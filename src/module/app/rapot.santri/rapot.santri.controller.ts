@@ -80,6 +80,21 @@ export default class Controller {
         return response.failed(checkFile, 422, res);
       }
 
+      let file_rapot_mda: any = null;
+      if (req?.files && req?.files.file_rapot_mda) {
+        const fileMda = req?.files?.file_rapot_mda;
+        const checkFileMda = helper.checkExtention(fileMda, 'file');
+        if (checkFileMda != 'allowed')
+          return response.failed(checkFileMda, 422, res);
+
+        file_rapot_mda = await helper.upload(
+          fileMda,
+          'rapot-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
+      }
+
       const { id_santri, tahun_ajaran, semester } = req.body;
       if (!id_santri) {
         if (trx) await trx.rollback();
@@ -117,6 +132,7 @@ export default class Controller {
         tahun_ajaran,
         semester,
         file_rapot: uploadedPath,
+        file_rapot_mda: file_rapot_mda,
         status: 'Aktif',
         created_by: creatorId,
       };
@@ -166,6 +182,20 @@ export default class Controller {
           'local'
         );
         payload.file_rapot = uploadedPath;
+      }
+
+      if (req?.files && req?.files.file_rapot_mda) {
+        const fileMda = req?.files?.file_rapot_mda;
+        const checkFileMda = helper.checkExtention(fileMda, 'file');
+        if (checkFileMda != 'allowed')
+          return response.failed(checkFileMda, 422, res);
+
+        payload.file_rapot_mda = await helper.upload(
+          fileMda,
+          'rapot-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
       }
 
       if (payload.status === 'Aktif' && check.status !== 'Aktif') {

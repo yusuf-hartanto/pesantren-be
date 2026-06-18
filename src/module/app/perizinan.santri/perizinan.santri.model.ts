@@ -32,6 +32,7 @@ export class PerizinanSantri extends Model {
   declare canceled_at: Date | null;
   declare canceled_by: string | null;
   declare alasan_penutupan: string | null;
+  declare file_izin: string | null;
   declare created_by: string;
   declare created_at: Date;
   declare updated_at: Date;
@@ -137,6 +138,10 @@ export function initPerizinanSantri(sequelize: Sequelize) {
       },
       request_canceled_catatan: {
         type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      file_izin: {
+        type: DataTypes.STRING,
         allowNull: true,
       },
       request_canceled_at: {
