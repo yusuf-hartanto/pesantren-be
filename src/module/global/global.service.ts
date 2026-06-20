@@ -15,10 +15,21 @@ import moment from 'moment';
 const BASE_URL = process.env.SITRENDI_URL || '';
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || '';
 
+const ONESIGNAL_URL = process.env.ONESIGNAL_URL || '';
+const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || '';
+const ONESIGNAL_APP_KEY = process.env.ONESIGNAL_APP_KEY || '';
+
 interface SyncSantriPayload {
   institution_id: string;
   kelas: string;
   user_id: string;
+}
+
+interface NotificationPayload {
+  title: string;
+  message: string;
+  url: string;
+  receiver: string[];
 }
 
 export default class Service {
@@ -249,6 +260,38 @@ export default class Service {
       total_temuan,
       total_perizinan,
     };
+  }
+
+  public async sendNotification(data: NotificationPayload) {
+    if (!ONESIGNAL_URL) return 'Belum setup url OneSignal';
+    if (!ONESIGNAL_APP_ID) return 'Belum setup app_id OneSignal';
+    if (!ONESIGNAL_APP_KEY) return 'Belum setup app_key OneSignal';
+
+    const response = await fetch(`${ONESIGNAL_URL}/notifications`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Key ${ONESIGNAL_APP_KEY}`,
+      },
+      body: JSON.stringify({
+        app_id: ONESIGNAL_APP_ID,
+        headings: {
+          en: data.title,
+        },
+        contents: {
+          en: data.message,
+        },
+        target_channel: 'push',
+        include_aliases: {
+          external_id: data.receiver,
+        },
+        url: data.url,
+      }),
+    });
+
+    const result = await response.json();
+  
+    return result;
   }
 }
 
