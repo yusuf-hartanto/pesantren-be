@@ -124,6 +124,13 @@ export default class Helper {
       file: ['pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'],
     };
     let ext: string = file?.name.split('.').pop() || '-';
+    if (
+      type == 'all' &&
+      Object.values(allowedExt)
+        .flat()
+        .includes(ext.toLocaleLowerCase())
+    )
+      return 'allowed';
     if (allowedExt[type].includes(ext.toLocaleLowerCase())) return 'allowed';
     return `file extension allowed *${allowedExt[type]?.join(', ')}.`;
   }
@@ -345,11 +352,15 @@ export default class Helper {
     const limit: any = req?.query?.perPage || 10;
     const offset: any = req?.query?.page || 1;
     const keyword: any = req?.query?.q || req?.query?.keyword;
+    const id_pegawai: any = req?.query?.id_pegawai;
+    const tanggal: any = req?.query?.tanggal;
 
     return {
       limit: parseInt(limit),
       offset: parseInt(limit) * (parseInt(offset) - 1),
       keyword,
+      tanggal,
+      id_pegawai,
     };
   }
 

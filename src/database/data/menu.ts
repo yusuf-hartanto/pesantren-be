@@ -225,6 +225,14 @@ export default class DataMenu {
         status: 1,
       },
       {
+        parent_id: 2,
+        menu_name: 'Jam Kerja Pegawai',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/pegawai-jam-kerja/list',
+        seq_number: 19,
+        status: 1,
+      },
+      {
         parent_id: 3,
         menu_name: 'Cabang',
         menu_icon: 'tabler-circle',
@@ -346,7 +354,7 @@ export default class DataMenu {
       },
       {
         parent_id: 5,
-        menu_name: 'Absen Kamar',
+        menu_name: 'Absen Harian',
         menu_icon: 'tabler-circle',
         module_name: '/app/absen-harian-santri/list',
         seq_number: 1,
@@ -358,6 +366,14 @@ export default class DataMenu {
         menu_icon: 'tabler-circle',
         module_name: '/app/absen-kelas-santri/list',
         seq_number: 2,
+        status: 1,
+      },
+      {
+        parent_id: 5,
+        menu_name: 'Absen Pegawai',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/pegawai-absen-harian/list',
+        seq_number: 3,
         status: 1,
       },
       {
@@ -394,7 +410,7 @@ export default class DataMenu {
       },
       {
         parent_id: 7,
-        menu_name: 'Absensi Kamar',
+        menu_name: 'Absensi Harian',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/absen-harian-santri/list',
         seq_number: 2,
@@ -406,6 +422,22 @@ export default class DataMenu {
         menu_icon: 'tabler-circle',
         module_name: '/app/report/absen-kelas-santri/list',
         seq_number: 3,
+        status: 1,
+      },
+      {
+        parent_id: 7,
+        menu_name: 'Perizinan Santri',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/report/perizinan-santri/list',
+        seq_number: 4,
+        status: 1,
+      },
+      {
+        parent_id: 7,
+        menu_name: 'Activity User',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/report/activity-log/list',
+        seq_number: 99,
         status: 1,
       },
       {

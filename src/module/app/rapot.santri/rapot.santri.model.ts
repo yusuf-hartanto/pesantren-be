@@ -48,6 +48,10 @@ export function initRapotSantri(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      file_rapot_mda: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       status: {
         type: DataTypes.ENUM('Aktif', 'Arsip'),
         allowNull: false,

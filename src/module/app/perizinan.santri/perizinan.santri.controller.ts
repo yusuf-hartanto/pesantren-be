@@ -243,6 +243,7 @@ export default class Controller {
         end_date: req.query.end_date,
         is_request_canceled: req.query.is_request_canceled,
         is_canceled: req.query.is_canceled,
+        kondisi: req.query.kondisi,
       };
 
       const { count, rows } = await repository.index(filter);
@@ -290,9 +291,25 @@ export default class Controller {
         );
       }
 
+      let file_izin: any = null;
+      if (req?.files && req?.files.file_izin) {
+        const fileIzin = req?.files?.file_izin;
+        const checkFileIzin = helper.checkExtention(fileIzin, 'all');
+        if (checkFileIzin != 'allowed')
+          return response.failed(checkFileIzin, 422, res);
+
+        file_izin = await helper.upload(
+          fileIzin,
+          'perizinan-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
+      }
+
       const payload = {
         ...validData,
         tanggal_pengajuan: new Date(),
+        file_izin,
         status_approval: 'Menunggu',
         created_by: req?.user?.id || 'SYSTEM',
       };
@@ -335,9 +352,24 @@ export default class Controller {
         }
       }
 
+      let file_izin: any = null;
+      if (req?.files && req?.files.file_izin) {
+        const fileIzin = req?.files?.file_izin;
+        const checkFileIzin = helper.checkExtention(fileIzin, 'all');
+        if (checkFileIzin != 'allowed')
+          return response.failed(checkFileIzin, 422, res);
+
+        file_izin = await helper.upload(
+          fileIzin,
+          'perizinan-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
+      }
+
       const finalPayload = helper.only(
         variable.fillable(),
-        { ...check.toJSON(), ...validData },
+        { ...check.toJSON(), ...validData, ...(file_izin ? { file_izin } : {}) },
         true
       );
       await repository.update(
@@ -520,6 +552,7 @@ export default class Controller {
         petugas_yang_membatalkan: result.canceler?.username || '-',
         catatan_pembatalan: result.alasan_penutupan || '-',
         surat_izin: result?.suratPerizinan || '',
+        file_izin: result?.file_izin || '',
         is_request_canceled: result.is_request_canceled || false,
         request_canceled_at: result.request_canceled_at
           ? moment(result.request_canceled_at).format('DD-MMM-YYYY HH:mm:ss')
@@ -710,6 +743,147 @@ export default class Controller {
       }
     } catch (err: any) {
       // Batalkan perubahan jika ada error di tengah jalan
+      await trx?.rollback();
+      return helper.catchError(err.message, 400, res);
+    }
+  }
+
+  public async scanCardGate(req: Request, res: Response) {
+    const trx = await PerizinanSantri.sequelize?.transaction();
+    try {
+      const { nomor_kartu_santri } = req.body;
+
+      if (!nomor_kartu_santri) {
+        throw new Error('Nomor kartu santri tidak boleh kosong!');
+      }
+
+      // Cari perizinan santri aktif yang berjalan hari ini berdasarkan nomor kartu
+      const perizinan = await repository.findActiveIzinByCardNumber(nomor_kartu_santri);
+
+      if (!perizinan) {
+        throw new Error(
+          'Akses Ditolak: Santri tidak memiliki dokumen perizinan aktif yang sah untuk hari ini!'
+        );
+      }
+
+      const perizinanSantriData = perizinan.santri;
+      if (!perizinanSantriData) {
+        throw new Error('Struktur data profil santri tidak ditemukan!');
+      }
+
+      const todayStr = moment().format('YYYY-MM-DD');
+      const tglSelesaiStr = moment(perizinan.tanggal_selesai).format('YYYY-MM-DD');
+
+      const id_izin = perizinan.id_izin;
+      const logGate = await repository.findLogGate(id_izin);
+      const activePetugasId = req?.user?.resource_id || req?.user?.id || 'GATE_KEEPER_ID';
+
+      // Persiapan payload profile untuk response JSON ke UI client
+      const profileResponse = {
+        nama_santri: perizinanSantriData.fullname || '-',
+        nis: perizinanSantriData.nis || '-',
+        kamar: perizinan.lokasiKamar?.nama_lokasi || '-',
+        jenis_izin: perizinan.jenis_izin || '-',
+        tanggal_mulai: perizinan.tanggal_mulai,
+        tanggal_selesai: perizinan.tanggal_selesai,
+      };
+
+      // --- KONDISI A: SANTRI KELUAR PONDOK (Log Gate Belum Ada) ---
+      if (!logGate) {
+        const waktuKeluarSekarang = new Date();
+
+        await repository.createLogGate(
+          {
+            id_gate: uuidv4(),
+            id_izin,
+            waktu_keluar: waktuKeluarSekarang,
+            petugas_keluar: activePetugasId,
+            status_gate: 'Keluar',
+            keterangan:
+              req.body.keterangan || 'Santri keluar komplek pondok via tapping kartu.',
+          },
+          trx
+        );
+
+        await trx?.commit();
+
+        return response.success(
+          'AKSES DIIZINKAN: Santri tercatat KELUAR.',
+          {
+            ...profileResponse,
+            status_gate: 'Keluar',
+            waktu_keluar: moment(waktuKeluarSekarang).format('YYYY-MM-DD HH:mm:ss'),
+            waktu_masuk: null,
+            kondisi: 'Normal',
+          },
+          res
+        );
+      }
+
+      // --- SANTRI KEMBALI KE DALAM PONDOK (Log Gate Sudah Ada) ---
+      else {
+        // Karena tidak menggunakan status_gate, cek ketersediaan waktu_masuk
+        if (logGate.waktu_masuk) {
+          throw new Error(
+            'Akses Ditolak: Santri dengan kartu ini sudah tercatat kembali ke dalam pondok sebelumnya.'
+          );
+        }
+
+        const waktuMasukSekarang = new Date();
+
+        // Update log gerbang masuk pondok
+        await repository.updateLogGate(
+          {
+            waktu_masuk: waktuMasukSekarang,
+            petugas_masuk: activePetugasId,
+            status_gate: 'Kembali',
+            keterangan:
+              req.body.keterangan || 'Santri kembali masuk pondok via tapping kartu.',
+          },
+          { id_izin },
+          trx
+        );
+
+        // Kalkulasi ketepatan waktu pengembalian
+        let kondisiFinal = 'Normal';
+        const targetToday = moment(todayStr);
+        const targetSelesai = moment(tglSelesaiStr);
+
+        if (targetToday.isAfter(targetSelesai)) {
+          kondisiFinal = 'Overdue';
+        } else if (targetToday.isBefore(targetSelesai)) {
+          kondisiFinal = 'Closed';
+        } else {
+          kondisiFinal = 'Normal';
+        }
+
+        // Simpan status final ke master perizinan santri
+        await repository.update(
+          {
+            kondisi: kondisiFinal,
+            updated_at: new Date(),
+          },
+          { id_izin },
+          trx
+        );
+
+        await trx?.commit();
+
+        return response.success(
+          `AKSES DIIZINKAN: Santri tercatat KEMBALI. Kondisi: [${kondisiFinal}]`,
+          {
+            ...profileResponse,
+            status_gate: 'Kembali',
+            waktu_keluar: logGate.waktu_keluar
+              ? moment(logGate.waktu_keluar).format('YYYY-MM-DD HH:mm:ss')
+              : '-',
+            waktu_masuk: moment(waktuMasukSekarang).format('YYYY-MM-DD HH:mm:ss'),
+            kondisi: kondisiFinal,
+          },
+          res
+        );
+      }
+    } catch (err: any) {
       await trx?.rollback();
       return helper.catchError(err.message, 400, res);
     }

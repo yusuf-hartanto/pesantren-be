@@ -85,6 +85,23 @@ export default class Repository {
       where: {},
     };
 
+    if (data?.id_jabatan && data?.id_jabatan !== '') {
+      query.where.id_jabatan = data.id_jabatan;
+    }
+    if (data?.status_pegawai && data?.status_pegawai !== '') {
+      if (data.status_pegawai === 'guru') {
+        query.where.id_pegawai = {
+          [Op.in]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+        };
+      } else if (data.status_pegawai === 'pegawai') {
+        query.where.id_pegawai = {
+          [Op.notIn]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+        };
+      } else {
+        query.where.status_pegawai = data.status_pegawai;
+      }
+    }
+
     const keyword = data?.keyword ? `%${data.keyword}%` : null;
 
     if (keyword) {
@@ -201,11 +218,32 @@ export default class Repository {
     q?: string;
     isTemplate?: boolean;
     limit?: number;
+    id_jabatan?: string;
+    status_pegawai?: string;
   }) {
-    const { q, isTemplate, limit } = params;
+    const { q, isTemplate, limit, id_jabatan, status_pegawai } = params;
     const keyword = q ? `%${q}%` : null;
 
     let whereClause: any = {};
+
+    if (!isTemplate) {
+      if (id_jabatan && id_jabatan !== '') {
+        whereClause.id_jabatan = id_jabatan;
+      }
+      if (status_pegawai && status_pegawai !== '') {
+        if (status_pegawai === 'guru') {
+          whereClause.id_pegawai = {
+            [Op.in]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+          };
+        } else if (status_pegawai === 'pegawai') {
+          whereClause.id_pegawai = {
+            [Op.notIn]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+          };
+        } else {
+          whereClause.status_pegawai = status_pegawai;
+        }
+      }
+    }
 
     // Jika bukan template dan ada keyword, terapkan filter pencarian
     if (!isTemplate && keyword) {

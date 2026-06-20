@@ -85,6 +85,10 @@ export class PerizinanSantriRepository {
       query.where.is_canceled = data.is_canceled;
     }
 
+    if (data?.kondisi) {
+      query.where.kondisi = data.kondisi;
+    }
+
     // Filter Free Text (Nama Santri / NIS / Kamar)
     if (data?.keyword) {
       const keyword = `%${data.keyword}%`;
@@ -96,6 +100,37 @@ export class PerizinanSantriRepository {
     }
 
     return await PerizinanSantri.findAndCountAll(query);
+  }
+
+  /**
+   * Menemukan perizinan santri aktif berdasarkan nomor kartu santri
+   * Aturan: Status wajib 'Disetujui', belum dibatalkan, dan hari ini berada di dalam rentang izin.
+   */
+  public async findActiveIzinByCardNumber(nomorKartu: string) {
+    const today = moment().format('YYYY-MM-DD');
+
+    return await PerizinanSantri.findOne({
+      where: {
+        status_approval: 'Disetujui',
+        is_canceled: false,
+        deleted_at: null,
+        tanggal_mulai: { [Op.lte]: today },
+        tanggal_selesai: { [Op.gte]: today },
+      },
+      include: [
+        {
+          model: Santri,
+          as: 'santri',
+          where: { kartu_santri_nomor: nomorKartu }, // Sesuai nama kolom nomor kartu di database Anda
+          attributes: ['fullname', 'nis'],
+        },
+        {
+          model: Lokasi,
+          as: 'lokasiKamar',
+          attributes: ['nama_lokasi'],
+        },
+      ],
+    });
   }
 
   /**

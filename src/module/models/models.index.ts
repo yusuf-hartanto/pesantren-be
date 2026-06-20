@@ -177,6 +177,8 @@ import {
   initPenempatanKelasSantri,
   associatePenempatanKelasSantri,
 } from '../app/penempatan.kelas.santri/penempatan.kelas.santri.model';
+import { associateJamKerjaPegawai, initJamKerjaPegawai } from '../app/pegawai.jam.kerja/pegawai.jam.kerja.model';
+import { associateAbsenHarianPegawai, initAbsenHarianPegawai } from '../app/pegawai.absen.harian/pegawai.absen.harian.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -242,6 +244,9 @@ export function initializeModels(sequelize: Sequelize) {
   initRapotSantri(sequelize);
   initPenempatanKelasSantri(sequelize);
 
+  initJamKerjaPegawai(sequelize);
+  initAbsenHarianPegawai(sequelize);
+
   // associate
   associateAppRole();
   associateAppMenu();
@@ -291,7 +296,8 @@ export function initializeModels(sequelize: Sequelize) {
   associateNotification();
   associateRapotSantri();
   associatePenempatanKelasSantri();
-
+  associateJamKerjaPegawai();
+  associateAbsenHarianPegawai();
   addGlobalActivityHooks(sequelize);
 }
 

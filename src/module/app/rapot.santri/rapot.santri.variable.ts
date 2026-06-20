@@ -7,6 +7,7 @@ export default class Variable {
       'tahun_ajaran',
       'semester',
       'file_rapot',
+      'file_rapot_mda',
       'status',
     ];
     return field;

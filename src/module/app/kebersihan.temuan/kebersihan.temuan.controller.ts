@@ -21,9 +21,12 @@ const date: string = helper.date();
 const generateDataExcel = (sheet: any, details: any) => {
   sheet.addRow([
     'No',
+    'Lokasi',
     'Kategori',
     'Deskripsi',
     'Tingkat',
+    'Kondisi',
+    'Status',
     'Perlu Tindak Lanjut',
     'Foto Path',
   ]);
@@ -33,12 +36,22 @@ const generateDataExcel = (sheet: any, details: any) => {
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
 
+  const statusObj: Record<number, string> = {
+    0: 'Belum Diproses',
+    1: 'Sedang Diproses',
+    2: 'Sudah Diproses',
+    3: 'Tidak Dapat Diproses',
+  };
+
   for (let i in details) {
     sheet.addRow([
       parseInt(i) + 1,
+      details[i]?.kebersihan_inspeksi?.lokasi?.nama_lokasi || '',
       details[i]?.kategori || '',
       details[i]?.deskripsi || '',
       details[i]?.tingkat || '',
+      details[i]?.kebersihan_inspeksi?.status_kondisi || '',
+      statusObj[details[i]?.status] || '',
       details[i]?.perlu_tindak_lanjut ? 'Ya' : 'Tidak',
       `${appConfig?.baseDomain}${details[i]?.foto_path}` || '',
     ]);
@@ -84,6 +97,7 @@ export default class Controller {
       const tanggal_awal: any = req?.query?.tanggal_awal || '';
       const tanggal_akhir: any = req?.query?.tanggal_akhir || '';
       const status: any = req?.query?.status || '';
+      const status_kondisi: any = req?.query?.status_kondisi || '';
       const { count, rows } = await repository.index({
         ...query,
         id_cabang,
@@ -92,6 +106,7 @@ export default class Controller {
         tanggal_awal,
         tanggal_akhir,
         status,
+        status_kondisi,
       });
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
@@ -246,6 +261,8 @@ export default class Controller {
         id_petugas,
         tanggal_awal,
         tanggal_akhir,
+        status,
+        status_kondisi,
       } = req?.body;
       const isTemplate: boolean = template && template == '1';
 
@@ -258,6 +275,8 @@ export default class Controller {
           id_petugas,
           tanggal_awal,
           tanggal_akhir,
+          status,
+          status_kondisi,
         });
         if (result?.length < 1)
           return response.success(NOT_FOUND, null, res, false);

@@ -51,6 +51,14 @@ export function initActivityLog(sequelize: Sequelize) {
       modelName: 'ActivityLog',
       tableName: 'activity_logs',
       timestamps: false,
+      indexes: [
+        {
+          fields: ['table_name'],
+        },
+        {
+          fields: ['record_id'],
+        },
+      ],
     }
   );
 

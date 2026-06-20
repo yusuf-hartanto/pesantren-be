@@ -241,6 +241,7 @@ export default class Middleware {
     try {
       const username: string = req?.body?.username;
       const password: string = req?.body?.password;
+      console.log('username', username, 'password', password);
       if (!username || !password)
         return response.failed(`Username or password ${REQUIRED}`, 422, res);
 
@@ -250,6 +251,8 @@ export default class Middleware {
         },
         ''
       );
+
+      console.log('result', result?.getDataValue('username'), username);
       if (!result) return response.success(NOT_FOUND, null, res, false);
 
       if (result?.getDataValue('status') === 'A') {
@@ -261,6 +264,7 @@ export default class Middleware {
         return response.failed('Your account need verification', 400, res);
       }
     } catch (err: any) {
+      console.log('err', err);
       return helper.catchError(`check verify: ${err?.message}`, 400, res);
     }
   }
