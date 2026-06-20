@@ -18,6 +18,9 @@ import { teleConfig } from '../config/config.telegram';
 import { APP_NAME, MYSQL, POSTGRES } from '../utils/constant';
 import AppResource from '../module/app/resource/resource.model';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
+import { service } from '../module/global/global.service';
+import { rawQuery } from './rawQuery';
+import { repository as notificationRepository } from '../module/app/notification/notification.repository';
 
 const month: string = moment().format('YYYY-MM');
 const parseTimeToSeconds = (time: string): number => {
@@ -33,6 +36,13 @@ const parseTimeToSeconds = (time: string): number => {
   return h * 3600 + m * 60 + s;
 };
 
+interface NotificationPayload {
+  title: string;
+  message: string;
+  url: string;
+  receiver: string[];
+  type: string;
+}
 export default class Helper {
   public date() {
     return moment().locale('id').format('YYYY-MM-DD HH:mm:ss');
@@ -564,6 +574,41 @@ export default class Helper {
       if (r) return val;
     }
     return null;
+  }
+
+  public async sendNotification(req: Request, data: NotificationPayload) {
+    try {
+      const q = `SELECT resource_id FROM app_resource WHERE username IN (:ids)`;
+      const conn = await rawQuery.getConnection();
+      const res: any =await conn.query(q, {
+        type: QueryTypes.SELECT,
+        replacements: {
+          ids: data.receiver
+        }
+      });
+
+      if (res.length > 0) {
+        let insert = [];
+        for (const user of res) {
+          insert.push({
+            from: req.user?.id,
+            to: user.resource_id,
+            title: data.title,
+            type: data.type,
+            url: data.url,
+            message: data.message
+          });
+        }
+
+        await notificationRepository.insert(insert);
+      }
+
+
+      const result = await service.sendNotification(data);
+      return result;
+    } catch (err: any) {
+      console.log(err)
+    }
   }
 }
 

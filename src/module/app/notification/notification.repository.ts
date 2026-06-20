@@ -85,6 +85,10 @@ export default class Repository {
       individualHooks: true,
     });
   }
+
+  public async insert(data: any) {
+    return Model.bulkCreate(data);
+  }
 }
 
 export const repository = new Repository();

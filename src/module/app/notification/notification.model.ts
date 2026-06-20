@@ -61,6 +61,12 @@ export function initNotification(sequelize: Sequelize) {
     row?.setDataValue('id_notification', uuidv4());
   });
 
+  Notification.beforeBulkCreate((rows) => {
+    for (const row of rows) {
+      row?.setDataValue('id_notification', uuidv4());
+    }
+  });
+
   return Notification;
 }
 
