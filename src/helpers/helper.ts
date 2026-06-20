@@ -461,6 +461,19 @@ export default class Helper {
         const mimeType = matches[1];
         data = matches[2];
         ext = mimeType.split('/')[1];
+      } else {
+        const prefix = base64.substring(0, 15);
+        if (prefix.startsWith('iVBORw0KGg')) {
+          ext = 'png';
+        } else if (prefix.startsWith('JVBERi')) {
+          ext = 'pdf';
+        } else if (prefix.startsWith('/9j/')) {
+          ext = 'jpeg';
+        } else if (prefix.startsWith('R0lGOD')) {
+          ext = 'gif';
+        } else if (prefix.startsWith('UEsDBB')) {
+          ext = 'zip';
+        }
       }
 
       const cleanFilename = filename.replace(/ /g, '');
@@ -499,14 +512,32 @@ export default class Helper {
   public checkExtentionBase64(base64: string, type: string = 'image') {
     if (!base64) return 'file tidak valid';
 
-    // ambil mime & data
+    let mimeType = '';
+    let data = '';
+    let ext = '';
+
     const matches = base64.match(/^data:(.+);base64,(.+)$/);
-    if (!matches) return 'format base64 tidak valid';
-
-    const mimeType = matches[1]; // contoh: image/png
-    const data = matches[2];
-
-    const ext = mimeType.split('/')[1]?.toLowerCase();
+    if (matches) {
+      mimeType = matches[1];
+      data = matches[2];
+      ext = mimeType.split('/')[1]?.toLowerCase();
+    } else {
+      data = base64;
+      const prefix = base64.substring(0, 15);
+      if (prefix.startsWith('iVBORw0KGg')) {
+        ext = 'png';
+      } else if (prefix.startsWith('JVBERi')) {
+        ext = 'pdf';
+      } else if (prefix.startsWith('/9j/')) {
+        ext = 'jpeg';
+      } else if (prefix.startsWith('R0lGOD')) {
+        ext = 'gif';
+      } else if (prefix.startsWith('UEsDBB')) {
+        ext = 'zip';
+      } else {
+        ext = type === 'image' ? 'png' : 'pdf';
+      }
+    }
 
     const allowedExt: any = {
       image: ['jpg', 'jpeg', 'png', 'gif'],
@@ -602,7 +633,7 @@ export default class Helper {
         let insert = [];
         for (const user of res) {
           insert.push({
-            from: req.user?.id,
+            from: req.user?.id || '00000000-0000-0000-0000-000000000000',
             to: user.resource_id,
             title: data.title,
             type: data.type,

@@ -20,6 +20,8 @@ import {
   NOT_FOUND,
 } from '../../utils/constant';
 import { appConfig } from '../../config/config.app';
+import { rawQuery } from '../../helpers/rawQuery';
+import { QueryTypes } from 'sequelize';
 
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || 'pesantren_key';
 
@@ -94,6 +96,7 @@ export default class Controller {
 
       const results = [];
 
+      let santriName = [];
       for (const item of data) {
         const {
           id_santri: idSantriSitrendi,
@@ -140,6 +143,7 @@ export default class Controller {
             `Santri dengan id_santri_sitrendi [${idSantriSitrendi}] tidak ditemukan.`
           );
         }
+        santriName.push(student.fullname);
 
         const placement = await PenempatanKamarSantri.findOne({
           where: { id_santri: student.id_santri, status: 'Aktif' },
@@ -179,7 +183,59 @@ export default class Controller {
         results.push(result);
       }
 
-      if (trx) await trx.commit();
+      if (trx) {
+        await trx.commit();
+
+        try {
+          let receivers: string[] = [];
+          try {
+            const conn = await rawQuery.getConnection();
+            const query = `
+              SELECT DISTINCT ar.username
+              FROM app_resource ar
+              JOIN app_role arol ON ar.role_id = arol.role_id
+              LEFT JOIN app_role_menu arm ON ar.role_id = arm.role_id
+              LEFT JOIN app_menu am ON arm.menu_id = am.menu_id
+              WHERE ar.status = 'A'
+                AND (
+                  arol.role_name = 'administrator'
+                  OR (
+                    am.module_name = '/app/perizinan-santri/kedisiplinan'
+                    AND arm.view = 1
+                    AND arm.edit = 1
+                  )
+                )
+            `;
+            const resultUsers = await conn.query(query, {
+              type: QueryTypes.SELECT,
+            });
+            receivers = (resultUsers as any[]).map((u: any) => u.username).filter(Boolean);
+          } catch (queryErr) {
+            console.error('Error fetching receivers for notification:', queryErr);
+          }
+
+          if (receivers && receivers.length > 0) {
+            req.user = {
+              id: '00000000-0000-0000-0000-000000000000',
+              username: 'sitrendi',
+              full_name: 'SiTrendi',
+            };
+            await helper.sendNotification(req, {
+              title: 'Request Perizinan',
+              message: `Terdapat ${santriName.length} perizinan baru dari santri (${santriName.join(', ')}).`,
+              url: '/app/perizinan-santri/kedisiplinan',
+              receiver: receivers,
+              type: 'Perizinan',
+            }).catch(err => {
+              console.error('Error executing sendNotification:', err);
+            });
+          } else {
+            console.warn('No receivers found for perizinan notification.');
+          }
+        } catch (notifErr) {
+          console.error('General notification execution error:', notifErr);
+        }
+      }
       return response.success(SUCCESS_SAVED, results, res);
     } catch (err: any) {
       if (trx && !(trx as any).finished) {
