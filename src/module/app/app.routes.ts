@@ -72,6 +72,7 @@ import { notification } from './notification/notification.controller';
 import { notificationSchema } from './notification/notification.schema';
 import { controller as rapotSantriController } from './rapot.santri/rapot.santri.controller';
 import { penempatanKelasSantri } from './penempatan.kelas.santri/penempatan.kelas.santri.controller';
+import { activityLog } from './activity.log/activity.log.controller';
 
 const router: Router = Router();
 
@@ -911,5 +912,8 @@ router.post(
   auth.checkBearerToken,
   penempatanKelasSantri.insert
 );
+
+router.get('/activity-log', auth.checkBearerToken, activityLog.index);
+router.get('/activity-log/:id', auth.checkBearerToken, activityLog.detail);
 
 export default router;

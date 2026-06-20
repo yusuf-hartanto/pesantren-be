@@ -243,6 +243,7 @@ export default class Controller {
         end_date: req.query.end_date,
         is_request_canceled: req.query.is_request_canceled,
         is_canceled: req.query.is_canceled,
+        kondisi: req.query.kondisi,
       };
 
       const { count, rows } = await repository.index(filter);
