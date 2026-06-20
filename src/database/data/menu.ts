@@ -225,6 +225,14 @@ export default class DataMenu {
         status: 1,
       },
       {
+        parent_id: 2,
+        menu_name: 'Jam Kerja Pegawai',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/pegawai-jam-kerja/list',
+        seq_number: 19,
+        status: 1,
+      },
+      {
         parent_id: 3,
         menu_name: 'Cabang',
         menu_icon: 'tabler-circle',
@@ -358,6 +366,14 @@ export default class DataMenu {
         menu_icon: 'tabler-circle',
         module_name: '/app/absen-kelas-santri/list',
         seq_number: 2,
+        status: 1,
+      },
+      {
+        parent_id: 5,
+        menu_name: 'Absen Pegawai',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/pegawai-absen-harian/list',
+        seq_number: 3,
         status: 1,
       },
       {

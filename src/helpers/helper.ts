@@ -335,11 +335,15 @@ export default class Helper {
     const limit: any = req?.query?.perPage || 10;
     const offset: any = req?.query?.page || 1;
     const keyword: any = req?.query?.q || req?.query?.keyword;
+    const id_pegawai: any = req?.query?.id_pegawai;
+    const tanggal: any = req?.query?.tanggal;
 
     return {
       limit: parseInt(limit),
       offset: parseInt(limit) * (parseInt(offset) - 1),
       keyword,
+      tanggal,
+      id_pegawai,
     };
   }
 
