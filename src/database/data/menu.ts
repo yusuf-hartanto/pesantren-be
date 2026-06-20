@@ -409,6 +409,14 @@ export default class DataMenu {
         status: 1,
       },
       {
+        parent_id: 7,
+        menu_name: 'Perizinan Santri',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/report/perizinan-santri/list',
+        seq_number: 4,
+        status: 1,
+      },
+      {
         parent_id: 99,
         menu_name: 'User',
         menu_icon: 'tabler-circle',

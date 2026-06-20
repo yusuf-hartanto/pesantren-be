@@ -77,12 +77,17 @@ export default class Repository {
       isInspeksiRequired = true;
     }
 
+    if (data?.status_kondisi && data?.status_kondisi != '') {
+      inspeksiWhere.status_kondisi = data?.status_kondisi;
+      isInspeksiRequired = true;
+    }
+
     query.include = [
       {
         model: KebersihanInspeksi,
         as: 'kebersihan_inspeksi',
         required: isInspeksiRequired,
-        attributes: ['id_inspeksi', 'waktu', 'tanggal'],
+        attributes: ['id_inspeksi', 'waktu', 'tanggal', 'status_kondisi'],
         include: [
           {
             model: Cabang,
