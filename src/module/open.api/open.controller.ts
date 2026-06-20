@@ -19,6 +19,7 @@ import {
   SUCCESS_SAVED,
   NOT_FOUND,
 } from '../../utils/constant';
+import { appConfig } from '../../config/config.app';
 
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || 'pesantren_key';
 
@@ -100,13 +101,35 @@ export default class Controller {
           tanggal_mulai,
           tanggal_selesai,
           alasan,
+          file_surat,
         } = item;
 
+        let fileSurat: any = null;
         if (!idSantriSitrendi) throw new Error('id_santri is required');
         if (!jenis_izin) throw new Error('jenis_izin is required');
         if (!tanggal_mulai) throw new Error('tanggal_mulai is required');
         if (!tanggal_selesai) throw new Error('tanggal_selesai is required');
         if (!alasan) throw new Error('alasan is required');
+        if (jenis_izin && jenis_izin.toLowerCase().includes('sakit')) {
+          if (!file_surat) {
+            throw new Error('file_surat is required');
+          }
+
+          if (file_surat) {
+            const checkFile = helper.checkExtentionBase64(file_surat, 'file');
+            if (checkFile !== 'allowed') {
+              if (trx) await trx.rollback();
+              return response.failed(checkFile, 422, res);
+            }
+
+            fileSurat = await helper.uploadBase64(
+              file_surat,
+              'perizinan',
+              'sitrendi',
+              appConfig?.assetType
+            );
+          }
+        }
 
         const student = await Santri.findOne({
           where: { id_santri_sitrendi: idSantriSitrendi },
@@ -149,6 +172,7 @@ export default class Controller {
           tanggal_pengajuan: new Date(),
           status_approval: 'Menunggu',
           created_by: '00000000-0000-0000-0000-000000000000', // dari SiTrendi
+          file_izin: fileSurat,
         };
 
         const result = await perizinanRepository.create(payload, trx);

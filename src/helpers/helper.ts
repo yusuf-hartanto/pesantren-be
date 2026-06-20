@@ -114,6 +114,13 @@ export default class Helper {
       file: ['pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'],
     };
     let ext: string = file?.name.split('.').pop() || '-';
+    if (
+      type == 'all' &&
+      Object.values(allowedExt)
+        .flat()
+        .includes(ext.toLocaleLowerCase())
+    )
+      return 'allowed';
     if (allowedExt[type].includes(ext.toLocaleLowerCase())) return 'allowed';
     return `file extension allowed *${allowedExt[type]?.join(', ')}.`;
   }

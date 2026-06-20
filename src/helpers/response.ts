@@ -7,13 +7,18 @@ export default class DataResponse {
     message: string,
     data: any,
     res: Response,
-    status: boolean = true
+    status: boolean = true,
+    others?: any
   ) {
-    res.json({
+    const result: any = {
       status: status,
       message: message,
       data: data,
-    });
+    };
+    if (others) {
+      result.others = others;
+    }
+    res.json(result);
     res.end();
   }
 

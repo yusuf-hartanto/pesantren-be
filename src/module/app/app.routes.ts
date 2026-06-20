@@ -74,6 +74,7 @@ import { controller as rapotSantriController } from './rapot.santri/rapot.santri
 import { penempatanKelasSantri } from './penempatan.kelas.santri/penempatan.kelas.santri.controller';
 import { JamKerjaPegawai } from './pegawai.jam.kerja/pegawai.jam.kerja.controller';
 import { AbsenHarianPegawaiController } from './pegawai.absen.harian/pegawai.absen.harian.controller';
+import { activityLog } from './activity.log/activity.log.controller';
 
 const router: Router = Router();
 
@@ -934,5 +935,8 @@ router.post(
   auth.checkBearerToken,
   penempatanKelasSantri.insert
 );
+
+router.get('/activity-log', auth.checkBearerToken, activityLog.index);
+router.get('/activity-log/:id', auth.checkBearerToken, activityLog.detail);
 
 export default router;

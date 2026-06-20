@@ -241,7 +241,12 @@ export default class Controller {
   public async index(req: Request, res: Response) {
     try {
       const query = helper.fetchQueryRequest(req);
-      const { count, rows } = await repository.index(query);
+      const filter = {
+        ...query,
+        id_jabatan: req.query.id_jabatan || '',
+        status_pegawai: req.query.status_pegawai || '',
+      };
+      const { count, rows } = await repository.index(filter);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
 
@@ -384,10 +389,15 @@ export default class Controller {
   public async export(req: Request, res: Response) {
     try {
       let condition: any = {};
-      const { q, template } = req?.body;
+      const { q, template, id_jabatan, status_pegawai } = req?.body;
       const isTemplate: boolean = template && template == '1';
 
-      let result = await repository.listForExport({ q, isTemplate });
+      let result = await repository.listForExport({
+        q,
+        isTemplate,
+        id_jabatan,
+        status_pegawai,
+      });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;

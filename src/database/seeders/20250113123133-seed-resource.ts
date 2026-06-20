@@ -54,6 +54,30 @@ export const up: Migration = async () => {
       created_by: '00000000-0000-0000-0000-000000000000',
     });
   }
+
+  const checkSitrendi = await Model.findOne({
+    where: { resource_id: '00000000-0000-0000-0000-000000000000' },
+  });
+  if (checkSitrendi) {
+    console.log(`⚠️ User SiTrendi already exists, skipping...`);
+  } else {
+    await Model.create({
+      resource_id: '00000000-0000-0000-0000-000000000000',
+      role_id: role?.getDataValue('role_id'),
+      username: 'sitrendi',
+      email: 'sitrendi@sitrendi.id',
+      password: password,
+      full_name: 'SiTrendi System',
+      place_of_birth: 'Bandung',
+      date_of_birth: helper.date(),
+      usia: 1,
+      telepon: '000000000000',
+      status: 'A',
+      area_province_id: province?.getDataValue('id'),
+      area_regencies_id: regency?.getDataValue('id'),
+      created_by: '00000000-0000-0000-0000-000000000000',
+    });
+  }
 };
 
 export const down: Migration = async () => {

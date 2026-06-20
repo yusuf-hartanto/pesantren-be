@@ -85,6 +85,10 @@ export class PerizinanSantriRepository {
       query.where.is_canceled = data.is_canceled;
     }
 
+    if (data?.kondisi) {
+      query.where.kondisi = data.kondisi;
+    }
+
     // Filter Free Text (Nama Santri / NIS / Kamar)
     if (data?.keyword) {
       const keyword = `%${data.keyword}%`;
