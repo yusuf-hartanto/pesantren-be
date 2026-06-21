@@ -16,7 +16,7 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
 } from '../../../utils/constant';
-import { orgUnitSchema } from './oraganization.unit.schema';
+import { orgUnitSchema, orgUnitUpdateSchema } from './oraganization.unit.schema';
 import z from 'zod';
 import moment from 'moment';
 import fs from 'fs/promises';
@@ -204,7 +204,7 @@ export default class Controller {
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       // 1. Validasi Partial Update (Zod)
-      const validData = orgUnitSchema.partial().parse(req.body);
+      const validData = orgUnitUpdateSchema.parse(req.body);
 
       // 2. VALIDASI ROLE: Cek jika mencoba mengubah jenis_orgunit menjadi 'Lembaga'
       if (validData.jenis_orgunit === 'Lembaga') {
