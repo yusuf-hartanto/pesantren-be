@@ -75,6 +75,8 @@ import { penempatanKelasSantri } from './penempatan.kelas.santri/penempatan.kela
 import { JamKerjaPegawai } from './pegawai.jam.kerja/pegawai.jam.kerja.controller';
 import { AbsenHarianPegawaiController } from './pegawai.absen.harian/pegawai.absen.harian.controller';
 import { activityLog } from './activity.log/activity.log.controller';
+import { guruPengganti } from './guru.pengganti/guru.pengganti.controller';
+import { guruPenggantiSchema } from './guru.pengganti/guru.pengganti.schema';
 
 const router: Router = Router();
 
@@ -938,5 +940,25 @@ router.post(
 
 router.get('/activity-log', auth.checkBearerToken, activityLog.index);
 router.get('/activity-log/:id', auth.checkBearerToken, activityLog.detail);
+
+router.get('/guru-pengganti/all-data', guruPengganti.list);
+router.get('/guru-pengganti', guruPengganti.index);
+router.get('/guru-pengganti/:id', guruPengganti.detail);
+router.post(
+  '/guru-pengganti',
+  sanitizeBody,
+  validate(guruPenggantiSchema),
+  guruPengganti.create
+);
+router.put(
+  '/guru-pengganti/:id',
+  sanitizeBody,
+  validate(guruPenggantiSchema),
+  guruPengganti.update
+);
+router.delete('/guru-pengganti/:id', guruPengganti.delete);
+router.post('/guru-pengganti/export', guruPengganti.export);
+router.post('/guru-pengganti/import', guruPengganti.import);
+router.post('/guru-pengganti/insert', guruPengganti.insert);
 
 export default router;

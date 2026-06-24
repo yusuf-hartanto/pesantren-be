@@ -179,6 +179,7 @@ import {
 } from '../app/penempatan.kelas.santri/penempatan.kelas.santri.model';
 import { associateJamKerjaPegawai, initJamKerjaPegawai } from '../app/pegawai.jam.kerja/pegawai.jam.kerja.model';
 import { associateAbsenHarianPegawai, initAbsenHarianPegawai } from '../app/pegawai.absen.harian/pegawai.absen.harian.model';
+import { initGuruPengganti, associateGuruPengganti } from '../app/guru.pengganti/guru.pengganti.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -247,6 +248,8 @@ export function initializeModels(sequelize: Sequelize) {
   initJamKerjaPegawai(sequelize);
   initAbsenHarianPegawai(sequelize);
 
+  initGuruPengganti(sequelize);
+
   // associate
   associateAppRole();
   associateAppMenu();
@@ -299,6 +302,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateJamKerjaPegawai();
   associateAbsenHarianPegawai();
   addGlobalActivityHooks(sequelize);
+  associateGuruPengganti();
 }
 
 Model.prototype.toJSON = function () {

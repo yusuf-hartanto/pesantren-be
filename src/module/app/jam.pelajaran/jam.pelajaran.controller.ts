@@ -21,6 +21,7 @@ import {
 } from '../../../utils/constant';
 import { repository as repoJenisJamPel } from '../jenis.jampel/jenis.jampel.repository';
 import { repository as repoLembagaFormal } from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.repository';
+import { repository as repoLembagaKepesantrenan } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.repository';
 
 const formatExcelTimeHHmm = (value: any): string => {
   if (!value) return '';
@@ -58,7 +59,7 @@ const generateDataExcel = (sheet: any, details: any) => {
       parseInt(i) + 1,
       details[i]?.nama_jampel || '',
       details[i]?.lembaga_type || '',
-      details[i]?.lembaga_formal?.nama_lembaga || '',
+      details[i]?.lembaga_formal ? details[i]?.lembaga_formal?.nama_lembaga : details[i]?.lembaga_kepesantrenan?.nama_lembaga || '',
       details[i]?.jenis_jam_pelajaran?.nama_jenis_jam || '',
       details[i]?.mulai || '',
       details[i]?.selesai || '',
@@ -130,7 +131,8 @@ const validateRow = (row: any) => {
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
-      const result = await repository.list({});
+      const lembaga_type: any = req?.query?.lembaga_type || '';
+      const result = await repository.list({lembaga_type});
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
@@ -248,7 +250,9 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      let condition: any = {};
+      let condition: any = {
+        lembaga_type: ''
+      };
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
       if (q) {
@@ -330,7 +334,16 @@ export default class Controller {
           });
 
           if (!lembaga) {
-            errors.push(`Lembaga "${row.nama_lembaga}" tidak ditemukan`);
+            const lembagaKepesantrenan = await repoLembagaKepesantrenan.detail({
+              nama_lembaga: row.nama_lembaga,
+            });
+
+            if (!lembagaKepesantrenan) {
+              errors.push(`Lembaga "${row.nama_lembaga}" tidak ditemukan`);
+            } else {
+              id_lembaga = lembagaKepesantrenan.id_lembaga;
+              nama_lembaga = lembagaKepesantrenan.getDataValue('nama_lembaga');
+            }
           } else {
             id_lembaga = lembaga.id_lembaga;
             nama_lembaga = lembaga.getDataValue('nama_lembaga');
