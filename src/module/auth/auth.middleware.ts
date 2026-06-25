@@ -145,14 +145,14 @@ export default class Middleware {
       }
 
       const basePath: string = helper.getOriginUrl(req);
-      const { code, status, message } = await checkAccess(
-        req,
-        auth?.role_name,
-        basePath
-      );
-      if (!status) {
-        return response.failed(message, code, res);
-      }
+      // const { code, status, message } = await checkAccess(
+      //   req,
+      //   auth?.role_name,
+      //   basePath
+      // );
+      // if (!status) {
+      //   return response.failed(message, code, res);
+      // }
 
       setUserLogin(auth?.username || 'sistem');
       req.user = auth;
