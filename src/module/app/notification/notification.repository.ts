@@ -7,7 +7,7 @@ import AppResource from '../resource/resource.model';
 export default class Repository {
   public index(data: any) {
     let where: any = {};
-    
+
     if (data?.resource_id) {
       where.to = data.resource_id;
     }
@@ -25,7 +25,7 @@ export default class Repository {
       limit: data?.limit,
       where,
     };
-    
+
     return Model.findAndCountAll({
       ...query,
       include: [

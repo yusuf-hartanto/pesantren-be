@@ -12,22 +12,38 @@ export default class Repository {
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['updated_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_jenis_jam: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
+              Sequelize.fn('LOWER', Sequelize.col('nama_jenis_jam')),
+              {
+                [Op.like]: keyword,
+              }
             ),
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('keterangan')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('lembaga_type'), 'TEXT')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

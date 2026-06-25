@@ -4,7 +4,8 @@ import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-    const tableDesc: any = await queryInterface.describeTable('perizinan_santri');
+    const tableDesc: any =
+      await queryInterface.describeTable('perizinan_santri');
 
     if (!tableDesc.file_izin) {
       await queryInterface.addColumn(
@@ -22,7 +23,8 @@ export const up = async (queryInterface: QueryInterface) => {
 
 export const down = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-    const tableDesc: any = await queryInterface.describeTable('perizinan_santri');
+    const tableDesc: any =
+      await queryInterface.describeTable('perizinan_santri');
     const columnsToRemove = ['file_izin'];
 
     for (const columnName of columnsToRemove) {

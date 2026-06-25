@@ -52,7 +52,9 @@ export function initAbsenHarianPegawai(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD')
+            : null;
           this.setDataValue('tanggal', formattedValue);
         },
       },
@@ -64,7 +66,9 @@ export function initAbsenHarianPegawai(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('waktu_masuk', formattedValue);
         },
       },
@@ -76,7 +80,9 @@ export function initAbsenHarianPegawai(sequelize: Sequelize) {
           return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
-          const formattedValue = value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
           this.setDataValue('waktu_keluar', formattedValue);
         },
       },

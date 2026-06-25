@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './param.global.model';
 
 export default class Repository {
@@ -27,14 +27,27 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           status: { [Op.ne]: 9 },
           [Op.or]: [
-            { param_key: { [Op.like]: `%${data?.keyword}%` } },
-            { param_value: { [Op.like]: `%${data?.keyword}%` } },
-            { param_desc: { [Op.like]: `%${data?.keyword}%` } },
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('param_key')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('param_value')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('param_desc')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

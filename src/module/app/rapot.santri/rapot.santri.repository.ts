@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import RapotSantri from './rapot.santri.model';
 import Santri from '../santri/santri.model';
 import AppResource from '../resource/resource.model';
@@ -53,13 +53,61 @@ export default class Repository {
       where.status = data.status;
     }
 
+      console.warn(data)
+    if (data?.tahun) {
+      const tahun = `%${data.tahun.toLowerCase()}%`;
+      where[Op.and] = [
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('RapotSantri.tahun_ajaran')),
+          {
+            [Op.like]: tahun,
+          }
+        ),
+      ];
+    }
+
+    if (data?.semester) {
+      const semester = `%${data.semester.toLowerCase()}%`;
+      where[Op.and] = [
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('RapotSantri.semester')),
+          {
+            [Op.like]: semester,
+          }
+        ),
+      ];
+    }
+
     if (data?.keyword) {
-      const keyword = `%${data.keyword}%`;
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       where[Op.or] = [
-        { '$santri.fullname$': { [Op.iLike]: keyword } },
-        { '$santri.nis$': { [Op.iLike]: keyword } },
-        { tahun_ajaran: { [Op.iLike]: keyword } },
-        { semester: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('santri.nis')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('RapotSantri.tahun_ajaran')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.col('RapotSantri.semester')
+          ),
+          {
+            [Op.like]: keyword,
+          }
+        ),
       ];
     }
 

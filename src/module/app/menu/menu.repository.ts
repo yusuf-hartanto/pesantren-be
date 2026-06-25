@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './menu.model';
 
 export default class Repository {
@@ -48,20 +48,48 @@ export default class Repository {
       order: [['seq_number', 'ASC']],
       offset: data?.offset,
       limit: data?.limit,
+      distinct: true,
+      subQuery: false,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           status: { [Op.ne]: 9 },
           [Op.or]: [
-            { menu_name: { [Op.like]: `%${data?.keyword}%` } },
-            { module_name: { [Op.like]: `%${data?.keyword}%` } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('AppMenu.menu_name')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('AppMenu.module_name')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('children.menu_name')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
     }
-    return Model.findAndCountAll(query);
+    return Model.findAndCountAll({
+      ...query,
+      include: [
+        {
+          model: Model,
+          as: 'children',
+          required: false,
+        },
+      ],
+    });
   }
 
   public detail(condition: any) {

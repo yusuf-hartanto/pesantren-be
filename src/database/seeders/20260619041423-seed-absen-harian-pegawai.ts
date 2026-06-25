@@ -29,20 +29,20 @@ export default {
       {
         status_kehadiran: 'Hadir',
         selisih_masuk_menit: -10, // Datang lebih awal 10 menit
-        selisih_keluar_menit: 5,   // Pulang lebih lambat 5 menit
+        selisih_keluar_menit: 5, // Pulang lebih lambat 5 menit
         keterangan_masuk: 'Absen masuk reguler, kondisi sehat.',
         keterangan_keluar: 'Absen pulang kerja selesai tugas harian.',
         lat: -7.556112,
-        long: 110.831642
+        long: 110.831642,
       },
       {
         status_kehadiran: 'Hadir',
-        selisih_masuk_menit: 15,  // Terlambat 15 menit
-        selisih_keluar_menit: 0,   // Pulang pas waktu
+        selisih_masuk_menit: 15, // Terlambat 15 menit
+        selisih_keluar_menit: 0, // Pulang pas waktu
         keterangan_masuk: 'Terlambat karena kendala kemacetan di jalan raya.',
         keterangan_keluar: 'Absen pulang tepat waktu.',
-        lat: -7.556200,
-        long: 110.831700
+        lat: -7.5562,
+        long: 110.8317,
       },
       {
         status_kehadiran: 'Sakit',
@@ -51,7 +51,7 @@ export default {
         keterangan_masuk: 'Surat dokter terlampir di sistem HC.',
         keterangan_keluar: null,
         lat: null,
-        long: null
+        long: null,
       },
       {
         status_kehadiran: 'Izin',
@@ -60,12 +60,16 @@ export default {
         keterangan_masuk: 'Izin keperluan urusan keluarga mendesak.',
         keterangan_keluar: null,
         lat: null,
-        long: null
-      }
+        long: null,
+      },
     ];
 
     // Helper untuk memanipulasi waktu string (HH:mm:ss) digabung dengan tanggal hari ini
-    const generateDateTime = (tanggalStr: string, waktuStr: string, manipulasiMenit: number | null) => {
+    const generateDateTime = (
+      tanggalStr: string,
+      waktuStr: string,
+      manipulasiMenit: number | null
+    ) => {
       if (!waktuStr || manipulasiMenit === null) return null;
       const tgl = new Date(`${tanggalStr}T${waktuStr}`);
       tgl.setMinutes(tgl.getMinutes() + manipulasiMenit);
@@ -76,8 +80,16 @@ export default {
       // Ambil skenario berurutan atau fallback ke skenario pertama jika loop melebihi variasi
       const skenario = skenarioAbsen[index] || skenarioAbsen[0];
 
-      const waktuMasukSimulasi = generateDateTime(hariIni, jk.waktu_mulai, skenario.selisih_masuk_menit);
-      const waktuKeluarSimulasi = generateDateTime(hariIni, jk.waktu_selesai, skenario.selisih_keluar_menit);
+      const waktuMasukSimulasi = generateDateTime(
+        hariIni,
+        jk.waktu_mulai,
+        skenario.selisih_masuk_menit
+      );
+      const waktuKeluarSimulasi = generateDateTime(
+        hariIni,
+        jk.waktu_selesai,
+        skenario.selisih_keluar_menit
+      );
 
       dataSeeder.push({
         id_absen: uuidv4(),

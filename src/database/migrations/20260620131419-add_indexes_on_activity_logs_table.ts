@@ -14,6 +14,12 @@ export const up = async (queryInterface: QueryInterface) => {
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.removeIndex('activity_logs', 'activity_logs_table_name_idx');
-  await queryInterface.removeIndex('activity_logs', 'activity_logs_record_id_idx');
+  await queryInterface.removeIndex(
+    'activity_logs',
+    'activity_logs_table_name_idx'
+  );
+  await queryInterface.removeIndex(
+    'activity_logs',
+    'activity_logs_record_id_idx'
+  );
 };

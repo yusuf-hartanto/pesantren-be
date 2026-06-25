@@ -4,6 +4,7 @@ import { Op, Sequelize } from 'sequelize';
 import Model from './jam.pelajaran.model';
 import JenisJamPelajaran from '../jenis.jampel/jenis.jampel.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public list(data: any) {
@@ -18,6 +19,15 @@ export default class Repository {
         },
       };
     }
+    if (data?.lembaga_type != '') {
+      query = {
+        ...query,
+        where: {
+          lembaga_type: { [Op.eq]: data?.lembaga_type },
+        },
+      };
+    }
+
     return Model.findAll({
       ...query,
       include: [
@@ -33,6 +43,12 @@ export default class Repository {
           required: false,
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembaga_kepesantrenan',
+          required: false,
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
       ],
     });
   }
@@ -44,18 +60,44 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_jampel: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.col('jenis_jam_pelajaran.nama_jenis_jam'),
-              { [Op.like]: `%${data?.keyword}%` }
+              Sequelize.fn('LOWER', Sequelize.col('JamPelajaran.nama_jampel')),
+              {
+                [Op.like]: keyword,
+              }
             ),
-            Sequelize.where(Sequelize.col('lembaga_formal.nama_lembaga'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('jenis_jam_pelajaran.nama_jenis_jam')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('lembaga_formal.nama_lembaga')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('lembaga_kepesantrenan.nama_lembaga')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
@@ -72,6 +114,12 @@ export default class Repository {
         {
           model: LembagaPendidikanFormal,
           as: 'lembaga_formal',
+          required: false,
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembaga_kepesantrenan',
           required: false,
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
@@ -94,6 +142,12 @@ export default class Repository {
         {
           model: LembagaPendidikanFormal,
           as: 'lembaga_formal',
+          required: false,
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembaga_kepesantrenan',
           required: false,
           attributes: ['id_lembaga', 'nama_lembaga'],
         },

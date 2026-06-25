@@ -6,7 +6,6 @@ import Pegawai from '../pegawai/pegawai.model';
 import Lokasi from '../location/location.model';
 
 export default class Repository {
-  
   public list(data: any) {
     let query: any = {
       order: [['created_at', 'DESC']],
@@ -31,15 +30,18 @@ export default class Repository {
       query.where = {
         [Op.or]: [
           { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-          { keterangan: { [Op.iLike]: keyword } }
-        ]
+          { keterangan: { [Op.iLike]: keyword } },
+        ],
       };
     }
 
     return Model.findAll(query);
   }
 
-  public async checkDuplicatePegawai(idPegawai: string, excludeIdJamKerja?: string) {
+  public async checkDuplicatePegawai(
+    idPegawai: string,
+    excludeIdJamKerja?: string
+  ) {
     const where: any = { id_pegawai: idPegawai };
     if (excludeIdJamKerja) {
       where.id_jamkerja = { [Op.ne]: excludeIdJamKerja };
@@ -116,7 +118,11 @@ export default class Repository {
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean; limit?: number }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+  }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
@@ -135,8 +141,16 @@ export default class Repository {
       limit: limit || (isTemplate ? 5 : undefined),
       subQuery: false,
       include: [
-        { model: Pegawai, as: 'pegawai', attributes: ['id_pegawai', 'nama_lengkap'] },
-        { model: Lokasi, as: 'lokasiKerja', attributes: ['id_lokasi', 'nama_lokasi'] },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          attributes: ['id_pegawai', 'nama_lengkap'],
+        },
+        {
+          model: Lokasi,
+          as: 'lokasiKerja',
+          attributes: ['id_lokasi', 'nama_lokasi'],
+        },
       ],
       order: [['created_at', 'DESC']],
     });

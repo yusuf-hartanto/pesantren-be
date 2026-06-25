@@ -209,9 +209,14 @@ export default class Controller {
             const resultUsers = await conn.query(query, {
               type: QueryTypes.SELECT,
             });
-            receivers = (resultUsers as any[]).map((u: any) => u.username).filter(Boolean);
+            receivers = (resultUsers as any[])
+              .map((u: any) => u.username)
+              .filter(Boolean);
           } catch (queryErr) {
-            console.error('Error fetching receivers for notification:', queryErr);
+            console.error(
+              'Error fetching receivers for notification:',
+              queryErr
+            );
           }
 
           if (receivers && receivers.length > 0) {
@@ -220,15 +225,17 @@ export default class Controller {
               username: 'sitrendi',
               full_name: 'SiTrendi',
             };
-            await helper.sendNotification(req, {
-              title: 'Request Perizinan',
-              message: `Terdapat ${santriName.length} perizinan baru dari santri (${santriName.join(', ')}).`,
-              url: '/app/perizinan-santri/kedisiplinan',
-              receiver: receivers,
-              type: 'Perizinan',
-            }).catch(err => {
-              console.error('Error executing sendNotification:', err);
-            });
+            await helper
+              .sendNotification(req, {
+                title: 'Request Perizinan',
+                message: `Terdapat ${santriName.length} perizinan baru dari santri (${santriName.join(', ')}).`,
+                url: '/app/perizinan-santri/kedisiplinan',
+                receiver: receivers,
+                type: 'Perizinan',
+              })
+              .catch((err) => {
+                console.error('Error executing sendNotification:', err);
+              });
           } else {
             console.warn('No receivers found for perizinan notification.');
           }
@@ -334,6 +341,8 @@ export default class Controller {
       const queryParams = helper.fetchQueryRequest(req);
       const filter = {
         ...queryParams,
+        tahun: req.query.tahun,
+        semester: req.query.semester,
         id_santri_sitrendi: req.query.id_santri,
         isOpenApi: true,
       };

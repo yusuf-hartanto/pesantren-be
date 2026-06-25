@@ -8,10 +8,12 @@ import Lokasi from '../location/location.model';
 import GeoArea from '../geo.areas/geo.areas.model';
 
 export default class Repository {
-  
   public list(data: any) {
     let query: any = {
-      order: [['tanggal', 'DESC'], ['created_at', 'DESC']],
+      order: [
+        ['tanggal', 'DESC'],
+        ['created_at', 'DESC'],
+      ],
       include: [
         {
           model: Pegawai,
@@ -23,8 +25,10 @@ export default class Repository {
           model: JamKerjaPegawai,
           as: 'jamKerjaPegawai',
           required: false,
-          include: [{ model: Lokasi, as: 'lokasiKerja', attributes: ['nama_lokasi'] }]
-        }
+          include: [
+            { model: Lokasi, as: 'lokasiKerja', attributes: ['nama_lokasi'] },
+          ],
+        },
       ],
     };
 
@@ -33,8 +37,8 @@ export default class Repository {
       query.where = {
         [Op.or]: [
           { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-          { status_kehadiran: { [Op.iLike]: keyword } }
-        ]
+          { status_kehadiran: { [Op.iLike]: keyword } },
+        ],
       };
     }
 
@@ -59,13 +63,13 @@ export default class Repository {
           model: JamKerjaPegawai,
           as: 'jamKerjaPegawai',
           required: false,
-        }
+        },
       ],
       where: {},
     };
 
     if (data?.id_pegawai) {
-      query.where.id_pegawai = data.id_pegawai; 
+      query.where.id_pegawai = data.id_pegawai;
     }
 
     if (data?.tanggal) {
@@ -77,10 +81,13 @@ export default class Repository {
       query.where[Op.or] = [
         { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
         { '$pegawai.nik$': { [Op.iLike]: keyword } },
-         Sequelize.where(
-          Sequelize.cast(Sequelize.col('AbsenHarianPegawai.status_kehadiran'), 'text'),
+        Sequelize.where(
+          Sequelize.cast(
+            Sequelize.col('AbsenHarianPegawai.status_kehadiran'),
+            'text'
+          ),
           { [Op.iLike]: keyword }
-        )
+        ),
       ];
     }
 
@@ -102,8 +109,8 @@ export default class Repository {
     return await Model.findOne({
       where: {
         id_pegawai: idPegawai,
-        tanggal: tanggal
-      }
+        tanggal: tanggal,
+      },
     });
   }
 
@@ -111,8 +118,8 @@ export default class Repository {
     return await GeoArea.findOne({
       where: {
         id_lokasi: idLokasi,
-        is_active: true
-      }
+        is_active: true,
+      },
     });
   }
 
@@ -173,7 +180,13 @@ export default class Repository {
       where: whereClause,
       limit: limit || (isTemplate ? 5 : undefined),
       subQuery: false,
-      include: [{ model: Pegawai, as: 'pegawai', attributes: ['id_pegawai', 'nama_lengkap', 'nik'] }],
+      include: [
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          attributes: ['id_pegawai', 'nama_lengkap', 'nik'],
+        },
+      ],
       order: [['tanggal', 'DESC']],
     });
   }

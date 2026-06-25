@@ -31,14 +31,12 @@ export const jamKerjaPegawaiSchema = z.object({
     .transform((val) => (!val || val.trim() === '' ? '-' : val.trim())),
 
   // Untuk boolean, jika tidak dikirim akan otomatis masuk ke .default(true)
-  is_active: z
-    .any()
-    .transform((val) => {
-      if (typeof val === 'boolean') return val;
-      if (val === '1' || val === 1) return true;
-      if (val === '0' || val === 0) return false;
-      return true; // fallback default
-    }),
+  is_active: z.any().transform((val) => {
+    if (typeof val === 'boolean') return val;
+    if (val === '1' || val === 1) return true;
+    if (val === '0' || val === 0) return false;
+    return true; // fallback default
+  }),
 });
 
 export type IJamKerjaPegawaiInput = z.infer<typeof jamKerjaPegawaiSchema>;

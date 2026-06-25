@@ -75,6 +75,8 @@ import { penempatanKelasSantri } from './penempatan.kelas.santri/penempatan.kela
 import { JamKerjaPegawai } from './pegawai.jam.kerja/pegawai.jam.kerja.controller';
 import { AbsenHarianPegawaiController } from './pegawai.absen.harian/pegawai.absen.harian.controller';
 import { activityLog } from './activity.log/activity.log.controller';
+import { guruPengganti } from './guru.pengganti/guru.pengganti.controller';
+import { guruPenggantiSchema } from './guru.pengganti/guru.pengganti.schema';
 
 const router: Router = Router();
 
@@ -401,16 +403,34 @@ router.post('/pegawai-jam-kerja/export', JamKerjaPegawai.export);
 router.post('/pegawai-jam-kerja/import', JamKerjaPegawai.import);
 router.post('/pegawai-jam-kerja/insert', JamKerjaPegawai.insert);
 
-router.post('/pegawai-absen-harian/clock-in', AbsenHarianPegawaiController.clockIn);
-router.post('/pegawai-absen-harian/clock-out', AbsenHarianPegawaiController.clockOut);
-router.get('/pegawai-absen-harian/today', AbsenHarianPegawaiController.getAttendanceToday);
+router.post(
+  '/pegawai-absen-harian/clock-in',
+  AbsenHarianPegawaiController.clockIn
+);
+router.post(
+  '/pegawai-absen-harian/clock-out',
+  AbsenHarianPegawaiController.clockOut
+);
+router.get(
+  '/pegawai-absen-harian/today',
+  AbsenHarianPegawaiController.getAttendanceToday
+);
 router.get('/pegawai-absen-harian', AbsenHarianPegawaiController.index);
 router.get('/pegawai-absen-harian/:id', AbsenHarianPegawaiController.detail);
 // router.post('/pegawai-absen-harian', AbsenHarianPegawaiController.create);
 router.delete('/pegawai-absen-harian/:id', AbsenHarianPegawaiController.delete);
-router.post('/pegawai-absen-harian/export', AbsenHarianPegawaiController.export);
-router.post('/pegawai-absen-harian/import', AbsenHarianPegawaiController.import);
-router.post('/pegawai-absen-harian/insert', AbsenHarianPegawaiController.insert);
+router.post(
+  '/pegawai-absen-harian/export',
+  AbsenHarianPegawaiController.export
+);
+router.post(
+  '/pegawai-absen-harian/import',
+  AbsenHarianPegawaiController.import
+);
+router.post(
+  '/pegawai-absen-harian/insert',
+  AbsenHarianPegawaiController.insert
+);
 
 router.get('/kamar/all-data', Kamar.list);
 router.get('/kamar', Kamar.index);
@@ -705,6 +725,8 @@ router.put(
 );
 router.delete('/kebersihan-inspeksi/:id', kebersihanInspeksi.delete);
 router.post('/kebersihan-inspeksi/export', kebersihanInspeksi.export);
+router.get('/kebersihan-inspeksi-petugas', kebersihanInspeksi.indexPetugas);
+router.post('/kebersihan-inspeksi-petugas/export', kebersihanInspeksi.exportPetugas);
 
 router.get('/kebersihan-temuan/all-data', kebersihanTemuan.list);
 router.get('/kebersihan-temuan', kebersihanTemuan.index);
@@ -890,5 +912,25 @@ router.post(
 
 router.get('/activity-log', auth.checkBearerToken, activityLog.index);
 router.get('/activity-log/:id', auth.checkBearerToken, activityLog.detail);
+
+router.get('/guru-pengganti/all-data', guruPengganti.list);
+router.get('/guru-pengganti', guruPengganti.index);
+router.get('/guru-pengganti/:id', guruPengganti.detail);
+router.post(
+  '/guru-pengganti',
+  sanitizeBody,
+  validate(guruPenggantiSchema),
+  guruPengganti.create
+);
+router.put(
+  '/guru-pengganti/:id',
+  sanitizeBody,
+  validate(guruPenggantiSchema),
+  guruPengganti.update
+);
+router.delete('/guru-pengganti/:id', guruPengganti.delete);
+router.post('/guru-pengganti/export', guruPengganti.export);
+router.post('/guru-pengganti/import', guruPengganti.import);
+router.post('/guru-pengganti/insert', guruPengganti.insert);
 
 export default router;

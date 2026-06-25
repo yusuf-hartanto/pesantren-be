@@ -1,4 +1,4 @@
-version: '3.8'
+name: pesantren-api
 
 services:
   app:
@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     user: '${UID}:${GID}'
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     ports:
       - '127.0.0.1:${PORT}:${PORT}'
     volumes:

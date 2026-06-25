@@ -11,10 +11,18 @@ export default class Repository {
       order: [['nomor_urut', 'DESC']],
     };
     if (data?.nama_mapel !== undefined && data?.nama_mapel != null) {
+      const keyword = `%${data.nama_mapel.toLowerCase()}%`;
       query = {
         ...query,
         where: {
-          nama_mapel: { [Op.like]: `%${data?.nama_mapel}%` },
+          [Op.or]: [
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('nama_mapel')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+          ],
         },
       };
     }
@@ -38,25 +46,47 @@ export default class Repository {
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['nomor_urut', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { kode_mapel: { [Op.like]: `%${data?.keyword}%` } },
-            { nama_mapel: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.col('kelompok_pelajaran.nama_kelpelajaran'),
-              { [Op.like]: `%${data?.keyword}%` }
+              Sequelize.fn('LOWER', Sequelize.col('kode_mapel')),
+              {
+                [Op.like]: keyword,
+              }
             ),
-            Sequelize.where(Sequelize.col('lembaga_formal.nama_lembaga'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('nama_mapel')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('lembaga_formal.nama_lembaga')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('kelompok_pelajaran.nama_kelpelajaran')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
