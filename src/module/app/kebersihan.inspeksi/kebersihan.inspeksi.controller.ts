@@ -425,12 +425,11 @@ export default class Controller {
     try {
       const query = {
         tanggal_awal: req?.body?.tanggal_awal || '',
-        tanggal_akhir: req?.body?.tanggal_akhir || '',
-        type: 'export'
+        tanggal_akhir: req?.body?.tanggal_akhir || ''
       };
 
       let result: any = [];
-      result = await repository.indexPetugas(query);
+      result = await repository.indexPetugasList(query);
       if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
 
       const { dir, path } = await helper.checkDirExport('excel');
