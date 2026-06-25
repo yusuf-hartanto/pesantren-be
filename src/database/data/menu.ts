@@ -233,6 +233,14 @@ export default class DataMenu {
         status: 1,
       },
       {
+        parent_id: 2,
+        menu_name: 'Guru Pengganti',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/guru-pengganti/list',
+        seq_number: 20,
+        status: 1,
+      },
+      {
         parent_id: 3,
         menu_name: 'Cabang',
         menu_icon: 'tabler-circle',
@@ -430,6 +438,14 @@ export default class DataMenu {
         menu_icon: 'tabler-circle',
         module_name: '/app/report/perizinan-santri/list',
         seq_number: 4,
+        status: 1,
+      },
+      {
+        parent_id: 7,
+        menu_name: 'Petugas Kebersihan',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/report/kebersihan-petugas/list',
+        seq_number: 5,
         status: 1,
       },
       {
