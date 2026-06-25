@@ -34,6 +34,8 @@ export default class Controller {
         ...helper.fetchQueryRequest(req),
         id_santri: req?.query?.id_santri || '',
         status: req?.query?.status || '',
+        tahun: req.query.tahun || '',
+        semester: req.query.semester || '',
       };
 
       const { count, rows } = await repository.index(query);
