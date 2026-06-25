@@ -9,6 +9,8 @@ import AreaProvince from '../../area/provinces.model';
 import Pegawai from '../pegawai/pegawai.model';
 import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Cabang from '../cabang/cabang.model';
+import JamKerjaPegawai from '../pegawai.jam.kerja/pegawai.jam.kerja.model';
+import Lokasi from '../location/location.model';
 
 export default class Repository {
   public list(data: any) {
@@ -122,6 +124,19 @@ export default class Repository {
                 }
               ]
             },
+            {
+              model: JamKerjaPegawai,
+              as: 'jamKerjaPegawai',
+              attributes: ['id_lokasi', 'waktu_mulai', 'waktu_selesai'],
+              required: false,
+              include: [
+                {
+                  model: Lokasi,
+                  as: 'lokasiKerja',
+                  attributes: ['nama_lokasi']
+                }
+              ]
+            }
           ],
         }
       ],

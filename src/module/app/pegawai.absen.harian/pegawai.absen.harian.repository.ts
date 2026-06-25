@@ -87,13 +87,14 @@ export default class Repository {
     return await Model.findAndCountAll(query);
   }
 
-  public detail(condition: any) {
+  public detail(condition: any, trx?: any) {
     return Model.findOne({
       include: [
         { model: Pegawai, as: 'pegawai' },
         { model: JamKerjaPegawai, as: 'jamKerjaPegawai' },
       ],
       where: condition,
+      transaction: trx
     });
   }
 
@@ -115,19 +116,39 @@ export default class Repository {
     });
   }
 
-  public async create(payloads: any[]) {
-    return await Model.bulkCreate(payloads);
+  public async create(payloads: any[], trx?: any) {
+    return await Model.bulkCreate(payloads, { transaction: trx });
   }
 
-  public update(data: any) {
+  public update(data: any, trx?: any) {
     return Model.update(data?.payload, {
       where: data?.condition,
+      transaction: trx,
+    });
+  }
+
+  public async  upsertAbsen(payload: any, trx?: any) {
+    return await Model.bulkCreate([payload as Record<string, any>], {
+      transaction: trx,
+      updateOnDuplicate: ['keterangan_masuk', 'status_kehadiran', 'created_by'],
     });
   }
 
   public async delete(condition: any) {
     return Model.destroy({
       where: condition,
+    });
+  }
+
+  public async removeAbsenByRangeDate(id_pegawai: string, startDate: string, endDate: string, transaction: any) {
+    return await Model.destroy({
+      where: {
+        id_pegawai,
+        tanggal: {
+          [Op.between]: [startDate, endDate]
+        }
+      },
+      transaction
     });
   }
 

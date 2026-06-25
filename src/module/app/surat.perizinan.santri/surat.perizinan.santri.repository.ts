@@ -8,6 +8,8 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
+import AppResource from '../resource/resource.model';
+import PerizinanSantri from '../perizinan.santri/perizinan.santri.model';
 
 export default class Repository {
   public list(data: any) {
@@ -101,14 +103,14 @@ export default class Repository {
     return await Model.findAndCountAll(query);
   }
 
-  public detail(condition: any) {
+  public detail(condition: any, trx?: any) {
     return Model.findOne({
       include: [
-        { model: OrganizationUnit, as: 'organizationUnit' },
-        { model: Jabatan, as: 'jabatan' },
-        { all: true, nested: true }, // Mengambil relasi wilayah
+        { model: PerizinanSantri, as: 'perizinanSantri' },
+        { model: AppResource, as: 'pencetak' }
       ],
       where: condition,
+      transaction: trx
     });
   }
 

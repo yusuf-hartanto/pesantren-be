@@ -4,17 +4,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
 
-// Import model terkait relasi (Silakan sesuaikan path import asli project Anda)
 import Santri from '../santri/santri.model';
+import Pegawai from '../pegawai/pegawai.model';
 import Lokasi from '../location/location.model';
 import AppResource from '../resource/resource.model';
 import SuratPerizinanSantri from '../surat.perizinan.santri/surat.perizinan.santri.model';
 
 export class PerizinanSantri extends Model {
   declare id_izin: string;
-  declare id_santri: string;
-  declare id_lokasi_kamar: string;
-  declare sumber_pengajuan: 'Waliasuh' | 'Orang Tua' | 'Kesehatan';
+  declare id_santri: string | null;       
+  declare id_lokasi_kamar: string | null;  
+  declare id_pegawai: string | null;       
+  declare id_lokasi_kerja: string | null;  
+  declare sumber_pengajuan: 'Waliasuh' | 'Orang Tua' | 'Kesehatan' | 'Pegawai'; 
   declare jenis_izin: 'Izin' | 'Sakit';
   declare kondisi: string;
   declare tanggal_pengajuan: Date;
@@ -38,9 +40,10 @@ export class PerizinanSantri extends Model {
   declare updated_at: Date;
   declare deleted_at: Date | null;
 
-  // Type definition untuk relasi (Eager Loading)
   declare santri?: Santri;
+  declare pegawai?: Pegawai;               
   declare lokasiKamar?: Lokasi;
+  declare lokasiKerja?: Lokasi;            
   declare approver?: AppResource;
   declare canceler?: AppResource;
   declare creator?: AppResource;
@@ -56,14 +59,22 @@ export function initPerizinanSantri(sequelize: Sequelize) {
       },
       id_santri: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,                   
       },
       id_lokasi_kamar: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,                   
+      },
+      id_pegawai: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      id_lokasi_kerja: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       sumber_pengajuan: {
-        type: DataTypes.ENUM('Waliasuh', 'Orang Tua', 'Kesehatan'),
+        type: DataTypes.ENUM('Waliasuh', 'Orang Tua', 'Kesehatan', 'Pegawai'),
         allowNull: false,
       },
       jenis_izin: {
@@ -205,14 +216,13 @@ export function initPerizinanSantri(sequelize: Sequelize) {
       tableName: 'perizinan_santri',
       underscored: true,
       timestamps: true,
-      paranoid: true, // Soft Delete aktif (mencari deleted_at otomatis)
+      paranoid: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at',
       deletedAt: 'deleted_at',
     }
   );
 
-  // Auto UUID generation sebelum record tersimpan ke DB
   PerizinanSantri.beforeCreate((perizinan) => {
     perizinan?.setDataValue('id_izin', uuidv4());
   });
@@ -227,7 +237,6 @@ export function initPerizinanSantri(sequelize: Sequelize) {
 }
 
 export function associatePerizinanSantri() {
-  // Relasi Master Santri
   PerizinanSantri.belongsTo(Santri, {
     foreignKey: 'id_santri',
     as: 'santri',
@@ -235,7 +244,13 @@ export function associatePerizinanSantri() {
     onDelete: 'RESTRICT',
   });
 
-  // Relasi Master Lokasi (Kamar)
+  PerizinanSantri.belongsTo(Pegawai, {
+    foreignKey: 'id_pegawai',
+    as: 'pegawai',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT',
+  });
+
   PerizinanSantri.belongsTo(Lokasi, {
     foreignKey: 'id_lokasi_kamar',
     as: 'lokasiKamar',
@@ -243,7 +258,13 @@ export function associatePerizinanSantri() {
     onDelete: 'RESTRICT',
   });
 
-  // Relasi Approver (Merujuk ke key resource_id milik app_resource)
+  PerizinanSantri.belongsTo(Lokasi, {
+    foreignKey: 'id_lokasi_kerja',
+    as: 'lokasiKerja',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT',
+  });
+
   PerizinanSantri.belongsTo(AppResource, {
     foreignKey: 'id_approver',
     targetKey: 'resource_id',
@@ -252,7 +273,6 @@ export function associatePerizinanSantri() {
     onDelete: 'SET NULL',
   });
 
-  // Relasi Canceler (Merujuk ke key resource_id milik app_resource)
   PerizinanSantri.belongsTo(AppResource, {
     foreignKey: 'canceled_by',
     targetKey: 'resource_id',
@@ -261,7 +281,6 @@ export function associatePerizinanSantri() {
     onDelete: 'SET NULL',
   });
 
-  // Relasi Creator (Merujuk ke key resource_id milik app_resource)
   PerizinanSantri.belongsTo(AppResource, {
     foreignKey: 'created_by',
     targetKey: 'resource_id',

@@ -10,9 +10,10 @@ export const up = async (queryInterface: QueryInterface) => {
       unique: true,
       allowNull: false,
     },
+    // Diubah menjadi allowNull: true agar baris milik pegawai bisa mengosongkannya
     id_santri: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true, 
       references: {
         model: 'santri',
         key: 'id_santri',
@@ -20,9 +21,10 @@ export const up = async (queryInterface: QueryInterface) => {
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
+    // Diubah menjadi allowNull: true agar baris milik pegawai bisa mengosongkannya
     id_lokasi_kamar: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'lokasi',
         key: 'id_lokasi',
@@ -30,8 +32,31 @@ export const up = async (queryInterface: QueryInterface) => {
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
+    // --- TAMBAHAN KOLOM UNTUK HANDLE PEGAWAI ---
+    id_pegawai: {
+      type: DataTypes.STRING,
+      allowNull: true, // Nullable karena baris data santri tidak memakai ini
+      references: {
+        model: 'pegawai', // Sesuaikan dengan nama tabel pegawai Anda asli di DB
+        key: 'id_pegawai', // Sesuaikan dengan primary key tabel pegawai Anda
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
+    },
+    id_lokasi_kerja: {
+      type: DataTypes.STRING,
+      allowNull: true, // Nullable karena baris data santri tidak memakai ini
+      references: {
+        model: 'lokasi', // Mengarah ke tabel lokasi yang sama dengan lokasi_kamar
+        key: 'id_lokasi',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
+    },
+    // -------------------------------------------
     sumber_pengajuan: {
-      type: DataTypes.ENUM('Waliasuh', 'Orang Tua', 'Kesehatan'),
+      // Ditambahkan opsi 'Pegawai' ke dalam daftar ENUM
+      type: DataTypes.ENUM('Waliasuh', 'Orang Tua', 'Kesehatan', 'Pegawai'),
       allowNull: false,
     },
     jenis_izin: {
@@ -61,7 +86,6 @@ export const up = async (queryInterface: QueryInterface) => {
     },
     kondisi: {
       type: DataTypes.STRING,
-      // allowNull: false,
     },
     id_approver: {
       type: DataTypes.STRING,
@@ -117,10 +141,9 @@ export const up = async (queryInterface: QueryInterface) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    // --- TAMBAHAN KOLOM AUDIT TRACKING ---
     created_by: {
       type: DataTypes.STRING,
-      allowNull: false, // Diset false agar wajib diisi saat insert data baru
+      allowNull: false,
       references: {
         model: 'app_resource',
         key: 'resource_id',
@@ -128,7 +151,6 @@ export const up = async (queryInterface: QueryInterface) => {
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
-    // -------------------------------------
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,

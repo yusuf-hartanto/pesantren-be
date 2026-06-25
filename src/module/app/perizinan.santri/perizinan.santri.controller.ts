@@ -4,6 +4,9 @@ import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './perizinan.santri.repository';
+import { repository as JamKerjaPegawaiRepository } from '../pegawai.jam.kerja/pegawai.jam.kerja.repository'
+import { repository as AbsenHarianPegawaiRepository } from '../pegawai.absen.harian/pegawai.absen.harian.repository'
+import { repository as suratIzinRepository } from '../surat.perizinan.santri/surat.perizinan.santri.repository'
 import { variable } from './perizinan.santri.variable';
 import {
   pengajuanIzinSchema,
@@ -65,10 +68,26 @@ export default class Controller {
   private generateDataExcel(
     sheet: any,
     details: any,
-    isTemplate: boolean = false
+    isTemplate: boolean = false,
+    isPegawai: boolean = false
   ) {
     // Definisikan susunan teks header persis di baris pertama
-    sheet.addRow([
+    const headers = isPegawai ? [
+      'No',
+      'ID Pegawai',
+      'NIP',
+      'Nama Pegawai',
+      'ID Lokasi Kerja',
+      'Nama Lokasi Kerja',
+      'Unit/Kode Lokasi',
+      'Sumber Pengajuan',
+      'Jenis Izin',
+      'Kondisi',
+      'Tanggal Mulai',
+      'Tanggal Selesai',
+      'Alasan',
+      'Status Approval',
+    ] : [
       'No',
       'ID Santri',
       'NIS',
@@ -83,24 +102,26 @@ export default class Controller {
       'Tanggal Selesai',
       'Alasan',
       'Status Approval',
-    ]);
+    ];
+
+    sheet.addRow(headers);
 
     // Set property metadata kolom (width disesuaikan agar proporsional)
     sheet.columns = [
-      { header: 'No', key: 'no', width: 5 },
-      { header: 'ID Santri', key: 'id_santri', width: 20 },
-      { header: 'NIS', key: 'nis', width: 15 },
-      { header: 'Nama Santri', key: 'nama_santri', width: 30 },
-      { header: 'ID Kamar', key: 'id_lokasi_kamar', width: 20 },
-      { header: 'Nama Kamar', key: 'nama_kamar', width: 25 },
-      { header: 'Unit/Kode Kamar', key: 'kode_unit', width: 18 },
-      { header: 'Sumber Pengajuan', key: 'sumber_pengajuan', width: 20 },
-      { header: 'Jenis Izin', key: 'jenis_izin', width: 15 },
-      { header: 'Kondisi', key: 'kondisi', width: 15 },
-      { header: 'Tanggal Mulai', key: 'tanggal_mulai', width: 15 },
-      { header: 'Tanggal Selesai', key: 'tanggal_selesai', width: 15 },
-      { header: 'Alasan', key: 'alasan', width: 40 },
-      { header: 'Status Approval', key: 'status_approval', width: 18 },
+      { header: headers[0], key: 'no', width: 5 },
+      { header: headers[1], key: 'id_subjek', width: 20 },
+      { header: headers[2], key: 'nomor_induk', width: 15 },
+      { header: headers[3], key: 'nama_subjek', width: 30 },
+      { header: headers[4], key: 'id_lokasi', width: 20 },
+      { header: headers[5], key: 'nama_lokasi', width: 25 },
+      { header: headers[6], key: 'kode_lokasi', width: 18 },
+      { header: headers[7], key: 'sumber_pengajuan', width: 20 },
+      { header: headers[8], key: 'jenis_izin', width: 15 },
+      { header: headers[9], key: 'kondisi', width: 15 },
+      { header: headers[10], key: 'tanggal_mulai', width: 15 },
+      { header: headers[11], key: 'tanggal_selesai', width: 15 },
+      { header: headers[12], key: 'alasan', width: 40 },
+      { header: headers[13], key: 'status_approval', width: 18 },
     ];
 
     // Styling Header Baris Pertama
@@ -115,26 +136,37 @@ export default class Controller {
     });
 
     // Perulangan Data menggunakan gaya indeks array (for...in) & Logika IsTemplate
-    for (let i in details) {
+   for (let i in details) {
+      const rowData = details[i];
+
+      // Ekstraksi data murni memanfaatkan parameter isPegawai
+      const idSubjek = isPegawai ? rowData?.id_pegawai : rowData?.id_santri;
+      const nomorInduk = isPegawai ? rowData?.pegawai?.nip : rowData?.santri?.nis;
+      const namaSubjek = isPegawai ? rowData?.pegawai?.nama_lengkap : rowData?.santri?.fullname;
+      
+      const idLokasi = isPegawai ? rowData?.id_lokasi_kerja : rowData?.id_lokasi_kamar;
+      const namaLokasi = isPegawai ? rowData?.lokasiKerja?.nama_lokasi : rowData?.lokasiKamar?.nama_lokasi;
+      const kodeLokasi = isPegawai ? rowData?.lokasiKerja?.kode_lokasi : rowData?.lokasiKamar?.kode_lokasi;
+
       sheet.addRow([
         parseInt(i) + 1,
-        details[i]?.id_santri || '',
-        details[i]?.santri?.nis || '',
-        details[i]?.santri?.fullname || '',
-        details[i]?.id_lokasi_kamar || '',
-        details[i]?.lokasiKamar?.nama_lokasi || '',
-        details[i]?.lokasiKamar?.kode_lokasi || '',
-        details[i]?.sumber_pengajuan || 'Orang Tua',
-        details[i]?.jenis_izin || 'Izin',
-        details[i]?.kondisi || 'Sehat',
-        details[i]?.tanggal_mulai
-          ? moment(details[i].tanggal_mulai).format('YYYY-MM-DD')
+        idSubjek || '',
+        nomorInduk || '',
+        namaSubjek || '',
+        idLokasi || '',
+        namaLokasi || '',
+        kodeLokasi || '',
+        rowData?.sumber_pengajuan || (isPegawai ? 'Pegawai' : 'Orang Tua'),
+        rowData?.jenis_izin || 'Izin',
+        rowData?.kondisi || 'Sehat',
+        rowData?.tanggal_mulai
+          ? moment(rowData.tanggal_mulai).format('YYYY-MM-DD')
           : '',
-        details[i]?.tanggal_selesai
-          ? moment(details[i].tanggal_selesai).format('YYYY-MM-DD')
+        rowData?.tanggal_selesai
+          ? moment(rowData.tanggal_selesai).format('YYYY-MM-DD')
           : '',
-        details[i]?.alasan || '',
-        details[i]?.status_approval || 'Menunggu',
+        rowData?.alasan || '',
+        rowData?.status_approval || 'Menunggu',
       ]);
     }
 
@@ -157,53 +189,64 @@ export default class Controller {
   }
 
   /**
-   * 2. Helper: normalizeRow
+   *  Helper: normalizeRow
    * Mengonversi objek baris dari file Excel menjadi objek data yang bersih
    */
-  private normalizeRow(row: any) {
-    return {
-      id_santri: String(row['ID Santri'] || '').trim(),
-      nis: String(row['NIS'] || '').trim(),
-      nama_santri: String(row['Nama Santri'] || '').trim(),
-      id_lokasi_kamar: String(row['ID Kamar'] || '').trim(),
-      nama_kamar: String(row['Nama Kamar'] || '').trim(),
-      kode_unit: String(row['Unit/Kode Kamar'] || '').trim(),
-      sumber_pengajuan: String(row['Sumber Pengajuan'] || 'Orang Tua').trim(),
-      jenis_izin: String(row['Jenis Izin'] || 'Izin').trim(),
-      kondisi: String(row['Kondisi'] || 'Sehat').trim(),
-      tanggal_mulai: row['Tanggal Mulai'] || null,
-      tanggal_selesai: row['Tanggal Selesai'] || null,
-      alasan: String(row['Alasan'] || '').trim(),
-      status_approval: String(row['Status Approval'] || 'Menunggu').trim(),
-      __row: row.__row,
-    };
-  }
+  private normalizeRow(row: any, isPegawai: boolean = false) { 
+      return {
+        // Data Identitas Subjek (Dipetakan berdasarkan parameter isPegawai)
+        id_santri: !isPegawai ? String(row['ID Santri'] || '').trim() : null,
+        id_pegawai: isPegawai ? String(row['ID Pegawai'] || '').trim() : null,
+        nis: !isPegawai ? String(row['NIS'] || '').trim() : null,
+        nip: isPegawai ? String(row['NIP'] || '').trim() : null,
+        nama_subjek: isPegawai ? String(row['Nama Pegawai'] || '').trim() : String(row['Nama Santri'] || '').trim(),
+        
+        // Data Lokasi
+        id_lokasi_kamar: !isPegawai ? String(row['ID Kamar'] || '').trim() : null,
+        id_lokasi_kerja: isPegawai ? String(row['ID Lokasi Kerja'] || '').trim() : null,
+        nama_lokasi: isPegawai ? String(row['Nama Lokasi Kerja'] || '').trim() : String(row['Nama Kamar'] || '').trim(),
+        kode_lokasi: isPegawai ? String(row['Unit/Kode Lokasi'] || '').trim() : String(row['Unit/Kode Kamar'] || '').trim(),
+        
+        // Data Atribut Perizinan Umum
+        sumber_pengajuan: String(row['Sumber Pengajuan'] || (isPegawai ? 'Pegawai' : 'Orang Tua')).trim(),
+        jenis_izin: String(row['Jenis Izin'] || 'Izin').trim(),
+        kondisi: String(row['Kondisi'] || 'Sehat').trim(),
+        tanggal_mulai: row['Tanggal Mulai'] || null,
+        tanggal_selesai: row['Tanggal Selesai'] || null,
+        alasan: String(row['Alasan'] || '').trim(),
+        status_approval: String(row['Status Approval'] || 'Menunggu').trim(),
+        __row: row.__row,
+      };
+    }
 
-  /**
-   * 3. Helper: validateRow
+/**
+   * Helper: validateRow
    * Memvalidasi isi kolom per baris data perizinan hasil import
    */
-  private validateRow(row: any) {
+  private validateRow(row: any, isPegawai: boolean = false) { 
     const errors: string[] = [];
 
-    if (!row.id_santri) errors.push('ID Santri wajib diisi');
-    if (!row.id_lokasi_kamar) errors.push('ID Kamar wajib diisi');
+    // Validasi Jalur Kritis Data Pegawai
+    if (isPegawai) {
+      if (!row.id_pegawai) errors.push('ID Pegawai wajib diisi');
+      if (!row.id_lokasi_kerja) errors.push('ID Lokasi Kerja wajib diisi');
+    } 
+    // Validasi Jalur Kritis Data Santri
+    else {
+      if (!row.id_santri) errors.push('ID Santri wajib diisi');
+      if (!row.id_lokasi_kamar) errors.push('ID Kamar wajib diisi');
+    }
+    
+    // Validasi Atribut Umum
     if (!row.alasan) errors.push('Alasan izin wajib diisi');
     if (!row.tanggal_mulai) errors.push('Tanggal Mulai wajib diisi');
     if (!row.tanggal_selesai) errors.push('Tanggal Selesai wajib diisi');
 
+    // Validasi Format dan Rentang Waktu Tanggal
     if (row.tanggal_mulai && row.tanggal_selesai) {
       const formatSesuai = 'YYYY-MM-DD';
-      const validMulai = moment(
-        row.tanggal_mulai,
-        formatSesuai,
-        true
-      ).isValid();
-      const validSelesai = moment(
-        row.tanggal_selesai,
-        formatSesuai,
-        true
-      ).isValid();
+      const validMulai = moment(row.tanggal_mulai, formatSesuai, true).isValid();
+      const validSelesai = moment(row.tanggal_selesai, formatSesuai, true).isValid();
 
       if (!validMulai)
         errors.push('Format Tanggal Mulai tidak valid (Gunakan YYYY-MM-DD)');
@@ -219,11 +262,15 @@ export default class Controller {
       }
     }
 
+    // Validasi Kesesuaian ENUM
     const allowedJenis = ['Izin', 'Sakit'];
     if (!allowedJenis.includes(row.jenis_izin)) {
-      errors.push(
-        `Jenis Izin harus berupa salah satu dari: ${allowedJenis.join(', ')}`
-      );
+      errors.push(`Jenis Izin harus berupa salah satu dari: ${allowedJenis.join(', ')}`);
+    }
+
+    const allowedSumber = ['Waliasuh', 'Orang Tua', 'Kesehatan', 'Pegawai'];
+    if (!allowedSumber.includes(row.sumber_pengajuan)) {
+      errors.push(`Sumber Pengajuan harus berupa salah satu dari: ${allowedSumber.join(', ')}`);
     }
 
     return errors;
@@ -244,6 +291,7 @@ export default class Controller {
         is_request_canceled: req.query.is_request_canceled,
         is_canceled: req.query.is_canceled,
         kondisi: req.query.kondisi,
+        is_pegawai: req.query.is_pegawai === 'true' ? true : false,
       };
 
       const { count, rows } = await repository.index(filter);
@@ -282,13 +330,26 @@ export default class Controller {
         );
       }
 
-      const hasActive = await repository.checkActiveLicense(
-        validData.id_santri
-      );
-      if (hasActive) {
-        throw new Error(
-          'Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.'
+      const isPegawai = validData.sumber_pengajuan === 'Pegawai';
+
+      if (isPegawai) {
+        const hasActive = await repository.checkActiveLicensePegawai(
+          validData.id_pegawai as string
         );
+        if (hasActive) {
+          throw new Error(
+            'Pegawai masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.'
+          );
+        }
+      } else {
+        const hasActive = await repository.checkActiveLicense(
+          validData.id_santri as string
+        );
+        if (hasActive) {
+          throw new Error(
+            'Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.'
+          );
+        }
       }
 
       let file_izin: any = null;
@@ -298,9 +359,10 @@ export default class Controller {
         if (checkFileIzin != 'allowed')
           return response.failed(checkFileIzin, 422, res);
 
+        const folderDest = isPegawai ? 'perizinan-pegawai' : 'perizinan-santri';
         file_izin = await helper.upload(
           fileIzin,
-          'perizinan-santri',
+          folderDest,
           req?.user?.username || 'system',
           'local'
         );
@@ -352,6 +414,9 @@ export default class Controller {
         }
       }
 
+      const sumberPengajuanAktif = validData.sumber_pengajuan || check.sumber_pengajuan;
+      const isPegawai = sumberPengajuanAktif === 'Pegawai';
+
       let file_izin: any = null;
       if (req?.files && req?.files.file_izin) {
         const fileIzin = req?.files?.file_izin;
@@ -359,9 +424,10 @@ export default class Controller {
         if (checkFileIzin != 'allowed')
           return response.failed(checkFileIzin, 422, res);
 
+        const folderDest = isPegawai ? 'perizinan-pegawai' : 'perizinan-santri';
         file_izin = await helper.upload(
           fileIzin,
-          'perizinan-santri',
+          folderDest,
           req?.user?.username || 'system',
           'local'
         );
@@ -379,7 +445,11 @@ export default class Controller {
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(err.message, 400, res);
+      const msg =
+        err instanceof z.ZodError
+          ? `Validasi Gagal: ${err.issues[0].message}`
+          : err.message;
+      return helper.catchError(msg, 400, res);
     }
   }
 
@@ -409,6 +479,7 @@ export default class Controller {
 
       const body = approvalIzinSchema.parse(req.body);
       const activeUser = req?.user?.id || 'SYSTEM';
+      const isPegawai = check.sumber_pengajuan === 'Pegawai';
 
       await repository.update(
         {
@@ -426,27 +497,108 @@ export default class Controller {
       if (body.status_approval === 'Disetujui') {
         const tahun = moment().year();
         const urut = await repository.getNextUrutSurat(tahun);
-        const codeUnit = check.lokasiKamar?.kode_lokasi || 'IZN';
         const bulanRomawi = this.convertToRomawi(moment().month() + 1);
 
-        const nomorSurat = `${String(urut).padStart(3, '0')}/IZN-SAN/${codeUnit}/${bulanRomawi}/${tahun}`;
 
-        await repository.createSurat(
-          {
-            id_izin: id,
-            urut,
-            tahun,
-            kode_unit: codeUnit,
-            nomor_surat: nomorSurat,
-            qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
-            tanggal_cetak: new Date(),
-            dicetak_oleh: activeUser,
-            versi_surat: 1,
-            status_surat: 'Aktif',
+
+        if (isPegawai) {
+          // --- LOGIKA UTAMA APPROVAL PEGAWAI ---
+          const codeUnit = check.lokasiKerja?.kode_lokasi || 'IZN';
+          const nomorSurat = `${String(urut).padStart(3, '0')}/IZN-PEG/${codeUnit}/${bulanRomawi}/${tahun}`;
+          const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({id_pegawai: check.id_pegawai}); 
+          if(!jamKerjaMaster) throw new Error('Jam kerja pegawai tidak ditemukan');
+
+          const existingSurat = await suratIzinRepository.detail({id_izin: id});
+          if (!existingSurat) {
+            await repository.createSurat(
+              {
+                id_izin: id,
+                urut,
+                tahun,
+                kode_unit: codeUnit,
+                nomor_surat: nomorSurat,
+                qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+                tanggal_cetak: new Date(),
+                dicetak_oleh: activeUser,
+                versi_surat: 1,
+                status_surat: 'Aktif',
+              },
+              trx
+            );
+          } else {
+            await repository.updateSurat(
+              {
+                tanggal_cetak: new Date(),
+                dicetak_oleh: activeUser,
+                status_surat: 'Aktif',
+              },
+              { id_izin: id }, 
+              trx           
+            );
+          }
+         
+
+          //  Loop & Insert Otomatis ke Absen Harian sesuai rentang tanggal izin
+          const start = moment(check.tanggal_mulai);
+          const end = moment(check.tanggal_selesai);
+          const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
+
+          while (start.isSameOrBefore(end)) {
+            const tanggalTarget = start.format('YYYY-MM-DD');
+
+            // 1. Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada
+            const existingAbsen = await AbsenHarianPegawaiRepository.detail({
+                id_pegawai: check.id_pegawai,
+                tanggal: tanggalTarget,
+                id_jamkerja: idJamKerja
+              }
+            );
+
+            const dataPayload = {
+              id_jamkerja: idJamKerja,
+              id_pegawai: check.id_pegawai,
+              tanggal: tanggalTarget,
+              keterangan_masuk: `Izin: ${check.alasan || 'Disetujui oleh sistem'}`,
+              status_kehadiran: check.jenis_izin, 
+              created_by: activeUser,
+            };
+
+            if (!existingAbsen) {
+              await AbsenHarianPegawaiRepository.create([{
+                ...dataPayload
+              }], trx);
+            } else {
+              // await AbsenHarianPegawaiRepository.update({ payload: dataPayload,
+              //   condition: { id_absen: existingAbsen.id_absen }},
+              //   trx
+              // );
+            }
+
+            start.add(1, 'days');
+          }
+
+        } else {
+          // --- LOGIKA UTAMA APPROVAL SANTRI ---
+          const codeUnit = check.lokasiKamar?.kode_lokasi || 'IZN';
+          const nomorSurat = `${String(urut).padStart(3, '0')}/IZN-SAN/${codeUnit}/${bulanRomawi}/${tahun}`;
+   
+          await repository.createSurat(
+            {
+              id_izin: id,
+              urut,
+              tahun,
+              kode_unit: codeUnit,
+              nomor_surat: nomorSurat,
+              qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+              tanggal_cetak: new Date(),
+              dicetak_oleh: activeUser,
+              versi_surat: 1,
+              status_surat: 'Aktif',
           },
           trx
         );
       }
+    }
 
       await trx?.commit();
       return response.success(
@@ -455,6 +607,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
+      console.log(err)
       await trx?.rollback();
       return helper.catchError(err.message, 400, res);
     }
@@ -472,6 +625,7 @@ export default class Controller {
 
       const activeUser = req?.user?.id || 'SYSTEM';
       const userRole = req?.user?.role_name;
+      const isPegawai = check.sumber_pengajuan === 'Pegawai';
 
       if (check.status_approval === 'Menunggu') {
         // Bisa dibatalkan langsung
@@ -510,6 +664,15 @@ export default class Controller {
         trx
       );
 
+      if (isPegawai && check.status_approval === 'Disetujui') {
+        await AbsenHarianPegawaiRepository.removeAbsenByRangeDate(
+          check.id_pegawai as string,
+          check.tanggal_mulai,
+          check.tanggal_selesai,
+          trx
+        );
+      }
+
       await trx?.commit();
       return response.success(
         'Perizinan dan dokumen surat berhasil dicabut/dibatalkan.',
@@ -538,11 +701,19 @@ export default class Controller {
         ? moment(result.tanggal_selesai).format('DD-MMM-YYYY')
         : '-';
 
+      const isPegawai = result.sumber_pengajuan === 'Pegawai';
+
       const formattedDetail = {
         status_izin: result.status_approval,
-        nama_santri: result.santri?.fullname || '-',
-        nis: result.santri?.nis || '-',
-        kamar: result.lokasiKamar?.nama_lokasi || '-',
+        ...(isPegawai ? {
+          nama_pegawai: result.pegawai?.nama_lengkap || '-',
+          nip: result.pegawai?.nip || '-',
+          lokasi_kerja: result.lokasiKerja?.nama_lokasi || '-',
+        } : {
+          nama_santri: result.santri?.fullname || '-',
+          nis: result.santri?.nis || '-',
+          kamar: result.lokasiKamar?.nama_lokasi || '-',
+        }),
         jenis_izin: result.jenis_izin,
         tanggal_izin: `${tanggalMulai} s/d ${tanggalSelesai}`,
         sumber_pengajuan: result.sumber_pengajuan,
@@ -901,8 +1072,11 @@ export default class Controller {
         start_date,
         end_date,
         template,
+        is_pegawai,
+        id_pegawai
       } = req.body;
       const isTemplate: boolean = template && template == '1';
+      const isPegawaiActive: boolean = is_pegawai === true || is_pegawai === 'true';
 
       const result = await repository.listForExport({
         keyword,
@@ -911,16 +1085,20 @@ export default class Controller {
         start_date,
         end_date,
         isTemplate,
+        is_pegawai: isPegawaiActive,
+        id_pegawai: isPegawaiActive ? id_pegawai : undefined
       });
 
       const workbook = new ExcelJS.Workbook();
-      let sheet = workbook.addWorksheet('DATA PERIZINAN SANTRI');
+      const sheetName = isPegawaiActive ? 'DATA PERIZINAN PEGAWAI' : 'DATA PERIZINAN SANTRI';
+      let sheet = workbook.addWorksheet(sheetName);
 
       // Memanggil fungsi helper internal generateDataExcel
-      sheet = this.generateDataExcel(sheet, result, isTemplate);
+      sheet = this.generateDataExcel(sheet, result, isTemplate, isPegawaiActive);
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `perizinan-santri-${isTemplate ? 'template' : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filePrefix = isPegawaiActive ? 'perizinan-pegawai' : 'perizinan-santri';
+      const filename = `${filePrefix}-${isTemplate ? 'template' : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
       return response.success(
@@ -942,7 +1120,9 @@ export default class Controller {
    * Fungsi Import data perizinan massal dari file excel (Preview & Commit)
    */
   public async import(req: Request, res: Response) {
+    const activeUser = req?.user?.id || 'SYSTEM';
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
+    const isPegawai: boolean = req.body?.is_pegawai === true || req.body?.is_pegawai === 'true' || req.query?.is_pegawai === 'true'; 
     const uploaded = req.files?.file_import;
     if (!uploaded)
       return response.success('File import tidak ditemukan', null, res, false);
@@ -958,7 +1138,6 @@ export default class Controller {
       const sheet = workbook.getWorksheet(1);
 
       const rawRows: any[] = [];
-      const activeUser = req?.user?.resource_id || 'SYSTEM';
 
       // Ekstrak data kasar dari Excel
       sheet?.eachRow((row, rowNumber) => {
@@ -979,9 +1158,9 @@ export default class Controller {
       const results = await Promise.all(
         rawRows.map(async (rawRowData) => {
           const rowNumber = rawRowData.__row;
-          const cleanData = this.normalizeRow(rawRowData);
+          const cleanData = this.normalizeRow(rawRowData, isPegawai);
 
-          const errors = this.validateRow(cleanData);
+          const errors = this.validateRow(cleanData, isPegawai);
 
           // Validasi Logika Jarak Tanggal
           if (cleanData.tanggal_mulai && cleanData.tanggal_selesai) {
@@ -997,18 +1176,35 @@ export default class Controller {
           }
 
           // Validasi Cek Perizinan Aktif di Database
-          if (cleanData.id_santri) {
-            try {
-              const hasActive = await repository.checkActiveLicense(
-                cleanData.id_santri
-              );
-              if (hasActive) {
-                errors.push(
-                  'Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini'
+          if (isPegawai) {
+            if (cleanData.id_pegawai) {
+              try {
+                const hasActive = await repository.checkActiveLicensePegawai(
+                  cleanData.id_pegawai
                 );
+                if (hasActive) {
+                  errors.push(
+                    'Pegawai masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini'
+                  );
+                }
+              } catch (dbErr) {
+                errors.push('Gagal memverifikasi status aktif perizinan pegawai');
               }
-            } catch (dbErr) {
-              errors.push('Gagal memverifikasi status aktif perizinan santri');
+            }
+          } else {
+            if (cleanData.id_santri) {
+              try {
+                const hasActive = await repository.checkActiveLicense(
+                  cleanData.id_santri
+                );
+                if (hasActive) {
+                  errors.push(
+                    'Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini'
+                  );
+                }
+              } catch (dbErr) {
+                errors.push('Gagal memverifikasi status aktif perizinan santri');
+              }
             }
           }
 
@@ -1016,6 +1212,8 @@ export default class Controller {
             id_izin: uuidv4(),
             id_santri: cleanData.id_santri || null,
             id_lokasi_kamar: cleanData.id_lokasi_kamar || null,
+            id_pegawai: cleanData.id_pegawai || null,         
+            id_lokasi_kerja: cleanData.id_lokasi_kerja || null, 
             sumber_pengajuan: cleanData.sumber_pengajuan,
             jenis_izin: cleanData.jenis_izin,
             kondisi: cleanData.kondisi,
@@ -1027,9 +1225,9 @@ export default class Controller {
               ? moment(cleanData.tanggal_selesai).format('YYYY-MM-DD')
               : null,
             alasan: cleanData.alasan,
-            status_approval: cleanData.status_approval || 'Menunggu', // Mengikuti status approval dari excel jika diatur
+            status_approval: cleanData.status_approval || 'Menunggu',
             created_by: activeUser,
-            kode_unit: cleanData.kode_unit || 'IZN', // Menyimpan kode unit asrama untuk kebutuhan penomoran surat
+            kode_unit: cleanData.kode_lokasi || 'IZN',
           };
 
           return {
@@ -1075,23 +1273,64 @@ export default class Controller {
                     ? moment(item.tanggal_mulai).month() + 1
                     : moment().month() + 1
                 );
-                const nomorSurat = `${String(urut).padStart(3, '0')}/IZN-SAN/${codeUnit}/${bulanRomawi}/${tahun}`;
 
-                await repository.createSurat(
-                  {
-                    id_izin: item.id_izin,
-                    urut,
-                    tahun,
-                    kode_unit: codeUnit,
-                    nomor_surat: nomorSurat,
-                    qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
-                    tanggal_cetak: new Date(),
-                    dicetak_oleh: activeUser,
-                    versi_surat: 1,
-                    status_surat: 'Aktif',
-                  },
-                  trx
-                );
+                const jenisKodeSurat = item.id_pegawai ? 'IZN-PEG' : 'IZN-SAN';
+                const nomorSurat = `${String(urut).padStart(3, '0')}/${jenisKodeSurat}/${codeUnit}/${bulanRomawi}/${tahun}`;
+                const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({id_pegawai: item.id_pegawai}); 
+                if(!jamKerjaMaster) throw new Error('Jam kerja pegawai tidak ditemukan');
+                
+                const existingSurat = await suratIzinRepository.detail({id_izin: item.id_izin});
+
+                if (!existingSurat) {
+                  await repository.createSurat(
+                    {
+                      id_izin: item.id_izin,
+                      urut,
+                      tahun,
+                      kode_unit: codeUnit,
+                      nomor_surat: nomorSurat,
+                      qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+                      tanggal_cetak: new Date(),
+                      dicetak_oleh: activeUser,
+                      versi_surat: 1,
+                      status_surat: 'Aktif',
+                    },
+                    trx
+                  );
+                }
+
+                const start = moment(item.tanggal_mulai);
+                const end = moment(item.tanggal_selesai);
+                const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
+
+                while (start.isSameOrBefore(end)) {
+                  const tanggalTarget = start.format('YYYY-MM-DD');
+
+                  // 1. Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada
+                  const existingAbsen = await AbsenHarianPegawaiRepository.detail({
+                      id_pegawai: item.id_pegawai,
+                      tanggal: tanggalTarget,
+                      id_jamkerja: idJamKerja
+                    }
+                  );
+
+                  const dataPayload = {
+                    id_jamkerja: idJamKerja,
+                    id_pegawai: item.id_pegawai,
+                    tanggal: tanggalTarget,
+                    keterangan_masuk: `Izin: ${item.alasan || 'Disetujui oleh sistem'}`,
+                    status_kehadiran: item.jenis_izin, 
+                    created_by: activeUser,
+                  };
+
+                  if (!existingAbsen) {
+                    await AbsenHarianPegawaiRepository.create([{
+                      ...dataPayload
+                    }], trx);
+                  }
+
+                  start.add(1, 'days');
+                }
               }
             }
 
@@ -1132,13 +1371,12 @@ export default class Controller {
     // Menggunakan transaksi agar proses insert aman jika terjadi error di tengah jalan
     const trx = await PerizinanSantri.sequelize?.transaction();
     try {
-      const activeUser = req?.user?.resource_id || 'SYSTEM';
-
-      // Jalankan bulk insert data perizinan utama terlebih dahulu
-      await repository.insertImport(payloads);
+      const activeUser = req?.user?.id || 'SYSTEM';
 
       // Iterasi untuk memproses Surat Izin (Tambah atau Cabut) secara kondisional
       for (const item of payloads) {
+        const reqIzin = await repository.create(item, trx);
+        
         // --- Tambah Surat Izin jika status_approval langsung 'Disetujui' ---
         if (item.status_approval === 'Disetujui' && !item.is_canceled) {
           const tahun = item.tanggal_mulai
@@ -1153,23 +1391,75 @@ export default class Controller {
               ? moment(item.tanggal_mulai).month() + 1
               : moment().month() + 1
           );
-          const nomorSurat = `${String(urut).padStart(3, '0')}/IZN-SAN/${codeUnit}/${bulanRomawi}/${tahun}`;
+          const jenisKodeSurat = item.id_pegawai || item.sumber_pengajuan === 'Pegawai' ? 'IZN-PEG' : 'IZN-SAN';
+          const nomorSurat = `${String(urut).padStart(3, '0')}/${jenisKodeSurat}/${codeUnit}/${bulanRomawi}/${tahun}`;
+          const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({ id_pegawai: item.id_pegawai }); 
+          if (!jamKerjaMaster) throw new Error('Jam kerja pegawai tidak ditemukan');
 
-          await repository.createSurat(
-            {
-              id_izin: item.id_izin,
-              urut,
-              tahun,
-              kode_unit: codeUnit,
-              nomor_surat: nomorSurat,
-              qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
-              tanggal_cetak: new Date(),
-              dicetak_oleh: activeUser,
-              versi_surat: 1,
-              status_surat: 'Aktif',
-            },
-            trx
-          );
+          // Masukkan objek transaksi trx agar pembacaan konsisten
+          const existingSurat = await suratIzinRepository.detail({ id_izin: item.id_izin }, trx);  
+          if (!existingSurat) {
+            await repository.createSurat(
+              {
+                id_izin: reqIzin.id_izin,
+                urut,
+                tahun,
+                kode_unit: codeUnit,
+                nomor_surat: nomorSurat,
+                qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+                tanggal_cetak: new Date(),
+                dicetak_oleh: activeUser,
+                versi_surat: 1,
+                status_surat: 'Aktif',
+              },
+              trx
+            );
+          }
+
+          const start = moment(item.tanggal_mulai);
+          const end = moment(item.tanggal_selesai);
+          const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
+
+          while (start.isSameOrBefore(end)) {
+            const tanggalTarget = start.format('YYYY-MM-DD');
+
+            // --- PERBAIKAN UTAMA: Masukkan parameter transaction: trx ---
+            const existingAbsen = await AbsenHarianPegawaiRepository.detail({
+                id_pegawai: item.id_pegawai,
+                tanggal: tanggalTarget,
+                id_jamkerja: idJamKerja
+              }, 
+              trx 
+            );
+
+            console.log(existingAbsen, {
+                id_pegawai: item.id_pegawai,
+                tanggal: tanggalTarget,
+                id_jamkerja: idJamKerja
+              })
+
+            const dataPayload = {
+              id_jamkerja: idJamKerja,
+              id_pegawai: item.id_pegawai,
+              tanggal: tanggalTarget,
+              keterangan_masuk: `Izin: ${item.alasan || 'Disetujui oleh sistem'}`,
+              status_kehadiran: item.jenis_izin, 
+              created_by: activeUser,
+            };
+
+            if (!existingAbsen) {
+              // Jika tabel Anda menggunakan id_absen berbasis STRING (Bukan AUTO_INCREMENT INT), 
+              // pastikan Anda men-generate nilai ID unik di sini.
+              await AbsenHarianPegawaiRepository.create([{
+                id_absen: `ABS-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+                ...dataPayload
+              }], trx);
+            } else {
+             
+            }
+
+            start.add(1, 'days');
+          }
         }
 
         // --- Cabut Surat Izin jika di-import dengan bendera 'is_canceled' true ---
@@ -1192,6 +1482,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
+      // console.log(err)
       // Rollback jika salah satu baris atau pembuatan surat gagal
       await trx?.rollback();
       return helper.catchError(`Insert Batch Gagal: ${err.message}`, 500, res);

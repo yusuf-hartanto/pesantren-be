@@ -9,6 +9,7 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
+import JamKerjaPegawai from '../pegawai.jam.kerja/pegawai.jam.kerja.model';
 
 export class Pegawai extends Model {
   declare id_pegawai: string;
@@ -41,6 +42,7 @@ export class Pegawai extends Model {
   // Relasi (Disesuaikan menjadi objek tunggal karena belongsTo)
   declare organizationUnit?: OrganizationUnit;
   declare jabatan?: Jabatan;
+  declare jamKerjaPegawai?: JamKerjaPegawai;
 }
 
 export function initPegawai(sequelize: Sequelize) {
@@ -252,6 +254,13 @@ export function associatePegawai() {
     as: 'subDistrict',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
+  });
+
+  Pegawai.hasOne(JamKerjaPegawai, {
+    foreignKey: 'id_pegawai',
+    as: 'jamKerjaPegawai',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT',
   });
 }
 

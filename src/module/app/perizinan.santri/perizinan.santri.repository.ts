@@ -8,6 +8,7 @@ import AppResource from '../resource/resource.model';
 import Santri from '../santri/santri.model';
 import Lokasi from '../location/location.model';
 import moment from 'moment';
+import Pegawai from '../pegawai/pegawai.model';
 
 export class PerizinanSantriRepository {
   /**
@@ -23,13 +24,34 @@ export class PerizinanSantriRepository {
       );
     }
 
-    const query: any = {
-      order: [['created_at', 'DESC']],
-      offset: data?.offset,
-      limit: data?.limit,
-      distinct: true,
-      subQuery: false,
-      include: [
+    const baseInclude: any[] = [
+      {
+        model: AppResource,
+        as: 'approver',
+        attributes: ['resource_id', 'username'],
+      },
+      {
+        model: AppResource,
+        as: 'creator',
+        attributes: ['resource_id', 'full_name'],
+      },
+    ];
+
+    if (data?.is_pegawai) {
+      baseInclude.push(
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          attributes: ['id_pegawai', 'nama_lengkap', 'nip', 'nik', 'jenis_kelamin'],
+        },
+        {
+          model: Lokasi,
+          as: 'lokasiKerja',
+          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
+        }
+      );
+    } else {
+      baseInclude.push(
         {
           model: Santri,
           as: 'santri',
@@ -39,24 +61,41 @@ export class PerizinanSantriRepository {
           model: Lokasi,
           as: 'lokasiKamar',
           attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
-        },
-        {
-          model: AppResource,
-          as: 'approver',
-          attributes: ['resource_id', 'username'],
-        },
-        {
-          model: AppResource,
-          as: 'creator',
-          attributes: ['resource_id', 'full_name'],
-        },
-      ],
+        }
+      );
+    }
+
+    const query: any = {
+      order: [['created_at', 'DESC']],
+      offset: data?.offset,
+      limit: data?.limit,
+      distinct: true,
+      subQuery: false,
+      include: baseInclude,
       where: {},
     };
 
     // Filter Status Approval
     if (data?.status_approval) {
       query.where.status_approval = data.status_approval;
+
+      switch (data.status_approval) {
+        case 'Menunggu':
+          query.where.is_canceled = false;
+          break;
+
+        case 'Disetujui':
+          query.where.is_request_canceled = false;
+          query.where.is_canceled = false;
+          break;
+
+        case 'Dibatalkan':
+          query.where.is_canceled = true;
+          break;
+
+        default:
+          break;
+      }
     }
 
     // Filter Jenis Izin
@@ -64,9 +103,18 @@ export class PerizinanSantriRepository {
       query.where.jenis_izin = data.jenis_izin;
     }
 
-    // Filter Santri (id_santri SiTrendi)
-    if (data?.id_santri) {
-      query.where['$santri.id_santri_sitrendi$'] = data.id_santri;
+    if (data?.is_pegawai) {
+      query.where.sumber_pengajuan = 'Pegawai';
+
+      if (data?.id_pegawai) {
+        query.where.id_pegawai = data.id_pegawai;
+      }
+    } else {
+      query.where.sumber_pengajuan = { [Op.ne]: 'Pegawai' };
+
+      // if (data?.id_santri) {
+      //   query.where['$santri.id_santri_sitrendi$'] = data.id_santri;
+      // }
     }
 
     // Filter Date Range Picker (Berdasarkan tanggal_mulai dan tanggal_selesai)
@@ -89,14 +137,21 @@ export class PerizinanSantriRepository {
       query.where.kondisi = data.kondisi;
     }
 
-    // Filter Free Text (Nama Santri / NIS / Kamar)
     if (data?.keyword) {
       const keyword = `%${data.keyword}%`;
-      query.where[Op.or] = [
-        { '$santri.fullname$': { [Op.iLike]: keyword } },
-        { '$santri.nis$': { [Op.iLike]: keyword } },
-        { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: keyword } },
-      ];
+      if (data?.is_pegawai) {
+        query.where[Op.or] = [
+          { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
+          { '$pegawai.nip$': { [Op.iLike]: keyword } },
+          { '$lokasiKerja.nama_lokasi$': { [Op.iLike]: keyword } },
+        ];
+      } else {
+        query.where[Op.or] = [
+          { '$santri.fullname$': { [Op.iLike]: keyword } },
+          { '$santri.nis$': { [Op.iLike]: keyword } },
+          { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: keyword } },
+        ];
+      }
     }
 
     return await PerizinanSantri.findAndCountAll(query);
@@ -161,13 +216,42 @@ export class PerizinanSantriRepository {
   }
 
   /**
+   * Cek aturan overlap izin pegawai aktif
+   */
+  public async checkActiveLicensePegawai(id_pegawai: string, transaction?: any) {
+    const today = moment().format('YYYY-MM-DD');
+
+    return await PerizinanSantri.findOne({
+      where: {
+        id_pegawai,
+        deleted_at: null,
+        [Op.or]: [
+          {
+            status_approval: 'Menunggu',
+            tanggal_mulai: { [Op.gt]: today },
+          },
+          {
+            status_approval: 'Disetujui',
+            is_canceled: false,
+            tanggal_mulai: { [Op.lte]: today },
+            tanggal_selesai: { [Op.gte]: today },
+          },
+        ],
+      },
+      transaction,
+    });
+  }
+
+  /**
    * Detail Data Perizinan Lengkap dengan Relasinya
    */
   public async detail(condition: any) {
     return await PerizinanSantri.findOne({
       include: [
         { model: Santri, as: 'santri' },
+        { model: Pegawai, as: 'pegawai' }, 
         { model: Lokasi, as: 'lokasiKamar' },
+        { model: Lokasi, as: 'lokasiKerja' }, 
         {
           model: AppResource,
           as: 'approver',
@@ -272,6 +356,8 @@ export class PerizinanSantriRepository {
     end_date?: string;
     isTemplate?: boolean;
     limit?: number;
+    is_pegawai?: boolean;
+    id_pegawai?: string;
   }) {
     const {
       keyword,
@@ -281,14 +367,40 @@ export class PerizinanSantriRepository {
       end_date,
       isTemplate,
       limit,
+      is_pegawai,
+      id_pegawai,
     } = params;
     const q = keyword ? `%${keyword}%` : null;
 
     let whereClause: any = {};
 
+    if (is_pegawai) {
+      whereClause.sumber_pengajuan = 'Pegawai';
+      if (id_pegawai) {
+        whereClause.id_pegawai = id_pegawai;
+      }
+    } else {
+      whereClause.sumber_pengajuan = { [Op.ne]: 'Pegawai' };
+    }
+
     if (!isTemplate) {
       if (status_approval) {
         whereClause.status_approval = status_approval;
+
+        switch (status_approval) {
+          case 'Menunggu':
+            whereClause.is_canceled = false;
+            break;
+          case 'Disetujui':
+            whereClause.is_request_canceled = false;
+            whereClause.is_canceled = false;
+            break;
+          case 'Ditolak':
+            whereClause.is_canceled = true;
+            break;
+          default:
+            break;
+        }
       }
 
       if (jenis_izin) {
@@ -303,19 +415,38 @@ export class PerizinanSantriRepository {
       }
 
       if (q) {
-        whereClause[Op.or] = [
-          { '$santri.fullname$': { [Op.iLike]: q } },
-          { '$santri.nis$': { [Op.iLike]: q } },
-          { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: q } },
-        ];
+        if (is_pegawai) {
+          whereClause[Op.or] = [
+            { '$pegawai.nama_lengkap$': { [Op.iLike]: q } },
+            { '$pegawai.nip$': { [Op.iLike]: q } },
+            { '$lokasiKerja.nama_lokasi$': { [Op.iLike]: q } },
+          ];
+        } else {
+          whereClause[Op.or] = [
+            { '$santri.fullname$': { [Op.iLike]: q } },
+            { '$santri.nis$': { [Op.iLike]: q } },
+            { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: q } },
+          ];
+        }
       }
     }
 
-    return await PerizinanSantri.findAll({
-      where: whereClause,
-      limit: limit || (isTemplate ? 5 : undefined),
-      subQuery: false,
-      include: [
+    const includeClause: any[] = [];
+    if (is_pegawai) {
+      includeClause.push(
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          attributes: ['id_pegawai', 'nip', 'nama_lengkap'],
+        },
+        {
+          model: Lokasi,
+          as: 'lokasiKerja',
+          attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
+        }
+      );
+    } else {
+      includeClause.push(
         {
           model: Santri,
           as: 'santri',
@@ -325,8 +456,15 @@ export class PerizinanSantriRepository {
           model: Lokasi,
           as: 'lokasiKamar',
           attributes: ['id_lokasi', 'nama_lokasi', 'kode_lokasi'],
-        },
-      ],
+        }
+      );
+    }
+
+    return await PerizinanSantri.findAll({
+      where: whereClause,
+      limit: limit || (isTemplate ? 5 : undefined),
+      subQuery: false,
+      include: includeClause,
       order: [['created_at', 'DESC']],
     });
   }
