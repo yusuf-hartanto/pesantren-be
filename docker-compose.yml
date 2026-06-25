@@ -1,4 +1,4 @@
-name: sada-api
+name: pesantren-api
 
 services:
   app:
