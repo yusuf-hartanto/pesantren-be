@@ -145,6 +145,9 @@ jobs:
 
             echo "Starting deployment..."
 
+            # Force remove any conflicting container with the name 'pesantren-api' (e.g. from the old project name)
+            docker rm -f pesantren-api || true
+
             $DCMD down
 
             # Using --no-build to ensure we use the loaded image
