@@ -725,6 +725,8 @@ router.put(
 );
 router.delete('/kebersihan-inspeksi/:id', kebersihanInspeksi.delete);
 router.post('/kebersihan-inspeksi/export', kebersihanInspeksi.export);
+router.get('/kebersihan-inspeksi-petugas', kebersihanInspeksi.indexPetugas);
+router.post('/kebersihan-inspeksi-petugas/export', kebersihanInspeksi.exportPetugas);
 
 router.get('/kebersihan-temuan/all-data', kebersihanTemuan.list);
 router.get('/kebersihan-temuan', kebersihanTemuan.index);

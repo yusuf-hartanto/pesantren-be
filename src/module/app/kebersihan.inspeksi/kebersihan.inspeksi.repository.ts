@@ -1,12 +1,14 @@
 'use strict';
 
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, QueryTypes } from 'sequelize';
 import Model from './kebersihan.inspeksi.model';
 import Pegawai from '../pegawai/pegawai.model';
 import Cabang from '../cabang/cabang.model';
 import Lokasi from '../location/location.model';
 import JadwalInspeksiKebersihan from '../jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.model';
 import KebersihanTemuan from '../kebersihan.temuan/kebersihan.temuan.model';
+import { rawQuery } from '../../../helpers/rawQuery';
+import moment from 'moment';
 
 export default class Repository {
   public list(data: any) {
@@ -170,7 +172,7 @@ export default class Repository {
           model: JadwalInspeksiKebersihan,
           as: 'jadwal_inspeksi_kebersihan',
           required: false,
-          attributes: ['id_jadwal', 'hari'],
+          attributes: ['id_jadwal', 'hari', 'kode_slot'],
         },
         {
           model: Pegawai,
@@ -214,6 +216,215 @@ export default class Repository {
       where: data?.condition,
       individualHooks: true,
     });
+  }
+
+  public async indexPetugas(data: any) {
+    const conn = await rawQuery.getConnection();
+
+    if (data?.type == 'export') {
+      const q = `
+        WITH tanggal AS (
+          SELECT generate_series(
+              DATE :startperiod,
+              DATE :endperiod,
+              INTERVAL '1 day'
+          )::date AS tanggal
+        ),
+        jadwal AS (
+            SELECT
+                t.tanggal,
+                jik.id_petugas,
+                p.nama_lengkap,
+                jik.kode_slot
+            FROM tanggal t
+            JOIN jadwal_inspeksi_kebersihan jik
+              ON jik.hari = EXTRACT(ISODOW FROM t.tanggal)
+            JOIN pegawai p
+              ON p.id_pegawai = jik.id_petugas
+            WHERE jik.is_active = true
+        ),
+        temuan AS (
+            SELECT
+                kt.id_inspeksi,
+                COUNT(*) AS jumlah_temuan
+            FROM kebersihan_temuan kt
+            GROUP BY kt.id_inspeksi
+        )
+        SELECT
+            j.id_petugas,
+            j.nama_lengkap,
+
+            COUNT(*) AS total_jadwal,
+
+            COUNT(ki.id_inspeksi) AS inspeksi,
+
+            COUNT(*) - COUNT(ki.id_inspeksi) AS tidak_inspeksi,
+
+            COALESCE(SUM(t.jumlah_temuan), 0) AS total_temuan
+
+        FROM jadwal j
+        LEFT JOIN kebersihan_inspeksi ki
+              ON ki.tanggal = j.tanggal
+              AND ki.kode_slot::text = j.kode_slot::text
+              AND ki.id_petugas = j.id_petugas
+
+        LEFT JOIN temuan t
+              ON t.id_inspeksi = ki.id_inspeksi
+
+        GROUP BY
+            j.id_petugas,
+            j.nama_lengkap
+
+        ORDER BY
+            j.nama_lengkap
+          `;
+
+        const rows = await conn.query(q, {
+          type: QueryTypes.SELECT,
+          replacements: {
+            startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
+            endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+          }
+        });
+
+      return rows;
+    }
+
+    const q = `
+    WITH tanggal AS (
+      SELECT generate_series(
+          DATE :startperiod,
+          DATE :endperiod,
+          INTERVAL '1 day'
+      )::date AS tanggal
+    ),
+    jadwal AS (
+        SELECT
+            t.tanggal,
+            jik.id_petugas,
+            p.nama_lengkap,
+            jik.kode_slot
+        FROM tanggal t
+        JOIN jadwal_inspeksi_kebersihan jik
+          ON jik.hari = EXTRACT(ISODOW FROM t.tanggal)
+        JOIN pegawai p
+          ON p.id_pegawai = jik.id_petugas
+        WHERE jik.is_active = true
+    ),
+    temuan AS (
+        SELECT
+            kt.id_inspeksi,
+            COUNT(*) AS jumlah_temuan
+        FROM kebersihan_temuan kt
+        GROUP BY kt.id_inspeksi
+    )
+    SELECT
+        j.id_petugas,
+        j.nama_lengkap,
+
+        COUNT(*) AS total_jadwal,
+
+        COUNT(ki.id_inspeksi) AS inspeksi,
+
+        COUNT(*) - COUNT(ki.id_inspeksi) AS tidak_inspeksi,
+
+        COALESCE(SUM(t.jumlah_temuan), 0) AS total_temuan
+
+    FROM jadwal j
+    LEFT JOIN kebersihan_inspeksi ki
+          ON ki.tanggal = j.tanggal
+          AND ki.kode_slot::text = j.kode_slot::text
+          AND ki.id_petugas = j.id_petugas
+
+    LEFT JOIN temuan t
+          ON t.id_inspeksi = ki.id_inspeksi
+
+    GROUP BY
+        j.id_petugas,
+        j.nama_lengkap
+
+    ORDER BY
+        j.nama_lengkap
+      LIMIT :limit
+      OFFSET :offset
+      `;
+
+    const rows = await conn.query(q, {
+      type: QueryTypes.SELECT,
+      replacements: {
+        limit: data?.limit,
+        offset: data?.offset,
+        startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
+        endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+      }
+    });
+
+    const countQuery = `
+    SELECT COUNT(*)::int AS count
+    FROM (
+        WITH tanggal AS (
+      SELECT generate_series(
+          DATE :startperiod,
+          DATE :endperiod,
+          INTERVAL '1 day'
+      )::date AS tanggal
+    ),
+    jadwal AS (
+        SELECT
+            t.tanggal,
+            jik.id_petugas,
+            p.nama_lengkap,
+            jik.kode_slot
+        FROM tanggal t
+        JOIN jadwal_inspeksi_kebersihan jik
+          ON jik.hari = EXTRACT(ISODOW FROM t.tanggal)
+        JOIN pegawai p
+          ON p.id_pegawai = jik.id_petugas
+        WHERE jik.is_active = true
+    ),
+    temuan AS (
+        SELECT
+            kt.id_inspeksi,
+            COUNT(*) AS jumlah_temuan
+        FROM kebersihan_temuan kt
+        GROUP BY kt.id_inspeksi
+    )
+    SELECT
+        j.id_petugas,
+        j.nama_lengkap,
+
+        COUNT(*) AS total_jadwal,
+
+        COUNT(ki.id_inspeksi) AS inspeksi,
+
+        COUNT(*) - COUNT(ki.id_inspeksi) AS tidak_inspeksi,
+
+        COALESCE(SUM(t.jumlah_temuan), 0) AS total_temuan
+
+    FROM jadwal j
+    LEFT JOIN kebersihan_inspeksi ki
+          ON ki.tanggal = j.tanggal
+          AND ki.kode_slot::text = j.kode_slot::text
+          AND ki.id_petugas = j.id_petugas
+
+    LEFT JOIN temuan t
+          ON t.id_inspeksi = ki.id_inspeksi
+
+    GROUP BY
+        j.id_petugas,
+        j.nama_lengkap
+    ) x
+    `;
+
+    const [{ count }] = await conn.query(countQuery, {
+      type: QueryTypes.SELECT,
+      replacements: {
+        startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
+        endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+      }
+    }) as any[];
+
+    return {count, rows};
   }
 }
 

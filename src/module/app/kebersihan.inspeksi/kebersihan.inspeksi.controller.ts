@@ -66,6 +66,46 @@ const generateDataExcel = (sheet: any, details: any) => {
   return sheet;
 };
 
+const generateDataExcelPetugas = (sheet: any, details: any) => {
+  sheet.addRow([
+    'No',
+    'Petugas',
+    'Jadwal',
+    'Inspeksi',
+    'Tidak Inspeksi',
+    'Temuan'
+  ]);
+
+  sheet.getRow(1).eachCell((cell: any) => {
+    cell.font = { bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+
+  for (let i in details) {
+    sheet.addRow([
+      parseInt(i) + 1,
+      details[i]?.nama_lengkap || '',
+      details[i]?.total_jadwal || '',
+      details[i]?.inspeksi || '',
+      details[i]?.tidak_inspeksi || '',
+      details[i]?.total_temuan || '',
+    ]);
+  }
+
+  for (let row = 1; row <= details?.length + 1; row++) {
+    sheet.getRow(row).eachCell((cell: any) => {
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } },
+      };
+    });
+  }
+
+  return sheet;
+};
+
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
@@ -128,7 +168,7 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const { waktu, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans } =
+      const { kode_slot, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans, tanggal } =
         req?.body;
 
       for (const temuan of temuans) {
@@ -141,7 +181,8 @@ export default class Controller {
       const idCabang = id_cabang?.value || null;
       const idJadwal = id_jadwal?.value || null;
       const check = await repository.detail({
-        waktu,
+        tanggal,
+        kode_slot,
         id_lokasi: idLokasi,
         id_petugas: idPetugas,
       });
@@ -194,7 +235,7 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const { waktu, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans } =
+      const { kode_slot, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans, tanggal } =
         req?.body;
       const idLokasi = id_lokasi?.value;
       const idPetugas = id_petugas?.value;
@@ -203,15 +244,15 @@ export default class Controller {
       const check = await repository.detail({ id_inspeksi: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      const waktuArr = check.waktu.split(':');
-
       if (
-        waktu !== `${waktuArr[0]}:${waktuArr[1]}` ||
+        tanggal !== check.tanggal ||
+        kode_slot !== check.kode_slot ||
         idLokasi !== check.id_lokasi ||
         idPetugas !== check.id_petugas
       ) {
         const duplicate = await repository.detail({
-          waktu,
+          tanggal,
+          kode_slot,
           id_lokasi: idLokasi,
           id_petugas: idPetugas,
         });
@@ -349,6 +390,68 @@ export default class Controller {
     } catch (err: any) {
       return helper.catchError(
         `export excel kebersihan inspeksi: ${err?.message}`,
+        500,
+        res
+      );
+    }
+  }
+
+  public async indexPetugas(req: Request, res: Response) {
+    try {
+      const query = {
+        ...helper.fetchQueryRequest(req),
+        tanggal_awal: req?.query?.tanggal_awal || '',
+        tanggal_akhir: req?.query?.tanggal_akhir || '',
+      };
+
+      const { count, rows } = await repository.indexPetugas(query);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
+      return response.success(
+        SUCCESS_RETRIEVED,
+        { total: count, values: rows },
+        res
+      );
+    } catch (err: any) {
+      return helper.catchError(
+        `kebersihan inspeksi index petugas: ${err?.message}`,
+        500,
+        res
+      );
+    }
+  }
+
+  public async exportPetugas(req: Request, res: Response) {
+    try {
+      const query = {
+        tanggal_awal: req?.body?.tanggal_awal || '',
+        tanggal_akhir: req?.body?.tanggal_akhir || '',
+        type: 'export'
+      };
+
+      let result: any = [];
+      result = await repository.indexPetugas(query);
+      if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+
+      const { dir, path } = await helper.checkDirExport('excel');
+
+      const name: string = 'kebersihan-inspeksi-petugas';
+      const filename: string = `${name}-${moment().format('DDMMYYYY')}.xlsx`;
+      const title: string = `${name.replace(/-/g, ' ').toUpperCase()}`;
+      const urlExcel: string = `${dir}/${filename}`;
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet(title);
+
+      generateDataExcelPetugas(sheet, result);
+      await workbook.xlsx.writeFile(`${path}/${filename}`);
+      return response.success(
+        'export excel kebersihan inspeksi petugas',
+        urlExcel,
+        res
+      );
+    } catch (err: any) {
+      return helper.catchError(
+        `export excel kebersihan inspeksi petugas: ${err?.message}`,
         500,
         res
       );
