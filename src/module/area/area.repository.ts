@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import AreaProvince from './provinces.model';
 import AreaRegency from './regencies.model';
 import AreaDistrict from './districts.model';
@@ -23,9 +23,12 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
-        where: { name: { [Op.like]: `%${data?.keyword}%` } },
+        where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), {
+          [Op.like]: keyword,
+        }),
       };
     }
     return AreaRegency.findAndCountAll(query);
@@ -49,9 +52,12 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
-        where: { name: { [Op.like]: `%${data?.keyword}%` } },
+        where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), {
+          [Op.like]: keyword,
+        }),
       };
     }
     return AreaDistrict.findAndCountAll(query);
@@ -75,9 +81,12 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
-        where: { name: { [Op.like]: `%${data?.keyword}%` } },
+        where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('name')), {
+          [Op.like]: keyword,
+        }),
       };
     }
     return AreaSubDistrict.findAndCountAll(query);

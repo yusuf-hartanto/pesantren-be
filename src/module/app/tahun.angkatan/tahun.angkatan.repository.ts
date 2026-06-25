@@ -26,16 +26,32 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { tahun_angkatan: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
+              Sequelize.fn('LOWER', Sequelize.col('tahun_angkatan')),
+              {
+                [Op.like]: keyword,
+              }
             ),
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('keterangan')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

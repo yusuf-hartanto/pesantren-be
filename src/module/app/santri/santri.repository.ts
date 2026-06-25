@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op, where } from 'sequelize';
+import { Op, Sequelize, where } from 'sequelize';
 import Model from './santri.model';
 import Cabang from '../cabang/cabang.model';
 import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
@@ -40,11 +40,16 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           status: { [Op.ne]: 9 },
-          [Op.or]: [{ fullname: { [Op.like]: `%${data?.keyword}%` } }],
+          [Op.or]: [
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('fullname')), {
+              [Op.like]: keyword,
+            }),
+          ],
         },
       };
     }

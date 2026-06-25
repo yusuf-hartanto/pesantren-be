@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './role.menu.model';
 import Role from '../role/role.model';
 import Menu from '../menu/menu.model';
@@ -57,11 +57,16 @@ export default class Repository {
       ],
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           status: { [Op.ne]: 9 },
-          role_name: { [Op.like]: `%${data?.keyword}%` },
+          [Op.or]: [
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('role_name')), {
+              [Op.like]: keyword,
+            }),
+          ],
         },
       };
     }

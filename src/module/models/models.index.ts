@@ -177,9 +177,18 @@ import {
   initPenempatanKelasSantri,
   associatePenempatanKelasSantri,
 } from '../app/penempatan.kelas.santri/penempatan.kelas.santri.model';
-import { associateJamKerjaPegawai, initJamKerjaPegawai } from '../app/pegawai.jam.kerja/pegawai.jam.kerja.model';
-import { associateAbsenHarianPegawai, initAbsenHarianPegawai } from '../app/pegawai.absen.harian/pegawai.absen.harian.model';
-import { initGuruPengganti, associateGuruPengganti } from '../app/guru.pengganti/guru.pengganti.model';
+import {
+  associateJamKerjaPegawai,
+  initJamKerjaPegawai,
+} from '../app/pegawai.jam.kerja/pegawai.jam.kerja.model';
+import {
+  associateAbsenHarianPegawai,
+  initAbsenHarianPegawai,
+} from '../app/pegawai.absen.harian/pegawai.absen.harian.model';
+import {
+  initGuruPengganti,
+  associateGuruPengganti,
+} from '../app/guru.pengganti/guru.pengganti.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize

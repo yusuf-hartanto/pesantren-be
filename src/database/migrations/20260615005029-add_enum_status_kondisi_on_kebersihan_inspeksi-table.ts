@@ -12,6 +12,5 @@ export const up = async (queryInterface: QueryInterface) => {
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  return queryInterface.sequelize.transaction(async (transaction) => {
-  });
+  return queryInterface.sequelize.transaction(async (transaction) => {});
 };

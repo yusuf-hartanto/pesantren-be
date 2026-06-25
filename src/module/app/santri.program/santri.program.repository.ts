@@ -30,13 +30,20 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            Sequelize.where(Sequelize.col('program_pesantren.nama_program'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('program_pesantren.nama_program')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

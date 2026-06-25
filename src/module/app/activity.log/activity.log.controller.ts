@@ -26,11 +26,7 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(
-        `activity log index: ${err?.message}`,
-        500,
-        res
-      );
+      return helper.catchError(`activity log index: ${err?.message}`, 500, res);
     }
   }
 

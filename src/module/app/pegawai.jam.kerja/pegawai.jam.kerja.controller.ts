@@ -58,11 +58,15 @@ const generateDataExcel = (
   // Isi Data
   for (let i in details) {
     const rowData = details[i];
-    
+
     // Agar kolom waktu kompatibel penuh saat diimport kembali oleh ExcelJS,
     // kita paksa formatnya berupa Text string jam murni (HH:mm:ss)
-    const tMulai = rowData?.waktu_mulai ? String(rowData.waktu_mulai).trim() : '00:00:00';
-    const tSelesai = rowData?.waktu_selesai ? String(rowData.waktu_selesai).trim() : '00:00:00';
+    const tMulai = rowData?.waktu_mulai
+      ? String(rowData.waktu_mulai).trim()
+      : '00:00:00';
+    const tSelesai = rowData?.waktu_selesai
+      ? String(rowData.waktu_selesai).trim()
+      : '00:00:00';
 
     sheet.addRow([
       parseInt(i) + 1,
@@ -107,7 +111,7 @@ const normalizeRow = (row: any) => {
     const sVal = String(val).trim();
     if (sVal.includes(':')) {
       // Jika format sudah HH:mm atau HH:mm:ss, ambil segment utamanya
-      return sVal.split(' ')[0]; 
+      return sVal.split(' ')[0];
     }
     if (moment(val, 'HH:mm:ss', true).isValid()) return sVal;
     // Jaga-jaga jika excel membaca raw cell time menjadi representasi ISO Date string lengkap
@@ -137,14 +141,21 @@ export default class Controller {
 
   private async validateBusinessLogic(item: any, id_jamkerja?: string) {
     const pegawai = await pegawaiRepo.detail({ id_pegawai: item.id_pegawai });
-    if (!pegawai) throw new Error(`Pegawai ID [${item.id_pegawai}] tidak ditemukan.`);
+    if (!pegawai)
+      throw new Error(`Pegawai ID [${item.id_pegawai}] tidak ditemukan.`);
 
     const lokasi = await lokasiRepo.detail({ id_lokasi: item.id_lokasi });
-    if (!lokasi) throw new Error(`Lokasi Kerja ID [${item.id_lokasi}] tidak ditemukan.`);
+    if (!lokasi)
+      throw new Error(`Lokasi Kerja ID [${item.id_lokasi}] tidak ditemukan.`);
 
-    const checkDuplicatePegawai = await repository.checkDuplicatePegawai(item.id_pegawai, id_jamkerja);
+    const checkDuplicatePegawai = await repository.checkDuplicatePegawai(
+      item.id_pegawai,
+      id_jamkerja
+    );
     if (checkDuplicatePegawai) {
-      throw new Error(`Pegawai [${pegawai.nama_lengkap}] sudah memiliki acuan master jam kerja.`);
+      throw new Error(
+        `Pegawai [${pegawai.nama_lengkap}] sudah memiliki acuan master jam kerja.`
+      );
     }
 
     return item;
@@ -153,10 +164,15 @@ export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const result = await repository.list({});
-      if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (result?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`JamKerjaPegawai list: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `JamKerjaPegawai list: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -164,11 +180,20 @@ export default class Controller {
     try {
       const query = helper.fetchQueryRequest(req);
       const { count, rows } = await repository.index(query);
-      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
 
-      return response.success(SUCCESS_RETRIEVED, { total: count, values: rows }, res);
+      return response.success(
+        SUCCESS_RETRIEVED,
+        { total: count, values: rows },
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`JamKerjaPegawai index: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `JamKerjaPegawai index: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -180,7 +205,11 @@ export default class Controller {
 
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
-      return helper.catchError(`JamKerjaPegawai detail: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `JamKerjaPegawai detail: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -199,7 +228,10 @@ export default class Controller {
       await repository.create(validatedData);
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
-      const msg = err instanceof z.ZodError ? `Validasi Gagal: ${err.issues[0].message}` : err.message;
+      const msg =
+        err instanceof z.ZodError
+          ? `Validasi Gagal: ${err.issues[0].message}`
+          : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
@@ -211,7 +243,10 @@ export default class Controller {
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       const validData = jamKerjaPegawaiSchema.partial().parse(req.body);
-      const finalUpdate = await this.validateBusinessLogic({ ...check.toJSON(), ...validData }, id);
+      const finalUpdate = await this.validateBusinessLogic(
+        { ...check.toJSON(), ...validData },
+        id
+      );
 
       await repository.update({
         payload: {
@@ -221,14 +256,17 @@ export default class Controller {
           waktu_selesai: finalUpdate.waktu_selesai,
           keterangan: finalUpdate.keterangan,
           is_active: finalUpdate.is_active,
-          updated_at: helper.date()
+          updated_at: helper.date(),
         },
         condition: { id_jamkerja: id },
       });
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      const msg = err instanceof z.ZodError ? `Update Gagal: ${err.issues[0].message}` : err.message;
+      const msg =
+        err instanceof z.ZodError
+          ? `Update Gagal: ${err.issues[0].message}`
+          : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
@@ -263,22 +301,36 @@ export default class Controller {
       generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
-      return response.success('export excel jam kerja', `${dir}/${filename}`, res);
+      return response.success(
+        'export excel jam kerja',
+        `${dir}/${filename}`,
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`export excel jam kerja: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel jam kerja: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async import(req: Request, res: Response) {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
-    if (!uploaded) return response.success('File tidak valid', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
-      
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
+
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
       const results: any[] = [];
 
       for (const raw of rows) {
@@ -294,11 +346,15 @@ export default class Controller {
         // Validasi Validitas Relasi ke DB jika data input awal lengkap
         if (row.id_pegawai) {
           const peg = await pegawaiRepo.detail({ id_pegawai: row.id_pegawai });
-          if (!peg) errors.push(`Pegawai dengan ID "${row.id_pegawai}" tidak ditemukan`);
+          if (!peg)
+            errors.push(
+              `Pegawai dengan ID "${row.id_pegawai}" tidak ditemukan`
+            );
         }
         if (row.id_lokasi) {
           const lok = await lokasiRepo.detail({ id_lokasi: row.id_lokasi });
-          if (!lok) errors.push(`Lokasi dengan ID "${row.id_lokasi}" tidak ditemukan`);
+          if (!lok)
+            errors.push(`Lokasi dengan ID "${row.id_lokasi}" tidak ditemukan`);
         }
 
         const valid = errors.length === 0;
@@ -327,24 +383,44 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validPayloads = results.filter((r) => r.valid).map((r) => r.payload);
-        if (validPayloads.length > 0) await repository.insertImport(validPayloads);
-        return response.success('import master jam kerja berhasil', dataRes, res);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
+        if (validPayloads.length > 0)
+          await repository.insertImport(validPayloads);
+        return response.success(
+          'import master jam kerja berhasil',
+          dataRes,
+          res
+        );
       }
 
-      return response.success('preview import master jam kerja', { ...dataRes, data: results }, res);
+      return response.success(
+        'preview import master jam kerja',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`import excel jam kerja: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `import excel jam kerja: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public insert = async (req: Request, res: Response) => {
     const payloads = req.body?.data as any[];
-    if (!payloads || payloads.length === 0) return response.success('Data kosong', null, res, false);
+    if (!payloads || payloads.length === 0)
+      return response.success('Data kosong', null, res, false);
 
     try {
       await repository.insertImport(payloads);
-      return response.success('Import batch berhasil', { count: payloads.length }, res);
+      return response.success(
+        'Import batch berhasil',
+        { count: payloads.length },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }

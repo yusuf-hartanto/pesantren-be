@@ -369,7 +369,11 @@ export default class Controller {
 
       const finalPayload = helper.only(
         variable.fillable(),
-        { ...check.toJSON(), ...validData, ...(file_izin ? { file_izin } : {}) },
+        {
+          ...check.toJSON(),
+          ...validData,
+          ...(file_izin ? { file_izin } : {}),
+        },
         true
       );
       await repository.update(
@@ -758,7 +762,8 @@ export default class Controller {
       }
 
       // Cari perizinan santri aktif yang berjalan hari ini berdasarkan nomor kartu
-      const perizinan = await repository.findActiveIzinByCardNumber(nomor_kartu_santri);
+      const perizinan =
+        await repository.findActiveIzinByCardNumber(nomor_kartu_santri);
 
       if (!perizinan) {
         throw new Error(
@@ -772,11 +777,14 @@ export default class Controller {
       }
 
       const todayStr = moment().format('YYYY-MM-DD');
-      const tglSelesaiStr = moment(perizinan.tanggal_selesai).format('YYYY-MM-DD');
+      const tglSelesaiStr = moment(perizinan.tanggal_selesai).format(
+        'YYYY-MM-DD'
+      );
 
       const id_izin = perizinan.id_izin;
       const logGate = await repository.findLogGate(id_izin);
-      const activePetugasId = req?.user?.resource_id || req?.user?.id || 'GATE_KEEPER_ID';
+      const activePetugasId =
+        req?.user?.resource_id || req?.user?.id || 'GATE_KEEPER_ID';
 
       // Persiapan payload profile untuk response JSON ke UI client
       const profileResponse = {
@@ -800,7 +808,8 @@ export default class Controller {
             petugas_keluar: activePetugasId,
             status_gate: 'Keluar',
             keterangan:
-              req.body.keterangan || 'Santri keluar komplek pondok via tapping kartu.',
+              req.body.keterangan ||
+              'Santri keluar komplek pondok via tapping kartu.',
           },
           trx
         );
@@ -812,7 +821,9 @@ export default class Controller {
           {
             ...profileResponse,
             status_gate: 'Keluar',
-            waktu_keluar: moment(waktuKeluarSekarang).format('YYYY-MM-DD HH:mm:ss'),
+            waktu_keluar: moment(waktuKeluarSekarang).format(
+              'YYYY-MM-DD HH:mm:ss'
+            ),
             waktu_masuk: null,
             kondisi: 'Normal',
           },
@@ -838,7 +849,8 @@ export default class Controller {
             petugas_masuk: activePetugasId,
             status_gate: 'Kembali',
             keterangan:
-              req.body.keterangan || 'Santri kembali masuk pondok via tapping kartu.',
+              req.body.keterangan ||
+              'Santri kembali masuk pondok via tapping kartu.',
           },
           { id_izin },
           trx
@@ -877,7 +889,9 @@ export default class Controller {
             waktu_keluar: logGate.waktu_keluar
               ? moment(logGate.waktu_keluar).format('YYYY-MM-DD HH:mm:ss')
               : '-',
-            waktu_masuk: moment(waktuMasukSekarang).format('YYYY-MM-DD HH:mm:ss'),
+            waktu_masuk: moment(waktuMasukSekarang).format(
+              'YYYY-MM-DD HH:mm:ss'
+            ),
             kondisi: kondisiFinal,
           },
           res

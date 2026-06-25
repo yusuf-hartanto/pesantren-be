@@ -37,7 +37,8 @@ export class AbsenKelasSantri extends Model {
     const values = super.toJSON() as any;
     values.lokasi = {
       id_lokasi: this.id_lokasi,
-      nama_lokasi: this.kelasFormal?.nama_kelas || this.kelasMda?.nama_kelas_mda || '-'
+      nama_lokasi:
+        this.kelasFormal?.nama_kelas || this.kelasMda?.nama_kelas_mda || '-',
     };
     return values;
   }

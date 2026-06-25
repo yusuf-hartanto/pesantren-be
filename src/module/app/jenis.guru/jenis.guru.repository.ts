@@ -52,29 +52,50 @@ export default class Repository {
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['nomor_urut', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_jenis_guru: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(Sequelize.col('pegawai.nama_lengkap'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
-            Sequelize.where(Sequelize.col('tingkat.tingkat'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
-            Sequelize.where(Sequelize.col('mata_pelajaran.nama_mapel'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
-            Sequelize.where(Sequelize.col('lembaga_formal.nama_lembaga'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('JenisGuru.nama_jenis_guru')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('tingkat.tingkat')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('mata_pelajaran.nama_mapel')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('lembaga_formal.nama_lembaga')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

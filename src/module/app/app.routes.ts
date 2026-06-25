@@ -403,16 +403,34 @@ router.post('/pegawai-jam-kerja/export', JamKerjaPegawai.export);
 router.post('/pegawai-jam-kerja/import', JamKerjaPegawai.import);
 router.post('/pegawai-jam-kerja/insert', JamKerjaPegawai.insert);
 
-router.post('/pegawai-absen-harian/clock-in', AbsenHarianPegawaiController.clockIn);
-router.post('/pegawai-absen-harian/clock-out', AbsenHarianPegawaiController.clockOut);
-router.get('/pegawai-absen-harian/today', AbsenHarianPegawaiController.getAttendanceToday);
+router.post(
+  '/pegawai-absen-harian/clock-in',
+  AbsenHarianPegawaiController.clockIn
+);
+router.post(
+  '/pegawai-absen-harian/clock-out',
+  AbsenHarianPegawaiController.clockOut
+);
+router.get(
+  '/pegawai-absen-harian/today',
+  AbsenHarianPegawaiController.getAttendanceToday
+);
 router.get('/pegawai-absen-harian', AbsenHarianPegawaiController.index);
 router.get('/pegawai-absen-harian/:id', AbsenHarianPegawaiController.detail);
 // router.post('/pegawai-absen-harian', AbsenHarianPegawaiController.create);
 router.delete('/pegawai-absen-harian/:id', AbsenHarianPegawaiController.delete);
-router.post('/pegawai-absen-harian/export', AbsenHarianPegawaiController.export);
-router.post('/pegawai-absen-harian/import', AbsenHarianPegawaiController.import);
-router.post('/pegawai-absen-harian/insert', AbsenHarianPegawaiController.insert);
+router.post(
+  '/pegawai-absen-harian/export',
+  AbsenHarianPegawaiController.export
+);
+router.post(
+  '/pegawai-absen-harian/import',
+  AbsenHarianPegawaiController.import
+);
+router.post(
+  '/pegawai-absen-harian/insert',
+  AbsenHarianPegawaiController.insert
+);
 
 router.get('/kamar/all-data', Kamar.list);
 router.get('/kamar', Kamar.index);

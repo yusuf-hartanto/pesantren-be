@@ -110,7 +110,7 @@ export function initAppResourceModel(sequelize: Sequelize) {
       },
       id_eksternal: {
         type: DataTypes.STRING,
-      }
+      },
     },
     {
       sequelize,
@@ -139,7 +139,7 @@ export function associateAppResource() {
   AppResource.belongsTo(Pegawai, {
     as: 'pegawai',
     foreignKey: 'id_eksternal',
-  })
+  });
 }
 
 export default AppResource;

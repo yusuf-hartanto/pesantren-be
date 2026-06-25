@@ -37,7 +37,7 @@ const generateDataExcel = (sheet: any, details: any) => {
     'Guru Asli',
     'Guru Pengganti',
     'Alasan',
-    'Status Approval'
+    'Status Approval',
   ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
@@ -48,7 +48,7 @@ const generateDataExcel = (sheet: any, details: any) => {
   for (let i in details) {
     sheet.addRow([
       parseInt(i) + 1,
-        `${details[i]?.jadwal_pelajaran?.hari} / ${details[i]?.jadwal_pelajaran?.jam_pelajaran?.mulai?.slice(0, -3)} - ${details[i]?.jadwal_pelajaran?.jam_pelajaran?.selesai?.slice(0, -3)} / ${details[i]?.jadwal_pelajaran?.kelas_formal ? details[i]?.jadwal_pelajaran?.kelas_formal?.nama_kelas : details[i]?.jadwal_pelajaran?.kelas_mda?.nama_kelas_mda} (${details[i]?.jadwal_pelajaran?.kelas_formal ? details[i]?.jadwal_pelajaran?.kelas_formal?.lembaga?.nama_lembaga : details[i]?.jadwal_pelajaran?.kelas_mda?.lembaga?.nama_lembaga})`,
+      `${details[i]?.jadwal_pelajaran?.hari} / ${details[i]?.jadwal_pelajaran?.jam_pelajaran?.mulai?.slice(0, -3)} - ${details[i]?.jadwal_pelajaran?.jam_pelajaran?.selesai?.slice(0, -3)} / ${details[i]?.jadwal_pelajaran?.kelas_formal ? details[i]?.jadwal_pelajaran?.kelas_formal?.nama_kelas : details[i]?.jadwal_pelajaran?.kelas_mda?.nama_kelas_mda} (${details[i]?.jadwal_pelajaran?.kelas_formal ? details[i]?.jadwal_pelajaran?.kelas_formal?.lembaga?.nama_lembaga : details[i]?.jadwal_pelajaran?.kelas_mda?.lembaga?.nama_lembaga})`,
       details[i]?.tanggal || '',
       details[i]?.guru_asli?.nama_lengkap || '',
       details[i]?.guru_pengganti?.nama_lengkap || '',
@@ -154,12 +154,7 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const {
-        tanggal,
-        id_jadwal,
-        id_guru_asli,
-        id_guru_pengganti,
-      } = req?.body;
+      const { tanggal, id_jadwal, id_guru_asli, id_guru_pengganti } = req?.body;
 
       const idJadwal = id_jadwal?.value || null;
       const idGuruAsli = id_guru_asli?.value || null;
@@ -178,7 +173,7 @@ export default class Controller {
           id_guru_pengganti: idGuruPengganti,
           id_jadwal: idJadwal,
           id_guru_asli: idGuruAsli,
-          created_by: req.user?.id
+          created_by: req.user?.id,
         },
       });
 
@@ -200,19 +195,16 @@ export default class Controller {
         id_jadwal,
         id_guru_asli,
         id_guru_pengganti,
-        status_approval
+        status_approval,
       } = req?.body;
       const idJadwal = id_jadwal?.value;
       const idGuruAsli = id_guru_asli?.value;
       const idGuruPengganti = id_guru_pengganti?.value;
-      
+
       const check = await repository.detail({ id_pengganti: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      if (
-        tanggal !== check.tanggal ||
-        idJadwal !== check.id_jadwal
-      ) {
+      if (tanggal !== check.tanggal || idJadwal !== check.id_jadwal) {
         const duplicate = await repository.detail({
           tanggal,
           id_jadwal: idJadwal,
@@ -228,19 +220,18 @@ export default class Controller {
       if (status_approval == 'Disetujui') {
         approved = {
           approved_by: req.user?.id,
-          approved_at: helper.date()
-        }
+          approved_at: helper.date(),
+        };
       }
 
       await repository.update({
         payload: {
           ...data,
-          id_jadwal:
-            idJadwal || check?.getDataValue('id_jadwal'),
+          id_jadwal: idJadwal || check?.getDataValue('id_jadwal'),
           id_guru_asli: idGuruAsli || check?.getDataValue('id_guru_asli'),
           id_guru_pengganti:
             idGuruPengganti || check?.getDataValue('id_guru_pengganti'),
-          ...approved
+          ...approved,
         },
         condition: { id_pengganti: id },
       });
@@ -389,8 +380,12 @@ export default class Controller {
           );
         }
 
-        const guruAsliExist = await guruRepository.detail({ nama_lengkap: guru_asli });
-        const guruPenggantiExist = await guruRepository.detail({ nama_lengkap: guru_pengganti });
+        const guruAsliExist = await guruRepository.detail({
+          nama_lengkap: guru_asli,
+        });
+        const guruPenggantiExist = await guruRepository.detail({
+          nama_lengkap: guru_pengganti,
+        });
 
         if (!guruAsliExist) {
           errors.push(`Guru Asli tidak ditemukan`);
@@ -403,7 +398,7 @@ export default class Controller {
         let idKelas = null;
         if (typeLembaga == 'FORMAL') {
           const kelasFormalExist = await kelasFormalRepository.detail({
-            nama_kelas: kelasName
+            nama_kelas: kelasName,
           });
 
           if (!kelasFormalExist) {
@@ -413,7 +408,7 @@ export default class Controller {
           }
         } else {
           const kelasMdaExist = await kelasMdaRepository.detail({
-            nama_kelas_mda: kelasName
+            nama_kelas_mda: kelasName,
           });
           if (!kelasMdaExist) {
             errors.push(`Kelas ${kelasName} tidak ditemukan`);
@@ -422,10 +417,10 @@ export default class Controller {
           }
         }
 
-        const jadwalExist = await jadwalPelajaranRepository.detail({ 
+        const jadwalExist = await jadwalPelajaranRepository.detail({
           hari,
           id_kelas: idKelas,
-          id_jam_pelajaran: jamPelajaranExist?.id_jampel || '', 
+          id_jam_pelajaran: jamPelajaranExist?.id_jampel || '',
         });
 
         if (!jadwalExist) {
@@ -438,7 +433,7 @@ export default class Controller {
           ...row,
           id_jadwal: jadwalExist?.id_jadwal,
           id_guru_asli: guruAsliExist?.id_pegawai,
-          id_guru_pengganti: guruPenggantiExist?.id_pegawai
+          id_guru_pengganti: guruPenggantiExist?.id_pegawai,
         };
 
         results.push({
@@ -468,7 +463,7 @@ export default class Controller {
           let newCreate = await GuruPengganti.create(
             {
               ...payload,
-              created_by: req.user?.id
+              created_by: req.user?.id,
             },
             { transaction: trx! }
           );
@@ -485,11 +480,7 @@ export default class Controller {
       if (trx) {
         await trx.commit();
 
-        return response.success(
-          'import guru pengganti berhasil',
-          dataRes,
-          res
-        );
+        return response.success('import guru pengganti berhasil', dataRes, res);
       }
 
       return response.success(
@@ -525,7 +516,7 @@ export default class Controller {
       for (const payload of payloads) {
         const existing = await repository.detail({
           tanggal: payload.tanggal,
-          id_jadwal: payload.id_jadwal
+          id_jadwal: payload.id_jadwal,
         });
 
         if (existing) {
@@ -539,7 +530,7 @@ export default class Controller {
           let newCreate = await GuruPengganti.create(
             {
               ...payload,
-              created_by: req.user?.id
+              created_by: req.user?.id,
             },
             { transaction: trx }
           );

@@ -65,7 +65,7 @@ export default class Repository {
                   attributes: ['id_lembaga', 'nama_lembaga'],
                 },
               ],
-            }
+            },
           ],
         },
         {
@@ -79,7 +79,7 @@ export default class Repository {
           as: 'guru_pengganti',
           required: false,
           attributes: ['id_pegawai', 'nama_lengkap'],
-        }
+        },
       ],
     });
   }
@@ -141,7 +141,7 @@ export default class Repository {
                   attributes: ['id_lembaga', 'nama_lembaga'],
                 },
               ],
-            }
+            },
           ],
         },
         {
@@ -155,7 +155,7 @@ export default class Repository {
           as: 'guru_pengganti',
           required: false,
           attributes: ['id_pegawai', 'nama_lengkap'],
-        }
+        },
       ],
     });
   }
@@ -205,7 +205,7 @@ export default class Repository {
                   attributes: ['id_lembaga', 'nama_lembaga'],
                 },
               ],
-            }
+            },
           ],
         },
         {
@@ -219,7 +219,7 @@ export default class Repository {
           as: 'guru_pengganti',
           required: false,
           attributes: ['id_pegawai', 'nama_lengkap'],
-        }
+        },
       ],
     });
   }

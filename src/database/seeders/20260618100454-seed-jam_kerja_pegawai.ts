@@ -30,26 +30,27 @@ export default {
         waktu_mulai: '07:30:00',
         waktu_selesai: '15:30:00',
         id_lokasi: lokasiId1,
-        keterangan: 'Jam masuk & pulang reguler Shift Pagi - Kantor Pusat. Toleransi 15 menit.'
+        keterangan:
+          'Jam masuk & pulang reguler Shift Pagi - Kantor Pusat. Toleransi 15 menit.',
       },
       {
         waktu_mulai: '08:00:00',
         waktu_selesai: '16:00:00',
         id_lokasi: lokasiId2,
-        keterangan: 'Jam masuk & pulang standar reguler - Cabang A.'
+        keterangan: 'Jam masuk & pulang standar reguler - Cabang A.',
       },
       {
         waktu_mulai: '08:30:00',
         waktu_selesai: '16:30:00',
         id_lokasi: lokasiId1,
-        keterangan: 'Jam masuk & pulang reguler - Unit Pelayanan Publik.'
+        keterangan: 'Jam masuk & pulang reguler - Unit Pelayanan Publik.',
       },
       {
         waktu_mulai: '13:00:00',
         waktu_selesai: '21:00:00',
         id_lokasi: lokasiId2,
-        keterangan: 'Jam masuk & pulang khusus Shift Siang / Piket Sore.'
-      }
+        keterangan: 'Jam masuk & pulang khusus Shift Siang / Piket Sore.',
+      },
     ];
 
     const dataSeeder: any[] = [];

@@ -44,16 +44,35 @@ export default class Repository {
 
     // Filter keyword
     if (data?.keyword) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       where[Op.or] = [
-        { nama_semester: { [Op.like]: `%${data?.keyword}%` } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT'),
-          { [Op.like]: `%${data?.keyword}%` }
+          Sequelize.fn('LOWER', Sequelize.col('tahun_ajaran.tahun_ajaran')),
+          {
+            [Op.like]: keyword,
+          }
         ),
-        { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-        Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
-          [Op.like]: `%${data?.keyword}%`,
-        }),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Semester.nomor_urut'), 'TEXT')
+          ),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('Semester.nama_semester')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('Semester.keterangan')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
       ];
     }
 
