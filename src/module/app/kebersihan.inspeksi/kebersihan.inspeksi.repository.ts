@@ -218,77 +218,79 @@ export default class Repository {
     });
   }
 
-  public async indexPetugas(data: any) {
+  public async indexPetugasList(data: any) {
     const conn = await rawQuery.getConnection();
 
-    if (data?.type == 'export') {
-      const q = `
-        WITH tanggal AS (
-          SELECT generate_series(
-              DATE :startperiod,
-              DATE :endperiod,
-              INTERVAL '1 day'
-          )::date AS tanggal
-        ),
-        jadwal AS (
-            SELECT
-                t.tanggal,
-                jik.id_petugas,
-                p.nama_lengkap,
-                jik.kode_slot
-            FROM tanggal t
-            JOIN jadwal_inspeksi_kebersihan jik
-              ON jik.hari = EXTRACT(ISODOW FROM t.tanggal)
-            JOIN pegawai p
-              ON p.id_pegawai = jik.id_petugas
-            WHERE jik.is_active = true
-        ),
-        temuan AS (
-            SELECT
-                kt.id_inspeksi,
-                COUNT(*) AS jumlah_temuan
-            FROM kebersihan_temuan kt
-            GROUP BY kt.id_inspeksi
-        )
-        SELECT
-            j.id_petugas,
-            j.nama_lengkap,
+    const q = `
+      WITH tanggal AS (
+        SELECT generate_series(
+            DATE :startperiod,
+            DATE :endperiod,
+            INTERVAL '1 day'
+        )::date AS tanggal
+      ),
+      jadwal AS (
+          SELECT
+              t.tanggal,
+              jik.id_petugas,
+              p.nama_lengkap,
+              jik.kode_slot
+          FROM tanggal t
+          JOIN jadwal_inspeksi_kebersihan jik
+            ON jik.hari = EXTRACT(ISODOW FROM t.tanggal)
+          JOIN pegawai p
+            ON p.id_pegawai = jik.id_petugas
+          WHERE jik.is_active = true
+      ),
+      temuan AS (
+          SELECT
+              kt.id_inspeksi,
+              COUNT(*) AS jumlah_temuan
+          FROM kebersihan_temuan kt
+          GROUP BY kt.id_inspeksi
+      )
+      SELECT
+          j.id_petugas,
+          j.nama_lengkap,
 
-            COUNT(*) AS total_jadwal,
+          COUNT(*) AS total_jadwal,
 
-            COUNT(ki.id_inspeksi) AS inspeksi,
+          COUNT(ki.id_inspeksi) AS inspeksi,
 
-            COUNT(*) - COUNT(ki.id_inspeksi) AS tidak_inspeksi,
+          COUNT(*) - COUNT(ki.id_inspeksi) AS tidak_inspeksi,
 
-            COALESCE(SUM(t.jumlah_temuan), 0) AS total_temuan
+          COALESCE(SUM(t.jumlah_temuan), 0) AS total_temuan
 
-        FROM jadwal j
-        LEFT JOIN kebersihan_inspeksi ki
-              ON ki.tanggal = j.tanggal
-              AND ki.kode_slot::text = j.kode_slot::text
-              AND ki.id_petugas = j.id_petugas
+      FROM jadwal j
+      LEFT JOIN kebersihan_inspeksi ki
+            ON ki.tanggal = j.tanggal
+            AND ki.kode_slot::text = j.kode_slot::text
+            AND ki.id_petugas = j.id_petugas
 
-        LEFT JOIN temuan t
-              ON t.id_inspeksi = ki.id_inspeksi
+      LEFT JOIN temuan t
+            ON t.id_inspeksi = ki.id_inspeksi
 
-        GROUP BY
-            j.id_petugas,
-            j.nama_lengkap
+      GROUP BY
+          j.id_petugas,
+          j.nama_lengkap
 
-        ORDER BY
-            j.nama_lengkap
-          `;
+      ORDER BY
+          j.nama_lengkap
+        `;
 
-        const rows = await conn.query(q, {
-          type: QueryTypes.SELECT,
-          replacements: {
-            startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
-            endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
-          }
-        });
+      const rows = await conn.query(q, {
+        type: QueryTypes.SELECT,
+        replacements: {
+          startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
+          endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+        }
+      });
 
-      return rows;
-    }
+    return rows;
+  }
+
+  public async indexPetugas(data: any) {
+    const conn = await rawQuery.getConnection();
 
     const q = `
     WITH tanggal AS (
