@@ -341,6 +341,8 @@ export default class Controller {
       const queryParams = helper.fetchQueryRequest(req);
       const filter = {
         ...queryParams,
+        tahun: req.query.tahun,
+        semester: req.query.semester,
         id_santri_sitrendi: req.query.id_santri,
         isOpenApi: true,
       };
