@@ -404,7 +404,7 @@ export default class Controller {
         tanggal_akhir: req?.query?.tanggal_akhir || '',
       };
 
-      const { count, rows } = await repository.indexPetugas(query);
+      const { count, rows } = (await repository.indexPetugas(query)) as { count: number; rows: any[] };
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(
