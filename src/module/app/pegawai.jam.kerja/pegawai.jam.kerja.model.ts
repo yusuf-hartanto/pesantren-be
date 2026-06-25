@@ -3,8 +3,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import moment from 'moment';
-import Pegawai from '../pegawai/pegawai.model'; 
-import Lokasi from '../location/location.model'; 
+import Pegawai from '../pegawai/pegawai.model';
+import Lokasi from '../location/location.model';
 
 export class JamKerjaPegawai extends Model {
   declare id_jamkerja: string;
@@ -111,7 +111,7 @@ export function associateJamKerjaPegawai() {
 
   JamKerjaPegawai.belongsTo(Lokasi, {
     foreignKey: 'id_lokasi',
-    as: 'lokasiKerja', 
+    as: 'lokasiKerja',
     onUpdate: 'CASCADE',
     onDelete: 'RESTRICT',
   });

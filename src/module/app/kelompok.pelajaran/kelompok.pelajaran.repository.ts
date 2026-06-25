@@ -30,7 +30,7 @@ export default class Repository {
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       where: {
         parent_id: {
           [Op.is]: null,
@@ -39,8 +39,11 @@ export default class Repository {
       order: [['updated_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      distinct: true,
+      subQuery: false,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
@@ -48,12 +51,45 @@ export default class Repository {
             [Op.is]: null,
           },
           [Op.or]: [
-            { nama_kelpelajaran: { [Op.like]: `%${data?.keyword}%` } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('nomor_urut'), 'TEXT'),
-              { [Op.like]: `%${data?.keyword}%` }
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('KelompokPelajaran.nama_kelpelajaran')
+              ),
+              {
+                [Op.like]: keyword,
+              }
             ),
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('children.nama_kelpelajaran')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('KelompokPelajaran.nomor_urut'),
+                  'TEXT'
+                )
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('KelompokPelajaran.keterangan')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

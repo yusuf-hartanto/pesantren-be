@@ -21,11 +21,16 @@ export default class Repository {
     }
 
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query.where = {
         ...query.where,
         [Op.or]: [
-          { kategori: { [Op.like]: `%${data?.keyword}%` } },
-          { deskripsi: { [Op.like]: `%${data?.keyword}%` } },
+          Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('kategori')), {
+            [Op.like]: keyword,
+          }),
+          Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('deskripsi')), {
+            [Op.like]: keyword,
+          }),
         ],
       };
     }

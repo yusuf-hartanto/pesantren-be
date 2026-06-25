@@ -24,19 +24,20 @@ export default class Controller {
     try {
       const query = {
         ...helper.fetchQueryRequest(req),
-        resource_id: req.user?.id
+        resource_id: req.user?.id,
       };
       const { count, rows } = await repository.index(query);
       const q = `SELECT COUNT(*) FROM notifications WHERE status = 0 AND "to" = :resource_id`;
       const conn = await rawQuery.getConnection();
-      const result: any =await conn.query(q, {
+      const result: any = await conn.query(q, {
         type: QueryTypes.SELECT,
         replacements: {
-          resource_id: req.user?.id
-        }
+          resource_id: req.user?.id,
+        },
       });
 
-      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
       return response.success(
         SUCCESS_RETRIEVED,
         { total: count, values: rows, total_new: parseInt(result[0]?.count) },

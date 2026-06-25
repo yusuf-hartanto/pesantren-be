@@ -57,14 +57,14 @@ export default class Repository {
       },
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_wali: { [Op.like]: `%${data?.keyword}%` } },
-            // Sequelize.where(Sequelize.col('santri.nama_santri'), {
-            //   [Op.like]: `%${data?.keyword}%`,
-            // }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('nama_wali')), {
+              [Op.like]: keyword,
+            }),
           ],
         },
       };

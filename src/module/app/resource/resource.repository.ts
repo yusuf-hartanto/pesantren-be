@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './resource.model';
 import AppRole from '../role/role.model';
 import AreaRegency from '../../area/regencies.model';
@@ -29,16 +29,46 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           ...condition,
           status: { [Op.ne]: 'D' },
           [Op.or]: [
-            { username: { [Op.like]: `%${data?.keyword}%` } },
-            { full_name: { [Op.like]: `%${data?.keyword}%` } },
-            { email: { [Op.like]: `%${data?.keyword}%` } },
-            { place_of_birth: { [Op.like]: `%${data?.keyword}%` } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('AppResource.username')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('AppResource.full_name')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('AppResource.email')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('AppResource.place_of_birth')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('role.role_name')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
@@ -119,11 +149,11 @@ export default class Repository {
                   as: 'cabang',
                   attributes: ['id_cabang', 'nama_cabang'],
                   required: false,
-                }
-              ]
+                },
+              ],
             },
           ],
-        }
+        },
       ],
     });
   }

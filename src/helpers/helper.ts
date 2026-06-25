@@ -126,9 +126,7 @@ export default class Helper {
     let ext: string = file?.name.split('.').pop() || '-';
     if (
       type == 'all' &&
-      Object.values(allowedExt)
-        .flat()
-        .includes(ext.toLocaleLowerCase())
+      Object.values(allowedExt).flat().includes(ext.toLocaleLowerCase())
     )
       return 'allowed';
     if (allowedExt[type].includes(ext.toLocaleLowerCase())) return 'allowed';
@@ -622,11 +620,11 @@ export default class Helper {
     try {
       const q = `SELECT resource_id FROM app_resource WHERE username IN (:ids)`;
       const conn = await rawQuery.getConnection();
-      const res: any =await conn.query(q, {
+      const res: any = await conn.query(q, {
         type: QueryTypes.SELECT,
         replacements: {
-          ids: data.receiver
-        }
+          ids: data.receiver,
+        },
       });
 
       if (res.length > 0) {
@@ -638,18 +636,17 @@ export default class Helper {
             title: data.title,
             type: data.type,
             url: data.url,
-            message: data.message
+            message: data.message,
           });
         }
 
         await notificationRepository.insert(insert);
       }
 
-
       const result = await service.sendNotification(data);
       return result;
     } catch (err: any) {
-      console.log(err)
+      console.log(err);
     }
   }
 }

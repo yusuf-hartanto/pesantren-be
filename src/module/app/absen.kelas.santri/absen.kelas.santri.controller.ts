@@ -67,7 +67,10 @@ const generateDataExcel = (
         : '', // Tanggal Absen
       details[i]?.waktu_absen || '', // Waktu Absen
       details[i]?.id_lokasi || '', // ID Lokasi
-      details[i]?.lokasi?.nama_kelas || details[i]?.kelasFormal?.nama_kelas || details[i]?.kelasMda?.nama_kelas_mda || '', // Nama Lokasi
+      details[i]?.lokasi?.nama_kelas ||
+        details[i]?.kelasFormal?.nama_kelas ||
+        details[i]?.kelasMda?.nama_kelas_mda ||
+        '', // Nama Lokasi
       details[i]?.id_jam_pelajaran || '', // ID Jam Pelajaran
       details[i]?.jamPelajaran?.nama_jampel || '', // Nama Jam Pelajaran
       details[i]?.id_petugas || '', // ID Petugas
@@ -371,11 +374,7 @@ export default class Controller {
         final_id_jampel = jamPelajaran.getDataValue('id_jampel');
       }
 
-      if (
-        validData.id_santri ||
-        validData.id_lokasi ||
-        validData.tanggal
-      ) {
+      if (validData.id_santri || validData.id_lokasi || validData.tanggal) {
         const isKelasValid = await repository.checkSantriKelasValidity(
           finalData.id_santri,
           finalData.id_lokasi,

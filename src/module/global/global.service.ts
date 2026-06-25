@@ -513,7 +513,7 @@ export default class Service {
     });
 
     const result = await response.json();
-  
+
     return result;
   }
 }

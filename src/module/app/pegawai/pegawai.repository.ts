@@ -91,11 +91,15 @@ export default class Repository {
     if (data?.status_pegawai && data?.status_pegawai !== '') {
       if (data.status_pegawai === 'guru') {
         query.where.id_pegawai = {
-          [Op.in]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+          [Op.in]: Sequelize.literal(
+            `(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`
+          ),
         };
       } else if (data.status_pegawai === 'pegawai') {
         query.where.id_pegawai = {
-          [Op.notIn]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+          [Op.notIn]: Sequelize.literal(
+            `(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`
+          ),
         };
       } else {
         query.where.status_pegawai = data.status_pegawai;
@@ -177,20 +181,23 @@ export default class Repository {
         const hashedPassword = await helper.hashIt(rawPassword);
         const confirm_hash = await helper.hashIt(username, 6);
 
-        await AppResource.create({
-          resource_id: uuidv4(),
-          role_id: role.role_id,
-          username,
-          email: item.email,
-          password: hashedPassword,
-          full_name: item.nama_lengkap,
-          telepon: item.no_hp || null,
-          status: 'A',
-          confirm_hash,
-          created_by: data.userId || null,
-          created_date: new Date(),
-          id_eksternal: pegawais[idx].id_pegawai,
-        }, { transaction: trx });
+        await AppResource.create(
+          {
+            resource_id: uuidv4(),
+            role_id: role.role_id,
+            username,
+            email: item.email,
+            password: hashedPassword,
+            full_name: item.nama_lengkap,
+            telepon: item.no_hp || null,
+            status: 'A',
+            confirm_hash,
+            created_by: data.userId || null,
+            created_date: new Date(),
+            id_eksternal: pegawais[idx].id_pegawai,
+          },
+          { transaction: trx }
+        );
       }
 
       idx++;
@@ -233,11 +240,15 @@ export default class Repository {
       if (status_pegawai && status_pegawai !== '') {
         if (status_pegawai === 'guru') {
           whereClause.id_pegawai = {
-            [Op.in]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+            [Op.in]: Sequelize.literal(
+              `(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`
+            ),
           };
         } else if (status_pegawai === 'pegawai') {
           whereClause.id_pegawai = {
-            [Op.notIn]: Sequelize.literal(`(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`),
+            [Op.notIn]: Sequelize.literal(
+              `(SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL)`
+            ),
           };
         } else {
           whereClause.status_pegawai = status_pegawai;

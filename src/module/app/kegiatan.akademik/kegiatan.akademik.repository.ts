@@ -44,18 +44,35 @@ export default class Repository {
       limit: data?.limit,
     };
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_kegiatan: { [Op.like]: `%${data?.keyword}%` } },
-            { keterangan: { [Op.like]: `%${data?.keyword}%` } },
-            Sequelize.where(Sequelize.col('tahun_ajaran.tahun_ajaran'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
-            Sequelize.where(Sequelize.col('semester.nama_semester'), {
-              [Op.like]: `%${data?.keyword}%`,
-            }),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('nama_kegiatan')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('keterangan')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('tahun_ajaran.tahun_ajaran')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('semester.nama_semester')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

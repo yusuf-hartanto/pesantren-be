@@ -24,10 +24,26 @@ export default class Repository {
 
     // Filter keyword
     if (data?.keyword) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       where[Op.or] = [
-        { kode_status_awal: { [Op.like]: `%${data?.keyword}%` } },
-        { nama_status_awal: { [Op.like]: `%${data?.keyword}%` } },
-        { keterangan: { [Op.like]: `%${data?.keyword}%` } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kode_status_awal')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('nama_status_awal'), 'TEXT')
+          ),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('keterangan')), {
+          [Op.like]: keyword,
+        }),
       ];
     }
 

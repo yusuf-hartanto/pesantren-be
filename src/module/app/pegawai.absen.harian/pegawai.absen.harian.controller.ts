@@ -20,7 +20,11 @@ import {
 import { clockInSchema, clockOutSchema } from './pegawai.absen.harian.schema';
 import z from 'zod';
 
-const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false) => {
+const generateDataExcel = (
+  sheet: any,
+  details: any,
+  isTemplate: boolean = false
+) => {
   sheet.addRow([
     'No',
     'ID Pegawai',
@@ -42,15 +46,27 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
     { header: 'ID Pegawai', key: 'id_pegawai', width: 25 },
     { header: 'Nama Pegawai', key: 'nama_pegawai', width: 25 },
     { header: 'Tanggal (YYYY-MM-DD)', key: 'tanggal', width: 15 },
-    { header: 'Waktu Masuk (YYYY-MM-DD HH:mm:ss)', key: 'waktu_masuk', width: 25 },
-    { header: 'Waktu Keluar (YYYY-MM-DD HH:mm:ss)', key: 'waktu_keluar', width: 25 },
+    {
+      header: 'Waktu Masuk (YYYY-MM-DD HH:mm:ss)',
+      key: 'waktu_masuk',
+      width: 25,
+    },
+    {
+      header: 'Waktu Keluar (YYYY-MM-DD HH:mm:ss)',
+      key: 'waktu_keluar',
+      width: 25,
+    },
     { header: 'Keterangan Masuk', key: 'keterangan_masuk', width: 30 },
     { header: 'Keterangan Keluar', key: 'keterangan_keluar', width: 30 },
     { header: 'Lat Masuk', key: 'lat_masuk', width: 15 },
     { header: 'Long Masuk', key: 'long_masuk', width: 15 },
     { header: 'Lat Keluar', key: 'lat_keluar', width: 15 },
     { header: 'Long Keluar', key: 'long_keluar', width: 15 },
-    { header: 'Status Kehadiran (Hadir/Izin/Sakit/Alfa)', key: 'status_kehadiran', width: 25 },
+    {
+      header: 'Status Kehadiran (Hadir/Izin/Sakit/Alfa)',
+      key: 'status_kehadiran',
+      width: 25,
+    },
   ];
 
   sheet.getRow(1).eachCell((cell: any) => {
@@ -93,11 +109,11 @@ const generateDataExcel = (sheet: any, details: any, isTemplate: boolean = false
   return sheet;
 };
 
-
 const normalizeRow = (row: any) => {
   const parseDateTimeStr = (val: any) => {
     if (!val) return null;
-    if (moment(val, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return String(val).trim();
+    if (moment(val, 'YYYY-MM-DD HH:mm:ss', true).isValid())
+      return String(val).trim();
     if (moment(val).isValid()) return moment(val).format('YYYY-MM-DD HH:mm:ss');
     return String(val).trim();
   };
@@ -120,7 +136,9 @@ const normalizeRow = (row: any) => {
     long_masuk: row['Long Masuk'] ? parseFloat(row['Long Masuk']) : null,
     lat_keluar: row['Lat Keluar'] ? parseFloat(row['Lat Keluar']) : null,
     long_keluar: row['Long Keluar'] ? parseFloat(row['Long Keluar']) : null,
-    status_kehadiran: String(row['Status Kehadiran (Hadir/Izin/Sakit/Alfa)'] || 'Hadir').trim(),
+    status_kehadiran: String(
+      row['Status Kehadiran (Hadir/Izin/Sakit/Alfa)'] || 'Hadir'
+    ).trim(),
     __row: row.__row,
   };
 };
@@ -134,7 +152,6 @@ export default class Controller {
     this.export = this.export.bind(this);
   }
 
-
   private async validateRow(row: any) {
     const errors: string[] = [];
 
@@ -143,7 +160,9 @@ export default class Controller {
 
     const validEnum = ['Hadir', 'Izin', 'Sakit', 'Alfa'];
     if (!validEnum.includes(row.status_kehadiran)) {
-      errors.push(`Status Kehadiran harus salah satu dari: ${validEnum.join('/')}`);
+      errors.push(
+        `Status Kehadiran harus salah satu dari: ${validEnum.join('/')}`
+      );
     }
 
     if (row.id_pegawai) {
@@ -153,7 +172,9 @@ export default class Controller {
       } else {
         const jk = await jamKerjaRepo.checkDuplicatePegawai(row.id_pegawai);
         if (!jk) {
-          errors.push(`Pegawai [${peg.nama_lengkap}] belum dikonfigurasi acuan Master Jam Kerjanya.`);
+          errors.push(
+            `Pegawai [${peg.nama_lengkap}] belum dikonfigurasi acuan Master Jam Kerjanya.`
+          );
         } else {
           row.id_jamkerja = jk.id_jamkerja;
         }
@@ -173,42 +194,74 @@ export default class Controller {
       const tanggalHariIni = moment().format('YYYY-MM-DD');
       const waktuSekarang = moment();
 
-      const jamKerjaMaster = await jamKerjaRepo.checkDuplicatePegawai(id_pegawai);
+      const jamKerjaMaster =
+        await jamKerjaRepo.checkDuplicatePegawai(id_pegawai);
       if (!jamKerjaMaster || !jamKerjaMaster.is_active) {
-        return helper.catchError('Pegawai belum memiliki master acuan jam kerja yang aktif.', 400, res);
+        return helper.catchError(
+          'Pegawai belum memiliki master acuan jam kerja yang aktif.',
+          400,
+          res
+        );
       }
 
-      const geoAreaRaw = await repository.getActiveGeoLocation(jamKerjaMaster.id_lokasi);
+      const geoAreaRaw = await repository.getActiveGeoLocation(
+        jamKerjaMaster.id_lokasi
+      );
       const geoArea = geoAreaRaw ? geoAreaRaw.dataValues : null;
 
       if (!geoArea) {
-        return helper.catchError('Area koordinat lokasi penugasan tidak ditemukan/tidak aktif.', 400, res);
+        return helper.catchError(
+          'Area koordinat lokasi penugasan tidak ditemukan/tidak aktif.',
+          400,
+          res
+        );
       }
-    
+
       if (geoArea.tipe_geo === 'CIRCLE' || geoArea.tipe_geo === 'POINT') {
-        const batasAman = (geoArea.radius_meter || 0) + (geoArea.toleransi_meter || 0);
+        const batasAman =
+          (geoArea.radius_meter || 0) + (geoArea.toleransi_meter || 0);
 
         const isInside = geolib.isPointWithinRadius(
-          { latitude: latitude, longitude: longitude }, 
-          { latitude: parseFloat(geoArea.latitude as any), longitude: parseFloat(geoArea.longitude as any) },
+          { latitude: latitude, longitude: longitude },
+          {
+            latitude: parseFloat(geoArea.latitude as any),
+            longitude: parseFloat(geoArea.longitude as any),
+          },
           batasAman
         );
 
         if (!isInside) {
           const jarakReal = geolib.getDistance(
             { latitude: latitude, longitude: longitude },
-            { latitude: parseFloat(geoArea.latitude as any), longitude: parseFloat(geoArea.longitude as any) }
+            {
+              latitude: parseFloat(geoArea.latitude as any),
+              longitude: parseFloat(geoArea.longitude as any),
+            }
           );
-          return helper.catchError(`Gagal Absen! Anda berada di luar radius penugasan (${jarakReal} meter dari titik pusat kantor).`, 400, res);
+          return helper.catchError(
+            `Gagal Absen! Anda berada di luar radius penugasan (${jarakReal} meter dari titik pusat kantor).`,
+            400,
+            res
+          );
         }
       }
 
-      const checkAttendance = await repository.findAttendanceToday(id_pegawai, tanggalHariIni);
+      const checkAttendance = await repository.findAttendanceToday(
+        id_pegawai,
+        tanggalHariIni
+      );
       if (checkAttendance && checkAttendance.waktu_masuk) {
-        return helper.catchError('Anda sudah melakukan absensi masuk (Clock In) untuk hari ini.', 400, res);
+        return helper.catchError(
+          'Anda sudah melakukan absensi masuk (Clock In) untuk hari ini.',
+          400,
+          res
+        );
       }
 
-      const acuanMasuk = moment(`${tanggalHariIni} ${jamKerjaMaster.waktu_mulai}`, 'YYYY-MM-DD HH:mm:ss');
+      const acuanMasuk = moment(
+        `${tanggalHariIni} ${jamKerjaMaster.waktu_mulai}`,
+        'YYYY-MM-DD HH:mm:ss'
+      );
       const selisihMenit = waktuSekarang.diff(acuanMasuk, 'minutes');
 
       let keteranganMasuk = '';
@@ -226,18 +279,23 @@ export default class Controller {
         keterangan_masuk: keteranganMasuk.trim(),
         lat_masuk: latitude,
         long_masuk: longitude,
-        status_kehadiran: 'Hadir'
+        status_kehadiran: 'Hadir',
       };
 
       await repository.create([payloadAbsen]);
-      return response.success('Berhasil melakukan absensi masuk (Clock In). Selamat Bekerja!', null, res);
-
+      return response.success(
+        'Berhasil melakukan absensi masuk (Clock In). Selamat Bekerja!',
+        null,
+        res
+      );
     } catch (err: any) {
-      const msg = err instanceof z.ZodError ? `Validasi Payload Gagal: ${err.issues[0].message}` : err.message;
+      const msg =
+        err instanceof z.ZodError
+          ? `Validasi Payload Gagal: ${err.issues[0].message}`
+          : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
-
 
   public async clockOut(req: Request, res: Response) {
     try {
@@ -247,35 +305,68 @@ export default class Controller {
       const tanggalHariIni = moment().format('YYYY-MM-DD');
       const waktuSekarang = moment();
 
-      const attendance = await repository.findAttendanceToday(id_pegawai, tanggalHariIni);
+      const attendance = await repository.findAttendanceToday(
+        id_pegawai,
+        tanggalHariIni
+      );
       if (!attendance) {
-        return helper.catchError('Gagal Pulang! Anda belum memiliki catatan absen masuk (Clock In) hari ini.', 400, res);
+        return helper.catchError(
+          'Gagal Pulang! Anda belum memiliki catatan absen masuk (Clock In) hari ini.',
+          400,
+          res
+        );
       }
       if (attendance.waktu_keluar) {
-        return helper.catchError('Anda sudah melakukan absensi pulang (Clock Out) sebelumnya.', 400, res);
+        return helper.catchError(
+          'Anda sudah melakukan absensi pulang (Clock Out) sebelumnya.',
+          400,
+          res
+        );
       }
 
-      const jamKerjaMaster = await jamKerjaRepo.detail({ id_jamkerja: attendance.id_jamkerja });
+      const jamKerjaMaster = await jamKerjaRepo.detail({
+        id_jamkerja: attendance.id_jamkerja,
+      });
       if (!jamKerjaMaster) {
-        return helper.catchError('Referensi Master jam kerja tidak ditemukan.', 400, res);
+        return helper.catchError(
+          'Referensi Master jam kerja tidak ditemukan.',
+          400,
+          res
+        );
       }
 
-      const geoArea = await repository.getActiveGeoLocation(jamKerjaMaster.id_lokasi);
-      if (geoArea && (geoArea.tipe_geo === 'CIRCLE' || geoArea.tipe_geo === 'POINT')) {
-        const batasAman = (geoArea.radius_meter || 0) + (geoArea.toleransi_meter || 0);
+      const geoArea = await repository.getActiveGeoLocation(
+        jamKerjaMaster.id_lokasi
+      );
+      if (
+        geoArea &&
+        (geoArea.tipe_geo === 'CIRCLE' || geoArea.tipe_geo === 'POINT')
+      ) {
+        const batasAman =
+          (geoArea.radius_meter || 0) + (geoArea.toleransi_meter || 0);
 
         const isInside = geolib.isPointWithinRadius(
           { latitude: latitude, longitude: longitude },
-          { latitude: parseFloat(geoArea.latitude as any), longitude: parseFloat(geoArea.longitude as any) },
+          {
+            latitude: parseFloat(geoArea.latitude as any),
+            longitude: parseFloat(geoArea.longitude as any),
+          },
           batasAman
         );
 
         if (!isInside) {
-          return helper.catchError(`Gagal Absen Pulang! Anda berada di luar radius penugasan resmi kantor.`, 400, res);
+          return helper.catchError(
+            `Gagal Absen Pulang! Anda berada di luar radius penugasan resmi kantor.`,
+            400,
+            res
+          );
         }
       }
 
-      const acuanPulang = moment(`${tanggalHariIni} ${jamKerjaMaster.waktu_selesai}`, 'YYYY-MM-DD HH:mm:ss');
+      const acuanPulang = moment(
+        `${tanggalHariIni} ${jamKerjaMaster.waktu_selesai}`,
+        'YYYY-MM-DD HH:mm:ss'
+      );
       const selisihMenit = waktuSekarang.diff(acuanPulang, 'minutes');
 
       let keteranganKeluar = '';
@@ -291,15 +382,21 @@ export default class Controller {
           keterangan_keluar: keteranganKeluar.trim(),
           lat_keluar: latitude,
           long_keluar: longitude,
-          updated_at: helper.date()
+          updated_at: helper.date(),
         },
-        condition: { id_absen: attendance.id_absen }
+        condition: { id_absen: attendance.id_absen },
       });
 
-      return response.success('Berhasil melakukan absensi pulang (Clock Out). Terima kasih atas kerja keras Anda!', null, res);
-
+      return response.success(
+        'Berhasil melakukan absensi pulang (Clock Out). Terima kasih atas kerja keras Anda!',
+        null,
+        res
+      );
     } catch (err: any) {
-      const msg = err instanceof z.ZodError ? `Validasi Payload Gagal: ${err.issues[0].message}` : err.message;
+      const msg =
+        err instanceof z.ZodError
+          ? `Validasi Payload Gagal: ${err.issues[0].message}`
+          : err.message;
       return helper.catchError(msg, 400, res);
     }
   }
@@ -309,19 +406,34 @@ export default class Controller {
       const { id_pegawai } = req.query;
 
       if (!id_pegawai) {
-        return helper.catchError('Parameter id_pegawai wajib disertakan dalam query string.', 400, res);
+        return helper.catchError(
+          'Parameter id_pegawai wajib disertakan dalam query string.',
+          400,
+          res
+        );
       }
 
       const tanggalHariIni = moment().format('YYYY-MM-DD');
-      const attendance = await repository.findAttendanceToday(String(id_pegawai), tanggalHariIni);
+      const attendance = await repository.findAttendanceToday(
+        String(id_pegawai),
+        tanggalHariIni
+      );
 
       if (!attendance) {
-        return response.success('Pegawai belum melakukan absensi hari ini.', null, res);
+        return response.success(
+          'Pegawai belum melakukan absensi hari ini.',
+          null,
+          res
+        );
       }
 
       return response.success(SUCCESS_RETRIEVED, attendance, res);
     } catch (err: any) {
-      return helper.catchError(`Gagal mengambil data absen hari ini: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `Gagal mengambil data absen hari ini: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -332,7 +444,11 @@ export default class Controller {
       const { q, template, id_pegawai } = req.body;
       const isTemplate: boolean = template && template == '1';
 
-      let result = await repository.listForExport({ q, isTemplate, id_pegawai });
+      let result = await repository.listForExport({
+        q,
+        isTemplate,
+        id_pegawai,
+      });
 
       const { dir, path } = await helper.checkDirExport('excel');
       const filename = `absen-harian-pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
@@ -343,22 +459,36 @@ export default class Controller {
       generateDataExcel(sheet, result, isTemplate);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
-      return response.success('export excel absen harian', `${dir}/${filename}`, res);
+      return response.success(
+        'export excel absen harian',
+        `${dir}/${filename}`,
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`export excel absen harian: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `export excel absen harian: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public async import(req: Request, res: Response) {
     const mode: 'preview' | 'commit' = req.body?.mode ?? 'preview';
     const uploaded = req.files?.file_import;
-    if (!uploaded) return response.success('File tidak valid', null, res, false);
+    if (!uploaded)
+      return response.success('File tidak valid', null, res, false);
 
     try {
       const file = Array.isArray(uploaded) ? uploaded[0] : uploaded;
-      const buffer = file.tempFilePath ? await fs.readFile(file.tempFilePath) : file.data;
+      const buffer = file.tempFilePath
+        ? await fs.readFile(file.tempFilePath)
+        : file.data;
 
-      const rows = await helper.parseImportFile({ name: file.name, data: buffer });
+      const rows = await helper.parseImportFile({
+        name: file.name,
+        data: buffer,
+      });
       const results: any[] = [];
 
       for (const raw of rows) {
@@ -397,24 +527,44 @@ export default class Controller {
       };
 
       if (mode === 'commit') {
-        const validPayloads = results.filter((r) => r.valid).map((r) => r.payload);
-        if (validPayloads.length > 0) await repository.insertImport(validPayloads);
-        return response.success('import log absen harian berhasil', dataRes, res);
+        const validPayloads = results
+          .filter((r) => r.valid)
+          .map((r) => r.payload);
+        if (validPayloads.length > 0)
+          await repository.insertImport(validPayloads);
+        return response.success(
+          'import log absen harian berhasil',
+          dataRes,
+          res
+        );
       }
 
-      return response.success('preview import log absen harian', { ...dataRes, data: results }, res);
+      return response.success(
+        'preview import log absen harian',
+        { ...dataRes, data: results },
+        res
+      );
     } catch (err: any) {
-      return helper.catchError(`import excel log absen: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `import excel log absen: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
   public insert = async (req: Request, res: Response) => {
     const payloads = req.body?.data as any[];
-    if (!payloads || payloads.length === 0) return response.success('Data kosong', null, res, false);
+    if (!payloads || payloads.length === 0)
+      return response.success('Data kosong', null, res, false);
 
     try {
       await repository.insertImport(payloads);
-      return response.success('Import batch data absen harian berhasil', { count: payloads.length }, res);
+      return response.success(
+        'Import batch data absen harian berhasil',
+        { count: payloads.length },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(err.message, 500, res);
     }
@@ -426,8 +576,13 @@ export default class Controller {
     try {
       const query = helper.fetchQueryRequest(req);
       const { count, rows } = await repository.index(query);
-      if (rows?.length < 1) return response.success(NOT_FOUND, null, res, false);
-      return response.success(SUCCESS_RETRIEVED, { total: count, values: rows }, res);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
+      return response.success(
+        SUCCESS_RETRIEVED,
+        { total: count, values: rows },
+        res
+      );
     } catch (err: any) {
       return helper.catchError(`Absen index: ${err?.message}`, 500, res);
     }
@@ -450,7 +605,11 @@ export default class Controller {
       await repository.delete({ id_absen: req.params.id });
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
-      return helper.catchError(`Gagal hapus log absen: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `Gagal hapus log absen: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 }
