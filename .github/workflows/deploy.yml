@@ -145,8 +145,18 @@ jobs:
 
             echo "Starting deployment..."
 
-            # Force remove any conflicting container with the name 'pesantren-be' (e.g. from the old project name)
-            docker rm -f pesantren-be || true
+            # Force remove any conflicting container with the name 'pesantren-be' or 'pesantren-api'
+            docker rm -f pesantren-be pesantren-api || true
+            docker compose -p pesantren-api down || true
+
+            # Clean up any other container occupying the target port
+            if [ -n "$PORT" ]; then
+              CONFLICTING_CONTAINERS=$(docker ps --filter "publish=$PORT" -q)
+              if [ -n "$CONFLICTING_CONTAINERS" ]; then
+                echo "Removing conflicting container(s) using port $PORT: $CONFLICTING_CONTAINERS"
+                docker rm -f $CONFLICTING_CONTAINERS || true
+              fi
+            fi
 
             $DCMD down
 
