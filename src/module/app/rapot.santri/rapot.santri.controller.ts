@@ -69,17 +69,22 @@ export default class Controller {
   public async create(req: Request, res: Response) {
     const trx = await Santri.sequelize?.transaction();
     try {
-      const uploadedFile = req.files?.file_rapot;
-      if (!uploadedFile) {
-        if (trx) await trx.rollback();
-        return response.failed('file_rapot is required', 422, res);
-      }
+      let file_rapot: any = null;
+      if (req?.files && req?.files.file_rapot) {
+        const fileFormal = req?.files?.file_rapot;
+        const file = Array.isArray(fileFormal) ? fileFormal[0] : fileFormal;
+        const checkFile = helper.checkExtention(file, 'file');
+        if (checkFile !== 'allowed') {
+          if (trx) await trx.rollback();
+          return response.failed(checkFile, 422, res);
+        }
 
-      const file = Array.isArray(uploadedFile) ? uploadedFile[0] : uploadedFile;
-      const checkFile = helper.checkExtention(file, 'file');
-      if (checkFile !== 'allowed') {
-        if (trx) await trx.rollback();
-        return response.failed(checkFile, 422, res);
+        file_rapot = await helper.upload(
+          file,
+          'rapot-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
       }
 
       let file_rapot_mda: any = null;
@@ -121,19 +126,12 @@ export default class Controller {
 
       await repository.archivePreviousRapots(id_santri, trx);
 
-      const uploadedPath = await helper.upload(
-        file,
-        'rapot-santri',
-        req?.user?.username || 'system',
-        'local'
-      );
-
       const creatorId = req?.user?.id || '00000000-0000-0000-0000-000000000000';
       const payload = {
         id_santri,
         tahun_ajaran,
         semester,
-        file_rapot: uploadedPath,
+        file_rapot: file_rapot,
         file_rapot_mda: file_rapot_mda,
         status: 'Aktif',
         created_by: creatorId,
@@ -165,6 +163,31 @@ export default class Controller {
       }
 
       let payload: any = helper.only(variable.fillable(), req.body, true);
+
+      let fileDelete: string[] = [];
+      if (req.body.file_delete) {
+        if (Array.isArray(req.body.file_delete)) {
+          fileDelete = req.body.file_delete;
+        } else if (typeof req.body.file_delete == 'string') {
+          try {
+            if (req.body.file_delete.startsWith('[')) {
+              fileDelete = JSON.parse(req.body.file_delete);
+            } else {
+              fileDelete = [req.body.file_delete];
+            }
+          } catch (e) {
+            fileDelete = [req.body.file_delete];
+          }
+        }
+      }
+
+      fileDelete.forEach((fieldKey) => {
+        if (fieldKey == 'file_rapot') {
+          payload.file_rapot = '';
+        } else if (fieldKey == 'file_rapot_mda') {
+          payload.file_rapot_mda = null;
+        }
+      });
 
       if (req.files?.file_rapot) {
         const uploadedFile = req.files.file_rapot;
