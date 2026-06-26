@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true
@@ -136,7 +136,7 @@ jobs:
             fi
             # Note: We can't easily backup the previous running container's image tag unless we stored it.
             # But we can check if there's a running container and get its image ID/Tag.
-            PREV_IMAGE=$(docker ps --filter "name=pesantren-api" --format "{{.Image}}")
+            PREV_IMAGE=$(docker ps --filter "name=pesantren-be" --format "{{.Image}}")
             echo "Previous Image: $PREV_IMAGE"
 
             # Deploy
@@ -145,8 +145,8 @@ jobs:
 
             echo "Starting deployment..."
 
-            # Force remove any conflicting container with the name 'pesantren-api' (e.g. from the old project name)
-            docker rm -f pesantren-api || true
+            # Force remove any conflicting container with the name 'pesantren-be' (e.g. from the old project name)
+            docker rm -f pesantren-be || true
 
             $DCMD down
 

@@ -1,8 +1,8 @@
-name: pesantren-api
+name: pesantren-be
 
 services:
   app:
-    container_name: pesantren-api
+    container_name: pesantren-be
     image: pesantren-be:${IMAGE_TAG:-latest}
     restart: unless-stopped
     user: '${UID}:${GID}'
