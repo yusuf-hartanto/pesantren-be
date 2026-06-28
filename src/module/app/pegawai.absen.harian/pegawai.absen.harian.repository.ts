@@ -86,6 +86,8 @@ export default class Repository {
 
     if (data?.tanggal) {
       query.where.tanggal = data.tanggal;
+    } else if (data?.tanggal_awal && data?.tanggal_akhir) {
+      query.where.tanggal = { [Op.between]: [data.tanggal_awal, data.tanggal_akhir] };
     }
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
@@ -193,13 +195,19 @@ export default class Repository {
     isTemplate?: boolean;
     limit?: number;
     id_pegawai?: string;
+    tanggal_awal?: string;
+    tanggal_akhir?: string;
   }) {
-    const { q, isTemplate, limit, id_pegawai } = params;
+    const { q, isTemplate, limit, id_pegawai, tanggal_awal, tanggal_akhir } = params;
     const keyword = q ? `%${q}%` : null;
     let whereClause: any = {};
 
     if (id_pegawai) {
       whereClause.id_pegawai = id_pegawai;
+    }
+
+    if (tanggal_awal && tanggal_akhir) {
+      whereClause.tanggal = { [Op.between]: [tanggal_awal, tanggal_akhir] };
     }
 
     if (!isTemplate && keyword) {

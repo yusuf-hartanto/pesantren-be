@@ -25,10 +25,19 @@ export default class Repository {
         id_lokasi: id_lokasi_kamar,
         status: 'Aktif',
         is_deleted: false,
-        tanggal_masuk: { [Op.lte]: targetDate },
-        [Op.or]: [
-          { tanggal_keluar: null },
-          { tanggal_keluar: { [Op.gte]: targetDate } },
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { tanggal_masuk: null },
+              { tanggal_masuk: { [Op.lte]: targetDate } },
+            ],
+          },
+          {
+            [Op.or]: [
+              { tanggal_keluar: null },
+              { tanggal_keluar: { [Op.gte]: targetDate } },
+            ],
+          },
         ],
       },
       include: [
@@ -107,10 +116,19 @@ export default class Repository {
         id_lokasi: id_lokasi_kamar,
         status: 'Aktif',
         is_deleted: false,
-        tanggal_masuk: { [Op.lte]: targetDate },
-        [Op.or]: [
-          { tanggal_keluar: null },
-          { tanggal_keluar: { [Op.gte]: targetDate } },
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { tanggal_masuk: null },
+              { tanggal_masuk: { [Op.lte]: targetDate } },
+            ],
+          },
+          {
+            [Op.or]: [
+              { tanggal_keluar: null },
+              { tanggal_keluar: { [Op.gte]: targetDate } },
+            ],
+          },
         ],
       },
     });
@@ -321,10 +339,19 @@ export default class Repository {
     const penempatanWhere: any = {
       status: 'Aktif',
       is_deleted: false,
-      tanggal_masuk: { [Op.lte]: targetDate },
-      [Op.or]: [
-        { tanggal_keluar: null },
-        { tanggal_keluar: { [Op.gte]: targetDate } },
+      [Op.and]: [
+        {
+          [Op.or]: [
+            { tanggal_masuk: null },
+            { tanggal_masuk: { [Op.lte]: targetDate } },
+          ],
+        },
+        {
+          [Op.or]: [
+            { tanggal_keluar: null },
+            { tanggal_keluar: { [Op.gte]: targetDate } },
+          ],
+        },
       ],
     };
 
@@ -503,10 +530,19 @@ export default class Repository {
     let condition: any = {
       status: 'Aktif',
       is_deleted: false,
-      tanggal_masuk: { [Op.lte]: targetDate },
-      [Op.or]: [
-        { tanggal_keluar: null },
-        { tanggal_keluar: { [Op.gte]: targetDate } },
+      [Op.and]: [
+        {
+          [Op.or]: [
+            { tanggal_masuk: null },
+            { tanggal_masuk: { [Op.lte]: targetDate } },
+          ],
+        },
+        {
+          [Op.or]: [
+            { tanggal_keluar: null },
+            { tanggal_keluar: { [Op.gte]: targetDate } },
+          ],
+        },
       ],
     };
 

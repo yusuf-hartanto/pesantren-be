@@ -69,39 +69,6 @@ export default class Controller {
   public async create(req: Request, res: Response) {
     const trx = await Santri.sequelize?.transaction();
     try {
-      let file_rapot: any = null;
-      if (req?.files && req?.files.file_rapot) {
-        const fileFormal = req?.files?.file_rapot;
-        const file = Array.isArray(fileFormal) ? fileFormal[0] : fileFormal;
-        const checkFile = helper.checkExtention(file, 'file');
-        if (checkFile !== 'allowed') {
-          if (trx) await trx.rollback();
-          return response.failed(checkFile, 422, res);
-        }
-
-        file_rapot = await helper.upload(
-          file,
-          'rapot-santri',
-          req?.user?.username || 'system',
-          'local'
-        );
-      }
-
-      let file_rapot_mda: any = null;
-      if (req?.files && req?.files.file_rapot_mda) {
-        const fileMda = req?.files?.file_rapot_mda;
-        const checkFileMda = helper.checkExtention(fileMda, 'file');
-        if (checkFileMda != 'allowed')
-          return response.failed(checkFileMda, 422, res);
-
-        file_rapot_mda = await helper.upload(
-          fileMda,
-          'rapot-santri',
-          req?.user?.username || 'system',
-          'local'
-        );
-      }
-
       const { id_santri, tahun_ajaran, semester } = req.body;
       if (!id_santri) {
         if (trx) await trx.rollback();
@@ -122,6 +89,51 @@ export default class Controller {
       if (!studentExists) {
         if (trx) await trx.rollback();
         return response.failed('Santri not found', 404, res);
+      }
+
+      const timestamp = Date.now();
+      const santriName = studentExists.fullname.toLowerCase().replace(/\s+/g, '_');
+
+      let file_rapot: any = null;
+      if (req?.files && req?.files.file_rapot) {
+        const fileFormal = req?.files?.file_rapot;
+        const file = Array.isArray(fileFormal) ? fileFormal[0] : fileFormal;
+        const checkFile = helper.checkExtention(file, 'file');
+        if (checkFile !== 'allowed') {
+          if (trx) await trx.rollback();
+          return response.failed(checkFile, 422, res);
+        }
+
+        const extFormal = file.name.split('.').pop() || 'pdf';
+        file.name = `${santriName}_formal_${timestamp}.${extFormal}`;
+
+        file_rapot = await helper.upload(
+          file,
+          'rapot-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
+      }
+
+      let file_rapot_mda: any = null;
+      if (req?.files && req?.files.file_rapot_mda) {
+        const fileMdaFormal = req?.files?.file_rapot_mda;
+        const fileMda = Array.isArray(fileMdaFormal) ? fileMdaFormal[0] : fileMdaFormal;
+        const checkFileMda = helper.checkExtention(fileMda, 'file');
+        if (checkFileMda != 'allowed') {
+          if (trx) await trx.rollback();
+          return response.failed(checkFileMda, 422, res);
+        }
+
+        const extMda = fileMda.name.split('.').pop() || 'pdf';
+        fileMda.name = `${santriName}_mda_${timestamp}.${extMda}`;
+
+        file_rapot_mda = await helper.upload(
+          fileMda,
+          'rapot-santri',
+          req?.user?.username || 'system',
+          'local'
+        );
       }
 
       await repository.archivePreviousRapots(id_santri, trx);
@@ -189,6 +201,16 @@ export default class Controller {
         }
       });
 
+      let fullname = check.santri?.fullname || '';
+      if (!fullname) {
+        const santri = await Santri.findByPk(check.id_santri, { transaction: trx });
+        if (santri) {
+          fullname = santri.fullname;
+        }
+      }
+      const timestamp = Date.now();
+      const santriName = fullname.toLowerCase().replace(/\s+/g, '_');
+
       if (req.files?.file_rapot) {
         const uploadedFile = req.files.file_rapot;
         const file = Array.isArray(uploadedFile)
@@ -200,6 +222,9 @@ export default class Controller {
           return response.failed(checkFile, 422, res);
         }
 
+        const extFormal = file.name.split('.').pop() || 'pdf';
+        file.name = `${santriName}_formal_${timestamp}.${extFormal}`;
+
         const uploadedPath = await helper.upload(
           file,
           'rapot-santri',
@@ -210,10 +235,16 @@ export default class Controller {
       }
 
       if (req?.files && req?.files.file_rapot_mda) {
-        const fileMda = req?.files?.file_rapot_mda;
+        const fileMdaFormal = req?.files?.file_rapot_mda;
+        const fileMda = Array.isArray(fileMdaFormal) ? fileMdaFormal[0] : fileMdaFormal;
         const checkFileMda = helper.checkExtention(fileMda, 'file');
-        if (checkFileMda != 'allowed')
+        if (checkFileMda != 'allowed') {
+          if (trx) await trx.rollback();
           return response.failed(checkFileMda, 422, res);
+        }
+
+        const extMda = fileMda.name.split('.').pop() || 'pdf';
+        fileMda.name = `${santriName}_mda_${timestamp}.${extMda}`;
 
         payload.file_rapot_mda = await helper.upload(
           fileMda,

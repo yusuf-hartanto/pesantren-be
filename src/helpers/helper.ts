@@ -215,7 +215,7 @@ export default class Helper {
   public async catchError(message: string, code: number, res: Response) {
     const msg: string = `${appConfig?.app} - ${message}`;
     await this.sendNotif(msg);
-    return response.failed(msg, code, res);
+    return response.failed(message, code, res);
   }
 
   public async sendEmail(data: Object | any) {

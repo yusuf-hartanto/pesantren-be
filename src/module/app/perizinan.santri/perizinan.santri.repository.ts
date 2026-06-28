@@ -117,10 +117,10 @@ export class PerizinanSantriRepository {
       }
     } else {
       query.where.sumber_pengajuan = { [Op.ne]: 'Pegawai' };
+    }
 
-      // if (data?.id_santri) {
-      //   query.where['$santri.id_santri_sitrendi$'] = data.id_santri;
-      // }
+    if (data?.id_santri) {
+      query.where['$santri.id_santri_sitrendi$'] = data.id_santri;
     }
 
     // Filter Date Range Picker (Berdasarkan tanggal_mulai dan tanggal_selesai)
