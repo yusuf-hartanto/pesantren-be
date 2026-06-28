@@ -36,6 +36,8 @@ export default class Controller {
         status: req?.query?.status || '',
         tahun: req.query.tahun || '',
         semester: req.query.semester || '',
+        id_cabang: req.query.id_cabang || '',
+        id_kelas: req.query.id_kelas || '',
       };
 
       const { count, rows } = await repository.index(query);

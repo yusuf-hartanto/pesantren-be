@@ -6,6 +6,7 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import AppInstitution from '../institution/institution.model';
 import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
+import PenempatanKelasSantri from '../penempatan.kelas.santri/penempatan.kelas.santri.model';
 
 export class AppSantri extends Model {
   declare id_santri: string;
@@ -152,6 +153,11 @@ export function associateAppSantri() {
   });
   AppSantri.hasMany(PenempatanKamarSantri, {
     as: 'penempatanKamar',
+    foreignKey: 'id_santri',
+    sourceKey: 'id_santri',
+  });
+  AppSantri.hasMany(PenempatanKelasSantri, {
+    as: 'penempatanKelas',
     foreignKey: 'id_santri',
     sourceKey: 'id_santri',
   });

@@ -59,13 +59,13 @@ export default class Repository {
         id_wali: data?.parent,
       };
     }
-    if (data?.status != '') {
+    if (data?.status && data?.status != '') {
       query.where = {
         ...query.where,
         status: data?.status,
       };
     }
-    if (data?.id_cabang != '') {
+    if (data?.id_cabang && data?.id_cabang != '') {
       query.where = {
         ...query.where,
         id_cabang: data?.id_cabang,
