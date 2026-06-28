@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Santri from '../santri/santri.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
 import KelasFormal from '../kelas.formal/kelas.formal.model';
@@ -64,14 +64,50 @@ export default class Repository {
     }
 
     if (data?.keyword) {
-      const keyword = `%${data.keyword}%`;
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       where[Op.or] = [
-        { status: { [Op.iLike]: keyword } },
-        { '$santri.fullname$': { [Op.iLike]: keyword } },
-        { '$santri.nis$': { [Op.iLike]: keyword } },
-        { '$kelasMda.nama_kelas_mda$': { [Op.iLike]: keyword } },
-        { '$kelasFormal.nama_kelas$': { [Op.iLike]: keyword } },
-        { '$tahunAjaran.tahun_ajaran$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('PenempatanKelasSantri.status'), 'TEXT')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
       ];
     }
 

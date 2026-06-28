@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Santri from '../santri/santri.model';
 import Model from './penempatan.kamar.santri.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
@@ -35,13 +35,45 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
-    if (keyword) {
+    if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           is_deleted: false,
           nama_kamar: { [Op.like]: keyword },
+          [Op.or]: [
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('PenempatanKamarSantri.status'), 'TEXT')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+          ],
         },
       };
     }
@@ -94,22 +126,46 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
-    if (keyword) {
+    if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           is_deleted: false,
           [Op.or]: [
-            { status: { [Op.like]: keyword } },
-            { '$lokasi.nama_lokasi$': { [Op.like]: keyword } },
-            { '$santri.fullname$': { [Op.like]: keyword } },
-            { '$tahunAjaran.tahun_ajaran$': { [Op.like]: keyword } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('PenempatanKamarSantri.status'), 'TEXT')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
-
-      return await Model.findAndCountAll(query);
     }
 
     return Model.findAndCountAll(query);
