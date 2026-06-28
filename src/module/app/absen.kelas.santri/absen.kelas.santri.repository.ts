@@ -223,8 +223,8 @@ export default class Repository {
     }
 
     // 6. Filter Pencarian Global (Nama / NIS / Keyword)
-    if (data?.q) {
-      const keyword = `%${data.q.toLowerCase()}%`;
+    if (data?.keyword) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query.where[Op.or] = [
         Sequelize.where(
           Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
@@ -237,6 +237,24 @@ export default class Repository {
             'LOWER',
             Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
           ),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('jamPelajaran.nama_jampel')),
           {
             [Op.like]: keyword,
           }

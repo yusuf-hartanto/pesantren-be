@@ -294,13 +294,7 @@ export default class Controller {
     try {
       const query = helper.fetchQueryRequest(req);
       const filterData = {
-        offset: query.offset,
-        limit: query.limit,
-        keyword: query.keyword,
-      };
-
-      const additionalFilter = {
-        ...filterData,
+        ...query,
         tanggal: req.query.tanggal,
         id_lokasi: req.query.id_lokasi,
         id_jam_pelajaran: req.query.id_jam_pelajaran,
@@ -308,7 +302,7 @@ export default class Controller {
         tanggal_awal: req.query.tanggal_awal,
         tanggal_akhir: req.query.tanggal_akhir,
       };
-      const { count, rows } = await repository.index(additionalFilter);
+      const { count, rows } = await repository.index(filterData);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
 

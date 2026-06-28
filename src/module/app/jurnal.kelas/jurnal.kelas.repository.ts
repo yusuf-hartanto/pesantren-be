@@ -168,6 +168,24 @@ export default class Repository {
             [Op.like]: keyword,
           }
         ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('jamPelajaran.nama_jampel')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
       ];
     }
 
