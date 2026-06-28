@@ -225,14 +225,148 @@ export default class Service {
       dateTimeFilter = { [Op.between]: [`${targetDate} 00:00:00`, `${targetDate} 23:59:59`] };
     }
 
-    const santriStats = (await AppSantri.findAll({
-      attributes: [
-        'status',
-        [Sequelize.fn('COUNT', Sequelize.col('id_santri')), 'count'],
-      ],
-      group: ['status'],
-      raw: true,
-    })) as any[];
+    const [
+      santriStats,
+      absensiStats,
+      absensiKelasStats,
+      pegawaiStats,
+      temuanStats,
+      perizinanStats,
+      absensiPegawaiStats,
+      totalSesiGuru,
+      kebersihanInspeksiStats,
+      perizinanPegawaiStats
+    ] = await Promise.all([
+      AppSantri.findAll({
+        attributes: [
+          'status',
+          [Sequelize.fn('COUNT', Sequelize.col('id_santri')), 'count'],
+        ],
+        group: ['status'],
+        raw: true,
+      }),
+      AbsenHarianSantri.findAll({
+        attributes: [
+          'status_kehadiran',
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        group: ['status_kehadiran'],
+        raw: true,
+      }),
+      AbsenKelasSantri.findAll({
+        attributes: [
+          'status_kehadiran',
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        group: ['status_kehadiran'],
+        raw: true,
+      }),
+      Pegawai.findAll({
+        attributes: [
+          [
+            Sequelize.literal(`
+              CASE 
+                WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) 
+                THEN 'GURU' 
+                ELSE 'PEGAWAI' END
+              `),
+            'role',
+          ],
+          [Sequelize.fn('COUNT', Sequelize.col('id_pegawai')), 'count'],
+        ],
+        where: { status_pegawai: 'Aktif' },
+        group: [
+          Sequelize.literal(`
+          CASE 
+            WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) THEN 'GURU' 
+            ELSE 'PEGAWAI' 
+          END
+        `) as any,
+        ],
+        raw: true,
+      }),
+      KebersihanTemuan.findAll({
+        include: [
+          {
+            model: KebersihanInspeksi,
+            as: 'kebersihan_inspeksi',
+            attributes: [],
+            required: true,
+          },
+        ],
+        attributes: [
+          [Sequelize.col('kebersihan_inspeksi.status_kondisi'), 'status_kondisi'],
+          [Sequelize.fn('COUNT', Sequelize.col('id_temuan')), 'count'],
+        ],
+        where: {
+          created_at: dateTimeFilter,
+          status: { [Op.in]: [0, 1] },
+        },
+        group: [Sequelize.col('kebersihan_inspeksi.status_kondisi')],
+        raw: true,
+      }),
+      PerizinanSantri.findAll({
+        attributes: [
+          'status_approval',
+          'kondisi',
+          [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
+        ],
+        where: {
+          created_at: dateTimeFilter,
+          is_canceled: false,
+          id_santri: { [Op.ne]: null },
+        },
+        group: ['status_approval', 'kondisi'],
+        raw: true,
+      }),
+      AbsenHarianPegawai.findAll({
+        attributes: [
+          'status_kehadiran',
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_pegawai')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        group: ['status_kehadiran'],
+        raw: true,
+      }),
+      JurnalKelas.count({
+        where: { tanggal: dateFilter },
+      }),
+      KebersihanInspeksi.findOne({
+        attributes: [
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_petugas')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        raw: true,
+      }),
+      PerizinanSantri.findAll({
+        attributes: [
+          'status_approval',
+          'kondisi',
+          [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
+        ],
+        where: {
+          created_at: dateTimeFilter,
+          is_canceled: false,
+          id_pegawai: { [Op.ne]: null },
+        },
+        group: ['status_approval', 'kondisi'],
+        raw: true,
+      })
+    ]) as any;
 
     let activeSantri = 0;
     let totalSantri = 0;
@@ -250,19 +384,6 @@ export default class Service {
       totalSantri > 0
         ? parseFloat(((activeSantri / totalSantri) * 100).toFixed(1))
         : 0;
-
-    const absensiStats = (await AbsenHarianSantri.findAll({
-      attributes: [
-        'status_kehadiran',
-        [
-          Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
-          'count',
-        ],
-      ],
-      where: { tanggal: dateFilter },
-      group: ['status_kehadiran'],
-      raw: true,
-    })) as any[];
 
     let totalHadir = 0;
     let totalIzin = 0;
@@ -294,19 +415,6 @@ export default class Service {
         ? parseFloat(((totalAlfa / activeSantri) * 100).toFixed(1))
         : 0;
 
-    const absensiKelasStats = (await AbsenKelasSantri.findAll({
-      attributes: [
-        'status_kehadiran',
-        [
-          Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
-          'count',
-        ],
-      ],
-      where: { tanggal: dateFilter },
-      group: ['status_kehadiran'],
-      raw: true,
-    })) as any[];
-
     let totalKelasHadir = 0;
     let totalKelasIzin = 0;
     let totalKelasSakit = 0;
@@ -337,31 +445,6 @@ export default class Service {
         ? parseFloat(((totalKelasAlfa / activeSantri) * 100).toFixed(1))
         : 0;
 
-    const pegawaiStats = (await Pegawai.findAll({
-      attributes: [
-        [
-          Sequelize.literal(`
-            CASE 
-              WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) 
-              THEN 'GURU' 
-              ELSE 'PEGAWAI' END
-            `),
-          'role',
-        ],
-        [Sequelize.fn('COUNT', Sequelize.col('id_pegawai')), 'count'],
-      ],
-      where: { status_pegawai: 'Aktif' },
-      group: [
-        Sequelize.literal(`
-        CASE 
-          WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) THEN 'GURU' 
-          ELSE 'PEGAWAI' 
-        END
-      `) as any,
-      ],
-      raw: true,
-    })) as any[];
-
     let totalGuruAktif = 0;
     let totalPegawaiAktif = 0;
     for (const item of pegawaiStats) {
@@ -369,27 +452,6 @@ export default class Service {
       if (item.role === 'GURU') totalGuruAktif = countVal;
       else if (item.role === 'PEGAWAI') totalPegawaiAktif = countVal;
     }
-
-    const temuanStats = (await KebersihanTemuan.findAll({
-      include: [
-        {
-          model: KebersihanInspeksi,
-          as: 'kebersihan_inspeksi',
-          attributes: [],
-          required: true,
-        },
-      ],
-      attributes: [
-        [Sequelize.col('kebersihan_inspeksi.status_kondisi'), 'status_kondisi'],
-        [Sequelize.fn('COUNT', Sequelize.col('id_temuan')), 'count'],
-      ],
-      where: {
-        created_at: dateTimeFilter,
-        status: { [Op.in]: [0, 1] },
-      },
-      group: [Sequelize.col('kebersihan_inspeksi.status_kondisi')],
-      raw: true,
-    })) as any[];
 
     let total_temuan = 0;
     let temuan_kotor = 0;
@@ -403,21 +465,6 @@ export default class Service {
       else if (statusKondisi === 'RUSAK') temuan_rusak = countVal;
     }
 
-    const perizinanStats = (await PerizinanSantri.findAll({
-      attributes: [
-        'status_approval',
-        'kondisi',
-        [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
-      ],
-      where: {
-        created_at: dateTimeFilter,
-        is_canceled: false,
-        id_santri: { [Op.ne]: null },
-      },
-      group: ['status_approval', 'kondisi'],
-      raw: true,
-    })) as any[];
-
     let total_perizinan = 0;
     let perizinan_menunggu = 0;
     let perizinan_disetujui = 0;
@@ -429,7 +476,7 @@ export default class Service {
       const kondisi = item.kondisi;
 
       if (
-        ['Menunggu', 'Disetujui'].includes(status) &&
+        ['Rumah', 'Kembali', 'Menunggu', 'Disetujui'].includes(status) &&
         (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
       ) {
         total_perizinan += countVal;
@@ -453,20 +500,6 @@ export default class Service {
         perizinan_overdue += countVal;
       }
     }
-
-    // 1. Absensi Pegawai
-    const absensiPegawaiStats = (await AbsenHarianPegawai.findAll({
-      attributes: [
-        'status_kehadiran',
-        [
-          Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_pegawai')),
-          'count',
-        ],
-      ],
-      where: { tanggal: dateFilter },
-      group: ['status_kehadiran'],
-      raw: true,
-    })) as any[];
 
     let totalPegawaiHadir = 0;
     let totalPegawaiIzin = 0;
@@ -500,40 +533,7 @@ export default class Service {
         ? parseFloat(((totalPegawaiAlfa / totalPegawaiAktifSum) * 100).toFixed(1))
         : 0;
 
-    // 2. Sesi Guru
-    const totalSesiGuru = await JurnalKelas.count({
-      where: { tanggal: dateFilter },
-    });
-
-    // 3. Petugas Inspeksi
-    const kebersihanInspeksiStats = (await KebersihanInspeksi.findOne({
-      attributes: [
-        [
-          Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_petugas')),
-          'count',
-        ],
-      ],
-      where: { tanggal: dateFilter },
-      raw: true,
-    })) as any;
-
     const totalPetugasInspeksi = parseInt(kebersihanInspeksiStats?.count, 10) || 0;
-
-    // 4. Perizinan Pegawai
-    const perizinanPegawaiStats = (await PerizinanSantri.findAll({
-      attributes: [
-        'status_approval',
-        'kondisi',
-        [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
-      ],
-      where: {
-        created_at: dateTimeFilter,
-        is_canceled: false,
-        id_pegawai: { [Op.ne]: null },
-      },
-      group: ['status_approval', 'kondisi'],
-      raw: true,
-    })) as any[];
 
     let total_perizinan_pegawai = 0;
     let perizinan_pegawai_menunggu = 0;
