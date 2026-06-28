@@ -10,6 +10,7 @@ import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
 import KelasFormal from '../kelas.formal/kelas.formal.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
+import JurnalKelas from '../jurnal.kelas/jurnal.kelas.model';
 
 export class AbsenKelasSantri extends Model {
   declare id_absen: string;
@@ -21,6 +22,7 @@ export class AbsenKelasSantri extends Model {
   declare status_kehadiran: 'Hadir' | 'Izin' | 'Sakit' | 'Alfa';
   declare keterangan: string | null;
   declare id_petugas: string | null;
+  declare id_jurnal: string | null;
   declare created_at: Date;
   declare updated_at: Date;
 
@@ -32,6 +34,7 @@ export class AbsenKelasSantri extends Model {
   declare resource?: AppResource;
   declare kelasFormal?: KelasFormal;
   declare kelasMda?: KelasMda;
+  declare jurnalKelas?: JurnalKelas;
 
   public toJSON(): any {
     const values = super.toJSON() as any;
@@ -94,6 +97,10 @@ export function initAbsenKelasSantri(sequelize: Sequelize) {
         allowNull: true,
       },
       id_petugas: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      id_jurnal: {
         type: DataTypes.STRING,
         allowNull: true,
       },
@@ -194,6 +201,13 @@ export function associateAbsenKelasSantri() {
   AbsenKelasSantri.belongsTo(AppResource, {
     foreignKey: 'id_petugas',
     as: 'resource',
+  });
+
+  AbsenKelasSantri.belongsTo(JurnalKelas, {
+    foreignKey: 'id_jurnal',
+    as: 'jurnalKelas',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
   });
 }
 

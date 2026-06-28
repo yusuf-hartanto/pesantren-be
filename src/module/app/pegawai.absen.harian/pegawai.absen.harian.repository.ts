@@ -32,12 +32,24 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       query.where = {
         [Op.or]: [
-          { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-          { status_kehadiran: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('AbsenHarianPegawai.status_kehadiran'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
         ],
       };
     }
@@ -76,17 +88,29 @@ export default class Repository {
       query.where.tanggal = data.tanggal;
     }
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       query.where[Op.or] = [
-        { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-        { '$pegawai.nik$': { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(
-            Sequelize.col('AbsenHarianPegawai.status_kehadiran'),
-            'text'
+          Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('pegawai.nik'), 'TEXT')
           ),
-          { [Op.iLike]: keyword }
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(
+              Sequelize.col('AbsenHarianPegawai.status_kehadiran'),
+              'text'
+            )
+          ),
+          { [Op.like]: keyword }
         ),
       ];
     }
@@ -101,7 +125,7 @@ export default class Repository {
         { model: JamKerjaPegawai, as: 'jamKerjaPegawai' },
       ],
       where: condition,
-      transaction: trx
+      transaction: trx,
     });
   }
 
@@ -134,7 +158,7 @@ export default class Repository {
     });
   }
 
-  public async  upsertAbsen(payload: any, trx?: any) {
+  public async upsertAbsen(payload: any, trx?: any) {
     return await Model.bulkCreate([payload as Record<string, any>], {
       transaction: trx,
       updateOnDuplicate: ['keterangan_masuk', 'status_kehadiran', 'created_by'],
@@ -147,19 +171,29 @@ export default class Repository {
     });
   }
 
-  public async removeAbsenByRangeDate(id_pegawai: string, startDate: string, endDate: string, transaction: any) {
+  public async removeAbsenByRangeDate(
+    id_pegawai: string,
+    startDate: string,
+    endDate: string,
+    transaction: any
+  ) {
     return await Model.destroy({
       where: {
         id_pegawai,
         tanggal: {
-          [Op.between]: [startDate, endDate]
-        }
+          [Op.between]: [startDate, endDate],
+        },
       },
-      transaction
+      transaction,
     });
   }
 
-  public async listForExport(params: { q?: string; isTemplate?: boolean; limit?: number; id_pegawai?: string }) {
+  public async listForExport(params: {
+    q?: string;
+    isTemplate?: boolean;
+    limit?: number;
+    id_pegawai?: string;
+  }) {
     const { q, isTemplate, limit, id_pegawai } = params;
     const keyword = q ? `%${q}%` : null;
     let whereClause: any = {};
@@ -169,10 +203,29 @@ export default class Repository {
     }
 
     if (!isTemplate && keyword) {
+      const keywordLower = keyword.toLowerCase();
       whereClause[Op.or] = [
-        { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-        { '$pegawai.nik$': { [Op.iLike]: keyword } },
-        { status_kehadiran: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+          { [Op.like]: keywordLower }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('pegawai.nik'), 'TEXT')
+          ),
+          { [Op.like]: keywordLower }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(
+              Sequelize.col('AbsenHarianPegawai.status_kehadiran'),
+              'TEXT'
+            )
+          ),
+          { [Op.like]: keywordLower }
+        ),
       ];
     }
 

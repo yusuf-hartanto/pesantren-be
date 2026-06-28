@@ -18,10 +18,16 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       query.where = {
-        nama_lembaga: { [Op.like]: keyword },
+        nama_lembaga: Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.col('LembagaPendidikanFormal.nama_lembaga')
+          ),
+          { [Op.like]: keyword }
+        ),
       };
     }
 
@@ -45,24 +51,62 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query.where = {
         [Op.or]: [
-          { nama_lembaga: { [Op.iLike]: keyword } },
-          { nomor_npsn: { [Op.iLike]: keyword } },
-          { keterangan: { [Op.iLike]: keyword } },
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
-            { [Op.iLike]: keyword }
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('LembagaPendidikanFormal.nama_lembaga')
+            ),
+            { [Op.like]: keyword }
           ),
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
-            { [Op.iLike]: keyword }
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.nomor_npsn'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
           ),
-          { nomor_npsn: { [Op.iLike]: keyword } },
-          { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.keterangan'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.jenis_lembaga'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.status_akreditasi'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('cabang.nama_cabang')),
+            { [Op.like]: keyword }
+          ),
         ],
       };
     }
@@ -112,26 +156,64 @@ export default class Repository {
     limit?: number;
   }) {
     const { q, isTemplate, limit } = params;
-    const keyword = q ? `%${q}%` : null;
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
       whereClause = {
         [Op.or]: [
-          { nama_lembaga: { [Op.iLike]: keyword } },
-          { nomor_npsn: { [Op.iLike]: keyword } },
-          { keterangan: { [Op.iLike]: keyword } },
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('jenis_lembaga'), 'TEXT'),
-            { [Op.iLike]: keyword }
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('LembagaPendidikanFormal.nama_lembaga')
+            ),
+            { [Op.like]: keyword }
           ),
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('status_akreditasi'), 'TEXT'),
-            { [Op.iLike]: keyword }
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.nomor_npsn'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
           ),
-          { nomor_npsn: { [Op.iLike]: keyword } },
-          { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.keterangan'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.jenis_lembaga'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanFormal.status_akreditasi'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('cabang.nama_cabang')),
+            { [Op.like]: keyword }
+          ),
         ],
       };
     }

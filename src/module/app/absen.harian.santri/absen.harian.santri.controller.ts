@@ -190,10 +190,11 @@ export default class Controller {
       const { waktu_absen } = req.query;
 
       if (!waktu_absen) {
-        return res.status(400).json({
-          status: false,
-          message: 'Parameter waktu_absen wajib diisi (Format: HH:mm:ss)',
-        });
+        return response.failed(
+          'Parameter waktu_absen wajib diisi (Format: HH:mm:ss)',
+          400,
+          res
+        );
       }
 
       let result: any = await repository.findMatchingAsramaShift(
@@ -207,20 +208,20 @@ export default class Controller {
         isFallbackToAll = true;
       }
 
-      return res.status(200).json({
-        status: true,
-        message: isFallbackToAll
+      return response.success(
+        isFallbackToAll
           ? 'Tidak ada shift yang cocok dengan waktu tersebut. Menampilkan semua shift asrama aktif.'
           : 'Berhasil menemukan shift asrama yang cocok.',
-        data: isFallbackToAll ? result : [result],
-      });
+        isFallbackToAll ? result : [result],
+        res
+      );
     } catch (error: any) {
       console.error('Error pada findAsramaShift:', error);
-      return res.status(500).json({
-        status: false,
-        message: 'Terjadi kesalahan internal server',
-        error: error.message,
-      });
+      return response.failed(
+        error.message || 'Terjadi kesalahan internal server',
+        500,
+        res
+      );
     }
   }
 

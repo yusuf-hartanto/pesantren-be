@@ -24,10 +24,13 @@ export default class Repository {
       query.limit = limit;
     }
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       query.where = {
-        nama_lokasi: { [Op.like]: keyword },
+        nama_lokasi: Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('Lokasi.nama_lokasi')),
+          { [Op.like]: keyword }
+        ),
       };
     }
     if (data?.jenis_lokasi && data?.data?.keyword != '') {
@@ -53,23 +56,45 @@ export default class Repository {
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
+      const keywordLower = keyword.toLowerCase();
       whereClause = {
         [Op.or]: [
-          // Pencarian di Tabel Utama
-          { nama_lokasi: { [Op.iLike]: keyword } },
-          { kode_lokasi: { [Op.iLike]: keyword } },
-          { keterangan: { [Op.iLike]: keyword } },
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('Model.jenis_lokasi'), 'text'), // Sesuaikan 'Model' dengan nama/alias registrasi model utama Anda jika perlu
-            { [Op.iLike]: keyword }
+            Sequelize.fn('LOWER', Sequelize.col('Lokasi.nama_lokasi')),
+            { [Op.like]: keywordLower }
           ),
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('Model.kapasitas'), 'text'),
-            { [Op.iLike]: keyword }
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.kode_lokasi'), 'text')
+            ),
+            { [Op.like]: keywordLower }
           ),
-
-          // Pencarian di Tabel Relasi (menggunakan alias yang didefinisikan di include)
-          { '$parent.nama_lokasi$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.keterangan'), 'text')
+            ),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.jenis_lokasi'), 'text')
+            ),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.kapasitas'), 'text')
+            ),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('parent.nama_lokasi')),
+            { [Op.like]: keywordLower }
+          ),
         ],
       };
     }
@@ -119,23 +144,47 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query.where = {
         [Op.or]: [
-          { nama_lokasi: { [Op.iLike]: keyword } },
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('Lokasi.jenis_lokasi'), 'text'),
-            { [Op.iLike]: keyword }
+            Sequelize.fn('LOWER', Sequelize.col('Lokasi.nama_lokasi')),
+            { [Op.like]: keyword }
           ),
-          { kode_lokasi: { [Op.iLike]: keyword } },
           Sequelize.where(
-            Sequelize.cast(Sequelize.col('Lokasi.kapasitas'), 'text'),
-            { [Op.iLike]: keyword }
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.jenis_lokasi'), 'text')
+            ),
+            { [Op.like]: keyword }
           ),
-          { keterangan: { [Op.iLike]: keyword } },
-          { '$parent.nama_lokasi$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.kode_lokasi'), 'text')
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.kapasitas'), 'text')
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Lokasi.keterangan'), 'text')
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('parent.nama_lokasi')),
+            { [Op.like]: keyword }
+          ),
         ],
       };
     }

@@ -67,7 +67,13 @@ export default class Repository {
       const keyword = `%${data.keyword.toLowerCase()}%`;
       where[Op.or] = [
         Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('PenempatanKelasSantri.status'), 'TEXT')),
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(
+              Sequelize.col('PenempatanKelasSantri.status'),
+              'TEXT'
+            )
+          ),
           {
             [Op.like]: keyword,
           }
@@ -79,13 +85,19 @@ export default class Repository {
           }
         ),
         Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+          ),
           {
             [Op.like]: keyword,
           }
         ),
         Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')),
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')
+          ),
           {
             [Op.like]: keyword,
           }

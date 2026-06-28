@@ -8,12 +8,12 @@ import { Op } from 'sequelize';
 
 export default class Repository {
   public async list(data: any) {
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     // Gunakan array untuk menampung kondisi
     const conditions = ['o.deleted_at IS NULL'];
     if (keyword) {
-      conditions.push(`o.nama_orgunit ILIKE :keyword`);
+      conditions.push(`LOWER(o.nama_orgunit) LIKE :keyword`);
     }
 
     const whereClause = `WHERE ${conditions.join(' AND ')}`;
@@ -48,21 +48,21 @@ export default class Repository {
     offset?: number;
     limit?: number;
   }) {
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     // Satukan deleted_at dengan filter keyword
     const conditions = ['o.deleted_at IS NULL'];
     if (keyword) {
       conditions.push(`(
-        o.id_orgunit::text ILIKE :keyword OR
-        o.nama_orgunit ILIKE :keyword OR
-        o.level_orgunit::text ILIKE :keyword OR
-        o.jenis_orgunit::text ILIKE :keyword OR
-        o.keterangan ILIKE :keyword OR
-        p.nama_orgunit ILIKE :keyword OR
-        c.nama_cabang ILIKE :keyword OR
-        lf.nama_lembaga ILIKE :keyword OR
-        lp.nama_lembaga ILIKE :keyword
+        LOWER(o.id_orgunit::text) LIKE :keyword OR
+        LOWER(o.nama_orgunit) LIKE :keyword OR
+        LOWER(o.level_orgunit::text) LIKE :keyword OR
+        LOWER(o.jenis_orgunit::text) LIKE :keyword OR
+        LOWER(o.keterangan) LIKE :keyword OR
+        LOWER(p.nama_orgunit) LIKE :keyword OR
+        LOWER(c.nama_cabang) LIKE :keyword OR
+        LOWER(lf.nama_lembaga) LIKE :keyword OR
+        LOWER(lp.nama_lembaga) LIKE :keyword
       )`);
     }
 
@@ -172,7 +172,7 @@ export default class Repository {
     limit?: number;
   }) {
     const { q, isTemplate, limit } = params;
-    const keyword = q ? `%${q}%` : null;
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
 
@@ -182,40 +182,74 @@ export default class Repository {
         {
           [Op.or]: [
             Sequelize.where(
-              Sequelize.cast(
-                Sequelize.col('OrganizationUnit.id_orgunit'),
-                'text'
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('OrganizationUnit.id_orgunit'),
+                  'text'
+                )
               ),
-              { [Op.iLike]: keyword }
+              { [Op.like]: keyword }
             ),
             Sequelize.where(
-              Sequelize.cast(
-                Sequelize.col('OrganizationUnit.level_orgunit'),
-                'text'
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('OrganizationUnit.level_orgunit'),
+                  'text'
+                )
               ),
-              { [Op.iLike]: keyword }
+              { [Op.like]: keyword }
             ),
             Sequelize.where(
-              Sequelize.cast(
-                Sequelize.col('OrganizationUnit.jenis_orgunit'),
-                'text'
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('OrganizationUnit.jenis_orgunit'),
+                  'text'
+                )
               ),
-              { [Op.iLike]: keyword }
+              { [Op.like]: keyword }
             ),
-
-            { nama_orgunit: { [Op.iLike]: keyword } },
-            { keterangan: { [Op.iLike]: keyword } },
-
-            { '$cabang.nama_cabang$': { [Op.iLike]: keyword } },
-            { '$parent.nama_orgunit$': { [Op.iLike]: keyword } },
-            {
-              '$lembagaPendidikanFormal.nama_lembaga$': { [Op.iLike]: keyword },
-            },
-            {
-              '$lembagaPendidikanKepesantrenan.nama_lembaga$': {
-                [Op.iLike]: keyword,
-              },
-            },
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('OrganizationUnit.nama_orgunit')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('OrganizationUnit.keterangan'),
+                  'TEXT'
+                )
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('cabang.nama_cabang')),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('parent.nama_orgunit')),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('lembagaPendidikanFormal.nama_lembaga')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('lembagaPendidikanKepesantrenan.nama_lembaga')
+              ),
+              { [Op.like]: keyword }
+            ),
           ],
         },
       ];
@@ -261,9 +295,10 @@ export default class Repository {
   ) {
     return Model.findOne({
       where: {
-        nama_orgunit: {
-          [Op.iLike]: name.trim(),
-        },
+        nama_orgunit: Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('OrganizationUnit.nama_orgunit')),
+          name.trim().toLowerCase()
+        ),
         id_cabang,
         id_lembaga: id_lembaga || null,
         lembaga_type: lembaga_type || null,

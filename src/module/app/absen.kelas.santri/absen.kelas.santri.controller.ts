@@ -5,6 +5,7 @@ import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './absen.kelas.santri.repository';
 import { repository as repoJamPelajaran } from '../jam.pelajaran/jam.pelajaran.repository';
+import { repository as repoJurnalKelas } from '../jurnal.kelas/jurnal.kelas.repository';
 import {
   absenKelasSantriSchema,
   bulkAbsenKelasSantriSchema,
@@ -139,10 +140,11 @@ export default class Controller {
       const { waktu_absen } = req.query;
 
       if (!waktu_absen) {
-        return res.status(400).json({
-          status: false,
-          message: 'Parameter waktu_absen wajib diisi (Format: HH:mm:ss)',
-        });
+        return response.failed(
+          'Parameter waktu_absen wajib diisi (Format: HH:mm:ss)',
+          400,
+          res
+        );
       }
 
       let result: any = await repository.findMatchingJamPelajaran(
@@ -156,20 +158,20 @@ export default class Controller {
         isFallbackToAll = true;
       }
 
-      return res.status(200).json({
-        status: true,
-        message: isFallbackToAll
+      return response.success(
+        isFallbackToAll
           ? 'Tidak ada jam pelajaran dengan waktu tersebut. Menampilkan semua jam pelajaran aktif.'
           : 'Berhasil menemukan jam pelajaran yang cocok.',
-        data: isFallbackToAll ? result : [result],
-      });
+        isFallbackToAll ? result : [result],
+        res
+      );
     } catch (error: any) {
       console.error('Error pada findJamPelajaran:', error);
-      return res.status(500).json({
-        status: false,
-        message: 'Terjadi kesalahan internal server',
-        error: error.message,
-      });
+      return response.failed(
+        error.message || 'Terjadi kesalahan internal server',
+        500,
+        res
+      );
     }
   }
 
@@ -178,44 +180,33 @@ export default class Controller {
       const { id_kelas } = req.query;
 
       if (!id_kelas) {
-        return res.status(400).json({
-          status: false,
-          message: 'Parameter id_kelas wajib diisi',
-        });
+        return response.failed('Parameter id_kelas wajib diisi', 400, res);
       }
 
       let result: any = await repository.findKelasSantri(id_kelas as string);
 
-      return res.status(200).json({
-        status: true,
-        message: 'Berhasil menemukan santri',
-        data: result,
-      });
+      return response.success('Berhasil menemukan santri', result, res);
     } catch (error: any) {
       console.error('Error pada findKelasSantri:', error);
-      return res.status(500).json({
-        status: false,
-        message: 'Terjadi kesalahan internal server',
-        error: error.message,
-      });
+      return response.failed(
+        error.message || 'Terjadi kesalahan internal server',
+        500,
+        res
+      );
     }
   }
 
   public async findKelasList(req: Request, res: Response) {
     try {
       const result = await repository.findAllClasses();
-      return res.status(200).json({
-        status: true,
-        message: 'Berhasil menemukan kelas',
-        data: result,
-      });
+      return response.success('Berhasil menemukan kelas', result, res);
     } catch (error: any) {
       console.error('Error pada findKelasList:', error);
-      return res.status(500).json({
-        status: false,
-        message: 'Terjadi kesalahan internal server',
-        error: error.message,
-      });
+      return response.failed(
+        error.message || 'Terjadi kesalahan internal server',
+        500,
+        res
+      );
     }
   }
 
@@ -225,7 +216,6 @@ export default class Controller {
 
       const targetTanggal = moment(validBody.tanggal).format('YYYY-MM-DD');
       const targetWaktu = validBody.waktu_absen || moment().format('HH:mm:ss');
-
       const id_petugas = req.user?.id || null;
 
       const jamPelajaran =
@@ -239,6 +229,17 @@ export default class Controller {
       }
 
       const id_jam_pelajaran = jamPelajaran.getDataValue('id_jampel');
+
+      const jurnal = await repoJurnalKelas.findOrCreateJurnal({
+        id_petugas,
+        id_lokasi: validBody.id_lokasi,
+        id_jam_pelajaran: validBody.id_jam_pelajaran || id_jam_pelajaran,
+        tanggal: targetTanggal,
+        jam_mulai: targetWaktu,
+        created_by: id_petugas,
+      });
+
+      const id_jurnal = jurnal.getDataValue('id_jurnal');
       const validatedPayloads = [];
 
       for (const item of validBody.data_absen) {
@@ -265,6 +266,7 @@ export default class Controller {
           status_kehadiran: item.status_kehadiran,
           keterangan: item.keterangan || null,
           id_petugas,
+          id_jurnal,
         });
       }
 
@@ -275,6 +277,7 @@ export default class Controller {
         {
           processed: validatedPayloads.length,
           jampel_applied: jamPelajaran.getDataValue('nama_jampel'),
+          jurnal: jurnal.toJSON(),
         },
         res
       );
@@ -424,7 +427,13 @@ export default class Controller {
       const targetTanggal =
         validBody.tanggal_custom || moment().format('YYYY-MM-DD');
       const targetWaktu = validBody.waktu_custom || moment().format('HH:mm:ss');
-      const id_petugas = req.user?.id || null;
+      if (!validBody.id_lokasi) {
+        return response.failed(
+          'Gagal Scan: ID Lokasi/Kelas wajib ditentukan.',
+          422,
+          res
+        );
+      }
 
       let jamPelajaran: any = null;
       let id_jam_pelajaran = validBody.id_jam_pelajaran || null;
@@ -505,6 +514,18 @@ export default class Controller {
         }
       }
 
+      const id_petugas = req.user?.id || null;
+      const jurnal = await repoJurnalKelas.findOrCreateJurnal({
+        id_petugas,
+        id_lokasi: validBody.id_lokasi,
+        id_jam_pelajaran: id_jam_pelajaran as string,
+        tanggal: targetTanggal,
+        jam_mulai: targetWaktu,
+        created_by: id_petugas,
+      });
+
+      const id_jurnal = jurnal.getDataValue('id_jurnal');
+
       const payload = {
         id_santri: santri.getDataValue('id_santri'),
         id_lokasi: validBody.id_lokasi,
@@ -514,6 +535,7 @@ export default class Controller {
         status_kehadiran,
         keterangan,
         id_petugas,
+        id_jurnal,
       };
 
       await repository.upsertSingleAbsen(payload);
@@ -529,6 +551,7 @@ export default class Controller {
           jampel: jamPelajaran.getDataValue('nama_jampel'),
           status_kehadiran,
           keterangan,
+          jurnal: jurnal.toJSON(),
         },
         res
       );

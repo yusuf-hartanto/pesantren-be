@@ -166,6 +166,10 @@ import {
   associateAbsenKelasSantri,
 } from '../app/absen.kelas.santri/absen.kelas.santri.model';
 import {
+  initJurnalKelas,
+  associateJurnalKelas,
+} from '../app/jurnal.kelas/jurnal.kelas.model';
+import {
   initNotification,
   associateNotification,
 } from '../app/notification/notification.model';
@@ -250,6 +254,7 @@ export function initializeModels(sequelize: Sequelize) {
   initLogGateSantri(sequelize);
 
   initAbsenKelasSantri(sequelize);
+  initJurnalKelas(sequelize);
   initNotification(sequelize);
   initRapotSantri(sequelize);
   initPenempatanKelasSantri(sequelize);
@@ -305,6 +310,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateSuratPerizinanSantri();
   associateLogGateSantri();
   associateAbsenKelasSantri();
+  associateJurnalKelas();
   associateNotification();
   associateRapotSantri();
   associatePenempatanKelasSantri();

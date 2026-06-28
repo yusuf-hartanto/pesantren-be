@@ -25,13 +25,18 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
-          nama_kamar: { [Op.like]: keyword },
+          nama_kamar: Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('Kamar.nama_kamar')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         },
       };
     }
@@ -62,20 +67,53 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_kamar: { [Op.like]: keyword } },
-            { lantai: { [Op.like]: keyword } },
-            { kapasitas: { [Op.like]: keyword } },
-            { status: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { '$asrama.nama_asrama$': { [Op.like]: keyword } },
-            { '$waliAsuh.nama_pegawai$': { [Op.like]: keyword } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('Kamar.nama_kamar')),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Kamar.lantai'), 'TEXT')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Kamar.kapasitas'), 'TEXT')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Kamar.status'), 'TEXT')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Kamar.keterangan'), 'TEXT')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('asrama.nama_asrama')),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('waliAsuh.nama_lengkap')),
+              { [Op.like]: keyword }
+            ),
           ],
         },
       };

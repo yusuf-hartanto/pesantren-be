@@ -28,7 +28,7 @@ export const pengajuanIzinSchema = z
       .nullable()
       .optional(),
 
-    sumber_pengajuan: z.enum(['Waliasuh', 'Orang Tua', 'Kesehatan', 'Pegawai']), 
+    sumber_pengajuan: z.enum(['Waliasuh', 'Orang Tua', 'Kesehatan', 'Pegawai']),
 
     jenis_izin: z.enum(['Izin', 'Sakit']),
 
@@ -49,8 +49,9 @@ export const pengajuanIzinSchema = z
       }
     },
     {
-      message: 'Data subjek perizinan (Santri/Pegawai) beserta lokasinya wajib diisi sesuai dengan sumber pengajuan',
-      path: ['sumber_pengajuan'], 
+      message:
+        'Data subjek perizinan (Santri/Pegawai) beserta lokasinya wajib diisi sesuai dengan sumber pengajuan',
+      path: ['sumber_pengajuan'],
     }
   );
 

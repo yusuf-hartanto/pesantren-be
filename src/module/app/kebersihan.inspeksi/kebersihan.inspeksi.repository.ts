@@ -278,13 +278,13 @@ export default class Repository {
           j.nama_lengkap
         `;
 
-      const rows = await conn.query(q, {
-        type: QueryTypes.SELECT,
-        replacements: {
-          startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
-          endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
-        }
-      });
+    const rows = await conn.query(q, {
+      type: QueryTypes.SELECT,
+      replacements: {
+        startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
+        endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+      },
+    });
 
     return rows;
   }
@@ -358,7 +358,7 @@ export default class Repository {
         offset: data?.offset,
         startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
         endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
-      }
+      },
     });
 
     const countQuery = `
@@ -418,15 +418,15 @@ export default class Repository {
     ) x
     `;
 
-    const [{ count }] = await conn.query(countQuery, {
+    const [{ count }] = (await conn.query(countQuery, {
       type: QueryTypes.SELECT,
       replacements: {
         startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
         endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
-      }
-    }) as any[];
+      },
+    })) as any[];
 
-    return {count, rows};
+    return { count, rows };
   }
 }
 

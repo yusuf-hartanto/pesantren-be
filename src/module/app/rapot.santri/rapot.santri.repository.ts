@@ -53,7 +53,7 @@ export default class Repository {
       where.status = data.status;
     }
 
-      console.warn(data)
+    console.warn(data);
     if (data?.tahun) {
       const tahun = `%${data.tahun.toLowerCase()}%`;
       where[Op.and] = [
@@ -87,12 +87,9 @@ export default class Repository {
             [Op.like]: keyword,
           }
         ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('santri.nis')),
-          {
-            [Op.like]: keyword,
-          }
-        ),
+        Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('santri.nis')), {
+          [Op.like]: keyword,
+        }),
         Sequelize.where(
           Sequelize.fn('LOWER', Sequelize.col('RapotSantri.tahun_ajaran')),
           {
@@ -100,10 +97,7 @@ export default class Repository {
           }
         ),
         Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.col('RapotSantri.semester')
-          ),
+          Sequelize.fn('LOWER', Sequelize.col('RapotSantri.semester')),
           {
             [Op.like]: keyword,
           }

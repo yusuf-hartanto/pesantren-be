@@ -33,13 +33,16 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
-          nama_orgunit: { [Op.like]: keyword },
+          nama_lengkap: Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('Pegawai.nama_lengkap')),
+            { [Op.like]: keyword }
+          ),
         },
       };
     }
@@ -106,20 +109,50 @@ export default class Repository {
       }
     }
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query.where[Op.or] = [
-        { nama_lengkap: { [Op.iLike]: keyword } },
-        { nik: { [Op.iLike]: keyword } },
-        { nip: { [Op.iLike]: keyword } },
-        { email: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'),
-          { [Op.iLike]: keyword }
+          Sequelize.fn('LOWER', Sequelize.col('Pegawai.nama_lengkap')),
+          { [Op.like]: keyword }
         ),
-        { '$organizationUnit.nama_orgunit$': { [Op.iLike]: keyword } },
-        { '$jabatan.nama_jabatan$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.nik'), 'TEXT')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.nip'), 'TEXT')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.email'), 'TEXT')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('organizationUnit.nama_orgunit')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('jabatan.nama_jabatan')),
+          { [Op.like]: keyword }
+        ),
       ];
     }
 
@@ -258,17 +291,48 @@ export default class Repository {
 
     // Jika bukan template dan ada keyword, terapkan filter pencarian
     if (!isTemplate && keyword) {
+      const keywordLower = keyword.toLowerCase();
       whereClause[Op.or] = [
-        { nama_lengkap: { [Op.iLike]: keyword } },
-        { nik: { [Op.iLike]: keyword } },
-        { nip: { [Op.iLike]: keyword } },
-        { email: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text'),
-          { [Op.iLike]: keyword }
+          Sequelize.fn('LOWER', Sequelize.col('Pegawai.nama_lengkap')),
+          { [Op.like]: keywordLower }
         ),
-        { '$organizationUnit.nama_orgunit$': { [Op.iLike]: keyword } },
-        { '$jabatan.nama_jabatan$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.nik'), 'TEXT')
+          ),
+          { [Op.like]: keywordLower }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.nip'), 'TEXT')
+          ),
+          { [Op.like]: keywordLower }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.email'), 'TEXT')
+          ),
+          { [Op.like]: keywordLower }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('Pegawai.status_pegawai'), 'text')
+          ),
+          { [Op.like]: keywordLower }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('organizationUnit.nama_orgunit')),
+          { [Op.like]: keywordLower }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('jabatan.nama_jabatan')),
+          { [Op.like]: keywordLower }
+        ),
       ];
     }
 
@@ -309,7 +373,10 @@ export default class Repository {
     ) => {
       if (!id) return null;
       const condition: any = {
-        id: { [Op.iLike]: id.trim() },
+        id: Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('id')),
+          id.trim().toLowerCase()
+        ),
       };
 
       if (parentField && parentId) {

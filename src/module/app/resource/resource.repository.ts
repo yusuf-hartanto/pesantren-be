@@ -163,10 +163,10 @@ export default class Repository {
                 {
                   model: Lokasi,
                   as: 'lokasiKerja',
-                  attributes: ['nama_lokasi']
-                }
-              ]
-            }
+                  attributes: ['nama_lokasi'],
+                },
+              ],
+            },
           ],
         },
       ],

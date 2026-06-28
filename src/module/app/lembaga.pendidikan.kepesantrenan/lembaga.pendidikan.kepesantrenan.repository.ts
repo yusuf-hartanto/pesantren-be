@@ -18,13 +18,19 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
-          nama_lembaga: { [Op.like]: keyword },
+          nama_lembaga: Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('LembagaPendidikanKepesantrenan.nama_lembaga')
+            ),
+            { [Op.like]: keyword }
+          ),
         },
       };
     }
@@ -53,17 +59,44 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { id_lembaga: { [Op.iLike]: `%${keyword}%` } },
-            { nama_lembaga: { [Op.iLike]: `%${keyword}%` } },
-            { keterangan: { [Op.iLike]: `%${keyword}%` } },
-            { '$cabang.nama_cabang$': { [Op.iLike]: `%${keyword}%` } },
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('LembagaPendidikanKepesantrenan.id_lembaga'),
+                  'TEXT'
+                )
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('LembagaPendidikanKepesantrenan.nama_lembaga')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('LembagaPendidikanKepesantrenan.keterangan'),
+                  'TEXT'
+                )
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('cabang.nama_cabang')),
+              { [Op.like]: keyword }
+            ),
           ],
         },
       };
@@ -112,16 +145,34 @@ export default class Repository {
     limit?: number;
   }) {
     const { q, isTemplate, limit } = params;
-    const keyword = q ? `%${q}%` : null;
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
       whereClause = {
         [Op.or]: [
-          { nama_lembaga: { [Op.iLike]: `%${keyword}%` } },
-          { keterangan: { [Op.iLike]: `%${keyword}%` } },
-          { '$cabang.nama_cabang$': { [Op.iLike]: `%${keyword}%` } },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('LembagaPendidikanKepesantrenan.nama_lembaga')
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('LembagaPendidikanKepesantrenan.keterangan'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('cabang.nama_cabang')),
+            { [Op.like]: keyword }
+          ),
         ],
       };
     }

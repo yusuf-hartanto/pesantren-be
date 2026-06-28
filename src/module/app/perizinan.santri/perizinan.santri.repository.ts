@@ -42,7 +42,13 @@ export class PerizinanSantriRepository {
         {
           model: Pegawai,
           as: 'pegawai',
-          attributes: ['id_pegawai', 'nama_lengkap', 'nip', 'nik', 'jenis_kelamin'],
+          attributes: [
+            'id_pegawai',
+            'nama_lengkap',
+            'nip',
+            'nik',
+            'jenis_kelamin',
+          ],
         },
         {
           model: Lokasi,
@@ -138,18 +144,54 @@ export class PerizinanSantriRepository {
     }
 
     if (data?.keyword) {
-      const keyword = `%${data.keyword}%`;
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       if (data?.is_pegawai) {
         query.where[Op.or] = [
-          { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-          { '$pegawai.nip$': { [Op.iLike]: keyword } },
-          { '$lokasiKerja.nama_lokasi$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('pegawai.nip'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('lokasiKerja.nama_lokasi')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         ];
       } else {
         query.where[Op.or] = [
-          { '$santri.fullname$': { [Op.iLike]: keyword } },
-          { '$santri.nis$': { [Op.iLike]: keyword } },
-          { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('lokasiKamar.nama_lokasi')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         ];
       }
     }
@@ -218,7 +260,10 @@ export class PerizinanSantriRepository {
   /**
    * Cek aturan overlap izin pegawai aktif
    */
-  public async checkActiveLicensePegawai(id_pegawai: string, transaction?: any) {
+  public async checkActiveLicensePegawai(
+    id_pegawai: string,
+    transaction?: any
+  ) {
     const today = moment().format('YYYY-MM-DD');
 
     return await PerizinanSantri.findOne({
@@ -249,9 +294,9 @@ export class PerizinanSantriRepository {
     return await PerizinanSantri.findOne({
       include: [
         { model: Santri, as: 'santri' },
-        { model: Pegawai, as: 'pegawai' }, 
+        { model: Pegawai, as: 'pegawai' },
         { model: Lokasi, as: 'lokasiKamar' },
-        { model: Lokasi, as: 'lokasiKerja' }, 
+        { model: Lokasi, as: 'lokasiKerja' },
         {
           model: AppResource,
           as: 'approver',
@@ -415,17 +460,54 @@ export class PerizinanSantriRepository {
       }
 
       if (q) {
+        const keywordLower = q.toLowerCase();
         if (is_pegawai) {
           whereClause[Op.or] = [
-            { '$pegawai.nama_lengkap$': { [Op.iLike]: q } },
-            { '$pegawai.nip$': { [Op.iLike]: q } },
-            { '$lokasiKerja.nama_lokasi$': { [Op.iLike]: q } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+              {
+                [Op.like]: keywordLower,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('pegawai.nip'), 'TEXT')
+              ),
+              {
+                [Op.like]: keywordLower,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('lokasiKerja.nama_lokasi')),
+              {
+                [Op.like]: keywordLower,
+              }
+            ),
           ];
         } else {
           whereClause[Op.or] = [
-            { '$santri.fullname$': { [Op.iLike]: q } },
-            { '$santri.nis$': { [Op.iLike]: q } },
-            { '$lokasiKamar.nama_lokasi$': { [Op.iLike]: q } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+              {
+                [Op.like]: keywordLower,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+              ),
+              {
+                [Op.like]: keywordLower,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('lokasiKamar.nama_lokasi')),
+              {
+                [Op.like]: keywordLower,
+              }
+            ),
           ];
         }
       }

@@ -41,10 +41,25 @@ export default class Repository {
         ...query,
         where: {
           is_deleted: false,
-          nama_kamar: { [Op.like]: keyword },
+          nama_kamar: Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('PenempatanKamarSantri.nama_kamar'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
           [Op.or]: [
             Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('PenempatanKamarSantri.status'), 'TEXT')),
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('PenempatanKamarSantri.status'),
+                  'TEXT'
+                )
+              ),
               {
                 [Op.like]: keyword,
               }
@@ -56,13 +71,19 @@ export default class Repository {
               }
             ),
             Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+              ),
               {
                 [Op.like]: keyword,
               }
             ),
             Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')),
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')
+              ),
               {
                 [Op.like]: keyword,
               }
@@ -134,7 +155,13 @@ export default class Repository {
           is_deleted: false,
           [Op.or]: [
             Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('PenempatanKamarSantri.status'), 'TEXT')),
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('PenempatanKamarSantri.status'),
+                  'TEXT'
+                )
+              ),
               {
                 [Op.like]: keyword,
               }
@@ -146,13 +173,19 @@ export default class Repository {
               }
             ),
             Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+              ),
               {
                 [Op.like]: keyword,
               }
             ),
             Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')),
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')
+              ),
               {
                 [Op.like]: keyword,
               }

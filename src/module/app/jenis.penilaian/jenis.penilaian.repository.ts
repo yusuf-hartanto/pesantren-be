@@ -11,8 +11,14 @@ export default class Repository {
     excludeId?: string
   ) {
     const where: any = {
-      singkatan: { [Op.iLike]: singkatan?.trim() },
-      jenis_pengujian: { [Op.iLike]: jenisPengujian.trim() },
+      singkatan: Sequelize.where(
+        Sequelize.fn('LOWER', Sequelize.col('JenisPenilaian.singkatan')),
+        singkatan ? singkatan.trim().toLowerCase() : ''
+      ),
+      jenis_pengujian: Sequelize.where(
+        Sequelize.fn('LOWER', Sequelize.col('JenisPenilaian.jenis_pengujian')),
+        jenisPengujian.trim().toLowerCase()
+      ),
       lembaga_type: lembagaType,
     };
     if (excludeId) {
@@ -48,19 +54,34 @@ export default class Repository {
       where: {},
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query.where[Op.or] = [
-        { jenis_pengujian: { [Op.iLike]: keyword } },
-        { singkatan: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'),
-          { [Op.iLike]: keyword }
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.col('JenisPenilaian.jenis_pengujian')
+          ),
+          { [Op.like]: keyword }
         ),
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'),
-          { [Op.iLike]: keyword }
+          Sequelize.fn('LOWER', Sequelize.col('JenisPenilaian.singkatan')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text')
+          ),
+          { [Op.like]: keyword }
         ),
       ];
     }
@@ -93,9 +114,10 @@ export default class Repository {
   public findByName(name: string, type?: string | null) {
     return Model.findOne({
       where: {
-        singkatan: {
-          [Op.iLike]: name.trim(),
-        },
+        singkatan: Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('JenisPenilaian.singkatan')),
+          name.trim().toLowerCase()
+        ),
         ...(type && { lembaga_type: type }),
       },
     });
@@ -107,21 +129,36 @@ export default class Repository {
     limit?: number;
   }) {
     const { q, isTemplate, limit } = params;
-    const keyword = q ? `%${q}%` : null;
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
       whereClause[Op.or] = [
-        { jenis_pengujian: { [Op.iLike]: keyword } },
-        { singkatan: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text'),
-          { [Op.iLike]: keyword }
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.col('JenisPenilaian.jenis_pengujian')
+          ),
+          { [Op.like]: keyword }
         ),
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text'),
-          { [Op.iLike]: keyword }
+          Sequelize.fn('LOWER', Sequelize.col('JenisPenilaian.singkatan')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('JenisPenilaian.lembaga_type'), 'text')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('JenisPenilaian.status'), 'text')
+          ),
+          { [Op.like]: keyword }
         ),
       ];
     }
@@ -140,8 +177,17 @@ export default class Repository {
       for (const item of payloads) {
         const existing = await Model.findOne({
           where: {
-            singkatan: { [Op.iLike]: item.singkatan.trim() },
-            jenis_pengujian: { [Op.iLike]: item.jenis_pengujian.trim() },
+            singkatan: Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('JenisPenilaian.singkatan')),
+              item.singkatan.trim().toLowerCase()
+            ),
+            jenis_pengujian: Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('JenisPenilaian.jenis_pengujian')
+              ),
+              item.jenis_pengujian.trim().toLowerCase()
+            ),
             lembaga_type: item.lembaga_type,
           },
         });

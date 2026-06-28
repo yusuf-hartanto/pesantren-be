@@ -67,9 +67,11 @@ export default class Repository {
   }
 
   public async list(data: any) {
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
-    const whereClause = keyword ? `WHERE jp.singkatan ILIKE :keyword` : '';
+    const whereClause = keyword
+      ? `WHERE LOWER(jp.singkatan) LIKE :keyword`
+      : '';
 
     const query = `
 		SELECT 
@@ -117,7 +119,7 @@ export default class Repository {
     offset?: number;
     limit?: number;
   }) {
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     const limit = data?.limit ? parseInt(data.limit.toString(), 10) : 10;
     const offset = data?.offset ? parseInt(data.offset.toString(), 10) : 0;
 
@@ -126,14 +128,14 @@ export default class Repository {
         ${
           keyword
             ? `AND (
-            jp.singkatan ILIKE :keyword OR
-            jpb.lembaga_type::TEXT ILIKE :keyword OR
-            t.tingkat ILIKE :keyword OR
-            ta.tahun_ajaran ILIKE :keyword OR
-            jpb.bobot::TEXT ILIKE :keyword OR
-            jpb.status::TEXT ILIKE :keyword OR
-            lf.nama_lembaga ILIKE :keyword OR
-            lp.nama_lembaga ILIKE :keyword
+            LOWER(jp.singkatan) LIKE :keyword OR
+            LOWER(jpb.lembaga_type::TEXT) LIKE :keyword OR
+            LOWER(t.tingkat) LIKE :keyword OR
+            LOWER(ta.tahun_ajaran) LIKE :keyword OR
+            LOWER(jpb.bobot::TEXT) LIKE :keyword OR
+            LOWER(jpb.status::TEXT) LIKE :keyword OR
+            LOWER(lf.nama_lembaga) LIKE :keyword OR
+            LOWER(lp.nama_lembaga) LIKE :keyword
         )`
             : ''
         }
@@ -285,23 +287,41 @@ export default class Repository {
     limit?: number;
   }) {
     const { q, isTemplate, limit } = params;
-    const keyword = q ? `%${q}%` : null;
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
       whereClause[Op.or] = [
-        { '$jenisPenilaian.jenis_pengujian$': { [Op.iLike]: keyword } },
-        { '$jenisPenilaian.singkatan$': { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(
-            Sequelize.col('JenisPenilaianBobot.lembaga_type'),
-            'text'
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.col('jenisPenilaian.jenis_pengujian')
           ),
-          { [Op.iLike]: keyword }
+          { [Op.like]: keyword }
         ),
-        { '$tingkat.tingkat$': { [Op.iLike]: keyword } },
-        { '$tahunAjaran.tahun_ajaran$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('jenisPenilaian.singkatan')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(
+              Sequelize.col('JenisPenilaianBobot.lembaga_type'),
+              'text'
+            )
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('tingkat.tingkat')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
+          { [Op.like]: keyword }
+        ),
       ];
     }
 

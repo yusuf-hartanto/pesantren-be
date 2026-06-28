@@ -43,7 +43,15 @@ export default class Repository {
       query = {
         ...query,
         where: {
-          cabang: { [Op.like]: `%${data?.cabang}%` },
+          cabang: Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Cabang.cabang'), 'TEXT')
+            ),
+            {
+              [Op.like]: `%${data.cabang.toLowerCase()}%`,
+            }
+          ),
         },
       };
     }
@@ -85,19 +93,51 @@ export default class Repository {
     };
 
     if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { id_cabang: { [Op.iLike]: `%${data?.keyword}%` } },
-            { nama_cabang: { [Op.iLike]: `%${data?.keyword}%` } },
-            { keterangan: { [Op.iLike]: `%${data?.keyword}%` } },
-            { alamat: { [Op.iLike]: `%${data?.keyword}%` } },
-
-            { '$province.name$': { [Op.iLike]: `%${data?.keyword}%` } },
-            { '$city.name$': { [Op.iLike]: `%${data?.keyword}%` } },
-            { '$district.name$': { [Op.iLike]: `%${data?.keyword}%` } },
-            { '$subDistrict.name$': { [Op.iLike]: `%${data?.keyword}%` } },
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Cabang.id_cabang'), 'TEXT')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('Cabang.nama_cabang')),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Cabang.keterangan'), 'TEXT')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Cabang.alamat'), 'TEXT')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('province.name')),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('city.name')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('district.name')),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('subDistrict.name')),
+              { [Op.like]: keyword }
+            ),
           ],
         },
       };
@@ -141,19 +181,49 @@ export default class Repository {
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
+      const keywordLower = keyword.toLowerCase();
       whereClause = {
         [Op.or]: [
-          // Pencarian di Tabel Utama
-          { id_cabang: { [Op.iLike]: keyword } },
-          { nama_cabang: { [Op.iLike]: keyword } },
-          { keterangan: { [Op.iLike]: keyword } },
-          { alamat: { [Op.iLike]: keyword } },
-
-          // Pencarian di Tabel Relasi (menggunakan alias yang didefinisikan di include)
-          { '$province.name$': { [Op.iLike]: keyword } },
-          { '$city.name$': { [Op.iLike]: keyword } },
-          { '$district.name$': { [Op.iLike]: keyword } },
-          { '$subDistrict.name$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Cabang.id_cabang'), 'TEXT')
+            ),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('Cabang.nama_cabang')),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Cabang.keterangan'), 'TEXT')
+            ),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('Cabang.alamat'), 'TEXT')
+            ),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('province.name')),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('city.name')), {
+            [Op.like]: keywordLower,
+          }),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('district.name')),
+            { [Op.like]: keywordLower }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('subDistrict.name')),
+            { [Op.like]: keywordLower }
+          ),
         ],
       };
     }

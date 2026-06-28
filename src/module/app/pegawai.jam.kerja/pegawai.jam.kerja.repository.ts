@@ -25,12 +25,24 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       query.where = {
         [Op.or]: [
-          { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-          { keterangan: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+            { [Op.like]: keyword }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('JamKerjaPegawai.keterangan'),
+                'TEXT'
+              )
+            ),
+            { [Op.like]: keyword }
+          ),
         ],
       };
     }
@@ -73,18 +85,45 @@ export default class Repository {
       where: {},
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query.where[Op.or] = [
-        { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-        { '$pegawai.nik$': { [Op.iLike]: keyword } },
-        { '$pegawai.nip$': { [Op.iLike]: keyword } },
-        { '$lokasiKerja.nama_lokasi$': { [Op.iLike]: keyword } },
-        { keterangan: { [Op.iLike]: keyword } },
         Sequelize.where(
-          Sequelize.cast(Sequelize.col('JamKerjaPegawai.is_active'), 'text'),
-          { [Op.iLike]: keyword }
+          Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('pegawai.nik'), 'TEXT')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('pegawai.nip'), 'TEXT')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('lokasiKerja.nama_lokasi')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('JamKerjaPegawai.keterangan'), 'TEXT')
+          ),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('JamKerjaPegawai.is_active'), 'text')
+          ),
+          { [Op.like]: keyword }
         ),
       ];
     }
@@ -124,15 +163,27 @@ export default class Repository {
     limit?: number;
   }) {
     const { q, isTemplate, limit } = params;
-    const keyword = q ? `%${q}%` : null;
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
       whereClause[Op.or] = [
-        { '$pegawai.nama_lengkap$': { [Op.iLike]: keyword } },
-        { '$lokasiKerja.nama_lokasi$': { [Op.iLike]: keyword } },
-        { keterangan: { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('lokasiKerja.nama_lokasi')),
+          { [Op.like]: keyword }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('JamKerjaPegawai.keterangan'), 'TEXT')
+          ),
+          { [Op.like]: keyword }
+        ),
       ];
     }
 
