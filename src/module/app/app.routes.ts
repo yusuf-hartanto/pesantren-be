@@ -900,6 +900,11 @@ router.get(
   rapotSantriController.list
 );
 router.get('/rapot-santri', auth.checkBearerToken, rapotSantriController.index);
+router.post(
+  '/rapot-santri/export',
+  auth.checkBearerToken,
+  rapotSantriController.export
+);
 router.get(
   '/rapot-santri/:id',
   auth.checkBearerToken,

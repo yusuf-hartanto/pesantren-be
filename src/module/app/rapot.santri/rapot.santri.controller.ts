@@ -1,11 +1,14 @@
 'use strict';
 
+import moment from 'moment';
+import ExcelJS from 'exceljs';
 import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './rapot.santri.repository';
 import { variable } from './rapot.santri.variable';
 import Santri from '../santri/santri.model';
+import { appConfig } from '../../../config/config.app';
 import {
   NOT_FOUND,
   SUCCESS_RETRIEVED,
@@ -13,6 +16,98 @@ import {
   SUCCESS_UPDATED,
   SUCCESS_DELETED,
 } from '../../../utils/constant';
+
+const generateDataExcel = (sheet: any, details: any, baseUrl: string) => {
+  sheet.addRow([
+    'No',
+    'Nama Santri',
+    'NIS',
+    'Cabang',
+    'Kelas Formal',
+    'Kelas MDA',
+    'Tahun Ajaran',
+    'Semester',
+    'Status',
+    'Rapor Formal',
+    'Rapor MDA',
+  ]);
+
+  sheet.getRow(1).eachCell((cell: any) => {
+    cell.font = { bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+
+  details.forEach((row: any, i: number) => {
+    const placement = (row.santri?.penempatanKelas || []).find(
+      (p: any) => p.tahunAjaran?.tahun_ajaran?.toLowerCase() == row.tahun_ajaran?.toLowerCase()
+    );
+    const kelasFormalName = placement?.kelasFormal?.nama_kelas || '-';
+    const kelasMdaName = placement?.kelasMda?.nama_kelas_mda || '-';
+
+    const rowData = [
+      i + 1,
+      row.santri?.fullname || '-',
+      row.santri?.nis || '-',
+      row.santri?.cabang?.nama_cabang || '-',
+      kelasFormalName,
+      kelasMdaName,
+      row.tahun_ajaran || '-',
+      row.semester || '-',
+      row.status || '-',
+      '', // Rapor Formal hyperlink placeholder
+      '', // Rapor MDA hyperlink placeholder
+    ];
+
+    const excelRow = sheet.addRow(rowData);
+
+    if (row.file_rapot) {
+      const fileUrl = row.file_rapot.startsWith('http')
+        ? row.file_rapot
+        : `${baseUrl}${row.file_rapot.startsWith('/') ? '' : '/'}${row.file_rapot}`;
+
+      const filename = row.file_rapot.split('/').pop() || 'Rapor Formal';
+      const cell = excelRow.getCell(10);
+      cell.value = {
+        text: filename,
+        hyperlink: fileUrl,
+        tooltip: 'Klik untuk mengunduh Rapor Formal',
+      };
+      cell.font = { color: { argb: 'FF0000FF' }, underline: true };
+    } else {
+      excelRow.getCell(10).value = 'Belum ada Rapor Formal';
+    }
+
+    if (row.file_rapot_mda) {
+      const fileUrlMda = row.file_rapot_mda.startsWith('http')
+        ? row.file_rapot_mda
+        : `${baseUrl}${row.file_rapot_mda.startsWith('/') ? '' : '/'}${row.file_rapot_mda}`;
+
+      const filenameMda = row.file_rapot_mda.split('/').pop() || 'Rapor MDA';
+      const cell = excelRow.getCell(11);
+      cell.value = {
+        text: filenameMda,
+        hyperlink: fileUrlMda,
+        tooltip: 'Klik untuk mengunduh Rapor MDA',
+      };
+      cell.font = { color: { argb: 'FF0000FF' }, underline: true };
+    } else {
+      excelRow.getCell(11).value = 'Belum ada Rapor MDA';
+    }
+  });
+
+  for (let r = 1; r <= details.length + 1; r++) {
+    sheet.getRow(r).eachCell((cell: any) => {
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } },
+      };
+    });
+  }
+
+  return sheet;
+};
 
 export default class Controller {
   public async list(req: Request, res: Response) {
@@ -296,6 +391,45 @@ export default class Controller {
     } catch (err: any) {
       return helper.catchError(
         `rapot santri delete: ${err?.message}`,
+        500,
+        res
+      );
+    }
+  }
+
+  public async export(req: Request, res: Response) {
+    try {
+      const query = {
+        id_santri: req?.body?.id_santri || req?.query?.id_santri || '',
+        status: req?.body?.status || req?.query?.status || '',
+        tahun: req?.body?.tahun || req?.query?.tahun || '',
+        semester: req?.body?.semester || req?.query?.semester || '',
+        id_cabang: req?.body?.id_cabang || req?.query?.id_cabang || '',
+        id_kelas: req?.body?.id_kelas || req?.query?.id_kelas || '',
+        keyword: req?.body?.keyword || req?.query?.keyword || '',
+      };
+
+      const { rows } = await repository.index(query);
+      if (rows?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
+
+      const { dir, path: exportPath } = await helper.checkDirExport('excel');
+      const filename = `rapor-santri-${moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const title = 'RAPOR SANTRI';
+      const urlExcel = `${dir}/${filename}`;
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet(title);
+
+      const baseUrl = appConfig.baseDomain;
+
+      generateDataExcel(sheet, rows, baseUrl);
+
+      await workbook.xlsx.writeFile(`${exportPath}/${filename}`);
+      return response.success('export excel rapot santri', urlExcel, res);
+    } catch (err: any) {
+      return helper.catchError(
+        `export excel rapot santri: ${err?.message}`,
         500,
         res
       );
