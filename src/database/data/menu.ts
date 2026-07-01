@@ -59,6 +59,15 @@ export default class DataMenu {
       },
       {
         id: 7,
+        menu_name: 'Kesehatan',
+        menu_icon: 'tabler-stethoscope',
+        module_name: '#',
+        seq_number: 6,
+        parent_id: '00000000-0000-0000-0000-000000000000',
+        status: 1,
+      },
+      {
+        id: 88,
         menu_name: 'Laporan',
         menu_icon: 'tabler-report',
         module_name: '#',
@@ -426,6 +435,22 @@ export default class DataMenu {
       },
       {
         parent_id: 7,
+        menu_name: 'Kesehatan Santri',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/kesehatan-santri/list',
+        seq_number: 1,
+        status: 1,
+      },
+      {
+        parent_id: 7,
+        menu_name: 'Kesehatan Pegawai',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/kesehatan-pegawai/list',
+        seq_number: 2,
+        status: 1,
+      },
+      {
+        parent_id: 88,
         menu_name: 'Inspeksi Temuan',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/kebersihan-temuan/list',
@@ -433,7 +458,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 7,
+        parent_id: 88,
         menu_name: 'Absensi Harian',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/absen-harian-santri/list',
@@ -441,7 +466,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 7,
+        parent_id: 88,
         menu_name: 'Absensi Kelas',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/absen-kelas-santri/list',
@@ -449,7 +474,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 7,
+        parent_id: 88,
         menu_name: 'Perizinan-Santri',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/perizinan-santri/list',
@@ -457,7 +482,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 7,
+        parent_id: 88,
         menu_name: 'Perizinan-Pegawai',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/perizinan-pegawai/list',
@@ -465,7 +490,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 7,
+        parent_id: 88,
         menu_name: 'Petugas Kebersihan',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/kebersihan-petugas/list',
@@ -473,7 +498,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 7,
+        parent_id: 88,
         menu_name: 'Absensi Pegawai',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/absen-harian-pegawai/list',
@@ -481,7 +506,7 @@ export default class DataMenu {
         status: 1,
       },
       {
-        parent_id: 7,
+        parent_id: 88,
         menu_name: 'Activity User',
         menu_icon: 'tabler-circle',
         module_name: '/app/report/activity-log/list',

@@ -649,6 +649,24 @@ export default class Helper {
       console.log(err);
     }
   }
+
+  public convertToRomawi(month: number): string {
+    const romawi = [
+      'I',
+      'II',
+      'III',
+      'IV',
+      'V',
+      'VI',
+      'VII',
+      'VIII',
+      'IX',
+      'X',
+      'XI',
+      'XII',
+    ];
+    return romawi[month - 1] || 'I';
+  }
 }
 
 export const helper = new Helper();

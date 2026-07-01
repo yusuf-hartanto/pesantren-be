@@ -78,6 +78,8 @@ import { AbsenHarianPegawaiController } from './pegawai.absen.harian/pegawai.abs
 import { activityLog } from './activity.log/activity.log.controller';
 import { guruPengganti } from './guru.pengganti/guru.pengganti.controller';
 import { guruPenggantiSchema } from './guru.pengganti/guru.pengganti.schema';
+import { controller as kesehatanSantri } from './kesehatan.santri/kesehatan.santri.controller';
+import { createKesehatanSchema, updateKesehatanSchema } from './kesehatan.santri/kesehatan.santri.schema';
 
 const router: Router = Router();
 
@@ -994,5 +996,41 @@ router.delete('/guru-pengganti/:id', guruPengganti.delete);
 router.post('/guru-pengganti/export', guruPengganti.export);
 router.post('/guru-pengganti/import', guruPengganti.import);
 router.post('/guru-pengganti/insert', guruPengganti.insert);
+
+// ROUTE KESEHATAN SANTRI
+router.get(
+  '/kesehatan-santri',
+  auth.checkBearerToken,
+  kesehatanSantri.index
+);
+router.get(
+  '/kesehatan-santri/:id',
+  auth.checkBearerToken,
+  kesehatanSantri.detail
+);
+router.post(
+  '/kesehatan-santri',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(createKesehatanSchema),
+  kesehatanSantri.create
+);
+router.put(
+  '/kesehatan-santri/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(updateKesehatanSchema),
+  kesehatanSantri.update
+);
+router.delete(
+  '/kesehatan-santri/:id',
+  auth.checkBearerToken,
+  kesehatanSantri.delete
+);
+router.post(
+  '/kesehatan-santri/export',
+  auth.checkBearerToken,
+  kesehatanSantri.export
+);
 
 export default router;

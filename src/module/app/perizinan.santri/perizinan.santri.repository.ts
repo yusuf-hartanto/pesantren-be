@@ -110,13 +110,13 @@ export class PerizinanSantriRepository {
     }
 
     if (data?.is_pegawai) {
-      query.where.sumber_pengajuan = 'Pegawai';
-
       if (data?.id_pegawai) {
         query.where.id_pegawai = data.id_pegawai;
       }
+      query.where.id_pegawai = { [Op.ne]: null };
     } else {
       query.where.sumber_pengajuan = { [Op.ne]: 'Pegawai' };
+      query.where.id_santri = { [Op.ne]: null };
     }
 
     if (data?.id_santri) {
@@ -239,15 +239,15 @@ export class PerizinanSantriRepository {
     return await PerizinanSantri.findOne({
       where: {
         id_santri,
-        deleted_at: null,
+        is_canceled: false,
         [Op.or]: [
           {
             status_approval: 'Menunggu',
-            tanggal_mulai: { [Op.gt]: today },
+            kondisi: null,
           },
           {
             status_approval: 'Disetujui',
-            is_canceled: false,
+            kondisi: 'Normal',
             tanggal_mulai: { [Op.lte]: today },
             tanggal_selesai: { [Op.gte]: today },
           },
