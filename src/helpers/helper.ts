@@ -649,6 +649,20 @@ export default class Helper {
       console.log(err);
     }
   }
+
+  public async receiverByRole(roles: any[]) {
+    const q = `SELECT username FROM app_resource WHERE role_id IN (SELECT role_id FROM app_role where role_name in (:ids))`;
+    const conn = await rawQuery.getConnection();
+    const res: any = await conn.query(q, {
+      type: QueryTypes.SELECT,
+      replacements: {
+        ids: roles,
+      },
+    });
+
+    return res.length > 0 ? res.map((r: any) => r.username) : [];
+  }
 }
 
 export const helper = new Helper();
+

@@ -228,6 +228,21 @@ export default class Controller {
 
       const details = await temuanRepository.insert(insert);
 
+      // Send notification
+      if (result && result.status_kondisi === 'RUSAK') {
+        const receiver = await helper.receiverByRole(['administrator']);
+
+        const dataMessage = {
+          title: 'Inspeksi',
+          message: `Kondisi Rusak.`,
+          url: `/app/kebersihan-inspeksi/form?id=${result.id_inspeksi}&view=true`,
+          receiver: receiver,
+          type: 'Inspeksi',
+        }
+        
+        helper.sendNotification(req, dataMessage)
+      }
+
       return response.success(SUCCESS_SAVED, result, res);
     } catch (err: any) {
       return helper.catchError(

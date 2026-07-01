@@ -7,6 +7,8 @@ import { repository } from './perizinan.santri.repository';
 import { repository as JamKerjaPegawaiRepository } from '../pegawai.jam.kerja/pegawai.jam.kerja.repository';
 import { repository as AbsenHarianPegawaiRepository } from '../pegawai.absen.harian/pegawai.absen.harian.repository';
 import { repository as suratIzinRepository } from '../surat.perizinan.santri/surat.perizinan.santri.repository';
+import { repository as santriRepository } from '../santri/santri.repository';
+import { repository as pegawaiRepository } from '../pegawai/pegawai.repository';
 import { variable } from './perizinan.santri.variable';
 import {
   pengajuanIzinSchema,
@@ -401,7 +403,7 @@ export default class Controller {
           'local'
         );
       }
-
+      
       const payload = {
         ...validData,
         tanggal_pengajuan: new Date(),
@@ -411,6 +413,35 @@ export default class Controller {
       };
 
       const result = await repository.create(payload);
+
+      // Send notification
+      if (result) {
+        const receiver = await helper.receiverByRole(['administrator', 'pegawai_kedisiplinan']);
+
+        let dataMessage: any;
+        if (isPegawai) {
+          const pegawai = await pegawaiRepository.detail({ id_pegawai: result.id_pegawai });
+          dataMessage = {
+            title: 'Request Perizinan',
+            message: `Terdapat 1 perizinan baru dari pegawai (${pegawai?.nama_lengkap}).`,
+            url: `/app/perizinan-pegawai/detail?id=${result.id_izin}`,
+            receiver: receiver,
+            type: 'Perizinan',
+          }
+        } else {
+          const santri = await santriRepository.detail({ id_santri: result.id_santri });
+          dataMessage = {
+            title: 'Request Perizinan',
+            message: `Terdapat 1 perizinan baru dari santri (${santri?.fullname}).`,
+            url: `/app/perizinan-santri/detail?id=${result.id_izin}`,
+            receiver: receiver,
+            type: 'Perizinan',
+          }
+        }
+        
+        helper.sendNotification(req, dataMessage)
+      }
+
       return response.success(SUCCESS_SAVED, result, res);
     } catch (err: any) {
       const msg =
@@ -642,6 +673,43 @@ export default class Controller {
             trx
           );
         }
+      }
+
+      // Send notification
+      if (check) {
+        const roles = ['administrator']
+
+        if (body.status_approval === 'Disetujui') {
+          roles.push('satpam')
+        }
+
+        const receiver = await helper.receiverByRole(roles);
+        if (check.creator) {
+          receiver.push(check.creator.username);
+        }
+
+        let dataMessage: any;
+        if (isPegawai) {
+          const pegawai = await pegawaiRepository.detail({ id_pegawai: check.id_pegawai });
+          dataMessage = {
+            title: `Perizinan ${body.status_approval}`,
+            message: `Terdapat 1 perizinan dari pegawai (${pegawai?.nama_lengkap}) telah ${body.status_approval}.`,
+            url: `/app/perizinan-pegawai/detail?id=${check.id_izin}&view=true`,
+            receiver: receiver,
+            type: 'Perizinan',
+          }
+        } else {
+          const santri = await santriRepository.detail({ id_santri: check.id_santri });
+          dataMessage = {
+            title: `Perizinan ${body.status_approval}`,
+            message: `Terdapat 1 perizinan dari santri (${santri?.fullname}) telah ${body.status_approval}.`,
+            url: `/app/perizinan-santri/detail?id=${check.id_izin}&view=true`,
+            receiver: receiver,
+            type: 'Perizinan',
+          }
+        }
+        
+        helper.sendNotification(req, dataMessage)
       }
 
       await trx?.commit();
