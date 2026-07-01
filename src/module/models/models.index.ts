@@ -193,6 +193,10 @@ import {
   initGuruPengganti,
   associateGuruPengganti,
 } from '../app/guru.pengganti/guru.pengganti.model';
+import {
+  initKesehatanSantri,
+  associateKesehatanSantri,
+} from '../app/kesehatan.santri/kesehatan.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -263,6 +267,7 @@ export function initializeModels(sequelize: Sequelize) {
   initAbsenHarianPegawai(sequelize);
 
   initGuruPengganti(sequelize);
+  initKesehatanSantri(sequelize);
 
   // associate
   associateAppRole();
@@ -318,6 +323,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateAbsenHarianPegawai();
   addGlobalActivityHooks(sequelize);
   associateGuruPengganti();
+  associateKesehatanSantri();
 }
 
 Model.prototype.toJSON = function () {

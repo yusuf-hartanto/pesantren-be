@@ -662,6 +662,24 @@ export default class Helper {
 
     return res.length > 0 ? res.map((r: any) => r.username) : [];
   }
+  
+  public convertToRomawi(month: number): string {
+    const romawi = [
+      'I',
+      'II',
+      'III',
+      'IV',
+      'V',
+      'VI',
+      'VII',
+      'VIII',
+      'IX',
+      'X',
+      'XI',
+      'XII',
+    ];
+    return romawi[month - 1] || 'I';
+  }
 }
 
 export const helper = new Helper();

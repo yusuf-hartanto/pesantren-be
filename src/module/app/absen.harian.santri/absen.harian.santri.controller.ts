@@ -5,6 +5,7 @@ import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './absen.harian.santri.repository';
 import { repository as shiftPresensiRepo } from '../shift.presensi/shift.presensi.repository';
+import { repository as kesehatanRepo } from '../kesehatan.santri/kesehatan.santri.repository';
 import {
   absenHarianSantriSchema,
   bulkAbsenHarianSantriSchema,
@@ -157,13 +158,16 @@ export default class Controller {
         tanggal
       );
 
-      const listSantri = activePenempatan.map((p: any) => ({
-        id_santri: p.santri?.id_santri,
-        fullname: p.santri?.fullname,
-        nis: p.santri?.nis,
-        gender: p.santri?.gender,
-        id_lokasi_kamar: p.id_lokasi,
-        status_kehadiran_default: 'Hadir',
+      const listSantri = await Promise.all(activePenempatan.map(async (p: any) => {
+        const isDirawat = await kesehatanRepo.isSantriDirawat(p.santri?.id_santri);
+        return {
+          id_santri: p.santri?.id_santri,
+          fullname: p.santri?.fullname,
+          nis: p.santri?.nis,
+          gender: p.santri?.gender,
+          id_lokasi_kamar: p.id_lokasi,
+          status_kehadiran_default: isDirawat ? 'Sakit' : 'Hadir',
+        };
       }));
 
       if (listSantri.length === 0) {
@@ -265,6 +269,14 @@ export default class Controller {
           );
         }
 
+        const isDirawat = await kesehatanRepo.isSantriDirawat(item.id_santri);
+        let finalStatus = item.status_kehadiran;
+        let finalKeterangan = item.keterangan || null;
+        if (isDirawat) {
+          finalStatus = 'Sakit';
+          finalKeterangan = finalKeterangan ? `${finalKeterangan} (Dirawat)` : 'Sakit (Dirawat)';
+        }
+
         // Siapkan struktur payload database lengkap
         validatedPayloads.push({
           id_santri: item.id_santri,
@@ -272,8 +284,8 @@ export default class Controller {
           id_shift_presensi: validBody.id_shift_presensi || id_shift_presensi,
           tanggal: targetTanggal,
           waktu_absen: targetWaktu,
-          status_kehadiran: item.status_kehadiran,
-          keterangan: item.keterangan || null,
+          status_kehadiran: finalStatus,
+          keterangan: finalKeterangan,
           id_petugas,
         });
       }
@@ -486,6 +498,15 @@ export default class Controller {
       }
 
       const idLokasiSantri = penempatanAktif.id_lokasi;
+
+      const isDirawat = await kesehatanRepo.isSantriDirawat(santriKamar.id_santri);
+      if (isDirawat) {
+        return response.failed(
+          `Gagal Scan: Santri [${santriKamar.fullname}] sedang dalam status Dirawat.`,
+          422,
+          res
+        );
+      }
 
       // ========================================================
       // KONDISI TAMBAHAN: CEK JIKA SUDAH MELAKUKAN PRESENSI

@@ -6,6 +6,7 @@ import { response } from '../../../helpers/response';
 import { repository } from './absen.kelas.santri.repository';
 import { repository as repoJamPelajaran } from '../jam.pelajaran/jam.pelajaran.repository';
 import { repository as repoJurnalKelas } from '../jurnal.kelas/jurnal.kelas.repository';
+import { repository as kesehatanRepo } from '../kesehatan.santri/kesehatan.santri.repository';
 import {
   absenKelasSantriSchema,
   bulkAbsenKelasSantriSchema,
@@ -257,14 +258,22 @@ export default class Controller {
           );
         }
 
+        const isDirawat = await kesehatanRepo.isSantriDirawat(item.id_santri);
+        let finalStatus = item.status_kehadiran;
+        let finalKeterangan = item.keterangan || null;
+        if (isDirawat) {
+          finalStatus = 'Sakit';
+          finalKeterangan = finalKeterangan ? `${finalKeterangan} (Dirawat)` : 'Sakit (Dirawat)';
+        }
+
         validatedPayloads.push({
           id_santri: item.id_santri,
           id_lokasi: validBody.id_lokasi,
           id_jam_pelajaran: validBody.id_jam_pelajaran || id_jam_pelajaran,
           tanggal: targetTanggal,
           waktu_absen: targetWaktu,
-          status_kehadiran: item.status_kehadiran,
-          keterangan: item.keterangan || null,
+          status_kehadiran: finalStatus,
+          keterangan: finalKeterangan,
           id_petugas,
           id_jurnal,
         });
@@ -452,6 +461,15 @@ export default class Controller {
       if (!santri) {
         return response.failed(
           `Gagal Scan: Santri NIS [${validBody.nis}] tidak ditemukan.`,
+          422,
+          res
+        );
+      }
+
+      const isDirawat = await kesehatanRepo.isSantriDirawat(santri.getDataValue('id_santri'));
+      if (isDirawat) {
+        return response.failed(
+          `Gagal Scan: Santri [${santri.getDataValue('fullname')}] sedang dalam status Dirawat.`,
           422,
           res
         );

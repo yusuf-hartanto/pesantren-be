@@ -43,27 +43,6 @@ export default class Controller {
   }
 
   /**
-   * Helper konversi angka bulan ke format romawi untuk penomoran surat
-   */
-  private convertToRomawi(month: number): string {
-    const romawi = [
-      'I',
-      'II',
-      'III',
-      'IV',
-      'V',
-      'VI',
-      'VII',
-      'VIII',
-      'IX',
-      'X',
-      'XI',
-      'XII',
-    ];
-    return romawi[month - 1] || 'I';
-  }
-
-  /**
    * Helper: generateDataExcel
    * Menyusun struktur layout kolom, styling header, pengisian data, dan border file Excel
    */
@@ -383,7 +362,7 @@ export default class Controller {
         );
         if (hasActive) {
           throw new Error(
-            'Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.'
+            'Santri masih memiliki izin aktif atau menunggu persetujuan.'
           );
         }
       }
@@ -567,7 +546,7 @@ export default class Controller {
       if (body.status_approval === 'Disetujui') {
         const tahun = moment().year();
         const urut = await repository.getNextUrutSurat(tahun);
-        const bulanRomawi = this.convertToRomawi(moment().month() + 1);
+        const bulanRomawi = helper.convertToRomawi(moment().month());
 
         if (isPegawai) {
           // --- LOGIKA UTAMA APPROVAL PEGAWAI ---
@@ -1338,7 +1317,7 @@ export default class Controller {
                 );
                 if (hasActive) {
                   errors.push(
-                    'Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini'
+                    'Santri masih memiliki izin aktif atau menunggu persetujuan.'
                   );
                 }
               } catch (dbErr) {
@@ -1409,10 +1388,10 @@ export default class Controller {
                   : moment().year();
                 const urut = await repository.getNextUrutSurat(tahun);
                 const codeUnit = item.kode_unit || 'IZN';
-                const bulanRomawi = this.convertToRomawi(
+                const bulanRomawi = helper.convertToRomawi(
                   item.tanggal_mulai
-                    ? moment(item.tanggal_mulai).month() + 1
-                    : moment().month() + 1
+                    ? moment(item.tanggal_mulai).month()
+                    : moment().month()
                 );
 
                 const jenisKodeSurat = item.id_pegawai ? 'IZN-PEG' : 'IZN-SAN';
@@ -1535,12 +1514,11 @@ export default class Controller {
             : moment().year();
           const urut = await repository.getNextUrutSurat(tahun);
 
-          // Mengambil kode unit dari parameter objek atau default ke 'IZN' jika tidak tersedia
           const codeUnit = item.kode_unit || 'IZN';
-          const bulanRomawi = this.convertToRomawi(
+          const bulanRomawi = helper.convertToRomawi(
             item.tanggal_mulai
-              ? moment(item.tanggal_mulai).month() + 1
-              : moment().month() + 1
+              ? moment(item.tanggal_mulai).month()
+              : moment().month()
           );
           const jenisKodeSurat =
             item.id_pegawai || item.sumber_pengajuan === 'Pegawai'
