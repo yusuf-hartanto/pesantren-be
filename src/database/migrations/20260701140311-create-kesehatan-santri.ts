@@ -33,10 +33,10 @@ export const up = async (queryInterface: QueryInterface) => {
       },
       id_petugas: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,
         references: {
           model: 'app_resource',
-          key: 'id_pegawai',
+          key: 'resource_id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'RESTRICT',
