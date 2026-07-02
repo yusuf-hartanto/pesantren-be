@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import moment from 'moment';
 import Model from './absen.harian.santri.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model'; // Sesuaikan path asli Anda
@@ -25,10 +25,19 @@ export default class Repository {
         id_lokasi: id_lokasi_kamar,
         status: 'Aktif',
         is_deleted: false,
-        tanggal_masuk: { [Op.lte]: targetDate },
-        [Op.or]: [
-          { tanggal_keluar: null },
-          { tanggal_keluar: { [Op.gte]: targetDate } },
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { tanggal_masuk: null },
+              { tanggal_masuk: { [Op.lte]: targetDate } },
+            ],
+          },
+          {
+            [Op.or]: [
+              { tanggal_keluar: null },
+              { tanggal_keluar: { [Op.gte]: targetDate } },
+            ],
+          },
         ],
       },
       include: [
@@ -107,10 +116,19 @@ export default class Repository {
         id_lokasi: id_lokasi_kamar,
         status: 'Aktif',
         is_deleted: false,
-        tanggal_masuk: { [Op.lte]: targetDate },
-        [Op.or]: [
-          { tanggal_keluar: null },
-          { tanggal_keluar: { [Op.gte]: targetDate } },
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { tanggal_masuk: null },
+              { tanggal_masuk: { [Op.lte]: targetDate } },
+            ],
+          },
+          {
+            [Op.or]: [
+              { tanggal_keluar: null },
+              { tanggal_keluar: { [Op.gte]: targetDate } },
+            ],
+          },
         ],
       },
     });
@@ -287,10 +305,23 @@ export default class Repository {
 
     // 6. Filter Pencarian Global (Nama / NIS / Keyword)
     if (data?.q) {
-      const keyword = `%${data.q}%`;
+      const keyword = `%${data.q.toLowerCase()}%`;
       query.where[Op.or] = [
-        { '$santri.fullname$': { [Op.iLike]: keyword } },
-        { '$santri.nis$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+          ),
+          {
+            [Op.like]: keyword,
+          }
+        ),
       ];
     }
 
@@ -308,10 +339,19 @@ export default class Repository {
     const penempatanWhere: any = {
       status: 'Aktif',
       is_deleted: false,
-      tanggal_masuk: { [Op.lte]: targetDate },
-      [Op.or]: [
-        { tanggal_keluar: null },
-        { tanggal_keluar: { [Op.gte]: targetDate } },
+      [Op.and]: [
+        {
+          [Op.or]: [
+            { tanggal_masuk: null },
+            { tanggal_masuk: { [Op.lte]: targetDate } },
+          ],
+        },
+        {
+          [Op.or]: [
+            { tanggal_keluar: null },
+            { tanggal_keluar: { [Op.gte]: targetDate } },
+          ],
+        },
       ],
     };
 
@@ -422,10 +462,23 @@ export default class Repository {
 
       // 6. Filter Pencarian Global (Nama / NIS)
       if (q) {
-        const keyword = `%${q}%`;
+        const keyword = `%${q.toLowerCase()}%`;
         whereClause[Op.or] = [
-          { '$santri.fullname$': { [Op.iLike]: keyword } },
-          { '$santri.nis$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         ];
       }
     }
@@ -477,10 +530,19 @@ export default class Repository {
     let condition: any = {
       status: 'Aktif',
       is_deleted: false,
-      tanggal_masuk: { [Op.lte]: targetDate },
-      [Op.or]: [
-        { tanggal_keluar: null },
-        { tanggal_keluar: { [Op.gte]: targetDate } },
+      [Op.and]: [
+        {
+          [Op.or]: [
+            { tanggal_masuk: null },
+            { tanggal_masuk: { [Op.lte]: targetDate } },
+          ],
+        },
+        {
+          [Op.or]: [
+            { tanggal_keluar: null },
+            { tanggal_keluar: { [Op.gte]: targetDate } },
+          ],
+        },
       ],
     };
 

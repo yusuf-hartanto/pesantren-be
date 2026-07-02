@@ -12,11 +12,11 @@ import SuratPerizinanSantri from '../surat.perizinan.santri/surat.perizinan.sant
 
 export class PerizinanSantri extends Model {
   declare id_izin: string;
-  declare id_santri: string | null;       
-  declare id_lokasi_kamar: string | null;  
-  declare id_pegawai: string | null;       
-  declare id_lokasi_kerja: string | null;  
-  declare sumber_pengajuan: 'Waliasuh' | 'Orang Tua' | 'Kesehatan' | 'Pegawai'; 
+  declare id_santri: string | null;
+  declare id_lokasi_kamar: string | null;
+  declare id_pegawai: string | null;
+  declare id_lokasi_kerja: string | null;
+  declare sumber_pengajuan: 'Waliasuh' | 'Orang Tua' | 'Kesehatan' | 'Pegawai';
   declare jenis_izin: 'Izin' | 'Sakit';
   declare kondisi: string;
   declare tanggal_pengajuan: Date;
@@ -41,9 +41,9 @@ export class PerizinanSantri extends Model {
   declare deleted_at: Date | null;
 
   declare santri?: Santri;
-  declare pegawai?: Pegawai;               
+  declare pegawai?: Pegawai;
   declare lokasiKamar?: Lokasi;
-  declare lokasiKerja?: Lokasi;            
+  declare lokasiKerja?: Lokasi;
   declare approver?: AppResource;
   declare canceler?: AppResource;
   declare creator?: AppResource;
@@ -59,11 +59,11 @@ export function initPerizinanSantri(sequelize: Sequelize) {
       },
       id_santri: {
         type: DataTypes.STRING,
-        allowNull: true,                   
+        allowNull: true,
       },
       id_lokasi_kamar: {
         type: DataTypes.STRING,
-        allowNull: true,                   
+        allowNull: true,
       },
       id_pegawai: {
         type: DataTypes.STRING,

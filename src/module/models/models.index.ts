@@ -166,6 +166,10 @@ import {
   associateAbsenKelasSantri,
 } from '../app/absen.kelas.santri/absen.kelas.santri.model';
 import {
+  initJurnalKelas,
+  associateJurnalKelas,
+} from '../app/jurnal.kelas/jurnal.kelas.model';
+import {
   initNotification,
   associateNotification,
 } from '../app/notification/notification.model';
@@ -189,6 +193,10 @@ import {
   initGuruPengganti,
   associateGuruPengganti,
 } from '../app/guru.pengganti/guru.pengganti.model';
+import {
+  initKesehatanSantri,
+  associateKesehatanSantri,
+} from '../app/kesehatan.santri/kesehatan.santri.model';
 
 export function initializeModels(sequelize: Sequelize) {
   // initialize
@@ -250,6 +258,7 @@ export function initializeModels(sequelize: Sequelize) {
   initLogGateSantri(sequelize);
 
   initAbsenKelasSantri(sequelize);
+  initJurnalKelas(sequelize);
   initNotification(sequelize);
   initRapotSantri(sequelize);
   initPenempatanKelasSantri(sequelize);
@@ -258,6 +267,7 @@ export function initializeModels(sequelize: Sequelize) {
   initAbsenHarianPegawai(sequelize);
 
   initGuruPengganti(sequelize);
+  initKesehatanSantri(sequelize);
 
   // associate
   associateAppRole();
@@ -305,6 +315,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateSuratPerizinanSantri();
   associateLogGateSantri();
   associateAbsenKelasSantri();
+  associateJurnalKelas();
   associateNotification();
   associateRapotSantri();
   associatePenempatanKelasSantri();
@@ -312,6 +323,7 @@ export function initializeModels(sequelize: Sequelize) {
   associateAbsenHarianPegawai();
   addGlobalActivityHooks(sequelize);
   associateGuruPengganti();
+  associateKesehatanSantri();
 }
 
 Model.prototype.toJSON = function () {

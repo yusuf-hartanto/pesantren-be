@@ -87,13 +87,20 @@ export const up = async (queryInterface: QueryInterface) => {
     },
   });
 
-  await queryInterface.addIndex('absen_harian_pegawai', ['id_pegawai', 'tanggal', 'id_jamkerja', 'deleted_at'], {
-    unique: true,
-    name: 'unique_pegawai_tanggal_jamkerja_idx',
-  });
+  await queryInterface.addIndex(
+    'absen_harian_pegawai',
+    ['id_pegawai', 'tanggal', 'id_jamkerja', 'deleted_at'],
+    {
+      unique: true,
+      name: 'unique_pegawai_tanggal_jamkerja_idx',
+    }
+  );
 };
 
 export const down = async (queryInterface: QueryInterface) => {
-  await queryInterface.removeIndex('absen_harian_pegawai', 'unique_pegawai_tanggal_jamkerja_idx');
+  await queryInterface.removeIndex(
+    'absen_harian_pegawai',
+    'unique_pegawai_tanggal_jamkerja_idx'
+  );
   await queryInterface.dropTable('absen_harian_pegawai');
 };

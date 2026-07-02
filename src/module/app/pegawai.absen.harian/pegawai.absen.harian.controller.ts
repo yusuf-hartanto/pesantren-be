@@ -441,13 +441,15 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      const { q, template, id_pegawai } = req.body;
+      const { q, template, id_pegawai, tanggal_awal, tanggal_akhir } = req.body;
       const isTemplate: boolean = template && template == '1';
 
       let result = await repository.listForExport({
         q,
         isTemplate,
         id_pegawai,
+        tanggal_awal,
+        tanggal_akhir
       });
 
       const { dir, path } = await helper.checkDirExport('excel');

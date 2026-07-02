@@ -18,13 +18,18 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
-          nama_asrama: { [Op.like]: keyword },
+          nama_asrama: Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('Asrama.nama_asrama')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         },
       };
     }
@@ -49,17 +54,43 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_asrama: { [Op.like]: keyword } },
-            { jumlah_kamar: { [Op.like]: keyword } },
-            { keterangan: { [Op.like]: keyword } },
-            { '$cabang.nama_cabang$': { [Op.like]: keyword } },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('Asrama.nama_asrama')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Asrama.jumlah_kamar'), 'TEXT')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Asrama.keterangan'), 'TEXT')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('cabang.nama_cabang')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

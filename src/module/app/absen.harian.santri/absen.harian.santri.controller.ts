@@ -5,6 +5,7 @@ import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './absen.harian.santri.repository';
 import { repository as shiftPresensiRepo } from '../shift.presensi/shift.presensi.repository';
+import { repository as kesehatanRepo } from '../kesehatan.santri/kesehatan.santri.repository';
 import {
   absenHarianSantriSchema,
   bulkAbsenHarianSantriSchema,
@@ -157,13 +158,16 @@ export default class Controller {
         tanggal
       );
 
-      const listSantri = activePenempatan.map((p: any) => ({
-        id_santri: p.santri?.id_santri,
-        fullname: p.santri?.fullname,
-        nis: p.santri?.nis,
-        gender: p.santri?.gender,
-        id_lokasi_kamar: p.id_lokasi,
-        status_kehadiran_default: 'Hadir',
+      const listSantri = await Promise.all(activePenempatan.map(async (p: any) => {
+        const isDirawat = await kesehatanRepo.isSantriDirawat(p.santri?.id_santri);
+        return {
+          id_santri: p.santri?.id_santri,
+          fullname: p.santri?.fullname,
+          nis: p.santri?.nis,
+          gender: p.santri?.gender,
+          id_lokasi_kamar: p.id_lokasi,
+          status_kehadiran_default: isDirawat ? 'Sakit' : 'Hadir',
+        };
       }));
 
       if (listSantri.length === 0) {
@@ -190,10 +194,11 @@ export default class Controller {
       const { waktu_absen } = req.query;
 
       if (!waktu_absen) {
-        return res.status(400).json({
-          status: false,
-          message: 'Parameter waktu_absen wajib diisi (Format: HH:mm:ss)',
-        });
+        return response.failed(
+          'Parameter waktu_absen wajib diisi (Format: HH:mm:ss)',
+          400,
+          res
+        );
       }
 
       let result: any = await repository.findMatchingAsramaShift(
@@ -207,20 +212,20 @@ export default class Controller {
         isFallbackToAll = true;
       }
 
-      return res.status(200).json({
-        status: true,
-        message: isFallbackToAll
+      return response.success(
+        isFallbackToAll
           ? 'Tidak ada shift yang cocok dengan waktu tersebut. Menampilkan semua shift asrama aktif.'
           : 'Berhasil menemukan shift asrama yang cocok.',
-        data: isFallbackToAll ? result : [result],
-      });
+        isFallbackToAll ? result : [result],
+        res
+      );
     } catch (error: any) {
       console.error('Error pada findAsramaShift:', error);
-      return res.status(500).json({
-        status: false,
-        message: 'Terjadi kesalahan internal server',
-        error: error.message,
-      });
+      return response.failed(
+        error.message || 'Terjadi kesalahan internal server',
+        500,
+        res
+      );
     }
   }
 
@@ -264,6 +269,14 @@ export default class Controller {
           );
         }
 
+        const isDirawat = await kesehatanRepo.isSantriDirawat(item.id_santri);
+        let finalStatus = item.status_kehadiran;
+        let finalKeterangan = item.keterangan || null;
+        if (isDirawat) {
+          finalStatus = 'Sakit';
+          finalKeterangan = finalKeterangan ? `${finalKeterangan} (Dirawat)` : 'Sakit (Dirawat)';
+        }
+
         // Siapkan struktur payload database lengkap
         validatedPayloads.push({
           id_santri: item.id_santri,
@@ -271,8 +284,8 @@ export default class Controller {
           id_shift_presensi: validBody.id_shift_presensi || id_shift_presensi,
           tanggal: targetTanggal,
           waktu_absen: targetWaktu,
-          status_kehadiran: item.status_kehadiran,
-          keterangan: item.keterangan || null,
+          status_kehadiran: finalStatus,
+          keterangan: finalKeterangan,
           id_petugas,
         });
       }
@@ -485,6 +498,15 @@ export default class Controller {
       }
 
       const idLokasiSantri = penempatanAktif.id_lokasi;
+
+      const isDirawat = await kesehatanRepo.isSantriDirawat(santriKamar.id_santri);
+      if (isDirawat) {
+        return response.failed(
+          `Gagal Scan: Santri [${santriKamar.fullname}] sedang dalam status Dirawat.`,
+          422,
+          res
+        );
+      }
 
       // ========================================================
       // KONDISI TAMBAHAN: CEK JIKA SUDAH MELAKUKAN PRESENSI

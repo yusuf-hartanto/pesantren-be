@@ -13,7 +13,7 @@ export const up = async (queryInterface: QueryInterface) => {
     // Diubah menjadi allowNull: true agar baris milik pegawai bisa mengosongkannya
     id_santri: {
       type: DataTypes.STRING,
-      allowNull: true, 
+      allowNull: true,
       references: {
         model: 'santri',
         key: 'id_santri',

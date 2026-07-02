@@ -1,10 +1,9 @@
 'use strict';
 
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import moment from 'moment';
 import Model from './absen.kelas.santri.model';
 import AppSantri from '../santri/santri.model';
-import Lokasi from '../location/location.model';
 import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
@@ -224,11 +223,42 @@ export default class Repository {
     }
 
     // 6. Filter Pencarian Global (Nama / NIS / Keyword)
-    if (data?.q) {
-      const keyword = `%${data.q}%`;
+    if (data?.keyword) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       query.where[Op.or] = [
-        { '$santri.fullname$': { [Op.iLike]: keyword } },
-        { '$santri.nis$': { [Op.iLike]: keyword } },
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+          ),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('jamPelajaran.nama_jampel')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
       ];
     }
 
@@ -260,6 +290,7 @@ export default class Repository {
         status_kehadiran: 'Hadir',
         waktu_absen: payload.waktu_absen,
         id_petugas: payload.id_petugas,
+        id_jurnal: payload.id_jurnal,
         keterangan: 'Hadir via Pindai QR Code',
       });
     }
@@ -324,10 +355,23 @@ export default class Repository {
 
       // 6. Filter Pencarian Global (Nama / NIS)
       if (q) {
-        const keyword = `%${q}%`;
+        const keyword = `%${q.toLowerCase()}%`;
         whereClause[Op.or] = [
-          { '$santri.fullname$': { [Op.iLike]: keyword } },
-          { '$santri.nis$': { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         ];
       }
     }
@@ -407,8 +451,13 @@ export default class Repository {
       const placements = await PenempatanKelasSantri.findAll({
         where: {
           status: 'Aktif',
-          tanggal_masuk: { [Op.lte]: targetDate },
           [Op.and]: [
+            {
+              [Op.or]: [
+                { tanggal_masuk: null },
+                { tanggal_masuk: { [Op.lte]: targetDate } },
+              ],
+            },
             {
               [Op.or]: [
                 { tanggal_keluar: null },
@@ -454,8 +503,13 @@ export default class Repository {
       where: {
         id_santri,
         status: 'Aktif',
-        tanggal_masuk: { [Op.lte]: targetDate },
         [Op.and]: [
+          {
+            [Op.or]: [
+              { tanggal_masuk: null },
+              { tanggal_masuk: { [Op.lte]: targetDate } },
+            ],
+          },
           {
             [Op.or]: [
               { tanggal_keluar: null },

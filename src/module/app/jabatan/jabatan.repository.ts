@@ -19,13 +19,18 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
-          nama_jabatan: { [Op.like]: keyword },
+          nama_jabatan: Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('Jabatan.nama_jabatan')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         },
       };
     }
@@ -50,25 +55,49 @@ export default class Repository {
       ],
     };
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
 
     if (keyword) {
       query = {
         ...query,
         where: {
           [Op.or]: [
-            { nama_jabatan: { [Op.iLike]: keyword } },
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'),
-              { [Op.iLike]: keyword }
+              Sequelize.fn('LOWER', Sequelize.col('Jabatan.nama_jabatan')),
+              { [Op.like]: keyword }
             ),
             Sequelize.where(
-              Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'),
-              { [Op.iLike]: keyword }
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text')
+              ),
+              { [Op.like]: keyword }
             ),
-            { kode_jabatan: { [Op.iLike]: keyword } },
-            { keterangan: { [Op.iLike]: keyword } },
-            { '$orgunit.nama_orgunit$': { [Op.iLike]: keyword } },
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Jabatan.kode_jabatan'), 'text')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('Jabatan.keterangan'), 'text')
+              ),
+              { [Op.like]: keyword }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('orgunit.nama_orgunit')),
+              { [Op.like]: keyword }
+            ),
           ],
         },
       };
@@ -142,27 +171,51 @@ export default class Repository {
   }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
-
     let whereClause: any = {};
 
     if (!isTemplate && keyword) {
+      const keywordLower = keyword.toLowerCase();
       whereClause = {
         [Op.and]: [
           { deleted_at: null },
           {
             [Op.or]: [
-              { nama_jabatan: { [Op.iLike]: keyword } },
-              { kode_jabatan: { [Op.iLike]: keyword } },
-              { keterangan: { [Op.iLike]: keyword } },
               Sequelize.where(
-                Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text'),
-                { [Op.iLike]: keyword }
+                Sequelize.fn('LOWER', Sequelize.col('Jabatan.nama_jabatan')),
+                { [Op.like]: keywordLower }
               ),
               Sequelize.where(
-                Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text'),
-                { [Op.iLike]: keyword }
+                Sequelize.fn(
+                  'LOWER',
+                  Sequelize.cast(Sequelize.col('Jabatan.kode_jabatan'), 'text')
+                ),
+                { [Op.like]: keywordLower }
               ),
-              { '$orgunit.nama_orgunit$': { [Op.iLike]: keyword } },
+              Sequelize.where(
+                Sequelize.fn(
+                  'LOWER',
+                  Sequelize.cast(Sequelize.col('Jabatan.keterangan'), 'text')
+                ),
+                { [Op.like]: keywordLower }
+              ),
+              Sequelize.where(
+                Sequelize.fn(
+                  'LOWER',
+                  Sequelize.cast(Sequelize.col('Jabatan.level_jabatan'), 'text')
+                ),
+                { [Op.like]: keywordLower }
+              ),
+              Sequelize.where(
+                Sequelize.fn(
+                  'LOWER',
+                  Sequelize.cast(Sequelize.col('Jabatan.sifat_jabatan'), 'text')
+                ),
+                { [Op.like]: keywordLower }
+              ),
+              Sequelize.where(
+                Sequelize.fn('LOWER', Sequelize.col('orgunit.nama_orgunit')),
+                { [Op.like]: keywordLower }
+              ),
             ],
           },
         ],

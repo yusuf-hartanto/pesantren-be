@@ -4,6 +4,11 @@ import { Op, Sequelize } from 'sequelize';
 import RapotSantri from './rapot.santri.model';
 import Santri from '../santri/santri.model';
 import AppResource from '../resource/resource.model';
+import Cabang from '../cabang/cabang.model';
+import PenempatanKelasSantri from '../penempatan.kelas.santri/penempatan.kelas.santri.model';
+import KelasMda from '../kelas.mda/kelas.mda.model';
+import KelasFormal from '../kelas.formal/kelas.formal.model';
+import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 
 export default class Repository {
   public list(data: any) {
@@ -53,29 +58,54 @@ export default class Repository {
       where.status = data.status;
     }
 
-      console.warn(data)
+    if (data?.id_cabang && data?.id_cabang != '') {
+      where['$santri.id_cabang$'] = data?.id_cabang;
+    }
+
+    const whereAnd: any[] = [];
+
     if (data?.tahun) {
       const tahun = `%${data.tahun.toLowerCase()}%`;
-      where[Op.and] = [
+      whereAnd.push(
         Sequelize.where(
           Sequelize.fn('LOWER', Sequelize.col('RapotSantri.tahun_ajaran')),
           {
             [Op.like]: tahun,
           }
-        ),
-      ];
+        )
+      );
     }
 
     if (data?.semester) {
       const semester = `%${data.semester.toLowerCase()}%`;
-      where[Op.and] = [
+      whereAnd.push(
         Sequelize.where(
           Sequelize.fn('LOWER', Sequelize.col('RapotSantri.semester')),
           {
             [Op.like]: semester,
           }
-        ),
-      ];
+        )
+      );
+    }
+
+    if (data?.id_kelas && data?.id_kelas != '') {
+      whereAnd.push(
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('RapotSantri.tahun_ajaran')),
+          Op.eq,
+          Sequelize.fn('LOWER', Sequelize.col('santri->penempatanKelas->tahunAjaran.tahun_ajaran'))
+        )
+      );
+      whereAnd.push({
+        [Op.or]: [
+          { '$santri.penempatanKelas.id_kelas_formal$': data.id_kelas },
+          { '$santri.penempatanKelas.id_kelas_mda$': data.id_kelas },
+        ],
+      });
+    }
+
+    if (whereAnd.length > 0) {
+      where[Op.and] = whereAnd;
     }
 
     if (data?.keyword) {
@@ -87,12 +117,9 @@ export default class Repository {
             [Op.like]: keyword,
           }
         ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('santri.nis')),
-          {
-            [Op.like]: keyword,
-          }
-        ),
+        Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('santri.nis')), {
+          [Op.like]: keyword,
+        }),
         Sequelize.where(
           Sequelize.fn('LOWER', Sequelize.col('RapotSantri.tahun_ajaran')),
           {
@@ -100,10 +127,7 @@ export default class Repository {
           }
         ),
         Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.col('RapotSantri.semester')
-          ),
+          Sequelize.fn('LOWER', Sequelize.col('RapotSantri.semester')),
           {
             [Op.like]: keyword,
           }
@@ -122,6 +146,34 @@ export default class Repository {
           model: Santri,
           as: 'santri',
           attributes: santriAttributes,
+          include: [
+            {
+              model: Cabang,
+              as: 'cabang',
+              attributes: ['id_cabang', 'nama_cabang'],
+            },
+            {
+              model: PenempatanKelasSantri,
+              as: 'penempatanKelas',
+              include: [
+                {
+                  model: KelasMda,
+                  as: 'kelasMda',
+                  attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+                },
+                {
+                  model: KelasFormal,
+                  as: 'kelasFormal',
+                  attributes: ['id_kelas', 'nama_kelas'],
+                },
+                {
+                  model: TahunAjaran,
+                  as: 'tahunAjaran',
+                  attributes: ['id_tahunajaran', 'tahun_ajaran'],
+                },
+              ],
+            },
+          ],
         },
         {
           model: AppResource,

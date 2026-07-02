@@ -168,18 +168,49 @@ export default class Repository {
       andConditions.push(this.buildKondisiFilter(data.status));
     }
 
-    const keyword = data?.keyword ? `%${data.keyword}%` : null;
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       andConditions.push({
         [Op.or]: [
-          { '$perizinanSantri.santri.fullname$': { [Op.iLike]: keyword } },
-          { '$perizinanSantri.santri.nis$': { [Op.iLike]: keyword } },
-          {
-            '$perizinanSantri.lokasiKamar.nama_lokasi$': {
-              [Op.iLike]: keyword,
-            },
-          },
-          { keterangan: { [Op.iLike]: keyword } },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('perizinanSantri.santri.fullname')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('perizinanSantri.santri.nis'),
+                'TEXT'
+              )
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('perizinanSantri.lokasiKamar.nama_lokasi')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('LogGateSantri.keterangan'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         ],
       });
     }
@@ -394,17 +425,40 @@ export default class Repository {
       andConditions.push(this.buildKondisiFilter(status));
     }
 
-    const keyword = q ? `%${q}%` : null;
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
     if (!isTemplate && keyword) {
       andConditions.push({
         [Op.or]: [
-          { '$perizinanSantri.santri.fullname$': { [Op.iLike]: keyword } },
-          { '$perizinanSantri.santri.nis$': { [Op.iLike]: keyword } },
-          {
-            '$perizinanSantri.lokasiKamar.nama_lokasi$': {
-              [Op.iLike]: keyword,
-            },
-          },
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('perizinanSantri.santri.fullname')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('perizinanSantri.santri.nis'),
+                'TEXT'
+              )
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('perizinanSantri.lokasiKamar.nama_lokasi')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
         ],
       });
     }

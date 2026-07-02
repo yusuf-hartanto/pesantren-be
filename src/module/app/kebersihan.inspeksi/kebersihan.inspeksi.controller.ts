@@ -73,7 +73,7 @@ const generateDataExcelPetugas = (sheet: any, details: any) => {
     'Jadwal',
     'Inspeksi',
     'Tidak Inspeksi',
-    'Temuan'
+    'Temuan',
   ]);
 
   sheet.getRow(1).eachCell((cell: any) => {
@@ -168,8 +168,15 @@ export default class Controller {
 
   public async create(req: Request, res: Response) {
     try {
-      const { kode_slot, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans, tanggal } =
-        req?.body;
+      const {
+        kode_slot,
+        id_lokasi,
+        id_petugas,
+        id_cabang,
+        id_jadwal,
+        temuans,
+        tanggal,
+      } = req?.body;
 
       for (const temuan of temuans) {
         let checkFile = helper.checkExtentionBase64(temuan.foto_path);
@@ -221,6 +228,21 @@ export default class Controller {
 
       const details = await temuanRepository.insert(insert);
 
+      // Send notification
+      if (result && result.status_kondisi === 'RUSAK') {
+        const receiver = await helper.receiverByRole(['administrator']);
+
+        const dataMessage = {
+          title: 'Inspeksi',
+          message: `Kondisi Rusak.`,
+          url: `/app/kebersihan-inspeksi/form?id=${result.id_inspeksi}&view=true`,
+          receiver: receiver,
+          type: 'Inspeksi',
+        }
+        
+        helper.sendNotification(req, dataMessage)
+      }
+
       return response.success(SUCCESS_SAVED, result, res);
     } catch (err: any) {
       return helper.catchError(
@@ -235,8 +257,15 @@ export default class Controller {
     try {
       const id: string = req?.params?.id || '';
 
-      const { kode_slot, id_lokasi, id_petugas, id_cabang, id_jadwal, temuans, tanggal } =
-        req?.body;
+      const {
+        kode_slot,
+        id_lokasi,
+        id_petugas,
+        id_cabang,
+        id_jadwal,
+        temuans,
+        tanggal,
+      } = req?.body;
       const idLokasi = id_lokasi?.value;
       const idPetugas = id_petugas?.value;
       const idCabang = id_cabang?.value;
@@ -404,7 +433,10 @@ export default class Controller {
         tanggal_akhir: req?.query?.tanggal_akhir || '',
       };
 
-      const { count, rows } = (await repository.indexPetugas(query)) as { count: number; rows: any[] };
+      const { count, rows } = (await repository.indexPetugas(query)) as {
+        count: number;
+        rows: any[];
+      };
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(
@@ -425,12 +457,13 @@ export default class Controller {
     try {
       const query = {
         tanggal_awal: req?.body?.tanggal_awal || '',
-        tanggal_akhir: req?.body?.tanggal_akhir || ''
+        tanggal_akhir: req?.body?.tanggal_akhir || '',
       };
 
       let result: any = [];
       result = await repository.indexPetugasList(query);
-      if (result?.length < 1) return response.success(NOT_FOUND, null, res, false);
+      if (result?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
 
       const { dir, path } = await helper.checkDirExport('excel');
 

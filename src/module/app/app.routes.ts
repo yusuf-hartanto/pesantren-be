@@ -68,6 +68,7 @@ import { AbsenHarianSantriController } from './absen.harian.santri/absen.harian.
 import { PerizinanSantriController } from './perizinan.santri/perizinan.santri.controller';
 import { LogGateSantriController } from './log.gate.santri/log.gate.santri.controller';
 import { AbsenKelasSantriController } from './absen.kelas.santri/absen.kelas.santri.controller';
+import { JurnalKelasController } from './jurnal.kelas/jurnal.kelas.controller';
 import { notification } from './notification/notification.controller';
 import { notificationSchema } from './notification/notification.schema';
 import { controller as rapotSantriController } from './rapot.santri/rapot.santri.controller';
@@ -77,6 +78,8 @@ import { AbsenHarianPegawaiController } from './pegawai.absen.harian/pegawai.abs
 import { activityLog } from './activity.log/activity.log.controller';
 import { guruPengganti } from './guru.pengganti/guru.pengganti.controller';
 import { guruPenggantiSchema } from './guru.pengganti/guru.pengganti.schema';
+import { controller as kesehatanSantri } from './kesehatan.santri/kesehatan.santri.controller';
+import { createKesehatanSchema, updateKesehatanSchema } from './kesehatan.santri/kesehatan.santri.schema';
 
 const router: Router = Router();
 
@@ -499,6 +502,11 @@ router.post('/absen-kelas-santri/import', AbsenKelasSantriController.import);
 router.post('/absen-kelas-santri/insert', AbsenKelasSantriController.insert);
 router.put('/absen-kelas-santri/:id', AbsenKelasSantriController.update);
 
+router.get('/jurnal-kelas/active', JurnalKelasController.getActiveJurnal);
+router.post('/jurnal-kelas/end', JurnalKelasController.endJurnal);
+router.get('/jurnal-kelas', JurnalKelasController.index);
+router.post('/jurnal-kelas/export', JurnalKelasController.export);
+
 router.get('/kegiatan-akademik/all-data', kegiatanAkademik.list);
 router.get('/kegiatan-akademik', kegiatanAkademik.index);
 router.get('/kegiatan-akademik/:id', kegiatanAkademik.detail);
@@ -726,7 +734,10 @@ router.put(
 router.delete('/kebersihan-inspeksi/:id', kebersihanInspeksi.delete);
 router.post('/kebersihan-inspeksi/export', kebersihanInspeksi.export);
 router.get('/kebersihan-inspeksi-petugas', kebersihanInspeksi.indexPetugas);
-router.post('/kebersihan-inspeksi-petugas/export', kebersihanInspeksi.exportPetugas);
+router.post(
+  '/kebersihan-inspeksi-petugas/export',
+  kebersihanInspeksi.exportPetugas
+);
 
 router.get('/kebersihan-temuan/all-data', kebersihanTemuan.list);
 router.get('/kebersihan-temuan', kebersihanTemuan.index);
@@ -779,18 +790,66 @@ router.put(
 router.delete('/notification/:id', notification.delete);
 
 // ROUTE PERIZINAN SANTRI
-router.get('/perizinan-santri', auth.checkBearerToken, PerizinanSantriController.index);
-router.post('/perizinan-santri', auth.checkBearerToken, PerizinanSantriController.create);
-router.post('/perizinan-santri/approve/:id', auth.checkBearerToken, PerizinanSantriController.approve);
-router.post('/perizinan-santri/cancel/:id', auth.checkBearerToken, PerizinanSantriController.cancel);
-router.post('/perizinan-santri/request-cancellation/:id', auth.checkBearerToken, PerizinanSantriController.requestPembatalan);
-router.post('/perizinan-santri/scan-qr-gate', auth.checkBearerToken, PerizinanSantriController.scanQrGate);
-router.post('/perizinan-santri/scan-card-gate', auth.checkBearerToken, PerizinanSantriController.scanCardGate);
-router.post('/perizinan-santri/export', auth.checkBearerToken, PerizinanSantriController.export);
-router.post('/perizinan-santri/import', auth.checkBearerToken, PerizinanSantriController.import);
-router.post('/perizinan-santri/insert', auth.checkBearerToken, PerizinanSantriController.insert);
-router.get('/perizinan-santri/:id', auth.checkBearerToken, PerizinanSantriController.detail);
-router.put('/perizinan-santri/:id', auth.checkBearerToken, PerizinanSantriController.update);
+router.get(
+  '/perizinan-santri',
+  auth.checkBearerToken,
+  PerizinanSantriController.index
+);
+router.post(
+  '/perizinan-santri',
+  auth.checkBearerToken,
+  PerizinanSantriController.create
+);
+router.post(
+  '/perizinan-santri/approve/:id',
+  auth.checkBearerToken,
+  PerizinanSantriController.approve
+);
+router.post(
+  '/perizinan-santri/cancel/:id',
+  auth.checkBearerToken,
+  PerizinanSantriController.cancel
+);
+router.post(
+  '/perizinan-santri/request-cancellation/:id',
+  auth.checkBearerToken,
+  PerizinanSantriController.requestPembatalan
+);
+router.post(
+  '/perizinan-santri/scan-qr-gate',
+  auth.checkBearerToken,
+  PerizinanSantriController.scanQrGate
+);
+router.post(
+  '/perizinan-santri/scan-card-gate',
+  auth.checkBearerToken,
+  PerizinanSantriController.scanCardGate
+);
+router.post(
+  '/perizinan-santri/export',
+  auth.checkBearerToken,
+  PerizinanSantriController.export
+);
+router.post(
+  '/perizinan-santri/import',
+  auth.checkBearerToken,
+  PerizinanSantriController.import
+);
+router.post(
+  '/perizinan-santri/insert',
+  auth.checkBearerToken,
+  PerizinanSantriController.insert
+);
+router.get(
+  '/perizinan-santri/:id',
+  auth.checkBearerToken,
+  PerizinanSantriController.detail
+);
+router.put(
+  '/perizinan-santri/:id',
+  auth.checkBearerToken,
+  PerizinanSantriController.update
+);
 router.get(
   '/log-gate-santri/all-data',
   auth.checkBearerToken,
@@ -843,6 +902,11 @@ router.get(
   rapotSantriController.list
 );
 router.get('/rapot-santri', auth.checkBearerToken, rapotSantriController.index);
+router.post(
+  '/rapot-santri/export',
+  auth.checkBearerToken,
+  rapotSantriController.export
+);
 router.get(
   '/rapot-santri/:id',
   auth.checkBearerToken,
@@ -932,5 +996,41 @@ router.delete('/guru-pengganti/:id', guruPengganti.delete);
 router.post('/guru-pengganti/export', guruPengganti.export);
 router.post('/guru-pengganti/import', guruPengganti.import);
 router.post('/guru-pengganti/insert', guruPengganti.insert);
+
+// ROUTE KESEHATAN SANTRI
+router.get(
+  '/kesehatan-santri',
+  auth.checkBearerToken,
+  kesehatanSantri.index
+);
+router.get(
+  '/kesehatan-santri/:id',
+  auth.checkBearerToken,
+  kesehatanSantri.detail
+);
+router.post(
+  '/kesehatan-santri',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(createKesehatanSchema),
+  kesehatanSantri.create
+);
+router.put(
+  '/kesehatan-santri/:id',
+  auth.checkBearerToken,
+  sanitizeBody,
+  validate(updateKesehatanSchema),
+  kesehatanSantri.update
+);
+router.delete(
+  '/kesehatan-santri/:id',
+  auth.checkBearerToken,
+  kesehatanSantri.delete
+);
+router.post(
+  '/kesehatan-santri/export',
+  auth.checkBearerToken,
+  kesehatanSantri.export
+);
 
 export default router;

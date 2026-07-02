@@ -12,6 +12,8 @@ import KebersihanTemuan from '../app/kebersihan.temuan/kebersihan.temuan.model';
 import KebersihanInspeksi from '../app/kebersihan.inspeksi/kebersihan.inspeksi.model';
 import PerizinanSantri from '../app/perizinan.santri/perizinan.santri.model';
 import Pegawai from '../app/pegawai/pegawai.model';
+import AbsenHarianPegawai from '../app/pegawai.absen.harian/pegawai.absen.harian.model';
+import JurnalKelas from '../app/jurnal.kelas/jurnal.kelas.model';
 import { Op, Sequelize } from 'sequelize';
 import moment from 'moment';
 
@@ -212,21 +214,159 @@ export default class Service {
     tanggal_selesai?: string
   ) {
     let dateFilter: any;
+    let dateTimeFilter: any;
 
     if (tanggal_mulai && tanggal_selesai) {
       dateFilter = { [Op.between]: [tanggal_mulai, tanggal_selesai] };
+      dateTimeFilter = { [Op.between]: [`${tanggal_mulai} 00:00:00`, `${tanggal_selesai} 23:59:59`] };
     } else {
-      dateFilter = tanggal || moment().format('YYYY-MM-DD');
+      const targetDate = tanggal || moment().format('YYYY-MM-DD');
+      dateFilter = targetDate;
+      dateTimeFilter = { [Op.between]: [`${targetDate} 00:00:00`, `${targetDate} 23:59:59`] };
     }
 
-    const santriStats = (await AppSantri.findAll({
-      attributes: [
-        'status',
-        [Sequelize.fn('COUNT', Sequelize.col('id_santri')), 'count'],
-      ],
-      group: ['status'],
-      raw: true,
-    })) as any[];
+    const [
+      santriStats,
+      absensiStats,
+      absensiKelasStats,
+      pegawaiStats,
+      temuanStats,
+      perizinanStats,
+      absensiPegawaiStats,
+      totalSesiGuru,
+      kebersihanInspeksiStats,
+      perizinanPegawaiStats
+    ] = await Promise.all([
+      AppSantri.findAll({
+        attributes: [
+          'status',
+          [Sequelize.fn('COUNT', Sequelize.col('id_santri')), 'count'],
+        ],
+        group: ['status'],
+        raw: true,
+      }),
+      AbsenHarianSantri.findAll({
+        attributes: [
+          'status_kehadiran',
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        group: ['status_kehadiran'],
+        raw: true,
+      }),
+      AbsenKelasSantri.findAll({
+        attributes: [
+          'status_kehadiran',
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        group: ['status_kehadiran'],
+        raw: true,
+      }),
+      Pegawai.findAll({
+        attributes: [
+          [
+            Sequelize.literal(`
+              CASE 
+                WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) 
+                THEN 'GURU' 
+                ELSE 'PEGAWAI' END
+              `),
+            'role',
+          ],
+          [Sequelize.fn('COUNT', Sequelize.col('id_pegawai')), 'count'],
+        ],
+        where: { status_pegawai: 'Aktif' },
+        group: [
+          Sequelize.literal(`
+          CASE 
+            WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) THEN 'GURU' 
+            ELSE 'PEGAWAI' 
+          END
+        `) as any,
+        ],
+        raw: true,
+      }),
+      KebersihanTemuan.findAll({
+        include: [
+          {
+            model: KebersihanInspeksi,
+            as: 'kebersihan_inspeksi',
+            attributes: [],
+            required: true,
+          },
+        ],
+        attributes: [
+          [Sequelize.col('kebersihan_inspeksi.status_kondisi'), 'status_kondisi'],
+          [Sequelize.fn('COUNT', Sequelize.col('id_temuan')), 'count'],
+        ],
+        where: {
+          created_at: dateTimeFilter,
+          status: { [Op.in]: [0, 1] },
+        },
+        group: [Sequelize.col('kebersihan_inspeksi.status_kondisi')],
+        raw: true,
+      }),
+      PerizinanSantri.findAll({
+        attributes: [
+          'status_approval',
+          'kondisi',
+          [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
+        ],
+        where: {
+          created_at: dateTimeFilter,
+          is_canceled: false,
+          id_santri: { [Op.ne]: null },
+        },
+        group: ['status_approval', 'kondisi'],
+        raw: true,
+      }),
+      AbsenHarianPegawai.findAll({
+        attributes: [
+          'status_kehadiran',
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_pegawai')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        group: ['status_kehadiran'],
+        raw: true,
+      }),
+      JurnalKelas.count({
+        where: { tanggal: dateFilter },
+      }),
+      KebersihanInspeksi.findOne({
+        attributes: [
+          [
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_petugas')),
+            'count',
+          ],
+        ],
+        where: { tanggal: dateFilter },
+        raw: true,
+      }),
+      PerizinanSantri.findAll({
+        attributes: [
+          'status_approval',
+          'kondisi',
+          [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
+        ],
+        where: {
+          created_at: dateTimeFilter,
+          is_canceled: false,
+          id_pegawai: { [Op.ne]: null },
+        },
+        group: ['status_approval', 'kondisi'],
+        raw: true,
+      })
+    ]) as any;
 
     let activeSantri = 0;
     let totalSantri = 0;
@@ -244,19 +384,6 @@ export default class Service {
       totalSantri > 0
         ? parseFloat(((activeSantri / totalSantri) * 100).toFixed(1))
         : 0;
-
-    const absensiStats = (await AbsenHarianSantri.findAll({
-      attributes: [
-        'status_kehadiran',
-        [
-          Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
-          'count',
-        ],
-      ],
-      where: { tanggal: dateFilter },
-      group: ['status_kehadiran'],
-      raw: true,
-    })) as any[];
 
     let totalHadir = 0;
     let totalIzin = 0;
@@ -288,19 +415,6 @@ export default class Service {
         ? parseFloat(((totalAlfa / activeSantri) * 100).toFixed(1))
         : 0;
 
-    const absensiKelasStats = (await AbsenKelasSantri.findAll({
-      attributes: [
-        'status_kehadiran',
-        [
-          Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
-          'count',
-        ],
-      ],
-      where: { tanggal: dateFilter },
-      group: ['status_kehadiran'],
-      raw: true,
-    })) as any[];
-
     let totalKelasHadir = 0;
     let totalKelasIzin = 0;
     let totalKelasSakit = 0;
@@ -331,31 +445,6 @@ export default class Service {
         ? parseFloat(((totalKelasAlfa / activeSantri) * 100).toFixed(1))
         : 0;
 
-    const pegawaiStats = (await Pegawai.findAll({
-      attributes: [
-        [
-          Sequelize.literal(`
-            CASE 
-              WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) 
-              THEN 'GURU' 
-              ELSE 'PEGAWAI' END
-            `),
-          'role',
-        ],
-        [Sequelize.fn('COUNT', Sequelize.col('id_pegawai')), 'count'],
-      ],
-      where: { status_pegawai: 'Aktif' },
-      group: [
-        Sequelize.literal(`
-        CASE 
-          WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) THEN 'GURU' 
-          ELSE 'PEGAWAI' 
-        END
-      `) as any,
-      ],
-      raw: true,
-    })) as any[];
-
     let totalGuruAktif = 0;
     let totalPegawaiAktif = 0;
     for (const item of pegawaiStats) {
@@ -363,27 +452,6 @@ export default class Service {
       if (item.role === 'GURU') totalGuruAktif = countVal;
       else if (item.role === 'PEGAWAI') totalPegawaiAktif = countVal;
     }
-
-    const temuanStats = (await KebersihanTemuan.findAll({
-      include: [
-        {
-          model: KebersihanInspeksi,
-          as: 'kebersihan_inspeksi',
-          attributes: [],
-          required: true,
-        },
-      ],
-      attributes: [
-        [Sequelize.col('kebersihan_inspeksi.status_kondisi'), 'status_kondisi'],
-        [Sequelize.fn('COUNT', Sequelize.col('id_temuan')), 'count'],
-      ],
-      where: {
-        created_at: dateFilter,
-        status: { [Op.in]: [0, 1] },
-      },
-      group: [Sequelize.col('kebersihan_inspeksi.status_kondisi')],
-      raw: true,
-    })) as any[];
 
     let total_temuan = 0;
     let temuan_kotor = 0;
@@ -397,20 +465,6 @@ export default class Service {
       else if (statusKondisi === 'RUSAK') temuan_rusak = countVal;
     }
 
-    const perizinanStats = (await PerizinanSantri.findAll({
-      attributes: [
-        'status_approval',
-        'kondisi',
-        [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
-      ],
-      where: {
-        created_at: dateFilter,
-        is_canceled: false,
-      },
-      group: ['status_approval', 'kondisi'],
-      raw: true,
-    })) as any[];
-
     let total_perizinan = 0;
     let perizinan_menunggu = 0;
     let perizinan_disetujui = 0;
@@ -422,7 +476,7 @@ export default class Service {
       const kondisi = item.kondisi;
 
       if (
-        ['Menunggu', 'Disetujui'].includes(status) &&
+        ['Rumah', 'Kembali', 'Menunggu', 'Disetujui'].includes(status) &&
         (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
       ) {
         total_perizinan += countVal;
@@ -444,6 +498,76 @@ export default class Service {
 
       if (kondisi === 'Overdue') {
         perizinan_overdue += countVal;
+      }
+    }
+
+    let totalPegawaiHadir = 0;
+    let totalPegawaiIzin = 0;
+    let totalPegawaiSakit = 0;
+    let totalPegawaiAlfa = 0;
+
+    for (const item of absensiPegawaiStats) {
+      const countVal = parseInt(item.count, 10) || 0;
+      if (item.status_kehadiran == 'Hadir') totalPegawaiHadir = countVal;
+      else if (item.status_kehadiran == 'Izin') totalPegawaiIzin = countVal;
+      else if (item.status_kehadiran == 'Sakit') totalPegawaiSakit = countVal;
+      else if (item.status_kehadiran == 'Alfa') totalPegawaiAlfa = countVal;
+    }
+
+    const totalPegawaiAktifSum = totalGuruAktif + totalPegawaiAktif;
+
+    const persentasePegawaiAbsensi =
+      totalPegawaiAktifSum > 0
+        ? parseFloat(((totalPegawaiHadir / totalPegawaiAktifSum) * 100).toFixed(1))
+        : 0;
+    const persentasePegawaiIzin =
+      totalPegawaiAktifSum > 0
+        ? parseFloat(((totalPegawaiIzin / totalPegawaiAktifSum) * 100).toFixed(1))
+        : 0;
+    const persentasePegawaiSakit =
+      totalPegawaiAktifSum > 0
+        ? parseFloat(((totalPegawaiSakit / totalPegawaiAktifSum) * 100).toFixed(1))
+        : 0;
+    const persentasePegawaiAlfa =
+      totalPegawaiAktifSum > 0
+        ? parseFloat(((totalPegawaiAlfa / totalPegawaiAktifSum) * 100).toFixed(1))
+        : 0;
+
+    const totalPetugasInspeksi = parseInt(kebersihanInspeksiStats?.count, 10) || 0;
+
+    let total_perizinan_pegawai = 0;
+    let perizinan_pegawai_menunggu = 0;
+    let perizinan_pegawai_disetujui = 0;
+    let perizinan_pegawai_overdue = 0;
+
+    for (const item of perizinanPegawaiStats) {
+      const countVal = parseInt(item.count, 10) || 0;
+      const status = item.status_approval;
+      const kondisi = item.kondisi;
+
+      if (
+        ['Menunggu', 'Disetujui'].includes(status) &&
+        (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
+      ) {
+        total_perizinan_pegawai += countVal;
+      }
+
+      if (
+        status === 'Menunggu' &&
+        (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
+      ) {
+        perizinan_pegawai_menunggu += countVal;
+      }
+
+      if (
+        status === 'Disetujui' &&
+        (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
+      ) {
+        perizinan_pegawai_disetujui += countVal;
+      }
+
+      if (kondisi === 'Overdue') {
+        perizinan_pegawai_overdue += countVal;
       }
     }
 
@@ -482,6 +606,24 @@ export default class Service {
       perizinan_menunggu,
       perizinan_disetujui,
       perizinan_overdue,
+      total_absensi_pegawai: {
+        hadir: totalPegawaiHadir,
+        persentase: persentasePegawaiAbsensi,
+        izin: totalPegawaiIzin,
+        persentase_izin: persentasePegawaiIzin,
+        sakit: totalPegawaiSakit,
+        persentase_sakit: persentasePegawaiSakit,
+        alfa: totalPegawaiAlfa,
+        persentase_alfa: persentasePegawaiAlfa,
+      },
+      total_sesi_guru: totalSesiGuru,
+      total_petugas_inspeksi: totalPetugasInspeksi,
+      total_perizinan_pegawai: {
+        total: total_perizinan_pegawai,
+        menunggu: perizinan_pegawai_menunggu,
+        disetujui: perizinan_pegawai_disetujui,
+        overdue: perizinan_pegawai_overdue,
+      },
     };
   }
 

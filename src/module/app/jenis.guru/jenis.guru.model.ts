@@ -6,6 +6,7 @@ import Pegawai from '../pegawai/pegawai.model';
 import Tingkat from '../tingkat/tingkat.model';
 import MataPelajaran from '../mata.pelajaran/mata.pelajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export class JenisGuru extends Model {
   declare id_jenisguru: string;
@@ -94,6 +95,10 @@ export function associateJenisGuru() {
   });
   JenisGuru.belongsTo(LembagaPendidikanFormal, {
     as: 'lembaga_formal',
+    foreignKey: 'id_lembaga',
+  });
+  JenisGuru.belongsTo(LembagaPendidikanKepesantrenan, {
+    as: 'lembaga_kepesantrenan',
     foreignKey: 'id_lembaga',
   });
   JenisGuru.belongsTo(Tingkat, {
