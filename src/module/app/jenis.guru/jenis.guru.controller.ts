@@ -23,6 +23,7 @@ import { repository as repoPegawai } from '../pegawai/pegawai.repository';
 import { repository as repoTingkat } from '../tingkat/tingkat.repository';
 import { repository as repoMapel } from '../mata.pelajaran/mata.pelajaran.repository';
 import { repository as repoLembagaFormal } from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.repository';
+import { repository as repoLembagaKepesantrenan } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.repository';
 
 const generateDataExcel = (sheet: any, details: any) => {
   sheet.addRow([
@@ -46,7 +47,9 @@ const generateDataExcel = (sheet: any, details: any) => {
       parseInt(i) + 1,
       details[i]?.pegawai?.nama_lengkap || '',
       details[i]?.mata_pelajaran?.nama_mapel || '',
-      details[i]?.lembaga_formal?.nama_lembaga || '',
+      details[i]?.lembaga_formal
+        ? details[i]?.lembaga_formal?.nama_lembaga
+        : details[i]?.lembaga_kepesantrenan?.nama_lembaga || '',
       details[i]?.lembaga_type || '',
       details[i]?.tingkat?.tingkat || '',
       details[i]?.status == 'A' ? 'Aktif' : 'Tidak Aktif',
@@ -180,10 +183,16 @@ export default class Controller {
 
   public async update(req: Request, res: Response) {
     try {
-      const { id_guru, id_lembaga, id_mapel, id_tingkat } = req?.body;
+      const { nama_jenis_guru, id_guru, id_lembaga, id_mapel, id_tingkat } = req?.body;
       const id: string = req?.params?.id || '';
       const check = await repository.detail({ id_jenisguru: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
+
+      if (nama_jenis_guru != check?.nama_jenis_guru) {
+        const duplicate = await repository.detail({ nama_jenis_guru });
+        if (duplicate) return response.failed(ALREADY_EXIST, 400, res);
+      }
+
       const data: Object = helper.only(variable.fillable(), req?.body, true);
       await repository.update({
         payload: {
@@ -311,7 +320,16 @@ export default class Controller {
           });
 
           if (!lembaga) {
-            errors.push(`Lembaga "${row.nama_lembaga}" tidak ditemukan`);
+            const lembagaKepesantrenan = await repoLembagaKepesantrenan.detail({
+              nama_lembaga: row.nama_lembaga,
+            });
+
+            if (!lembagaKepesantrenan) {
+              errors.push(`Lembaga "${row.nama_lembaga}" tidak ditemukan`);
+            } else {
+              id_lembaga = lembagaKepesantrenan.id_lembaga;
+              nama_lembaga = lembagaKepesantrenan.getDataValue('nama_lembaga');
+            }
           } else {
             id_lembaga = lembaga.id_lembaga;
             nama_lembaga = lembaga.getDataValue('nama_lembaga');
@@ -365,7 +383,7 @@ export default class Controller {
         const valid = errors.length === 0;
 
         const payload = {
-          nama_jenis_guru: nama_guru,
+          nama_jenis_guru: `${nama_guru}|${nama_lembaga}|${nama_mapel}|${nama_tingkat}`,
           keterangan: row.keterangan ?? null,
           status: row.status ?? 'A',
           lembaga_type: row.lembaga_type,
@@ -390,7 +408,7 @@ export default class Controller {
         if (mode === 'preview' || !valid) continue;
 
         const existing = await repository.detail({
-          nama_jenis_guru: row.nama_guru,
+          nama_jenis_guru: `${row.nama_guru}|${row.nama_lembaga}|${row.nama_mapel}|${row.nama_tingkat}`,
         });
 
         if (existing) {

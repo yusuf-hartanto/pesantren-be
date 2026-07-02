@@ -6,6 +6,7 @@ import Pegawai from '../pegawai/pegawai.model';
 import Tingkat from '../tingkat/tingkat.model';
 import MataPelajaran from '../mata.pelajaran/mata.pelajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public list(data: any) {
@@ -44,6 +45,12 @@ export default class Repository {
         {
           model: LembagaPendidikanFormal,
           as: 'lembaga_formal',
+          required: false,
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembaga_kepesantrenan',
           required: false,
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
@@ -96,6 +103,15 @@ export default class Repository {
                 [Op.like]: keyword,
               }
             ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.col('lembaga_kepesantrenan.nama_lembaga')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
@@ -124,6 +140,12 @@ export default class Repository {
         {
           model: LembagaPendidikanFormal,
           as: 'lembaga_formal',
+          required: false,
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembaga_kepesantrenan',
           required: false,
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
@@ -156,6 +178,12 @@ export default class Repository {
         {
           model: LembagaPendidikanFormal,
           as: 'lembaga_formal',
+          required: false,
+          attributes: ['id_lembaga', 'nama_lembaga'],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembaga_kepesantrenan',
           required: false,
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
