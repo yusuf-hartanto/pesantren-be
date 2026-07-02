@@ -7,17 +7,17 @@ import moment from 'moment';
 /** @type {import('sequelize-cli').Migration} */
 export default {
   async up(queryInterface: QueryInterface) {
-    // 1. Ambil semua ID dari tabel perizinan_santri yang telah kita seed sebelumnya
+    // Ambil semua ID dari tabel perizinan_santri yang telah kita seed sebelumnya
     const [perizinans]: any = await queryInterface.sequelize.query(
       'SELECT id_izin FROM perizinan_santri ORDER BY created_at ASC LIMIT 5'
     );
 
-    // 2. Catatan: Ambil kode_lokasi dari tabel lokasi dengan tipe/jenis_lokasi = 'Asrama'
+    // Catatan: Ambil kode_lokasi dari tabel lokasi dengan tipe/jenis_lokasi = 'Asrama'
     const [asramas]: any = await queryInterface.sequelize.query(
       "SELECT kode_lokasi FROM lokasi WHERE jenis_lokasi = 'Asrama'  LIMIT 1"
     );
 
-    // 3. Ambil resource_id pegawai untuk pengisi field dicetak_oleh
+    // Ambil resource_id pegawai untuk pengisi field dicetak_oleh
     const [pegawais]: any = await queryInterface.sequelize.query(`
       SELECT ar.resource_id 
       FROM app_resource ar
@@ -32,10 +32,8 @@ export default {
       return;
     }
 
-    const kodeUnitTarget =
-      asramas.length > 0 ? asramas[0].kode_lokasi : 'ASM-PST';
-    const pencetakResourceId =
-      pegawais.length > 0 ? pegawais[0].resource_id : 'SYSTEM';
+    const kodeUnitTarget = asramas.length > 0 ? asramas[0].kode_lokasi : 'ASM-PST';
+    const pencetakResourceId = pegawais.length > 0 ? pegawais[0].resource_id : 'SYSTEM';
     const tahunSekarang = moment().year();
 
     const suratSeeds = perizinans.map((perizinan: any, index: number) => {

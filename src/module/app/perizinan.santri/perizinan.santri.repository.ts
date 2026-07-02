@@ -120,8 +120,8 @@ export class PerizinanSantriRepository {
     // Filter Date Range Picker (Berdasarkan tanggal_mulai dan tanggal_selesai)
     if (data?.start_date && data?.end_date) {
       query.where[Op.and] = [
-        { tanggal_mulai: { [Op.gte]: data.start_date } },
-        { tanggal_selesai: { [Op.lte]: data.end_date } },
+        { tanggal_mulai: { [Op.lte]: data.end_date } },    
+        { tanggal_selesai: { [Op.gte]: data.start_date } },
       ];
     }
 
@@ -185,32 +185,35 @@ export class PerizinanSantriRepository {
           attributes: ['nama_lokasi'],
         },
       ],
+      order: [['created_at', 'DESC']]
     });
   }
 
   /**
    * Cek aturan overlap izin santri aktif
    */
-  public async checkActiveLicense(id_santri: string, transaction?: any) {
-    const today = moment().format('YYYY-MM-DD');
+  public async checkActiveLicense(
+    id_santri: string, 
+    startDateInput: string, 
+    endDateInput: string,  
+    transaction?: any
+  ) {
+    const start = moment(startDateInput).format('YYYY-MM-DD');
+    const end = moment(endDateInput).format('YYYY-MM-DD');
 
     return await PerizinanSantri.findOne({
       where: {
         id_santri,
         deleted_at: null,
-        [Op.or]: [
-          {
-            status_approval: 'Menunggu',
-            tanggal_mulai: { [Op.gt]: today },
-          },
-          {
-            status_approval: 'Disetujui',
-            is_canceled: false,
-            tanggal_mulai: { [Op.lte]: today },
-            tanggal_selesai: { [Op.gte]: today },
-          },
-        ],
+        status_approval: { [Op.in]: ['Menunggu', 'Disetujui'] },
+        is_canceled: false,
+        
+        [Op.and]: [
+          { tanggal_mulai: { [Op.lte]: end } },   
+          { tanggal_selesai: { [Op.gte]: start } } 
+        ]
       },
+      order: [['created_at', 'DESC']],
       transaction,
     });
   }
@@ -238,6 +241,7 @@ export class PerizinanSantriRepository {
           },
         ],
       },
+      order: [['created_at', 'DESC']],
       transaction,
     });
   }
@@ -409,8 +413,8 @@ export class PerizinanSantriRepository {
 
       if (start_date && end_date) {
         whereClause[Op.and] = [
-          { tanggal_mulai: { [Op.gte]: start_date } },
-          { tanggal_selesai: { [Op.lte]: end_date } },
+          { tanggal_mulai: { [Op.lte]: end_date } },     // Mulai sebelum/saat filter berakhir
+          { tanggal_selesai: { [Op.gte]: start_date } },
         ];
       }
 

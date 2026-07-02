@@ -245,7 +245,6 @@ export default class Repository {
           baseWhereClause,
           {
             waktu_keluar: { [Op.ne]: null },
-            waktu_masuk: null,
           },
         ],
       },
