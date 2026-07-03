@@ -66,7 +66,6 @@ export default class Controller {
       await repository.update({
         payload: {
           ...data,
-          url: req?.body?.url?.replaceAll('amp;', ''),
         },
         condition: { id_notification: id },
       });
