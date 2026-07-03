@@ -274,7 +274,7 @@ export default class Controller {
         if (!result) return response.success(NOT_FOUND, null, res, false);
         navigation = formatNavigationRole(result);
 
-        const getUser: any = await resourceTransformer.detail(req?.user);
+        const getUser: any = await resourceTransformer.detail({...req?.user, dataValues: result?.dataValues});
         if (getUser?.ability?.length) {
           ability = getUser?.ability;
         }

@@ -61,8 +61,6 @@ export default class Controller {
 
       const data: Object = helper.only(variable.fillable(), req?.body, true);
 
-      console.log(data)
-
       await repository.update({
         payload: {
           ...data,
