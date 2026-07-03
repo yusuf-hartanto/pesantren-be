@@ -157,6 +157,8 @@ export default class Controller {
 
         const hasActive = await perizinanRepository.checkActiveLicense(
           student.id_santri,
+          tanggal_mulai,
+          tanggal_selesai,
           trx
         );
         if (hasActive) {

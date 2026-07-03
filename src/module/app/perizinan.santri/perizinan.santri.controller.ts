@@ -4,9 +4,11 @@ import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './perizinan.santri.repository';
-import { repository as JamKerjaPegawaiRepository } from '../pegawai.jam.kerja/pegawai.jam.kerja.repository';
-import { repository as AbsenHarianPegawaiRepository } from '../pegawai.absen.harian/pegawai.absen.harian.repository';
-import { repository as suratIzinRepository } from '../surat.perizinan.santri/surat.perizinan.santri.repository';
+import { repository as JamKerjaPegawaiRepository } from '../pegawai.jam.kerja/pegawai.jam.kerja.repository'
+import { repository as AbsenHarianPegawaiRepository } from '../pegawai.absen.harian/pegawai.absen.harian.repository'
+import { repository as suratIzinRepository } from '../surat.perizinan.santri/surat.perizinan.santri.repository'
+import { repository as LogGateRepository } from '../log.gate.santri/log.gate.santri.repository'
+import { repository as paramRepository } from '../param.global/param.global.repository'
 import { repository as santriRepository } from '../santri/santri.repository';
 import { repository as pegawaiRepository } from '../pegawai/pegawai.repository';
 import { variable } from './perizinan.santri.variable';
@@ -335,16 +337,6 @@ export default class Controller {
     try {
       const validData = pengajuanIzinSchema.parse(req.body);
 
-      if (
-        moment(validData.tanggal_selesai).isBefore(
-          moment(validData.tanggal_mulai)
-        )
-      ) {
-        throw new Error(
-          'Tanggal selesai harus lebih besar dari tanggal mulai.'
-        );
-      }
-
       const isPegawai = validData.sumber_pengajuan === 'Pegawai';
 
       if (isPegawai) {
@@ -358,12 +350,18 @@ export default class Controller {
         }
       } else {
         const hasActive = await repository.checkActiveLicense(
-          validData.id_santri as string
+          validData.id_santri as string, validData.tanggal_mulai as string, validData.tanggal_selesai as string
         );
+   
         if (hasActive) {
-          throw new Error(
-            'Santri masih memiliki izin aktif atau menunggu persetujuan.'
-          );
+          const activeData = hasActive?.dataValues
+          const logGate = await LogGateRepository.detail({id_izin: activeData?.id_izin});
+
+          if (!logGate || !logGate.dataValues?.waktu_keluar || !logGate.dataValues?.waktu_masuk) {
+            throw new Error(
+              'Santri masih memiliki pengajuan aktif berkriteria Menunggu / Sedang Disetujui saat ini.'
+            );
+          }
         }
       }
 
@@ -597,7 +595,7 @@ export default class Controller {
           while (start.isSameOrBefore(end)) {
             const tanggalTarget = start.format('YYYY-MM-DD');
 
-            // 1. Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada
+            // Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada
             const existingAbsen = await AbsenHarianPegawaiRepository.detail({
               id_pegawai: check.id_pegawai,
               tanggal: tanggalTarget,
@@ -1029,7 +1027,7 @@ export default class Controller {
         throw new Error(
           'Akses Ditolak: Santri tidak memiliki dokumen perizinan aktif yang sah untuk hari ini!'
         );
-      }
+      } 
 
       const perizinanSantriData = perizinan.santri;
       if (!perizinanSantriData) {
@@ -1045,6 +1043,21 @@ export default class Controller {
       const logGate = await repository.findLogGate(id_izin);
       const activePetugasId =
         req?.user?.resource_id || req?.user?.id || 'GATE_KEEPER_ID';
+
+
+      if (logGate && logGate.waktu_keluar && logGate.waktu_masuk) {
+        const tglMulaiFmt = moment(perizinan.tanggal_mulai).format('DD MMM YYYY');
+        const tglSelesaiFmt = moment(perizinan.tanggal_selesai).format('DD MMM YYYY');
+        
+        const txtKeluarFmt = moment(logGate.waktu_keluar).format('DD/MM/YYYY HH:mm');
+        const txtMasukFmt = moment(logGate.waktu_masuk).format('DD/MM/YYYY HH:mm');
+
+        throw new Error(
+          `Santri atas nama ${perizinanSantriData.fullname || 'n/a'} tidak memiliki dokumen perizinan aktif lain yang sah untuk hari ini. ` +
+          `Dokumen izin terakhir (Masa Berlaku: ${tglMulaiFmt} s/d ${tglSelesaiFmt}) dinyatakan Selesai/Hangus karena riwayat log gate mencatat: ` +
+          `Tapping Keluar pada [${txtKeluarFmt}] WIB dan Tapping Kembali pada [${txtMasukFmt}] WIB.`
+        );
+      }
 
       // Persiapan payload profile untuk response JSON ke UI client
       const profileResponse = {
@@ -1101,6 +1114,29 @@ export default class Controller {
         }
 
         const waktuMasukSekarang = new Date();
+
+        if (logGate.waktu_keluar) {
+
+          const limitParam = await paramRepository.detail({ 
+            param_key: 'LIMIT_SCAN_LOG_GATE_SANTRI' 
+          });
+
+          const limitMenit = limitParam?.dataValues?.param_value 
+            ? parseInt(limitParam.dataValues.param_value, 10) 
+            : 60;
+
+          const waktuKeluar = moment(logGate.waktu_keluar);
+          const waktuMasuk = moment(waktuMasukSekarang);
+          
+          const selisihMenit = waktuMasuk.diff(waktuKeluar, 'minutes');
+
+          if (selisihMenit < limitMenit) {
+            const sisaMenit = limitMenit - selisihMenit;
+            throw new Error(
+              `Akses Ditolak: Scan masuk terlalu cepat. Silakan tunggu ${sisaMenit} menit lagi.`
+            );
+          }
+        }
 
         // Update log gerbang masuk pondok
         await repository.updateLogGate(
@@ -1313,7 +1349,7 @@ export default class Controller {
             if (cleanData.id_santri) {
               try {
                 const hasActive = await repository.checkActiveLicense(
-                  cleanData.id_santri
+                  cleanData.id_santri, cleanData.tanggal_mulai, cleanData.tanggal_selesai
                 );
                 if (hasActive) {
                   errors.push(
@@ -1396,15 +1432,8 @@ export default class Controller {
 
                 const jenisKodeSurat = item.id_pegawai ? 'IZN-PEG' : 'IZN-SAN';
                 const nomorSurat = `${String(urut).padStart(3, '0')}/${jenisKodeSurat}/${codeUnit}/${bulanRomawi}/${tahun}`;
-                const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({
-                  id_pegawai: item.id_pegawai,
-                });
-                if (!jamKerjaMaster)
-                  throw new Error('Jam kerja pegawai tidak ditemukan');
-
-                const existingSurat = await suratIzinRepository.detail({
-                  id_izin: item.id_izin,
-                });
+                
+                const existingSurat = await suratIzinRepository.detail({ id_izin: item.id_izin }, trx);
 
                 if (!existingSurat) {
                   await repository.createSurat(
@@ -1424,42 +1453,57 @@ export default class Controller {
                   );
                 }
 
-                const start = moment(item.tanggal_mulai);
-                const end = moment(item.tanggal_selesai);
-                const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
+                // ========================================================
+                // LOGIKA KONDISIONAL: HANYA JALANKAN ABSENSI JIKA PEGAWAI
+                // ========================================================
+                if (item.id_pegawai) {
+                  const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({ id_pegawai: item.id_pegawai }); 
+                  if (!jamKerjaMaster) throw new Error(`Jam kerja untuk pegawai dengan ID ${item.id_pegawai} tidak ditemukan`);
+                  
+                  const start = moment(item.tanggal_mulai);
+                  const end = moment(item.tanggal_selesai);
+                  const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
 
-                while (start.isSameOrBefore(end)) {
-                  const tanggalTarget = start.format('YYYY-MM-DD');
+                  while (start.isSameOrBefore(end)) {
+                    const tanggalTarget = start.format('YYYY-MM-DD');
 
-                  // 1. Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada
-                  const existingAbsen =
-                    await AbsenHarianPegawaiRepository.detail({
-                      id_pegawai: item.id_pegawai,
-                      tanggal: tanggalTarget,
-                      id_jamkerja: idJamKerja,
-                    });
-
-                  const dataPayload = {
-                    id_jamkerja: idJamKerja,
-                    id_pegawai: item.id_pegawai,
-                    tanggal: tanggalTarget,
-                    keterangan_masuk: `Izin: ${item.alasan || 'Disetujui oleh sistem'}`,
-                    status_kehadiran: item.jenis_izin,
-                    created_by: activeUser,
-                  };
-
-                  if (!existingAbsen) {
-                    await AbsenHarianPegawaiRepository.create(
-                      [
-                        {
-                          ...dataPayload,
-                        },
-                      ],
+                    // Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada (Sertakan trx)
+                    const existingAbsen = await AbsenHarianPegawaiRepository.detail({
+                        id_pegawai: item.id_pegawai,
+                        tanggal: tanggalTarget,
+                        id_jamkerja: idJamKerja
+                      },
                       trx
                     );
-                  }
 
-                  start.add(1, 'days');
+                    const dataPayload = {
+                      id_jamkerja: idJamKerja,
+                      id_pegawai: item.id_pegawai,
+                      tanggal: tanggalTarget,
+                      keterangan_masuk: `Izin: ${item.alasan || 'Disetujui oleh sistem'}`,
+                      status_kehadiran: item.jenis_izin, 
+                      created_by: activeUser,
+                    };
+
+                    if (!existingAbsen) {
+                      await AbsenHarianPegawaiRepository.create([{
+                        id_absen: `ABS-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+                        ...dataPayload
+                      }], trx);
+                    } else {
+                      // Opsional: Lakukan update status jika data absen hari itu sudah ada
+                      await AbsenHarianPegawaiRepository.update({payload: dataPayload, condition: {
+                        id_pegawai: item.id_pegawai,
+                        tanggal: tanggalTarget,
+                        id_jamkerja: idJamKerja
+                      }}, trx);
+                    }
+
+                    start.add(1, 'days');
+                  }
+                } else {
+                  // Tempatkan logika sinkronisasi log absensi / mutasi santri di sini jika dibutuhkan di kemudian hari
+                  console.log(`Perizinan Santri dengan ID ${item.id_santri} berhasil diproses tanpa absensi pegawai.`);
                 }
               }
             }
@@ -1520,22 +1564,13 @@ export default class Controller {
               ? moment(item.tanggal_mulai).month()
               : moment().month()
           );
-          const jenisKodeSurat =
-            item.id_pegawai || item.sumber_pengajuan === 'Pegawai'
-              ? 'IZN-PEG'
-              : 'IZN-SAN';
+
+          // Penentuan jenis kode surat berdasarkan entitas pengaju (Pegawai vs Santri)
+          const jenisKodeSurat = item.id_pegawai || item.sumber_pengajuan === 'Pegawai' ? 'IZN-PEG' : 'IZN-SAN';
           const nomorSurat = `${String(urut).padStart(3, '0')}/${jenisKodeSurat}/${codeUnit}/${bulanRomawi}/${tahun}`;
-          const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({
-            id_pegawai: item.id_pegawai,
-          });
-          if (!jamKerjaMaster)
-            throw new Error('Jam kerja pegawai tidak ditemukan');
 
           // Masukkan objek transaksi trx agar pembacaan konsisten
-          const existingSurat = await suratIzinRepository.detail(
-            { id_izin: item.id_izin },
-            trx
-          );
+          const existingSurat = await suratIzinRepository.detail({ id_izin: item.id_izin }, trx);
           if (!existingSurat) {
             await repository.createSurat(
               {
@@ -1554,54 +1589,53 @@ export default class Controller {
             );
           }
 
-          const start = moment(item.tanggal_mulai);
-          const end = moment(item.tanggal_selesai);
-          const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
+          // ========================================================
+          // LOGIKA KONDISIONAL: HANYA PROSES ABSENSI JIKA PEGAWAI
+          // ========================================================
+          if (item.id_pegawai) {
+            const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({ id_pegawai: item.id_pegawai });
+            if (!jamKerjaMaster) throw new Error(`Jam kerja pegawai untuk ID ${item.id_pegawai} tidak ditemukan`);
 
-          while (start.isSameOrBefore(end)) {
-            const tanggalTarget = start.format('YYYY-MM-DD');
+            const start = moment(item.tanggal_mulai);
+            const end = moment(item.tanggal_selesai);
+            const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
 
-            // --- PERBAIKAN UTAMA: Masukkan parameter transaction: trx ---
-            const existingAbsen = await AbsenHarianPegawaiRepository.detail(
-              {
+            while (start.isSameOrBefore(end)) {
+              const tanggalTarget = start.format('YYYY-MM-DD');
+
+              // Perbaikan utama visibilitas transaksi berjalan
+              const existingAbsen = await AbsenHarianPegawaiRepository.detail({
                 id_pegawai: item.id_pegawai,
                 tanggal: tanggalTarget,
-                id_jamkerja: idJamKerja,
+                id_jamkerja: idJamKerja
               },
-              trx
-            );
-
-            console.log(existingAbsen, {
-              id_pegawai: item.id_pegawai,
-              tanggal: tanggalTarget,
-              id_jamkerja: idJamKerja,
-            });
-
-            const dataPayload = {
-              id_jamkerja: idJamKerja,
-              id_pegawai: item.id_pegawai,
-              tanggal: tanggalTarget,
-              keterangan_masuk: `Izin: ${item.alasan || 'Disetujui oleh sistem'}`,
-              status_kehadiran: item.jenis_izin,
-              created_by: activeUser,
-            };
-
-            if (!existingAbsen) {
-              // Jika tabel Anda menggunakan id_absen berbasis STRING (Bukan AUTO_INCREMENT INT),
-              // pastikan Anda men-generate nilai ID unik di sini.
-              await AbsenHarianPegawaiRepository.create(
-                [
-                  {
-                    id_absen: `ABS-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
-                    ...dataPayload,
-                  },
-                ],
                 trx
               );
-            } else {
-            }
 
-            start.add(1, 'days');
+              const dataPayload = {
+                id_jamkerja: idJamKerja,
+                id_pegawai: item.id_pegawai,
+                tanggal: tanggalTarget,
+                keterangan_masuk: `Izin: ${item.alasan || 'Disetujui oleh sistem'}`,
+                status_kehadiran: item.jenis_izin,
+                created_by: activeUser,
+              };
+
+              if (!existingAbsen) {
+                await AbsenHarianPegawaiRepository.create([{
+                  id_absen: `ABS-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+                  ...dataPayload
+                }], trx);
+              } else {
+                // Opsional: Jika record absen sudah ada, Anda bisa melakukan update status di sini jika diperlukan
+              }
+
+              start.add(1, 'days');
+            }
+          } else {
+            // Logika untuk Santri, abaikan pencarian jam kerja & absen harian pegawai.
+            // Anda bisa menaruh repositori absensi khusus santri di sini jika ada di masa mendatang.
+            console.log(`Perizinan Santri (${item.id_santri}) berhasil diproses tanpa absensi pegawai.`);
           }
         }
 
@@ -1625,7 +1659,6 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      // console.log(err)
       // Rollback jika salah satu baris atau pembuatan surat gagal
       await trx?.rollback();
       return helper.catchError(`Insert Batch Gagal: ${err.message}`, 500, res);
