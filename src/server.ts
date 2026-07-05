@@ -69,7 +69,7 @@ async function bootstrap() {
   app.use(express.static('public'));
   app.use(
     xss({
-      allowedKeys: ['penghasilan'],
+      allowedKeys: ['penghasilan', 'url'],
     })
   );
   app.use(cors(options));
