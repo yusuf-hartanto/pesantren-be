@@ -784,10 +784,10 @@ export default class Controller {
       if (!result) return response.success(NOT_FOUND, null, res, false);
 
       const tanggalMulai = result.tanggal_mulai
-        ? moment(result.tanggal_mulai).format('DD-MMM-YYYY')
+        ? moment(result.tanggal_mulai).format('DD-MMM-YYYY HH:mm')
         : '-';
       const tanggalSelesai = result.tanggal_selesai
-        ? moment(result.tanggal_selesai).format('DD-MMM-YYYY')
+        ? moment(result.tanggal_selesai).format('DD-MMM-YYYY HH:mm')
         : '-';
 
       const isPegawai = result.sumber_pengajuan === 'Pegawai';
@@ -1034,9 +1034,9 @@ export default class Controller {
         throw new Error('Struktur data profil santri tidak ditemukan!');
       }
 
-      const todayStr = moment().format('YYYY-MM-DD');
+      const todayStr = moment().format('YYYY-MM-DD HH:mm:ss');
       const tglSelesaiStr = moment(perizinan.tanggal_selesai).format(
-        'YYYY-MM-DD'
+        'YYYY-MM-DD HH:mm:ss'
       );
 
       const id_izin = perizinan.id_izin;
@@ -1072,6 +1072,13 @@ export default class Controller {
       // --- KONDISI A: SANTRI KELUAR PONDOK (Log Gate Belum Ada) ---
       if (!logGate) {
         const waktuKeluarSekarang = new Date();
+
+        if (moment(waktuKeluarSekarang).isAfter(moment(perizinan.tanggal_selesai))) {
+          const tglSelesaiFmt = moment(perizinan.tanggal_selesai).format('DD/MM/YYYY HH:mm');
+          throw new Error(
+            `Akses Ditolak: Tidak boleh keluar! Waktu perizinan santri telah habis/kedaluwarsa sejak ${tglSelesaiFmt} WIB.`
+          );
+        }
 
         await repository.createLogGate(
           {
@@ -1662,6 +1669,107 @@ export default class Controller {
       // Rollback jika salah satu baris atau pembuatan surat gagal
       await trx?.rollback();
       return helper.catchError(`Insert Batch Gagal: ${err.message}`, 500, res);
+    }
+  };
+
+  public insertMassalSantri = async (req: Request, res: Response) => {
+    const { id_cabang, jenis_izin, tanggal_mulai, tanggal_selesai, alasan } = req.body;
+
+    // Validasi input form utama
+    if (!id_cabang || !jenis_izin || !tanggal_mulai || !tanggal_selesai) {
+      return response.success('Form tidak lengkap. Cabang, jenis izin, dan tanggal wajib diisi.', null, res, false);
+    }
+
+    const activeUser = req?.user?.id || 'SYSTEM';
+    const idApprover = req?.user?.id || null;
+
+    const trx = await PerizinanSantri.sequelize?.transaction();
+
+    try {
+      // Ambil data santri aktif via repository
+      const listSantri = await repository.findSantriByCabangMassal(id_cabang, trx);
+
+      if (!listSantri || listSantri.length === 0) {
+        await trx?.rollback();
+        return response.success('Tidak ada santri aktif yang ditemukan di cabang tersebut', null, res, false);
+      }
+
+      const tahun = moment(tanggal_mulai).year();
+      let urutTerakhir = await repository.getNextUrutSurat(tahun);
+
+      for (const santri of listSantri) {
+        const kamarAktif = santri?.penempatanKamar && santri?.penempatanKamar.length > 0
+          ? santri.penempatanKamar[0]
+          : null;
+
+        const idLokasiKamar = kamarAktif?.id_lokasi || null;
+        const codeUnit = kamarAktif?.lokasi?.kode_lokasi || 'IZN';
+
+        // INSERT ke tabel parent 
+        const [perizinan] = await repository.createPerizinanMassal([{
+          id_santri: santri.id_santri,
+          id_lokasi_kamar: idLokasiKamar,
+          id_pegawai: null,
+          id_lokasi_kerja: null,
+          sumber_pengajuan: 'Waliasuh',
+          jenis_izin: jenis_izin,
+          kondisi: 'Normal',
+          tanggal_pengajuan: new Date(),
+          tanggal_mulai: moment(tanggal_mulai).format('YYYY-MM-DD'),
+          tanggal_selesai: moment(tanggal_selesai).format('YYYY-MM-DD'),
+          alasan: alasan || 'Perizinan Massal Cabang',
+          status_approval: 'Disetujui',
+          id_approver: idApprover,
+          tanggal_approval: new Date(),
+          catatan_approval: 'Disetujui otomatis oleh sistem (Massal)',
+          created_by: activeUser,
+          kode_unit: codeUnit,
+        }], trx);
+
+
+        const realIdIzin = perizinan.id_izin;
+
+        // INSERT ke tabel surat_perizinan_santri memakai id_izin dari database
+        const bulanRomawi = helper.convertToRomawi(moment(tanggal_mulai).month() + 1);
+        const nomorSurat = `${String(urutTerakhir).padStart(3, '0')}/IZN-SAN/${codeUnit}/${bulanRomawi}/${tahun}`;
+
+        await repository.createSuratMassal([{
+          id_izin: realIdIzin,
+          urut: urutTerakhir,
+          tahun: tahun,
+          kode_unit: codeUnit,
+          nomor_surat: nomorSurat,
+          qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+          tanggal_cetak: new Date(),
+          dicetak_oleh: activeUser,
+          versi_surat: 1,
+          status_surat: 'Aktif',
+        }], trx);
+
+        // INSERT ke tabel log_gate_santri memakai id_izin dari database
+        await repository.createLogMassal([{
+          id_log: uuidv4(),
+          id_izin: realIdIzin,
+          waktu_keluar: new Date(tanggal_mulai),
+          petugas_keluar: activeUser,
+          status_gate: 'Keluar',
+          keterangan: `Keluar massal cabang: ${alasan || 'Izin Bersama'}`,
+        }], trx);
+
+        urutTerakhir++;
+      }
+
+      await trx?.commit();
+
+      return response.success(
+        'Perizinan massal berhasil diproses, ID Izin tersinkronisasi otomatis oleh database.',
+        { total_santri: listSantri.length },
+        res
+      );
+
+    } catch (err: any) {
+      await trx?.rollback();
+      return helper.catchError(`Gagal memproses perizinan massal santri: ${err.message}`, 500, res);
     }
   };
 }

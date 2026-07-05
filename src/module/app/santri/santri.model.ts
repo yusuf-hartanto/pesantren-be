@@ -34,6 +34,8 @@ export class AppSantri extends Model {
   declare id_santri_sitrendi: string;
   declare id_wali_sitrendi: string;
   declare institution_id_sitrendi: string;
+
+  declare penempatanKamar?: PenempatanKamarSantri[];
 }
 
 export function initAppSantri(sequelize: Sequelize) {

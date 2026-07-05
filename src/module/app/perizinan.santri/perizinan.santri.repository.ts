@@ -9,6 +9,7 @@ import Santri from '../santri/santri.model';
 import Lokasi from '../location/location.model';
 import moment from 'moment';
 import Pegawai from '../pegawai/pegawai.model';
+import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
 
 export class PerizinanSantriRepository {
   /**
@@ -333,6 +334,24 @@ export class PerizinanSantriRepository {
     });
   }
 
+  public async findSantriByCabangMassal(id_cabang: string, transaction?: any) {
+    return await Santri.findAll({
+      where: {
+        id_cabang: id_cabang,
+        status: 1, 
+      },
+      include: [
+        {
+          model: PenempatanKamarSantri,
+          as: 'penempatanKamar',
+          where: { status: 'Aktif' },
+          required: false, 
+        },
+      ],
+      transaction,
+    });
+  }
+
   // --- OPRASIONAL TABEL SURAT ---
   public async getNextUrutSurat(tahun: number): Promise<number> {
     const max = await SuratPerizinanSantri.max('urut', { where: { tahun } });
@@ -567,6 +586,18 @@ export class PerizinanSantriRepository {
       await trx?.rollback();
       throw error;
     }
+  }
+
+  public async createPerizinanMassal(payloads: any[], transaction?: any) {
+    return await PerizinanSantri.bulkCreate(payloads, { transaction });
+  }
+
+  public async createSuratMassal(payloads: any[], transaction?: any) {
+    return await SuratPerizinanSantri.bulkCreate(payloads, { transaction });
+  }
+
+  public async createLogMassal(payloads: any[], transaction?: any) {
+    return await LogGateSantri.bulkCreate(payloads, { transaction });
   }
 }
 

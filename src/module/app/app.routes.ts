@@ -840,6 +840,11 @@ router.post(
   auth.checkBearerToken,
   PerizinanSantriController.insert
 );
+router.post(
+  '/perizinan-santri/massal',
+  auth.checkBearerToken,
+  PerizinanSantriController.insertMassalSantri
+);
 router.get(
   '/perizinan-santri/:id',
   auth.checkBearerToken,
