@@ -164,7 +164,10 @@ export default class Repository {
       include: [
         { model: OrganizationUnit, as: 'organizationUnit' },
         { model: Jabatan, as: 'jabatan' },
-        { all: true, nested: true }, // Mengambil relasi wilayah
+        { model: AreaProvince, as: 'province' },
+        { model: AreaRegency, as: 'city' },
+        { model: AreaDistrict, as: 'district' },
+        { model: AreaSubDistrict, as: 'subDistrict' },
       ],
       where: condition,
     });

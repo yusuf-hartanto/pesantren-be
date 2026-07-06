@@ -148,7 +148,7 @@ export default class Controller {
           confirm_hash: confirm_hash,
           image_foto: image_foto,
           role_id: role_id?.value || null,
-          status: 'NV',
+          status: req?.body?.status || 'NV',
           area_province_id: province_id?.value || null,
           area_regencies_id: regency_id?.value || null,
           created_by: req?.user?.id || null,
@@ -160,22 +160,24 @@ export default class Controller {
       return helper.catchError(`resource create: ${err?.message}`, 500, res);
     }
 
-    try {
-      await helper.sendEmail({
-        to: req?.body?.email,
-        subject: `Welcome to ${appConfig?.app}`,
-        content: `
-          <h3>Hi ${req?.body?.full_name},</h3>
-          <p>Congratulation to join as a member, below this link to activation your account:</p>
-          <a href="${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
-          <p>This is your username account: <b>${username}</b></p>
-        `,
-      });
-      await helper.sendNotif(
-        `Welcome to ${appConfig?.app}. Hi ${req?.body?.full_name}, Congratulation to join as a member, below this link to activation your account: ${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}. This is your username account: ${username}`
-      );
-    } catch (err: any) {
-      message = `<br /> error send email: ${err?.message}`;
+    if (req?.body?.status != "A") {
+      try {
+        await helper.sendEmail({
+          to: req?.body?.email,
+          subject: `Welcome to ${appConfig?.app}`,
+          content: `
+            <h3>Hi ${req?.body?.full_name},</h3>
+            <p>Congratulation to join as a member, below this link to activation your account:</p>
+            <a href="${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}" target="_blank">Activation</a>
+            <p>This is your username account: <b>${username}</b></p>
+          `,
+        });
+        await helper.sendNotif(
+          `Welcome to ${appConfig?.app}. Hi ${req?.body?.full_name}, Congratulation to join as a member, below this link to activation your account: ${appConfig?.baseUrlFe}/auth/account-verification?confirm_hash=${confirm_hash}. This is your username account: ${username}`
+        );
+      } catch (err: any) {
+        message = `<br /> error send email: ${err?.message}`;
+      }
     }
 
     return response.success(message, null, res);

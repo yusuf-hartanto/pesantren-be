@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op, Sequelize, where } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Model from './santri.model';
 import Cabang from '../cabang/cabang.model';
 import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
@@ -38,6 +38,8 @@ export default class Repository {
       order: [['updated_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
+      distinct: true,
+      subQuery: false,
     };
     if (data?.keyword && data?.keyword != undefined) {
       const keyword = `%${data.keyword.toLowerCase()}%`;
@@ -68,7 +70,7 @@ export default class Repository {
     if (data?.id_cabang && data?.id_cabang != '') {
       query.where = {
         ...query.where,
-        id_cabang: data?.id_cabang,
+        '$cabang.id_cabang$': data?.id_cabang,
       };
     }
     return Model.findAndCountAll({
@@ -84,6 +86,18 @@ export default class Repository {
             'nama_cabang',
             'email',
           ],
+          on: Sequelize.literal(
+            `"cabang".id_cabang = (
+              SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
+              FROM penempatan_kelas_santri pks
+              LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
+              LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
+              LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
+              LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
+              WHERE pks.id_santri = "AppSantri".id_santri AND pks.status = 'Aktif'
+              LIMIT 1
+            )`
+          ),
         },
         {
           model: OrangTuaWali,
@@ -106,6 +120,18 @@ export default class Repository {
           model: Cabang,
           as: 'cabang',
           required: false,
+          on: Sequelize.literal(
+            `"cabang".id_cabang = (
+              SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
+              FROM penempatan_kelas_santri pks
+              LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
+              LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
+              LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
+              LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
+              WHERE pks.id_santri = "AppSantri".id_santri AND pks.status = 'Aktif'
+              LIMIT 1
+            )`
+          ),
           include: [
             {
               model: AreaProvince,
