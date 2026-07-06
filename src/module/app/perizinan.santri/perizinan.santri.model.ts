@@ -99,12 +99,32 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         },
       },
       tanggal_mulai: {
-        type: DataTypes.DATEONLY,
+        type: DataTypes.DATE, 
         allowNull: false,
+        get() {
+          const value = this.getDataValue('tanggal_mulai');
+          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+        },
+        set(value) {
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
+          this.setDataValue('tanggal_mulai', formattedValue);
+        },
       },
       tanggal_selesai: {
-        type: DataTypes.DATEONLY,
+        type: DataTypes.DATE,
         allowNull: false,
+        get() {
+          const value = this.getDataValue('tanggal_selesai');
+          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+        },
+        set(value) {
+          const formattedValue = value
+            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            : null;
+          this.setDataValue('tanggal_selesai', formattedValue);
+        },
       },
       alasan: {
         type: DataTypes.TEXT,

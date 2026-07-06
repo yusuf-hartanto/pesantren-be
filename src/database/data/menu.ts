@@ -403,10 +403,18 @@ export default class DataMenu {
       },
       {
         parent_id: 6,
+        menu_name: 'Perizinan Santri Massal',
+        menu_icon: 'tabler-circle',
+        module_name: '/app/perizinan-santri/form-massal',
+        seq_number: 2,
+        status: 1,
+      },
+      {
+        parent_id: 6,
         menu_name: 'Perizinan Pegawai',
         menu_icon: 'tabler-circle',
         module_name: '/app/perizinan-pegawai/kewaliasuhan',
-        seq_number: 2,
+        seq_number: 3,
         status: 1,
       },
       {
@@ -414,7 +422,7 @@ export default class DataMenu {
         menu_name: 'Surat Izin Santri',
         menu_icon: 'tabler-circle',
         module_name: '/app/perizinan-santri/kedisiplinan',
-        seq_number: 3,
+        seq_number: 4,
         status: 1,
       },
       {
@@ -422,7 +430,7 @@ export default class DataMenu {
         menu_name: 'Surat Izin Pegawai',
         menu_icon: 'tabler-circle',
         module_name: '/app/perizinan-pegawai/kedisiplinan',
-        seq_number: 4,
+        seq_number: 5,
         status: 1,
       },
       {
@@ -430,7 +438,7 @@ export default class DataMenu {
         menu_name: 'Scan QR Gate',
         menu_icon: 'tabler-circle',
         module_name: '/app/log-gate/list',
-        seq_number: 5,
+        seq_number: 6,
         status: 1,
       },
       {
