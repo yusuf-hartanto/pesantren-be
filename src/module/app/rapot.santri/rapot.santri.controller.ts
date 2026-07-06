@@ -233,9 +233,34 @@ export default class Controller {
         );
       }
 
+      const creatorId = req?.user?.id || '00000000-0000-0000-0000-000000000000';
+
+      const existingRapot = await repository.detail(
+        { id_santri, tahun_ajaran, semester },
+        trx
+      );
+
+      if (existingRapot) {
+        const updatePayload: any = {
+          updated_by: creatorId,
+          status: 'Aktif',
+        };
+
+        if (file_rapot) {
+          updatePayload.file_rapot = file_rapot;
+        }
+        if (file_rapot_mda) {
+          updatePayload.file_rapot_mda = file_rapot_mda;
+        }
+
+        await existingRapot.update(updatePayload, { transaction: trx });
+
+        if (trx) await trx.commit();
+        return response.success(SUCCESS_SAVED, existingRapot, res);
+      }
+
       await repository.archivePreviousRapots(id_santri, trx);
 
-      const creatorId = req?.user?.id || '00000000-0000-0000-0000-000000000000';
       const payload = {
         id_santri,
         tahun_ajaran,
@@ -246,7 +271,6 @@ export default class Controller {
         created_by: creatorId,
       };
 
-      await repository.archivePreviousRapots(id_santri, trx);
       const result = await repository.create({ payload }, trx);
 
       if (trx) await trx.commit();

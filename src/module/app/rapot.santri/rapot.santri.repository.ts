@@ -9,6 +9,8 @@ import PenempatanKelasSantri from '../penempatan.kelas.santri/penempatan.kelas.s
 import KelasMda from '../kelas.mda/kelas.mda.model';
 import KelasFormal from '../kelas.formal/kelas.formal.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public list(data: any) {
@@ -59,7 +61,7 @@ export default class Repository {
     }
 
     if (data?.id_cabang && data?.id_cabang != '') {
-      where['$santri.id_cabang$'] = data?.id_cabang;
+      where['$santri.cabang.id_cabang$'] = data?.id_cabang;
     }
 
     const whereAnd: any[] = [];
@@ -148,23 +150,41 @@ export default class Repository {
           attributes: santriAttributes,
           include: [
             {
-              model: Cabang,
-              as: 'cabang',
-              attributes: ['id_cabang', 'nama_cabang'],
-            },
-            {
               model: PenempatanKelasSantri,
               as: 'penempatanKelas',
+              required: false,
+              on: Sequelize.literal(
+                `"santri->penempatanKelas".id_santri = "santri".id_santri AND "santri->penempatanKelas".id_tahun_ajaran = (
+                  SELECT id_tahunajaran
+                  FROM tahun_ajaran
+                  WHERE tahun_ajaran = "RapotSantri".tahun_ajaran
+                  LIMIT 1
+                )`
+              ),
               include: [
                 {
                   model: KelasMda,
                   as: 'kelasMda',
                   attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+                  include: [
+                    {
+                      model: LembagaPendidikanKepesantrenan,
+                      as: 'lembaga',
+                      attributes: ['id_lembaga', 'nama_lembaga', 'id_cabang'],
+                    },
+                  ],
                 },
                 {
                   model: KelasFormal,
                   as: 'kelasFormal',
                   attributes: ['id_kelas', 'nama_kelas'],
+                  include: [
+                    {
+                      model: LembagaPendidikanFormal,
+                      as: 'lembaga',
+                      attributes: ['id_lembaga', 'nama_lembaga', 'id_cabang'],
+                    },
+                  ],
                 },
                 {
                   model: TahunAjaran,
@@ -172,6 +192,24 @@ export default class Repository {
                   attributes: ['id_tahunajaran', 'tahun_ajaran'],
                 },
               ],
+            },
+            {
+              model: Cabang,
+              as: 'cabang',
+              attributes: ['id_cabang', 'nama_cabang'],
+              required: false,
+              on: Sequelize.literal(
+                `"santri->cabang".id_cabang = (
+                  SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
+                  FROM penempatan_kelas_santri pks
+                  LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
+                  LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
+                  LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
+                  LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
+                  WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
+                  LIMIT 1
+                )`
+              ),
             },
           ],
         },
@@ -192,7 +230,7 @@ export default class Repository {
     return RapotSantri.findAndCountAll(query);
   }
 
-  public detail(condition: any) {
+  public detail(condition: any, trx?: any) {
     return RapotSantri.findOne({
       include: [
         {
@@ -212,6 +250,7 @@ export default class Repository {
         },
       ],
       where: condition,
+      transaction: trx,
     });
   }
 

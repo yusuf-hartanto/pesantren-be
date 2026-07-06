@@ -15,6 +15,7 @@ export default class Variable {
       'status',
       'area_province_id',
       'area_regencies_id',
+      'id_eksternal',
     ];
     return field;
   }
