@@ -24,7 +24,7 @@ export default {
       SELECT ar.resource_id 
       FROM app_resource ar
       INNER JOIN app_role role ON ar.role_id = role.role_id
-      WHERE role.role_name IN ('petugas_kedisiplinan', 'pegawai')
+      WHERE role.role_name IN ('pegawai_kedisiplinan', 'pegawai')
       LIMIT 2
     `);
 
