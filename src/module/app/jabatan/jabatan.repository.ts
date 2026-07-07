@@ -4,10 +4,11 @@ import { Op, Sequelize } from 'sequelize';
 import Model from './jabatan.model';
 import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Pegawai from '../pegawai/pegawai.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['id_jabatan', 'DESC']],
       include: [
         {
@@ -20,7 +21,6 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query = {
         ...query,
@@ -35,11 +35,19 @@ export default class Repository {
       };
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_orgunit) {
+      query.where = {
+        ...query.where,
+        id_orgunit: userContext?.id_orgunit,
+      };
+    }
+
     return Model.findAll(query);
   }
 
   public async index(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['id_jabatan', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
@@ -56,7 +64,6 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query = {
         ...query,
@@ -101,8 +108,14 @@ export default class Repository {
           ],
         },
       };
+    }
 
-      return await Model.findAndCountAll(query);
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_orgunit) {
+      query.where = {
+        ...query.where,
+        id_orgunit: userContext?.id_orgunit,
+      };
     }
 
     return Model.findAndCountAll(query);
@@ -173,9 +186,18 @@ export default class Repository {
     const keyword = q ? `%${q}%` : null;
     let whereClause: any = {};
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_orgunit) {
+      whereClause = {
+        ...whereClause,
+        id_orgunit: userContext?.id_orgunit,
+      };
+    }
+
     if (!isTemplate && keyword) {
       const keywordLower = keyword.toLowerCase();
       whereClause = {
+        ...whereClause,
         [Op.and]: [
           { deleted_at: null },
           {

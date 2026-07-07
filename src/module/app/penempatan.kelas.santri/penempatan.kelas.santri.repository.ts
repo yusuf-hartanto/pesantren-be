@@ -7,6 +7,7 @@ import KelasFormal from '../kelas.formal/kelas.formal.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import AppResource from '../resource/resource.model';
 import Model from './penempatan.kelas.santri.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
@@ -47,6 +48,17 @@ export default class Repository {
 
     if (data?.id_santri) {
       query.where.id_santri = data.id_santri;
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      query.where = {
+        ...query.where,
+        [Op.or]: [
+          { '$kelasMda.id_lembaga$': userContext?.id_lembaga },
+          { '$kelasFormal.id_lembaga$': userContext?.id_lembaga },
+        ]
+      };
     }
 
     return Model.findAll(query);
@@ -120,6 +132,14 @@ export default class Repository {
             [Op.like]: keyword,
           }
         ),
+      ];
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      where[Op.or] = [
+        { '$kelasMda.id_lembaga$': userContext?.id_lembaga },
+        { '$kelasFormal.id_lembaga$': userContext?.id_lembaga },
       ];
     }
 

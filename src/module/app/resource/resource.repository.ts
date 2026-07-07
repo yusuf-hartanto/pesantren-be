@@ -11,6 +11,7 @@ import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Cabang from '../cabang/cabang.model';
 import JamKerjaPegawai from '../pegawai.jam.kerja/pegawai.jam.kerja.model';
 import Lokasi from '../location/location.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
@@ -21,7 +22,10 @@ export default class Repository {
   }
 
   public index(data: any, condition: any, conditionRole: Object = {}) {
-    let query: Object = {
+    const userContext = getUserContextData();
+    const idOrgunit = userContext?.id_orgunit;
+
+    let query: any = {
       where: {
         ...condition,
         status: { [Op.ne]: 'D' },
@@ -30,51 +34,56 @@ export default class Repository {
       offset: data?.offset,
       limit: data?.limit,
     };
-    if (data?.keyword && data?.keyword != undefined) {
-      const keyword = `%${data.keyword.toLowerCase()}%`;
-      query = {
-        ...query,
-        where: {
-          ...condition,
-          status: { [Op.ne]: 'D' },
-          [Op.or]: [
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('AppResource.username')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('AppResource.full_name')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('AppResource.email')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn(
-                'LOWER',
-                Sequelize.col('AppResource.place_of_birth')
-              ),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('role.role_name')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-          ],
-        },
+
+    if (idOrgunit) {
+      query.where = {
+        ...query.where,
+        '$pegawai.id_orgunit$': idOrgunit,
       };
     }
+
+    if (data?.keyword && data?.keyword != undefined) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
+      query.where = {
+        ...query.where,
+        [Op.or]: [
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('AppResource.username')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('AppResource.full_name')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('AppResource.email')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.col('AppResource.place_of_birth')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('role.role_name')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+        ],
+      };
+    }
+
     return Model.findAndCountAll({
       ...query,
       attributes: {
@@ -102,16 +111,31 @@ export default class Repository {
           as: 'regency',
           required: false,
         },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          attributes: ['id_pegawai', 'nama_lengkap', 'id_orgunit'],
+          required: !!idOrgunit,
+        },
       ],
     });
   }
 
   public detail(condition: any, admin: string = ROLE_ADMIN) {
+    const userContext = getUserContextData();
+    const idOrgunit = userContext?.id_orgunit;
+
+    const whereClause: any = {
+      ...condition,
+      status: { [Op.ne]: 'D' },
+    };
+
+    if (idOrgunit) {
+      whereClause['$pegawai.id_orgunit$'] = idOrgunit;
+    }
+
     return Model.findOne({
-      where: {
-        ...condition,
-        status: { [Op.ne]: 'D' },
-      },
+      where: whereClause,
       include: [
         {
           model: AppRole,
@@ -137,13 +161,13 @@ export default class Repository {
         {
           model: Pegawai,
           as: 'pegawai',
-          required: false,
-          attributes: ['id_pegawai', 'nama_lengkap'],
+          required: !!idOrgunit,
+          attributes: ['id_pegawai', 'nama_lengkap', "id_orgunit"],
           include: [
             {
               model: OrganizationUnit,
               as: 'organizationUnit',
-              attributes: ['id_orgunit', 'nama_orgunit'],
+              attributes: ['id_orgunit', 'nama_orgunit', "id_cabang", "id_lembaga", "lembaga_type"],
               required: false,
               include: [
                 {

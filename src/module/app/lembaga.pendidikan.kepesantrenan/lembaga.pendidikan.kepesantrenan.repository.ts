@@ -3,6 +3,7 @@
 import { Op, Sequelize } from 'sequelize';
 import Model from './lembaga.pendidikan.kepesantrenan.model';
 import Cabang from '../cabang/cabang.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
@@ -17,9 +18,16 @@ export default class Repository {
         },
       ],
     };
+    
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query = { 
+        ...query,
+        where: { id_cabang: userContext?.id_cabang, }
+      }
+    }
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query = {
         ...query,
@@ -58,9 +66,16 @@ export default class Repository {
         },
       ],
     };
+    
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query = { 
+        ...query,
+        where: { id_cabang: userContext?.id_cabang, }
+      }
+    }
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query = {
         ...query,
@@ -145,12 +160,20 @@ export default class Repository {
     limit?: number;
   }) {
     const { q, isTemplate, limit } = params;
-    const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
+    
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      whereClause = { 
+        id_cabang: userContext?.id_cabang,
+      }
+    }
 
+    const keyword = q ? `%${q.toLowerCase()}%` : null;
     if (!isTemplate && keyword) {
       whereClause = {
+        ...whereClause,
         [Op.or]: [
           Sequelize.where(
             Sequelize.fn(

@@ -6,6 +6,7 @@ import KebersihanInspeksi from '../kebersihan.inspeksi/kebersihan.inspeksi.model
 import Cabang from '../cabang/cabang.model';
 import Lokasi from '../location/location.model';
 import Pegawai from '../pegawai/pegawai.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   private buildQuery(data: any) {
@@ -67,8 +68,12 @@ export default class Repository {
       isInspeksiRequired = true;
     }
 
+    const userContext = getUserContextData();
     if (data?.id_cabang && data?.id_cabang != '') {
       inspeksiWhere.id_cabang = data?.id_cabang;
+      isInspeksiRequired = true;
+    } else if (userContext && userContext?.id_cabang) {
+      inspeksiWhere.id_cabang = userContext?.id_cabang;
       isInspeksiRequired = true;
     }
 

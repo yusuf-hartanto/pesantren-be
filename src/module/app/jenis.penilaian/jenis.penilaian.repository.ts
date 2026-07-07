@@ -2,6 +2,7 @@
 
 import { Op, Sequelize } from 'sequelize';
 import Model from './jenis.penilaian.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public async checkDuplicateCombination(
@@ -41,6 +42,11 @@ export default class Repository {
       query.where.lembaga_type = data.lembaga_type;
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.lembaga_type) {
+      query.where.lembaga_type = userContext?.lembaga_type;
+    }
+
     return Model.findAll(query);
   }
 
@@ -54,8 +60,12 @@ export default class Repository {
       where: {},
     };
 
-    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
+    const userContext = getUserContextData();
+    if (userContext && userContext?.lembaga_type) {
+      query.where.lembaga_type = userContext?.lembaga_type;
+    }
 
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       query.where[Op.or] = [
         Sequelize.where(

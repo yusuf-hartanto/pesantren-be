@@ -5,15 +5,20 @@ import Model from './organization.unit.model';
 import { rawQuery } from '../../../helpers/rawQuery';
 import Cabang from '../cabang/cabang.model';
 import { Op } from 'sequelize';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public async list(data: any) {
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
+    const userContext = getUserContextData();
 
     // Gunakan array untuk menampung kondisi
     const conditions = ['o.deleted_at IS NULL'];
     if (keyword) {
       conditions.push(`LOWER(o.nama_orgunit) LIKE :keyword`);
+    }
+    if (userContext && userContext?.id_cabang) {
+      conditions.push(`o.id_cabang = :id_cabang`);
     }
 
     const whereClause = `WHERE ${conditions.join(' AND ')}`;
@@ -39,7 +44,10 @@ export default class Repository {
     const conn = await rawQuery.getConnection();
     return await conn.query(query, {
       type: QueryTypes.SELECT,
-      replacements: { keyword },
+      replacements: { 
+        keyword,
+        id_cabang: userContext?.id_cabang || null,
+      },
     });
   }
 
@@ -49,6 +57,7 @@ export default class Repository {
     limit?: number;
   }) {
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
+    const userContext = getUserContextData();
 
     // Satukan deleted_at dengan filter keyword
     const conditions = ['o.deleted_at IS NULL'];
@@ -64,6 +73,9 @@ export default class Repository {
         LOWER(lf.nama_lembaga) LIKE :keyword OR
         LOWER(lp.nama_lembaga) LIKE :keyword
       )`);
+    }
+    if (userContext && userContext?.id_cabang) {
+      conditions.push(`o.id_cabang = :id_cabang`);
     }
 
     const whereClause = `WHERE ${conditions.join(' AND ')}`;
@@ -98,11 +110,17 @@ export default class Repository {
     const [dataResult, countResult] = await Promise.all([
       conn.query(queryData, {
         type: QueryTypes.SELECT,
-        replacements: { keyword },
+        replacements: { 
+          keyword,
+          id_cabang: userContext?.id_cabang || null,
+        },
       }),
       conn.query<any>(queryCount, {
         type: QueryTypes.SELECT,
-        replacements: { keyword },
+        replacements: { 
+          keyword,
+          id_cabang: userContext?.id_cabang || null,
+        },
       }),
     ]);
 
@@ -173,12 +191,18 @@ export default class Repository {
   }) {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q.toLowerCase()}%` : null;
+    const userContext = getUserContextData();
 
     let whereClause: any = {};
+
+    if (userContext && userContext?.id_cabang) {
+      whereClause.id_cabang = userContext.id_cabang;
+    }
 
     if (!isTemplate && keyword) {
       whereClause = [
         { deleted_at: null },
+        ...(userContext && userContext?.id_cabang ? [{ id_cabang: userContext.id_cabang }] : []),
         {
           [Op.or]: [
             Sequelize.where(

@@ -6,6 +6,7 @@ import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/
 import Tingkat from '../tingkat/tingkat.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import Pegawai from '../pegawai/pegawai.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
@@ -29,6 +30,18 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      query = { 
+        ...query,
+        where: { 
+          ...condition,
+          id_lembaga: userContext?.id_lembaga,
+        }
+      }
+    }
+
     return Model.findAll({
       ...query,
       include: [
@@ -106,6 +119,14 @@ export default class Repository {
     // Filter status
     if (data?.status) {
       where.status = data.status;
+    }
+    
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      where = { 
+        ...where,
+        id_lembaga: userContext?.id_lembaga,
+      }
     }
 
     let query: Object = {

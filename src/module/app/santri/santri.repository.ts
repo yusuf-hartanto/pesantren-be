@@ -8,10 +8,11 @@ import AreaDistrict from '../../area/districts.model';
 import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       where: {
         status: { [Op.ne]: 9 },
       },
@@ -27,6 +28,20 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (data?.id_cabang && data?.id_cabang != '') {
+      query.where = {
+        ...query.where,
+        id_cabang: data.id_cabang,
+      };
+    } else if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext.id_cabang,
+      };
+    }
+
     return Model.findAll(query);
   }
 
@@ -67,10 +82,16 @@ export default class Repository {
         status: data?.status,
       };
     }
+    const userContext = getUserContextData();
     if (data?.id_cabang && data?.id_cabang != '') {
       query.where = {
         ...query.where,
         '$cabang.id_cabang$': data?.id_cabang,
+      };
+    } else if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$cabang.id_cabang$': userContext.id_cabang,
       };
     }
     return Model.findAndCountAll({

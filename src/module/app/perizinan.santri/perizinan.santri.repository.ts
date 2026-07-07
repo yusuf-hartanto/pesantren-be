@@ -10,12 +10,14 @@ import Lokasi from '../location/location.model';
 import moment from 'moment';
 import Pegawai from '../pegawai/pegawai.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export class PerizinanSantriRepository {
   /**
    * Mengambil data paginasi + filter untuk list/index utama
    */
   public async index(data: any) {
+    const userContext = getUserContextData();
     const santriAttributes = ['id_santri', 'fullname', 'nis', 'nik', 'gender'];
     if (data?.isOpenApi) {
       santriAttributes.push(
@@ -81,6 +83,20 @@ export class PerizinanSantriRepository {
       include: baseInclude,
       where: {},
     };
+
+    if (userContext && userContext?.id_cabang) {
+      if (data?.is_pegawai) {
+        query.where = {
+          ...query.where,
+          '$lokasiKerja.id_cabang$': userContext.id_cabang,
+        };
+      } else {
+        query.where = {
+          ...query.where,
+          '$lokasiKamar.id_cabang$': userContext.id_cabang,
+        };
+      }
+    }
 
     // Filter Status Approval
     if (data?.status_approval) {
@@ -440,7 +456,22 @@ export class PerizinanSantriRepository {
     } = params;
     const q = keyword ? `%${keyword}%` : null;
 
+    const userContext = getUserContextData();
     let whereClause: any = {};
+
+    if (userContext && userContext?.id_cabang) {
+      if (is_pegawai) {
+        whereClause = {
+          ...whereClause,
+          '$lokasiKerja.id_cabang$': userContext.id_cabang,
+        };
+      } else {
+        whereClause = {
+          ...whereClause,
+          '$lokasiKamar.id_cabang$': userContext.id_cabang,
+        };
+      }
+    }
 
     if (is_pegawai) {
       whereClause.sumber_pengajuan = 'Pegawai';

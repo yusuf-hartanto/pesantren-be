@@ -5,10 +5,11 @@ import Santri from '../santri/santri.model';
 import Model from './penempatan.kamar.santri.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import Lokasi from '../location/location.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       where: {
         is_deleted: false,
       },
@@ -99,11 +100,19 @@ export default class Repository {
       };
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$lokasi.id_cabang$': userContext?.id_cabang,
+      };
+    }
+
     return Model.findAll(query);
   }
 
   public async index(data: any) {
-    let query: Object = {
+    let query: any = {
       where: {
         is_deleted: false,
       },
@@ -198,6 +207,14 @@ export default class Repository {
             ),
           ],
         },
+      };
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$lokasi.id_cabang$': userContext?.id_cabang,
       };
     }
 

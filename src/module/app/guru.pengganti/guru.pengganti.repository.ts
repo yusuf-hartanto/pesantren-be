@@ -9,10 +9,11 @@ import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendid
 import KelasMda from '../kelas.mda/kelas.mda.model';
 import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 import Pegawai from '../pegawai/pegawai.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['created_at', 'DESC']],
     };
     if (data?.status != '') {
@@ -23,6 +24,21 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_orgunit) {
+      query = { 
+        ...query,
+        where: {
+          ...query.where,
+          [Op.or]: [
+            { '$guru_asli.id_orgunit$': userContext.id_orgunit },
+            { '$guru_pengganti.id_orgunit$': userContext.id_orgunit }
+          ]
+        }
+      }
+    }
+
     return Model.findAll({
       ...query,
       include: [
@@ -98,6 +114,20 @@ export default class Repository {
       limit: data?.limit,
       where,
     };
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_orgunit) {
+      query = { 
+        ...query,
+        where: {
+          ...where,
+          [Op.or]: [
+            { '$guru_asli.id_orgunit$': userContext.id_orgunit },
+            { '$guru_pengganti.id_orgunit$': userContext.id_orgunit }
+          ]
+        }
+      }
+    }
 
     return Model.findAndCountAll({
       ...query,

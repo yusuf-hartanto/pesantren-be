@@ -5,10 +5,11 @@ import Model from './jadwal.inspeksi.kebersihan.model';
 import Pegawai from '../pegawai/pegawai.model';
 import Cabang from '../cabang/cabang.model';
 import MasterSlotWaktu from '../master.slot.waktu/master.slot.waktu.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['created_at', 'DESC']],
     };
 
@@ -28,6 +29,15 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext?.id_cabang,
+      };
+    }
+
     return Model.findAll({
       ...query,
       include: [
@@ -113,6 +123,11 @@ export default class Repository {
     // Filter cabang
     if (data?.id_cabang) {
       where.id_cabang = data.id_cabang;
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      where.id_cabang = userContext?.id_cabang;
     }
 
     let query: Object = {

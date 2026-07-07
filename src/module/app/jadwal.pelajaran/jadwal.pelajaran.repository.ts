@@ -13,10 +13,11 @@ import Pegawai from '../pegawai/pegawai.model';
 import MataPelajaran from '../mata.pelajaran/mata.pelajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['created_at', 'DESC']],
     };
     if (data?.status != '') {
@@ -27,6 +28,21 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      query = { 
+        ...query,
+        where: { 
+          ...query.where,
+          [Op.or]: [
+            { '$kelas_formal.id_lembaga$': userContext?.id_lembaga },
+            { '$kelas_mda.id_lembaga$': userContext?.id_lembaga },
+          ],
+        }
+      };
+    }
+
     return Model.findAll({
       ...query,
       include: [
@@ -124,7 +140,18 @@ export default class Repository {
       where.id_lokasi = data.id_lokasi;
     }
 
-    let query: Object = {
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      where = { 
+        ...where,
+        [Op.or]: [
+          { '$kelas_formal.id_lembaga$': userContext?.id_lembaga },
+          { '$kelas_mda.id_lembaga$': userContext?.id_lembaga },
+        ],
+      };
+    }
+
+    let query: any = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
