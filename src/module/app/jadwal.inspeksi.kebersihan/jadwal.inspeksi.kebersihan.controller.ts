@@ -147,11 +147,32 @@ export default class Controller {
       };
 
       const { count, rows } = await repository.index(query);
-      if (rows?.length < 1)
+
+      const grouped: Record<string, any> = {};
+      for (const row of rows) {
+        const rowData = row.get({ plain: true });
+        const key = `${rowData.id_cabang || ''}_${rowData.id_petugas || ''}_${rowData.kode_slot || ''}_${rowData.is_active}_${rowData.keterangan || ''}`;
+        if (!grouped[key]) {
+          grouped[key] = {
+            ...rowData,
+            haris: [rowData.hari],
+          };
+        } else {
+          grouped[key].haris.push(rowData.hari);
+          if (new Date(rowData.updated_at) > new Date(grouped[key].updated_at)) {
+            grouped[key].updated_at = rowData.updated_at;
+          }
+        }
+      }
+
+      const groupedArray = Object.values(grouped);
+      groupedArray.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+
+      if (groupedArray.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(
         SUCCESS_RETRIEVED,
-        { total: count, values: rows },
+        { total: count, values: groupedArray },
         res
       );
     } catch (err: any) {
@@ -166,11 +187,21 @@ export default class Controller {
   public async detail(req: Request, res: Response) {
     try {
       const id: string = req?.params?.id || '';
-      const result: Object | any = await repository.detail({
+      const result: any = await repository.detail({
         id_jadwal: id,
       });
       if (!result) return response.success(NOT_FOUND, null, res, false);
-      return response.success(SUCCESS_RETRIEVED, result, res);
+
+      const data = result.get({ plain: true });
+      const siblingSchedules = await JadwalInspeksiKebersihan.findAll({
+        where: {
+          id_cabang: data.id_cabang,
+          kode_slot: data.kode_slot,
+        }
+      });
+      data.hari = siblingSchedules.map((s: any) => s.hari);
+
+      return response.success(SUCCESS_RETRIEVED, data, res);
     } catch (err: any) {
       return helper.catchError(
         `jadwal inspeksi kebersihan detail: ${err?.message}`,
@@ -187,22 +218,36 @@ export default class Controller {
       const idCabang = id_cabang?.value || null;
       const kodeSlot = kode_slot?.value || null;
       const idPetugas = id_petugas?.value || null;
-      const check = await repository.detail({
-        hari,
-        id_cabang: idCabang,
-        kode_slot: kodeSlot,
-      });
 
-      if (check) return response.failed(ALREADY_EXIST, 400, res);
-      const data: Object = helper.only(variable.fillable(), req?.body);
-      const result = await repository.create({
-        payload: {
-          ...data,
+      const days = Array.isArray(hari) ? hari : [hari];
+
+      // Let's check duplicates for each day
+      for (const h of days) {
+        const check = await repository.detail({
+          hari: h,
           id_cabang: idCabang,
-          id_petugas: idPetugas,
           kode_slot: kodeSlot,
-        },
-      });
+        });
+
+        if (check) {
+          const dayName = haris.find((r) => r.id == h)?.label || h;
+          return response.failed(`${ALREADY_EXIST} (Hari: ${dayName})`, 400, res);
+        }
+      }
+
+      const data: Object = helper.only(variable.fillable(), req?.body);
+      
+      for (const h of days) {
+        await repository.create({
+          payload: {
+            ...data,
+            hari: h,
+            id_cabang: idCabang,
+            id_petugas: idPetugas,
+            kode_slot: kodeSlot,
+          },
+        });
+      }
 
       return response.success(SUCCESS_SAVED, null, res);
     } catch (err: any) {
@@ -224,32 +269,85 @@ export default class Controller {
       const check = await repository.detail({ id_jadwal: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
-      if (
-        idCabang !== check.id_cabang ||
-        kodeSlot !== check.kode_slot ||
-        hari !== check.hari
-      ) {
+      const days = Array.isArray(hari) ? hari : [hari];
+
+      // Check duplicates
+      for (const h of days) {
         const duplicate = await repository.detail({
-          hari,
-          id_cabang: idCabang,
-          kode_slot: kodeSlot,
+          hari: h,
+          id_cabang: idCabang || check.id_cabang,
+          kode_slot: kodeSlot || check.kode_slot,
         });
 
-        if (duplicate) {
-          return response.failed(ALREADY_EXIST, 400, res);
+        if (
+          duplicate && 
+          (duplicate.id_cabang !== check.id_cabang || duplicate.kode_slot !== check.kode_slot)
+        ) {
+          const dayName = haris.find((r) => r.id == h)?.label || h;
+          return response.failed(`${ALREADY_EXIST} (Hari: ${dayName})`, 400, res);
         }
       }
-      const data: Object = helper.only(variable.fillable(), req?.body, true);
 
-      await repository.update({
-        payload: {
-          ...data,
-          id_cabang: idCabang || check?.getDataValue('id_cabang'),
-          id_petugas: idPetugas || check?.getDataValue('id_petugas'),
-          kode_slot: kodeSlot || check?.getDataValue('kode_slot'),
-        },
-        condition: { id_jadwal: id },
+      // Find all existing records in this group
+      const existingRecords = await JadwalInspeksiKebersihan.findAll({
+        where: {
+          id_cabang: check.id_cabang,
+          kode_slot: check.kode_slot,
+        }
       });
+
+      const existingDays = existingRecords.map((r: any) => r.hari);
+
+      // Days to delete: in existingDays but not in new days
+      const daysToDelete = existingDays.filter((d: number) => !days.includes(d));
+
+      // Days to create: in new days but not in existingDays
+      const daysToCreate = days.filter((d: number) => !existingDays.includes(d));
+
+      // Days to update: in new days and in existingDays
+      const daysToUpdate = days.filter((d: number) => existingDays.includes(d));
+
+      const data: Object = helper.only(variable.fillable(), req?.body, true);
+      const updatePayload = {
+        ...data,
+        id_cabang: idCabang || check?.getDataValue('id_cabang'),
+        id_petugas: idPetugas || check?.getDataValue('id_petugas'),
+        kode_slot: kodeSlot || check?.getDataValue('kode_slot'),
+      };
+
+      // 1. Delete removed days
+      if (daysToDelete.length > 0) {
+        await JadwalInspeksiKebersihan.destroy({
+          where: {
+            id_cabang: check.id_cabang,
+            kode_slot: check.kode_slot,
+            hari: daysToDelete,
+          },
+          individualHooks: true,
+        });
+      }
+
+      // 2. Update remaining existing days
+      if (daysToUpdate.length > 0) {
+        await JadwalInspeksiKebersihan.update(updatePayload, {
+          where: {
+            id_cabang: check.id_cabang,
+            kode_slot: check.kode_slot,
+            hari: daysToUpdate,
+          },
+          individualHooks: true,
+        });
+      }
+
+      // 3. Create new days
+      for (const d of daysToCreate) {
+        await repository.create({
+          payload: {
+            ...updatePayload,
+            hari: d,
+          }
+        });
+      }
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
@@ -266,9 +364,15 @@ export default class Controller {
       const id: string = req?.params?.id || '';
       const check = await repository.detail({ id_jadwal: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      await repository.delete({
-        condition: { id_jadwal: id },
+      
+      await JadwalInspeksiKebersihan.destroy({
+        where: {
+          id_cabang: check.id_cabang,
+          kode_slot: check.kode_slot,
+        },
+        individualHooks: true,
       });
+
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(

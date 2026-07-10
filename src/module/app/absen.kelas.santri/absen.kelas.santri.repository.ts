@@ -560,13 +560,22 @@ export default class Repository {
   }
 
   public async findAllClasses() {
+    const userContext = getUserContextData();
+    let where: any = {
+      status: 'Aktif'
+    };
+
+    if (userContext && userContext?.id_lembaga) {
+      where.id_lembaga = userContext.id_lembaga;
+    }
+
     const formal = await KelasFormal.findAll({
-      where: { status: 'Aktif' },
+      where: where,
       attributes: ['id_kelas', 'nama_kelas'],
     });
 
     const mda = await KelasMda.findAll({
-      where: { status: 'Aktif' },
+      where: where,
       attributes: ['id_kelas_mda', 'nama_kelas_mda'],
     });
 

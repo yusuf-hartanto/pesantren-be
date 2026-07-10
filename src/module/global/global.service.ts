@@ -14,8 +14,14 @@ import PerizinanSantri from '../app/perizinan.santri/perizinan.santri.model';
 import Pegawai from '../app/pegawai/pegawai.model';
 import AbsenHarianPegawai from '../app/pegawai.absen.harian/pegawai.absen.harian.model';
 import JurnalKelas from '../app/jurnal.kelas/jurnal.kelas.model';
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, QueryTypes } from 'sequelize';
 import moment from 'moment';
+import { rawQuery } from '../../helpers/rawQuery';
+import { getUserContextData } from '../../context/userContext';
+import Lokasi from '../app/location/location.model';
+import OrganizationUnit from '../app/organization.unit/organization.unit.model';
+import KelasFormal from '../app/kelas.formal/kelas.formal.model';
+import KelasMda from '../app/kelas.mda/kelas.mda.model';
 
 const BASE_URL = process.env.SITRENDI_URL || '';
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || '';
@@ -213,16 +219,23 @@ export default class Service {
     tanggal_mulai?: string,
     tanggal_selesai?: string
   ) {
+    const userContext = getUserContextData();
     let dateFilter: any;
     let dateTimeFilter: any;
+    let startD: string;
+    let endD: string;
 
     if (tanggal_mulai && tanggal_selesai) {
       dateFilter = { [Op.between]: [tanggal_mulai, tanggal_selesai] };
       dateTimeFilter = { [Op.between]: [`${tanggal_mulai} 00:00:00`, `${tanggal_selesai} 23:59:59`] };
+      startD = tanggal_mulai;
+      endD = tanggal_selesai;
     } else {
       const targetDate = tanggal || moment().format('YYYY-MM-DD');
       dateFilter = targetDate;
       dateTimeFilter = { [Op.between]: [`${targetDate} 00:00:00`, `${targetDate} 23:59:59`] };
+      startD = targetDate;
+      endD = targetDate;
     }
 
     const [
@@ -235,13 +248,15 @@ export default class Service {
       absensiPegawaiStats,
       totalSesiGuru,
       kebersihanInspeksiStats,
-      perizinanPegawaiStats
+      perizinanPegawaiStats,
+      inspeksiProgress
     ] = await Promise.all([
       AppSantri.findAll({
         attributes: [
           'status',
           [Sequelize.fn('COUNT', Sequelize.col('id_santri')), 'count'],
         ],
+        where: userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {},
         group: ['status'],
         raw: true,
       }),
@@ -253,7 +268,18 @@ export default class Service {
             'count',
           ],
         ],
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_cabang ? { '$lokasiKamar.id_cabang$': userContext.id_cabang } : {}),
+        },
+        include: userContext?.id_cabang ? [
+          {
+            model: Lokasi,
+            as: 'lokasiKamar',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: ['status_kehadiran'],
         raw: true,
       }),
@@ -266,6 +292,17 @@ export default class Service {
           ],
         ],
         where: { tanggal: dateFilter },
+        include: userContext?.id_cabang ? [
+          {
+            model: Lokasi,
+            as: 'lokasi',
+            required: true,
+            attributes: [],
+            where: {
+              id_cabang: userContext.id_cabang,
+            },
+          }
+        ] : [],
         group: ['status_kehadiran'],
         raw: true,
       }),
@@ -282,7 +319,18 @@ export default class Service {
           ],
           [Sequelize.fn('COUNT', Sequelize.col('id_pegawai')), 'count'],
         ],
-        where: { status_pegawai: 'Aktif' },
+        where: {
+          status_pegawai: 'Aktif',
+          ...(userContext?.id_cabang ? { '$organizationUnit.id_cabang$': userContext.id_cabang } : {}),
+        },
+        include: userContext?.id_cabang ? [
+          {
+            model: OrganizationUnit,
+            as: 'organizationUnit',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: [
           Sequelize.literal(`
           CASE 
@@ -300,6 +348,7 @@ export default class Service {
             as: 'kebersihan_inspeksi',
             attributes: [],
             required: true,
+            where: userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {},
           },
         ],
         attributes: [
@@ -323,7 +372,16 @@ export default class Service {
           created_at: dateTimeFilter,
           is_canceled: false,
           id_santri: { [Op.ne]: null },
+          ...(userContext?.id_cabang ? { '$lokasiKamar.id_cabang$': userContext.id_cabang } : {}),
         },
+        include: userContext?.id_cabang ? [
+          {
+            model: Lokasi,
+            as: 'lokasiKamar',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: ['status_approval', 'kondisi'],
         raw: true,
       }),
@@ -336,11 +394,52 @@ export default class Service {
           ],
         ],
         where: { tanggal: dateFilter },
+        include: userContext?.id_cabang ? [
+          {
+            model: Pegawai,
+            as: 'pegawai',
+            attributes: [],
+            required: true,
+            include: [
+              {
+                model: OrganizationUnit,
+                as: 'organizationUnit',
+                attributes: [],
+                required: true,
+                where: {
+                  id_cabang: userContext.id_cabang,
+                },
+              }
+            ]
+          }
+        ] : [],
         group: ['status_kehadiran'],
         raw: true,
       }),
       JurnalKelas.count({
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_lembaga ? {
+            [Op.or]: [
+              { '$kelasMda.id_lembaga$': userContext.id_lembaga },
+              { '$kelasFormal.id_lembaga$': userContext.id_lembaga },
+            ]
+          } : {})
+        },
+        include: userContext?.id_lembaga ? [
+          {
+            model: KelasMda,
+            as: 'kelasMda',
+            attributes: [],
+            required: false,
+          },
+          {
+            model: KelasFormal,
+            as: 'kelasFormal',
+            attributes: [],
+            required: false,
+          }
+        ] : []
       }),
       KebersihanInspeksi.findOne({
         attributes: [
@@ -349,7 +448,10 @@ export default class Service {
             'count',
           ],
         ],
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
+        },
         raw: true,
       }),
       PerizinanSantri.findAll({
@@ -362,10 +464,66 @@ export default class Service {
           created_at: dateTimeFilter,
           is_canceled: false,
           id_pegawai: { [Op.ne]: null },
+          ...(userContext?.id_cabang ? { '$lokasiKerja.id_cabang$': userContext.id_cabang } : {}),
         },
+        include: userContext?.id_cabang ? [
+          {
+            model: Lokasi,
+            as: 'lokasiKerja',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: ['status_approval', 'kondisi'],
         raw: true,
-      })
+      }),
+      (async () => {
+        const conn = await rawQuery.getConnection();
+        const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
+        const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
+
+        const summaryQuery = `
+        WITH tanggal AS (
+          SELECT generate_series(
+              DATE :startperiod,
+              DATE :endperiod,
+              INTERVAL '1 day'
+          )::date AS tanggal
+        ),
+        jadwal AS (
+            SELECT
+                t.tanggal,
+                jik.id_petugas,
+                jik.kode_slot
+            FROM tanggal t
+            JOIN jadwal_inspeksi_kebersihan jik
+              ON jik.hari = EXTRACT(ISODOW FROM t.tanggal)
+            JOIN pegawai p
+              ON p.id_pegawai = jik.id_petugas
+            WHERE jik.is_active = true
+              ${idCabangFilter}
+        )
+        SELECT
+            COUNT(*) AS total_jadwal,
+            COUNT(ki.id_inspeksi) AS inspeksi
+        FROM jadwal j
+        LEFT JOIN kebersihan_inspeksi ki
+              ON ki.tanggal = j.tanggal
+              AND ki.kode_slot::text = j.kode_slot::text
+              AND ki.id_petugas = j.id_petugas
+              ${idCabangKiFilter}
+        `;
+
+        const [rows]: any = await conn.query(summaryQuery, {
+          type: QueryTypes.SELECT,
+          replacements: {
+            startperiod: startD,
+            endperiod: endD,
+            ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
+          },
+        });
+        return rows;
+      })()
     ]) as any;
 
     let activeSantri = 0;
@@ -618,6 +776,10 @@ export default class Service {
       },
       total_sesi_guru: totalSesiGuru,
       total_petugas_inspeksi: totalPetugasInspeksi,
+      petugas_inspeksi_progress: {
+        target: parseInt(inspeksiProgress?.total_jadwal, 10) || 0,
+        actual: parseInt(inspeksiProgress?.inspeksi, 10) || 0,
+      },
       total_perizinan_pegawai: {
         total: total_perizinan_pegawai,
         menunggu: perizinan_pegawai_menunggu,

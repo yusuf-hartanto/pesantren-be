@@ -63,7 +63,7 @@ export default class Repository {
     });
   }
 
-  public index(data: any) {
+  public async index(data: any) {
     let where: any = {};
 
     // Filter keyword
@@ -130,15 +130,90 @@ export default class Repository {
       where.id_cabang = userContext?.id_cabang;
     }
 
-    let query: Object = {
-      order: [['created_at', 'DESC']],
-      offset: data?.offset,
-      limit: data?.limit,
+    const paginatedGroups = await Model.findAll({
+      attributes: [
+        'id_cabang',
+        'id_petugas',
+        'kode_slot',
+        'is_active',
+        'keterangan',
+        [Sequelize.fn('MAX', Sequelize.col('JadwalInspeksiKebersihan.updated_at')), 'max_updated_at'],
+      ],
       where,
-    };
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          required: false,
+          attributes: [],
+        },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          required: false,
+          attributes: [],
+        },
+      ],
+      group: [
+        'JadwalInspeksiKebersihan.id_cabang',
+        'JadwalInspeksiKebersihan.id_petugas',
+        'JadwalInspeksiKebersihan.kode_slot',
+        'JadwalInspeksiKebersihan.is_active',
+        'JadwalInspeksiKebersihan.keterangan',
+      ],
+      order: [[Sequelize.literal('max_updated_at'), 'DESC']],
+      offset: data?.offset ? Number(data.offset) : undefined,
+      limit: data?.limit ? Number(data.limit) : undefined,
+      raw: true,
+    });
 
-    return Model.findAndCountAll({
-      ...query,
+    if (paginatedGroups.length === 0) {
+      return { count: 0, rows: [] };
+    }
+
+    const totalGroups = await Model.findAll({
+      attributes: [
+        'id_cabang',
+        'id_petugas',
+        'kode_slot',
+        'is_active',
+        'keterangan',
+      ],
+      where,
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          required: false,
+          attributes: [],
+        },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          required: false,
+          attributes: [],
+        },
+      ],
+      group: [
+        'JadwalInspeksiKebersihan.id_cabang',
+        'JadwalInspeksiKebersihan.id_petugas',
+        'JadwalInspeksiKebersihan.kode_slot',
+        'JadwalInspeksiKebersihan.is_active',
+        'JadwalInspeksiKebersihan.keterangan',
+      ],
+    });
+    const total = totalGroups.length;
+
+    const rows = await Model.findAll({
+      where: {
+        [Op.or]: paginatedGroups.map((g: any) => ({
+          id_cabang: g.id_cabang || null,
+          id_petugas: g.id_petugas || null,
+          kode_slot: g.kode_slot || null,
+          is_active: g.is_active,
+          keterangan: g.keterangan || null,
+        })),
+      },
       include: [
         {
           model: Cabang,
@@ -159,7 +234,10 @@ export default class Repository {
           attributes: ['kode_slot', 'jam_mulai', 'jam_selesai'],
         },
       ],
+      order: [['updated_at', 'DESC']],
     });
+
+    return { count: total, rows };
   }
 
   public detail(condition: any) {
