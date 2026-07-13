@@ -128,23 +128,37 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
     try {
       const AppSantri = require('../santri/santri.model').default;
       const CabangModel = require('../cabang/cabang.model').default;
+      const InstituionModel = require('../institution/institution.model').default;
 
-      let nama_cabang: string | null = null;
+      let payload: any = {
+        id_cabang: lembaga.id_cabang,
+        id_lembaga_formal: lembaga.id_lembaga,
+      }
+
       if (lembaga.id_cabang) {
         const cabang = await CabangModel.findOne({
           where: { id_cabang: lembaga.id_cabang },
           attributes: ['nama_cabang'],
           transaction,
         });
-        nama_cabang = cabang?.nama_cabang || null;
+        if (cabang && cabang?.nama_cabang) payload.nama_cabang = cabang?.nama_cabang;
       }
 
-      await AppSantri.update(
-        {
-          id_cabang: lembaga.id_cabang || null,
-          nama_cabang: nama_cabang,
-          id_lembaga_formal: lembaga.id_lembaga,
-        },
+      if (lembaga.institution_id_sitrendi) {
+        const institution = await InstituionModel.findOne({
+          where: { institution_id_sitrendi: lembaga.institution_id_sitrendi },
+          attributes: ['id_institution', 'institution_name'],
+          transaction,
+        });
+        if (institution && institution?.id_institution) {
+          payload.id_institution = institution?.id_institution;
+        }
+        if (institution && institution?.institution_name) {
+          payload.institution_name = institution?.institution_name;
+        }
+      }
+
+      await AppSantri.update(payload,
         {
           where: {
             institution_id_sitrendi: lembaga.institution_id_sitrendi,
