@@ -84,6 +84,8 @@ class Lokasi
   // timestamps
   declare readonly created_at: Date;
   declare readonly updated_at: Date;
+
+  declare cabang?: Cabang;
 }
 
 // 4. Inisialisasi Model

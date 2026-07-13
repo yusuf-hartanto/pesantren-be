@@ -15,6 +15,8 @@ export class KelasFormal extends Model {
   declare status: string;
   declare id_lembaga: string;
   declare id_tahunajaran: string;
+
+  declare lembaga?: LembagaPendidikanFormal;
 }
 
 export function initKelasFormal(sequelize: Sequelize) {

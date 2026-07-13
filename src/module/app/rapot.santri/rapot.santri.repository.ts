@@ -69,18 +69,6 @@ export default class Repository {
               as: 'cabang',
               attributes: ['id_cabang', 'nama_cabang'],
               required: false,
-              on: Sequelize.literal(
-                `"santri->cabang".id_cabang = (
-                  SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
-                  FROM penempatan_kelas_santri pks
-                  LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
-                  LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
-                  LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
-                  LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
-                  WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
-                  LIMIT 1
-                )`
-              ),
             },
           ],
         },
@@ -97,15 +85,15 @@ export default class Repository {
     }
     
     if (userContext && userContext?.id_cabang) {
-      query.where['$santri.cabang.id_cabang$'] = userContext.id_cabang;
+      query.where['$santri.id_cabang$'] = userContext.id_cabang;
     }
 
     if (userContext && userContext?.id_lembaga) {
       query.where[Op.and] = [
         {
           [Op.or]: [
-            { '$santri.penempatanKelas.kelasFormal.id_lembaga$': userContext.id_lembaga },
-            { '$santri.penempatanKelas.kelasMda.id_lembaga$': userContext.id_lembaga },
+            { '$santri.id_lembaga_formal$': userContext.id_lembaga },
+            { '$santri.id_lembaga_mda$': userContext.id_lembaga },
           ],
         }
       ];
@@ -139,9 +127,9 @@ export default class Repository {
     }
 
     if (data?.id_cabang && data?.id_cabang != '') {
-      where['$santri.cabang.id_cabang$'] = data?.id_cabang;
+      where['$santri.id_cabang$'] = data?.id_cabang;
     } else if (userContext && userContext?.id_cabang) {
-      where['$santri.cabang.id_cabang$'] = userContext.id_cabang;
+      where['$santri.id_cabang$'] = userContext.id_cabang;
     }
 
     const whereAnd: any[] = [];
@@ -187,8 +175,8 @@ export default class Repository {
     } else if (userContext && userContext?.id_lembaga) {
       whereAnd.push({
         [Op.or]: [
-          { '$santri.penempatanKelas.kelasFormal.id_lembaga$': userContext.id_lembaga },
-          { '$santri.penempatanKelas.kelasMda.id_lembaga$': userContext.id_lembaga },
+          { '$santri.id_lembaga_formal$': userContext.id_lembaga },
+          { '$santri.id_lembaga_mda$': userContext.id_lembaga },
         ],
       });
     }
@@ -285,18 +273,6 @@ export default class Repository {
               as: 'cabang',
               attributes: ['id_cabang', 'nama_cabang'],
               required: false,
-              on: Sequelize.literal(
-                `"santri->cabang".id_cabang = (
-                  SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
-                  FROM penempatan_kelas_santri pks
-                  LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
-                  LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
-                  LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
-                  LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
-                  WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
-                  LIMIT 1
-                )`
-              ),
             },
           ],
         },

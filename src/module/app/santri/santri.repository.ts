@@ -86,12 +86,12 @@ export default class Repository {
     if (data?.id_cabang && data?.id_cabang != '') {
       query.where = {
         ...query.where,
-        '$cabang.id_cabang$': data?.id_cabang,
+        id_cabang: data?.id_cabang,
       };
     } else if (userContext && userContext?.id_cabang) {
       query.where = {
         ...query.where,
-        '$cabang.id_cabang$': userContext.id_cabang,
+        id_cabang: userContext.id_cabang,
       };
     }
     return Model.findAndCountAll({
@@ -107,18 +107,6 @@ export default class Repository {
             'nama_cabang',
             'email',
           ],
-          on: Sequelize.literal(
-            `"cabang".id_cabang = (
-              SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
-              FROM penempatan_kelas_santri pks
-              LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
-              LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
-              LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
-              LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
-              WHERE pks.id_santri = "AppSantri".id_santri AND pks.status = 'Aktif'
-              LIMIT 1
-            )`
-          ),
         },
         {
           model: OrangTuaWali,
@@ -141,18 +129,6 @@ export default class Repository {
           model: Cabang,
           as: 'cabang',
           required: false,
-          on: Sequelize.literal(
-            `"cabang".id_cabang = (
-              SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
-              FROM penempatan_kelas_santri pks
-              LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
-              LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
-              LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
-              LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
-              WHERE pks.id_santri = "AppSantri".id_santri AND pks.status = 'Aktif'
-              LIMIT 1
-            )`
-          ),
           include: [
             {
               model: AreaProvince,
@@ -254,7 +230,7 @@ export default class Repository {
         'id_cabang',
         'nama_cabang',
 
-        'institution_id',
+        'id_institution',
         'institution_name',
 
         'group_code_1',
@@ -266,6 +242,7 @@ export default class Repository {
         'kartu_santri',
 
         'status',
+        'id_lembaga_formal',
         'updated_at',
       ],
     });

@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { helper } from '../../helpers/helper';
-import { repository as repoCabang } from '../app/cabang/cabang.repository';
 import { repository as repoSantri } from '../app/santri/santri.repository';
 import { repository as repoWali } from '../app/orang.tua.wali/orang.tua.wali.repository';
 import { repository as repoInstitution } from '../app/institution/institution.repository';
@@ -22,6 +21,11 @@ import Lokasi from '../app/location/location.model';
 import OrganizationUnit from '../app/organization.unit/organization.unit.model';
 import KelasFormal from '../app/kelas.formal/kelas.formal.model';
 import KelasMda from '../app/kelas.mda/kelas.mda.model';
+import LembagaPendidikanFormal from '../app/lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import PenempatanKelasSantri from '../app/penempatan.kelas.santri/penempatan.kelas.santri.model';
+import PenempatanKamarSantri from '../app/penempatan.kamar.santri/penempatan.kamar.santri.model';
+import LembagaPendidikanKepesantrenan from '../app/lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import Cabang from '../app/cabang/cabang.model';
 
 const BASE_URL = process.env.SITRENDI_URL || '';
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || '';
@@ -106,29 +110,49 @@ export default class Service {
 
     /*
     |--------------------------------------------------------------------------
-    | CABANG
+    | LEMBAGA PENDIDIKAN FORMAL
     |--------------------------------------------------------------------------
     */
-    const cabangMap = new Map();
+    const uniqueInstitutions = new Map<string, string>();
     for (const item of data) {
-      if (!cabangMap.has(item.institution_id)) {
-        cabangMap.set(item.institution_id, {
-          id_cabang: uuidv4(),
-          institution_id_sitrendi: item.institution_id,
-          nama_cabang: item.institution_name,
-        });
+      if (item.institution_id && item.institution_name) {
+        uniqueInstitutions.set(item.institution_id, item.institution_name.trim());
       }
     }
-    const cabang = Array.from(cabangMap.values());
-    await repoCabang.bulkUpsert(cabang);
 
-    const cabangDb = await repoCabang.all({});
-    const cabangPkMap = new Map(
-      cabangDb.map((item: any) => [
-        item.institution_id_sitrendi,
-        item.id_cabang,
-      ])
-    );
+    const lembagaFormalPkMap = new Map<string, string>();
+    const lembagaFormalCabangMap = new Map<string, string | null>();
+
+    for (const [institution_id, institution_name] of uniqueInstitutions.entries()) {
+      const existing = await LembagaPendidikanFormal.findOne({
+        where: {
+          [Op.or]: [
+            { institution_id_sitrendi: institution_id },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('nama_lembaga')),
+              institution_name.toLowerCase()
+            ),
+          ],
+        },
+      });
+
+      if (existing) {
+        if (existing.institution_id_sitrendi !== institution_id) {
+          await existing.update({ institution_id_sitrendi: institution_id });
+        }
+        lembagaFormalPkMap.set(institution_id, existing.id_lembaga);
+        lembagaFormalCabangMap.set(institution_id, existing.id_cabang || null);
+      } else {
+        const created = await LembagaPendidikanFormal.create({
+          id_lembaga: uuidv4(),
+          nama_lembaga: institution_name,
+          institution_id_sitrendi: institution_id,
+          id_cabang: null,
+        });
+        lembagaFormalPkMap.set(institution_id, created.id_lembaga);
+        lembagaFormalCabangMap.set(institution_id, null);
+      }
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -168,6 +192,9 @@ export default class Service {
     */
     const santriMap = new Map();
     for (const item of data) {
+      if (item.is_active !== true) {
+        continue;
+      }
       const key = `${item.id}_${item.institution_id}`;
 
       if (!santriMap.has(key)) {
@@ -181,8 +208,8 @@ export default class Service {
           birth_date: item.birth_date,
           phone: item.phone,
 
-          id_cabang: cabangPkMap.get(item.institution_id) || null,
-          nama_cabang: item.institution_name,
+          id_cabang: lembagaFormalCabangMap.get(item.institution_id) || null,
+          nama_cabang: item.nama_cabang || null,
 
           id_institution: institutionPkMap.get(item.institution_id) || null,
           institution_name: item.institution_name,
@@ -201,6 +228,7 @@ export default class Service {
           institution_id_sitrendi: item.institution_id,
           id_wali_sitrendi: item.user_id,
           id_wali: waliPkMap.get(item.user_id) || null,
+          id_lembaga_formal: lembagaFormalPkMap.get(item.institution_id) || null,
         });
       }
     }
@@ -264,18 +292,18 @@ export default class Service {
         attributes: [
           'status_kehadiran',
           [
-            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT "AbsenHarianSantri".id_santri')),
             'count',
           ],
         ],
         where: {
           tanggal: dateFilter,
-          ...(userContext?.id_cabang ? { '$lokasiKamar.id_cabang$': userContext.id_cabang } : {}),
+          ...(userContext?.id_cabang ? { '$santri.id_cabang$': userContext.id_cabang } : {}),
         },
         include: userContext?.id_cabang ? [
           {
-            model: Lokasi,
-            as: 'lokasiKamar',
+            model: AppSantri,
+            as: 'santri',
             attributes: [],
             required: true,
           }
@@ -287,20 +315,20 @@ export default class Service {
         attributes: [
           'status_kehadiran',
           [
-            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT "AbsenKelasSantri".id_santri')),
             'count',
           ],
         ],
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_cabang ? { '$santri.id_cabang$': userContext.id_cabang } : {}),
+        },
         include: userContext?.id_cabang ? [
           {
-            model: Lokasi,
-            as: 'lokasi',
-            required: true,
+            model: AppSantri,
+            as: 'santri',
             attributes: [],
-            where: {
-              id_cabang: userContext.id_cabang,
-            },
+            required: true,
           }
         ] : [],
         group: ['status_kehadiran'],
@@ -372,12 +400,12 @@ export default class Service {
           created_at: dateTimeFilter,
           is_canceled: false,
           id_santri: { [Op.ne]: null },
-          ...(userContext?.id_cabang ? { '$lokasiKamar.id_cabang$': userContext.id_cabang } : {}),
+          ...(userContext?.id_cabang ? { '$santri.id_cabang$': userContext.id_cabang } : {}),
         },
         include: userContext?.id_cabang ? [
           {
-            model: Lokasi,
-            as: 'lokasiKamar',
+            model: AppSantri,
+            as: 'santri',
             attributes: [],
             required: true,
           }
@@ -819,6 +847,110 @@ export default class Service {
     const result = await response.json();
 
     return result;
+  }
+
+  public async mapSantriRelations() {
+    const santris = await AppSantri.findAll({
+      where: {
+        status: { [Op.ne]: 9 }
+      }
+    });
+
+    let mappedCount = 0;
+
+    for (const santri of santris) {
+      const activeClass = await PenempatanKelasSantri.findOne({
+        where: { id_santri: santri.id_santri, status: 'Aktif' },
+        include: [
+          {
+            model: KelasFormal,
+            as: 'kelasFormal',
+            include: [
+              {
+                model: LembagaPendidikanFormal,
+                as: 'lembaga',
+                include: [
+                  {
+                    model: Cabang,
+                    as: 'cabang'
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            model: KelasMda,
+            as: 'kelasMda',
+            include: [
+              {
+                model: LembagaPendidikanKepesantrenan,
+                as: 'lembaga',
+                include: [
+                  {
+                    model: Cabang,
+                    as: 'cabang'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
+      const activeRoom = await PenempatanKamarSantri.findOne({
+        where: { id_santri: santri.id_santri, status: 'Aktif' },
+        include: [
+          {
+            model: Lokasi,
+            as: 'lokasi',
+            include: [
+              {
+                model: Cabang,
+                as: 'cabang'
+              }
+            ]
+          }
+        ]
+      });
+
+      if (activeClass || activeRoom) {
+        let id_kelas_formal = activeClass?.id_kelas_formal || null;
+        let id_kelas_mda = activeClass?.id_kelas_mda || null;
+        let id_lembaga_formal = activeClass?.kelasFormal?.id_lembaga || null;
+        let id_lembaga_mda = activeClass?.kelasMda?.id_lembaga || null;
+        
+        let id_cabang: string | null = null;
+        let nama_cabang: string | null = null;
+
+        if (activeClass?.kelasFormal?.lembaga?.id_cabang) {
+          id_cabang = activeClass.kelasFormal.lembaga.id_cabang;
+          nama_cabang = activeClass.kelasFormal.lembaga.cabang?.nama_cabang || null;
+        } else if (activeClass?.kelasMda?.lembaga?.id_cabang) {
+          id_cabang = activeClass.kelasMda.lembaga.id_cabang;
+          nama_cabang = activeClass.kelasMda.lembaga.cabang?.nama_cabang || null;
+        } else if (activeRoom?.lokasi?.id_cabang) {
+          id_cabang = activeRoom.lokasi.id_cabang;
+          nama_cabang = activeRoom.lokasi.cabang?.nama_cabang || null;
+        }
+
+        await santri.update({
+          id_cabang,
+          nama_cabang,
+          id_lembaga_formal,
+          id_lembaga_mda,
+          id_kelas_formal,
+          id_kelas_mda,
+          updated_at: helper.date(),
+        });
+
+        mappedCount++;
+      }
+    }
+
+    return {
+      total_santri_processed: santris.length,
+      mapped_count: mappedCount
+    };
   }
 }
 

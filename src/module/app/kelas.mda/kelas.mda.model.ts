@@ -15,6 +15,8 @@ export class KelasMda extends Model {
   declare status: string;
   declare id_lembaga: string;
   declare id_tahunajaran: string;
+
+  declare lembaga?: LembagaPendidikanKepesantrenan;
 }
 
 export function initKelasMda(sequelize: Sequelize) {

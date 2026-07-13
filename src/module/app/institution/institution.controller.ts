@@ -9,8 +9,6 @@ import { response } from '../../../helpers/response';
 import { repository } from './institution.repository';
 import { NOT_FOUND, SUCCESS_RETRIEVED } from '../../../utils/constant';
 
-const date: string = helper.date();
-
 const generateDataExcel = (sheet: any, details: any) => {
   sheet.addRow([
     'No',
@@ -50,6 +48,19 @@ const generateDataExcel = (sheet: any, details: any) => {
 };
 
 export default class Controller {
+  public async list(req: Request, res: Response) {
+    try {
+      const result = await repository.list({
+        institution_id_sitrendi: { [Op.ne]: null },
+      });
+      if (result?.length < 1)
+        return response.success(NOT_FOUND, null, res, false);
+      return response.success(SUCCESS_RETRIEVED, result, res);
+    } catch (err: any) {
+      return helper.catchError(`institution list: ${err?.message}`, 500, res);
+    }
+  }
+
   public async index(req: Request, res: Response) {
     try {
       const query = helper.fetchQueryRequest(req);

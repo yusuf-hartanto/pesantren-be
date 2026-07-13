@@ -7,6 +7,10 @@ import AppInstitution from '../institution/institution.model';
 import OrangTuaWali from '../orang.tua.wali/orang.tua.wali.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
 import PenempatanKelasSantri from '../penempatan.kelas.santri/penempatan.kelas.santri.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import KelasFormal from '../kelas.formal/kelas.formal.model';
+import KelasMda from '../kelas.mda/kelas.mda.model';
 
 export class AppSantri extends Model {
   declare id_santri: string;
@@ -34,6 +38,10 @@ export class AppSantri extends Model {
   declare id_santri_sitrendi: string;
   declare id_wali_sitrendi: string;
   declare institution_id_sitrendi: string;
+  declare id_lembaga_formal: string;
+  declare id_lembaga_mda: string;
+  declare id_kelas_formal: string;
+  declare id_kelas_mda: string;
 
   declare penempatanKamar?: PenempatanKamarSantri[];
 }
@@ -127,6 +135,18 @@ export function initAppSantri(sequelize: Sequelize) {
         type: DataTypes.STRING,
         unique: true,
       },
+      id_lembaga_formal: {
+        type: DataTypes.STRING,
+      },
+      id_lembaga_mda: {
+        type: DataTypes.STRING,
+      },
+      id_kelas_formal: {
+        type: DataTypes.STRING,
+      },
+      id_kelas_mda: {
+        type: DataTypes.STRING,
+      },
     },
     {
       sequelize,
@@ -162,6 +182,26 @@ export function associateAppSantri() {
     as: 'penempatanKelas',
     foreignKey: 'id_santri',
     sourceKey: 'id_santri',
+  });
+  AppSantri.belongsTo(LembagaPendidikanFormal, {
+    as: 'lembagaFormal',
+    foreignKey: 'id_lembaga_formal',
+    targetKey: 'id_lembaga',
+  });
+  AppSantri.belongsTo(LembagaPendidikanKepesantrenan, {
+    as: 'lembagaMda',
+    foreignKey: 'id_lembaga_mda',
+    targetKey: 'id_lembaga',
+  });
+  AppSantri.belongsTo(KelasFormal, {
+    as: 'kelasFormal',
+    foreignKey: 'id_kelas_formal',
+    targetKey: 'id_kelas',
+  });
+  AppSantri.belongsTo(KelasMda, {
+    as: 'kelasMda',
+    foreignKey: 'id_kelas_mda',
+    targetKey: 'id_kelas_mda',
   });
 }
 

@@ -507,6 +507,15 @@ export default class Controller {
       return helper.catchError(`summary: ${err?.message}`, 500, res);
     }
   }
+
+  public async mapSantriRelations(req: Request, res: Response) {
+    try {
+      const result = await service.mapSantriRelations();
+      return response.success('Mapping santri relations successful', result, res);
+    } catch (err: any) {
+      return helper.catchError(`mapSantriRelations: ${err?.message}`, 500, res);
+    }
+  }
 }
 
 export const global = new Controller();

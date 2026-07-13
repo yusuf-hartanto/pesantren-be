@@ -13,5 +13,6 @@ router.post('/sendtele', global.sendtele);
 router.get('/navigation', auth.checkToken, global.navigation);
 router.get('/summary', auth.checkBearerToken, global.summary);
 router.post('/sync-santri', global.syncSantri);
+router.post('/map-santri-relations', global.mapSantriRelations);
 
 export default router;
