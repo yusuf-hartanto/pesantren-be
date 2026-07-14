@@ -101,6 +101,109 @@ export function initPenempatanKelasSantri(sequelize: Sequelize) {
     });
   });
 
+  PenempatanKelasSantri.afterCreate(async (row, options) => {
+    let id_lembaga_mda: string | null = null;
+    if (row.id_kelas_mda) {
+      const kelasMda = await KelasMda.findByPk(row.id_kelas_mda, {
+        transaction: options.transaction,
+      });
+      id_lembaga_mda = kelasMda?.id_lembaga || null;
+    }
+
+    let id_lembaga_formal: string | null = null;
+    if (row.id_kelas_formal) {
+      const kelasFormal = await KelasFormal.findByPk(row.id_kelas_formal, {
+        transaction: options.transaction,
+      });
+      id_lembaga_formal = kelasFormal?.id_lembaga || null;
+    }
+
+    await Santri.update(
+      {
+        id_kelas_formal: row.id_kelas_formal,
+        id_kelas_mda: row.id_kelas_mda,
+        id_lembaga_mda,
+        id_lembaga_formal,
+      },
+      {
+        where: { id_santri: row.id_santri },
+        transaction: options.transaction,
+      }
+    );
+  });
+
+  PenempatanKelasSantri.afterUpdate(async (row, options) => {
+    let id_lembaga_mda: string | null = null;
+    if (row.id_kelas_mda) {
+      const kelasMda = await KelasMda.findByPk(row.id_kelas_mda, {
+        transaction: options.transaction,
+      });
+      id_lembaga_mda = kelasMda?.id_lembaga || null;
+    }
+
+    let id_lembaga_formal: string | null = null;
+    if (row.id_kelas_formal) {
+      const kelasFormal = await KelasFormal.findByPk(row.id_kelas_formal, {
+        transaction: options.transaction,
+      });
+      id_lembaga_formal = kelasFormal?.id_lembaga || null;
+    }
+
+    await Santri.update(
+      {
+        id_kelas_formal: row.id_kelas_formal,
+        id_kelas_mda: row.id_kelas_mda,
+        id_lembaga_mda,
+        id_lembaga_formal,
+      },
+      {
+        where: { id_santri: row.id_santri },
+        transaction: options.transaction,
+      }
+    );
+  });
+
+  PenempatanKelasSantri.afterBulkCreate(async (rows, options) => {
+    const mdaIds = rows.map((r) => r.id_kelas_mda).filter((id): id is string => !!id);
+    const formalIds = rows.map((r) => r.id_kelas_formal).filter((id): id is string => !!id);
+
+    const [mdaList, formalList] = await Promise.all([
+      mdaIds.length > 0
+        ? KelasMda.findAll({
+            where: { id_kelas_mda: mdaIds },
+            transaction: options.transaction,
+          })
+        : [],
+      formalIds.length > 0
+        ? KelasFormal.findAll({
+            where: { id_kelas: formalIds },
+            transaction: options.transaction,
+          })
+        : [],
+    ]);
+
+    const mdaMap = new Map(mdaList.map((m) => [m.id_kelas_mda, m.id_lembaga]));
+    const formalMap = new Map(formalList.map((f) => [f.id_kelas, f.id_lembaga]));
+
+    for (const row of rows) {
+      const id_lembaga_mda = row.id_kelas_mda ? (mdaMap.get(row.id_kelas_mda) || null) : null;
+      const id_lembaga_formal = row.id_kelas_formal ? (formalMap.get(row.id_kelas_formal) || null) : null;
+
+      await Santri.update(
+        {
+          id_kelas_formal: row.id_kelas_formal,
+          id_kelas_mda: row.id_kelas_mda,
+          id_lembaga_mda,
+          id_lembaga_formal,
+        },
+        {
+          where: { id_santri: row.id_santri },
+          transaction: options.transaction,
+        }
+      );
+    }
+  });
+
   return PenempatanKelasSantri;
 }
 
