@@ -92,6 +92,8 @@ export default class Controller {
         parent: req?.query?.parent || '',
         status: req?.query?.status || '',
         id_cabang: req?.query?.id_cabang || '',
+        id_lembaga_formal: req?.query?.id_lembaga_formal || '',
+        id_lembaga_mda: req?.query?.id_lembaga_mda || '',
       };
       const { count, rows } = await repository.index(filter);
       if (rows?.length < 1)

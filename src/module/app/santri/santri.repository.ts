@@ -9,6 +9,8 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 import { getUserContextData } from '../../../context/userContext';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public list(data: any) {
@@ -63,7 +65,19 @@ export default class Repository {
         where: {
           status: { [Op.ne]: 9 },
           [Op.or]: [
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('fullname')), {
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('AppSantri.fullname')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('AppSantri.nis'), 'TEXT')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('AppSantri.nik'), 'TEXT')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('wali.nama_wali')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('wali.no_hp'), 'TEXT')), {
               [Op.like]: keyword,
             }),
           ],
@@ -94,6 +108,25 @@ export default class Repository {
         id_cabang: userContext.id_cabang,
       };
     }
+    if (data?.id_lembaga_formal && data?.id_lembaga_formal != '') {
+      query.where = {
+        ...query.where,
+        id_lembaga_formal: data.id_lembaga_formal,
+      };
+    }
+    if (data?.id_lembaga_mda && data?.id_lembaga_mda != '') {
+      query.where = {
+        ...query.where,
+        id_lembaga_mda: data.id_lembaga_mda,
+      };
+    }
+
+    if (!data?.id_lembaga_mda && !data?.id_lembaga_formal && userContext && userContext?.id_lembaga) {
+      query.where = {
+        ...query.where,
+        [Op.or]: [{ id_lembaga_formal: userContext.id_lembaga }, { id_lembaga_mda: userContext.id_lembaga }],
+      };
+    }
     return Model.findAndCountAll({
       ...query,
       include: [
@@ -106,6 +139,24 @@ export default class Repository {
             'institution_id_sitrendi',
             'nama_cabang',
             'email',
+          ],
+        },
+        {
+          model: LembagaPendidikanFormal,
+          as: 'lembagaFormal',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
+          ],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembagaMda',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
           ],
         },
         {
@@ -185,6 +236,24 @@ export default class Repository {
               required: false,
               attributes: ['name'],
             },
+          ],
+        },
+        {
+          model: LembagaPendidikanFormal,
+          as: 'lembagaFormal',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
+          ],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembagaMda',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
           ],
         },
       ],
