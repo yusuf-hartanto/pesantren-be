@@ -356,6 +356,7 @@ export default class Controller {
         if (row.nama_mapel) {
           const mapel = await repoMapel.detail({
             nama_mapel: row.nama_mapel,
+            id_lembaga: id_lembaga
           });
 
           if (!mapel) {

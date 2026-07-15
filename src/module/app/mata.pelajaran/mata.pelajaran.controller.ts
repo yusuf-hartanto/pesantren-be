@@ -21,6 +21,7 @@ import {
 } from '../../../utils/constant';
 import { repository as repoKelPelajaran } from '../kelompok.pelajaran/kelompok.pelajaran.repository';
 import { repository as repoLembagaFormal } from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.repository';
+import { repository as repoLembagaKepesantrenan } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.repository';
 
 const generateDataExcel = (sheet: any, details: any) => {
   sheet.addRow([
@@ -46,7 +47,9 @@ const generateDataExcel = (sheet: any, details: any) => {
       details[i]?.kode_mapel || '',
       details[i]?.nama_mapel || '',
       details[i]?.lembaga_type || '',
-      details[i]?.lembaga_formal?.nama_lembaga || '',
+      details[i]?.lembaga_formal
+        ? details[i]?.lembaga_formal?.nama_lembaga
+        : details[i]?.lembaga_kepesantrenan?.nama_lembaga || '',
       details[i]?.kelompok_pelajaran?.nama_kelpelajaran || '',
       details[i]?.kkm || '',
       details[i]?.status == 'A' ? 'Aktif' : 'Tidak Aktif',
@@ -106,7 +109,9 @@ const validateRow = (row: any) => {
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
-      const result = await repository.list({});
+      const lembaga_type: any = req?.query?.lembaga_type || '';
+      const id_lembaga: any = req?.query?.id_lembaga || '';
+      const result = await repository.list({lembaga_type, id_lembaga});
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);
@@ -224,7 +229,10 @@ export default class Controller {
 
   public async export(req: Request, res: Response) {
     try {
-      let condition: any = {};
+      let condition: any = {
+        lembaga_type: '',
+        id_lembaga: '',
+      };
       const { q, template } = req?.body;
       const isTemplate: boolean = template && template == '1';
       if (q) {
@@ -306,7 +314,16 @@ export default class Controller {
           });
 
           if (!lembaga) {
-            errors.push(`Lembaga "${row.nama_lembaga}" tidak ditemukan`);
+            const lembagaKepesantrenan = await repoLembagaKepesantrenan.detail({
+              nama_lembaga: row.nama_lembaga,
+            });
+
+            if (!lembagaKepesantrenan) {
+              errors.push(`Lembaga "${row.nama_lembaga}" tidak ditemukan`);
+            } else {
+              id_lembaga = lembagaKepesantrenan.id_lembaga;
+              nama_lembaga = lembagaKepesantrenan.getDataValue('nama_lembaga');
+            }
           } else {
             id_lembaga = lembaga.id_lembaga;
             nama_lembaga = lembaga.getDataValue('nama_lembaga');

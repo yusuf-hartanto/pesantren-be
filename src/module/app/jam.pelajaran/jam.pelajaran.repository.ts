@@ -12,6 +12,18 @@ export default class Repository {
     let query: any = {
       order: [['nomor_urut', 'DESC']],
     };
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.lembaga_type) {
+      query = { 
+        ...query,
+        where: {
+          ...query.where,
+          lembaga_type: userContext?.lembaga_type,
+        }
+      }
+    }
+    
     if (data?.nama_jampel !== undefined && data?.nama_jampel != null) {
       query = {
         ...query,
@@ -28,17 +40,6 @@ export default class Repository {
           lembaga_type: data?.lembaga_type,
         },
       };
-    }
-    
-    const userContext = getUserContextData();
-    if (userContext && userContext?.lembaga_type) {
-      query = { 
-        ...query,
-        where: {
-          ...query.where,
-          lembaga_type: userContext?.lembaga_type,
-        }
-      }
     }
 
     return Model.findAll({

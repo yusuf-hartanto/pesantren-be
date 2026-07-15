@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import KelompokPelajaran from '../kelompok.pelajaran/kelompok.pelajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export class MataPelajaran extends Model {
   declare id_mapel: string;
@@ -88,6 +89,10 @@ export function associateMataPelajaran() {
   });
   MataPelajaran.belongsTo(LembagaPendidikanFormal, {
     as: 'lembaga_formal',
+    foreignKey: 'id_lembaga',
+  });
+  MataPelajaran.belongsTo(LembagaPendidikanKepesantrenan, {
+    as: 'lembaga_kepesantrenan',
     foreignKey: 'id_lembaga',
   });
 }
