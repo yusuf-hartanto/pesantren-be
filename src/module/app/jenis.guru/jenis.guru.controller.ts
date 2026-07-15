@@ -360,7 +360,7 @@ export default class Controller {
           });
 
           if (!mapel) {
-            errors.push(`Mata Pelajaran "${row.nama_mapel}" tidak ditemukan`);
+            errors.push(`Mata Pelajaran "${row.nama_mapel}" tidak ditemukan di lembaga ${row.nama_lembaga}`);
           } else {
             id_mapel = mapel.id_mapel;
             nama_mapel = mapel.getDataValue('nama_mapel');
