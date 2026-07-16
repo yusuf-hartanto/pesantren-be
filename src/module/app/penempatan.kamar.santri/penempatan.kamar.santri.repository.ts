@@ -205,6 +205,12 @@ export default class Repository {
                 [Op.like]: keyword,
               }
             ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('lokasi.nama_lokasi')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
