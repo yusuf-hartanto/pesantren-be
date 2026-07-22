@@ -18,7 +18,9 @@ export default class Repository {
           model: Santri,
           as: 'santri',
           attributes: ['id_santri', 'fullname', 'nis'],
-          required: false,
+          where: {
+            status: { [Op.ne]: 9 },
+          },
         },
         {
           model: KelasMda,
@@ -50,6 +52,25 @@ export default class Repository {
       query.where.id_santri = data.id_santri;
     }
 
+    if (data?.id_tahun_ajaran) {
+      query.where.id_tahun_ajaran = data.id_tahun_ajaran;
+    }
+
+    if (data?.id_kelas_formal) {
+      query.where.id_kelas_formal = data.id_kelas_formal;
+    }
+
+    if (data?.id_kelas_mda) {
+      query.where.id_kelas_mda = data.id_kelas_mda;
+    }
+
+    const santriInclude = query.include.find((inc: any) => inc.as === 'santri');
+    if (santriInclude && data?.status_santri) {
+      santriInclude.where = {
+        status: data.status_santri,
+      };
+    }
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
       query.where = {
@@ -73,6 +94,18 @@ export default class Repository {
 
     if (data?.id_santri) {
       where.id_santri = data.id_santri;
+    }
+
+    if (data?.id_tahun_ajaran) {
+      where.id_tahun_ajaran = data.id_tahun_ajaran;
+    }
+
+    if (data?.id_kelas_formal) {
+      where.id_kelas_formal = data.id_kelas_formal;
+    }
+
+    if (data?.id_kelas_mda) {
+      where.id_kelas_mda = data.id_kelas_mda;
     }
 
     if (data?.keyword) {
@@ -153,8 +186,10 @@ export default class Repository {
         {
           model: Santri,
           as: 'santri',
-          attributes: ['id_santri', 'fullname', 'nis', 'nik'],
-          required: false,
+          attributes: ['id_santri', 'fullname', 'nis', 'nik', 'status'],
+          where: {
+            status: data?.status_santri ? data.status_santri : { [Op.ne]: 9 },
+          },
         },
         {
           model: KelasMda,

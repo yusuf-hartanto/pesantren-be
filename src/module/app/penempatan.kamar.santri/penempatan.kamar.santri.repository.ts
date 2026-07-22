@@ -19,7 +19,9 @@ export default class Repository {
           model: Santri,
           as: 'santri',
           attributes: ['id_santri', 'fullname'],
-          required: false,
+          where: {
+            status: { [Op.ne]: 9 },
+          },
         },
         {
           model: Lokasi,
@@ -108,6 +110,22 @@ export default class Repository {
       };
     }
 
+    if (data?.status) {
+      query.where.status = data.status;
+    }
+    if (data?.id_lokasi) {
+      query.where.id_lokasi = data.id_lokasi;
+    }
+    if (data?.id_tahunajaran) {
+      query.where.id_tahunajaran = data.id_tahunajaran;
+    }
+    const santriInclude = query.include.find((inc: any) => inc.as === 'santri');
+    if (santriInclude && data?.status_santri) {
+      santriInclude.where = {
+        status: data.status_santri,
+      };
+    }
+
     return Model.findAll(query);
   }
 
@@ -125,8 +143,10 @@ export default class Repository {
         {
           model: Santri,
           as: 'santri',
-          attributes: ['id_santri', 'fullname', 'nis', 'nik'],
-          required: false,
+          attributes: ['id_santri', 'fullname', 'nis', 'nik', 'status'],
+          where: {
+            status: data?.status_santri ? data.status_santri : { [Op.ne]: 9 },
+          },
         },
         {
           model: Lokasi,
@@ -222,6 +242,16 @@ export default class Repository {
         ...query.where,
         '$lokasi.id_cabang$': userContext?.id_cabang,
       };
+    }
+
+    if (data?.status) {
+      query.where.status = data.status;
+    }
+    if (data?.id_lokasi) {
+      query.where.id_lokasi = data.id_lokasi;
+    }
+    if (data?.id_tahunajaran) {
+      query.where.id_tahunajaran = data.id_tahunajaran;
     }
 
     return Model.findAndCountAll(query);

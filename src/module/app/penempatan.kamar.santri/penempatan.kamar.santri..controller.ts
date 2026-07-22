@@ -112,7 +112,13 @@ export default class Controller {
 
   public async index(req: Request, res: Response) {
     try {
-      const query = helper.fetchQueryRequest(req);
+      const query = {
+        ...helper.fetchQueryRequest(req),
+        id_lokasi: req?.query?.id_lokasi || '',
+        id_tahunajaran: req?.query?.id_tahunajaran || '',
+        status: req?.query?.status || '',
+        status_santri: req?.query?.status_santri || '',
+      };
       const { count, rows } = await repository.index(query);
       if (rows?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
@@ -199,21 +205,24 @@ export default class Controller {
   public async export(req: Request, res: Response) {
     try {
       let condition: any = {};
-      const { q, template } = req?.body;
+      const { q, template, id_lokasi, id_tahunajaran, status, status_santri } = req?.body;
       const isTemplate: boolean = template && template == '1';
       if (q) {
         condition = {
           ...condition,
-          ...{
-            [Op.or]: [
-              { status: { [Op.like]: q } },
-              { '$lokasi.nama_lokasi$': { [Op.like]: q } },
-              { '$santri.fullname$': { [Op.like]: q } },
-              { '$tahunAjaran.tahun_ajaran$': { [Op.like]: q } },
-            ],
-          },
+          [Op.or]: [
+            { status: { [Op.like]: q } },
+            { '$lokasi.nama_lokasi$': { [Op.like]: q } },
+            { '$santri.fullname$': { [Op.like]: q } },
+            { '$tahunAjaran.tahun_ajaran$': { [Op.like]: q } },
+          ],
         };
       }
+
+      if (id_lokasi) condition.id_lokasi = id_lokasi;
+      if (id_tahunajaran) condition.id_tahunajaran = id_tahunajaran;
+      if (status) condition.status = status;
+      if (status_santri) condition.status_santri = status_santri;
 
       let result: any = [];
       if (!isTemplate) {
