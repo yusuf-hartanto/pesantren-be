@@ -7,7 +7,7 @@ import { repository } from './pegawai.absen.harian.repository';
 import { repository as pegawaiRepo } from '../pegawai/pegawai.repository';
 import { repository as jamKerjaRepo } from '../pegawai.jam.kerja/pegawai.jam.kerja.repository';
 import * as geolib from 'geolib'; // Import library geolib
-import moment from 'moment';
+import moment from 'moment-timezone';
 import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
 import {
@@ -20,6 +20,7 @@ import {
 import { clockInSchema, clockOutSchema } from './pegawai.absen.harian.schema';
 import z from 'zod';
 
+const TIMEZONE = 'Asia/Jakarta';
 const generateDataExcel = (
   sheet: any,
   details: any,
@@ -192,7 +193,7 @@ export default class Controller {
       const { id_pegawai, latitude, longitude, catatan } = validBody;
 
       const tanggalHariIni = moment().format('YYYY-MM-DD');
-      const waktuSekarang = moment();
+      const waktuSekarang = moment().tz(TIMEZONE);
 
       const jamKerjaMaster =
         await jamKerjaRepo.checkDuplicatePegawai(id_pegawai);
@@ -275,7 +276,7 @@ export default class Controller {
         id_jamkerja: jamKerjaMaster.id_jamkerja,
         id_pegawai,
         tanggal: tanggalHariIni,
-        waktu_masuk: waktuSekarang.toDate(),
+        waktu_masuk: waktuSekarang.format('YYYY-MM-DD HH:mm:ss'),
         keterangan_masuk: keteranganMasuk.trim(),
         lat_masuk: latitude,
         long_masuk: longitude,
@@ -303,7 +304,7 @@ export default class Controller {
       const { id_pegawai, latitude, longitude, catatan } = validBody;
 
       const tanggalHariIni = moment().format('YYYY-MM-DD');
-      const waktuSekarang = moment();
+      const waktuSekarang = moment.tz(TIMEZONE);
 
       const attendance = await repository.findAttendanceToday(
         id_pegawai,
@@ -378,7 +379,7 @@ export default class Controller {
 
       await repository.update({
         payload: {
-          waktu_keluar: waktuSekarang.toDate(),
+          waktu_keluar: waktuSekarang.format('YYYY-MM-DD HH:mm:ss'),
           keterangan_keluar: keteranganKeluar.trim(),
           lat_keluar: latitude,
           long_keluar: longitude,
