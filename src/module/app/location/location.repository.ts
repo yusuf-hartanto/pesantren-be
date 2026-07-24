@@ -10,7 +10,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any, limit?: number) {
     let query: any = {
-      order: [['id_lokasi', 'DESC']],
+      order: data?.orderWithParent ? [[Sequelize.col('parent.nama_lokasi'), 'ASC'], ['nama_lokasi', 'ASC']] : [['nama_lokasi', 'ASC']],
       include: [
         {
           model: Model,

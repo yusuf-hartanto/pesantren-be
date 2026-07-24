@@ -8,7 +8,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['id_lembaga', 'DESC']],
+      order: [['nama_lembaga', 'ASC']],
       include: [
         {
           model: Cabang,

@@ -16,38 +16,32 @@ import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public async findMatchingJamPelajaran(waktu_absen: string) {
-    const time = moment(waktu_absen, 'HH:mm:ss').format('HH:mm:ss');
+    const time = moment(waktu_absen, ['HH:mm:ss', 'HH:mm']).format('HH:mm:ss');
+    const userContext = getUserContextData();
+
+    const whereClause: any = {
+      status: 'A',
+      mulai: {
+        [Op.lte]: time,
+      },
+      selesai: {
+        [Op.gte]: time,
+      },
+    };
+
+    if (userContext && userContext?.lembaga_type) {
+      whereClause.lembaga_type = userContext?.lembaga_type;
+    }
+
+    if (userContext && userContext?.id_lembaga) {
+      whereClause.id_lembaga = userContext.id_lembaga;
+    }
 
     const result = await JamPelajaran.findAll({
-      where: {
-        status: 'A',
-        mulai: {
-          [Op.lte]: time,
-        },
-        selesai: {
-          [Op.gte]: time,
-        },
-      },
+      where: whereClause,
     });
 
-    if (result.length === 0) return null;
-    if (result.length === 1) return result[0];
-
-    return result.reduce((shortest, current) => {
-      const startShortest = moment(shortest.mulai, 'HH:mm:ss');
-      const endShortest = moment(shortest.selesai, 'HH:mm:ss');
-      const durationShortest = moment
-        .duration(endShortest.diff(startShortest))
-        .asMinutes();
-
-      const startCurrent = moment(current.mulai, 'HH:mm:ss');
-      const endCurrent = moment(current.selesai, 'HH:mm:ss');
-      const durationCurrent = moment
-        .duration(endCurrent.diff(startCurrent))
-        .asMinutes();
-
-      return durationCurrent < durationShortest ? current : shortest;
-    });
+    return result;
   }
 
   public async findAllJamPelajaran() {

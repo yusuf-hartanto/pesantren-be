@@ -10,7 +10,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [['nomor_urut', 'DESC']],
+      order: [['mulai', 'ASC']],
     };
 
     const userContext = getUserContextData();
@@ -79,6 +79,15 @@ export default class Repository {
       query = { 
         ...query,
         where: { lembaga_type: userContext?.lembaga_type }
+      }
+    }
+    if (userContext && userContext?.id_lembaga) {
+      query = { 
+        ...query,
+        where: { 
+          ...query.where,
+          id_lembaga: userContext?.id_lembaga 
+        }
       }
     }
 

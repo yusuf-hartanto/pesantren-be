@@ -58,7 +58,7 @@ export default class Repository {
    * Jika ada > 1 shift cocok, dipilih yang memiliki durasi paling kecil (prioritas).
    */
   public async findMatchingAsramaShift(waktu_absen: string) {
-    const time = moment(waktu_absen, 'HH:mm:ss').format('HH:mm:ss');
+    const time = moment(waktu_absen, ['HH:mm:ss', 'HH:mm']).format('HH:mm:ss');
 
     const matchingShifts = await ShiftPresensi.findAll({
       where: {
@@ -69,25 +69,7 @@ export default class Repository {
       },
     });
 
-    if (matchingShifts.length === 0) return null;
-    if (matchingShifts.length === 1) return matchingShifts[0];
-
-    // Jika lebih dari 1 shift cocok, hitung durasi terkecil (waktu_selesai - waktu_mulai)
-    return matchingShifts.reduce((shortest, current) => {
-      const startShortest = moment(shortest.waktu_mulai, 'HH:mm:ss');
-      const endShortest = moment(shortest.waktu_selesai, 'HH:mm:ss');
-      const durationShortest = moment
-        .duration(endShortest.diff(startShortest))
-        .asMinutes();
-
-      const startCurrent = moment(current.waktu_mulai, 'HH:mm:ss');
-      const endCurrent = moment(current.waktu_selesai, 'HH:mm:ss');
-      const durationCurrent = moment
-        .duration(endCurrent.diff(startCurrent))
-        .asMinutes();
-
-      return durationCurrent < durationShortest ? current : shortest;
-    });
+    return matchingShifts;
   }
 
   public async findAllAsramaShift() {

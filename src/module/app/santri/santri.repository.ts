@@ -19,7 +19,7 @@ export default class Repository {
       where: {
         status: { [Op.ne]: 9 },
       },
-      order: [['created_at', 'DESC']],
+      order: [['fullname', 'ASC']],
     };
     if (data?.status != '') {
       query = {

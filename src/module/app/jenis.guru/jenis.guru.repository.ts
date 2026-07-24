@@ -12,7 +12,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [['nomor_urut', 'DESC']],
+      order: [[Sequelize.col('pegawai.nama_lengkap'), 'ASC'], [Sequelize.col('mata_pelajaran.nama_mapel'), 'ASC']],
     };
     if (data?.nama_jenis_guru !== undefined && data?.nama_jenis_guru != null) {
       query = {
