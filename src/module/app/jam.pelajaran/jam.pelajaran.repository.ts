@@ -81,6 +81,15 @@ export default class Repository {
         where: { lembaga_type: userContext?.lembaga_type }
       }
     }
+    if (userContext && userContext?.id_lembaga) {
+      query = { 
+        ...query,
+        where: { 
+          ...query.where,
+          id_lembaga: userContext?.id_lembaga 
+        }
+      }
+    }
 
     if (data?.keyword && data?.keyword != undefined) {
       const keyword = `%${data.keyword.toLowerCase()}%`;

@@ -157,7 +157,7 @@ export default class Controller {
 
       let isFallbackToAll = false;
 
-      if (!result) {
+      if (!result || result.length === 0) {
         result = await repository.findAllJamPelajaran();
         isFallbackToAll = true;
       }
@@ -166,7 +166,7 @@ export default class Controller {
         isFallbackToAll
           ? 'Tidak ada jam pelajaran dengan waktu tersebut. Menampilkan semua jam pelajaran aktif.'
           : 'Berhasil menemukan jam pelajaran yang cocok.',
-        isFallbackToAll ? result : [result],
+        result,
         res
       );
     } catch (error: any) {
@@ -288,9 +288,9 @@ export default class Controller {
       const targetWaktu = validBody.waktu_absen || moment().format('HH:mm:ss');
       const id_petugas = req.user?.id || null;
 
-      const jamPelajaran =
+      const jamPelajarans =
         await repository.findMatchingJamPelajaran(targetWaktu);
-      if (!jamPelajaran) {
+      if (!jamPelajarans || jamPelajarans.length === 0) {
         return response.failed(
           `Tidak ada jam pelajaran yang aktif untuk rentang waktu [${targetWaktu}].`,
           422,
@@ -298,7 +298,7 @@ export default class Controller {
         );
       }
 
-      const id_jam_pelajaran = jamPelajaran.getDataValue('id_jampel');
+      const id_jam_pelajaran = jamPelajarans[0].getDataValue('id_jampel');
 
       const jurnal = await repoJurnalKelas.findOrCreateJurnal({
         id_petugas,
@@ -354,7 +354,7 @@ export default class Controller {
         SUCCESS_SAVED,
         {
           processed: validatedPayloads.length,
-          jampel_applied: jamPelajaran.getDataValue('nama_jampel'),
+          jampel_applied: jamPelajarans[0].getDataValue('nama_jampel'),
           jurnal: jurnal.toJSON(),
         },
         res
@@ -437,16 +437,16 @@ export default class Controller {
 
       let final_id_jampel = currentData.id_jam_pelajaran;
       if (validData.waktu_absen || validData.tanggal) {
-        const jamPelajaran =
+        const jamPelajarans =
           await repository.findMatchingJamPelajaran(targetWaktu);
-        if (!jamPelajaran) {
+        if (!jamPelajarans || jamPelajarans.length === 0) {
           return response.failed(
             `Validasi Gagal: Waktu absen [${targetWaktu}] tidak masuk dalam window jam pelajaran manapun.`,
             422,
             res
           );
         }
-        final_id_jampel = jamPelajaran.getDataValue('id_jampel');
+        final_id_jampel = jamPelajarans[0].getDataValue('id_jampel');
       }
 
       if (validData.id_santri || validData.id_lokasi || validData.tanggal) {
@@ -510,7 +510,10 @@ export default class Controller {
       let jamPelajaran: any = null;
       let id_jam_pelajaran = validBody.id_jam_pelajaran || null;
 
-      jamPelajaran = await repository.findMatchingJamPelajaran(targetWaktu);
+      const jamPelajarans = await repository.findMatchingJamPelajaran(targetWaktu);
+      if (jamPelajarans && jamPelajarans.length > 0) {
+        jamPelajaran = jamPelajarans[0];
+      }
       if (!jamPelajaran && id_jam_pelajaran) {
         jamPelajaran = await repoJamPelajaran.detail({
           id_jampel: id_jam_pelajaran,
@@ -752,10 +755,10 @@ export default class Controller {
           final_id_jampel === 'undefined' ||
           final_id_jampel === ''
         ) {
-          const autoJamPel =
+          const autoJamPels =
             await repository.findMatchingJamPelajaran(targetWaktu);
-          if (autoJamPel) {
-            final_id_jampel = autoJamPel.getDataValue('id_jampel');
+          if (autoJamPels && autoJamPels.length > 0) {
+            final_id_jampel = autoJamPels[0].getDataValue('id_jampel');
           } else {
             errors.push(
               `Tidak ada jam pelajaran aktif yang memayungi waktu [${targetWaktu}]`
