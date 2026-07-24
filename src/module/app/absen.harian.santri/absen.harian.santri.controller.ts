@@ -274,7 +274,7 @@ export default class Controller {
 
       let isFallbackToAll = false;
 
-      if (!result) {
+      if (!result || result.length === 0) {
         result = await repository.findAllAsramaShift();
         isFallbackToAll = true;
       }
@@ -283,7 +283,7 @@ export default class Controller {
         isFallbackToAll
           ? 'Tidak ada shift yang cocok dengan waktu tersebut. Menampilkan semua shift asrama aktif.'
           : 'Berhasil menemukan shift asrama yang cocok.',
-        isFallbackToAll ? result : [result],
+        result,
         res
       );
     } catch (error: any) {
@@ -308,8 +308,8 @@ export default class Controller {
 
       const id_petugas = req.user?.id || null;
 
-      const shiftDoc = await repository.findMatchingAsramaShift(targetWaktu);
-      if (!shiftDoc) {
+      const shiftDocs = await repository.findMatchingAsramaShift(targetWaktu);
+      if (!shiftDocs || shiftDocs.length === 0) {
         return response.failed(
           `Tidak ada shift presensi kategori 'ASRAMA' yang aktif untuk rentang waktu [${targetWaktu}].`,
           422,
@@ -317,7 +317,7 @@ export default class Controller {
         );
       }
 
-      const id_shift_presensi = shiftDoc.getDataValue('id_shift');
+      const id_shift_presensi = shiftDocs[0].getDataValue('id_shift');
 
       const validatedPayloads = [];
 
@@ -363,7 +363,7 @@ export default class Controller {
         SUCCESS_SAVED,
         {
           processed: validatedPayloads.length,
-          shift_applied: shiftDoc.getDataValue('nama_shift'),
+          shift_applied: shiftDocs[0].getDataValue('nama_shift'),
         },
         res
       );
@@ -471,15 +471,15 @@ export default class Controller {
       // ATURAN BISNIS: Jika ada perubahan waktu/tanggal, hitung ulang Shift Asrama yang cocok
       let final_id_shift = currentData.id_shift_presensi;
       if (validData.waktu_absen || validData.tanggal) {
-        const shiftDoc = await repository.findMatchingAsramaShift(targetWaktu);
-        if (!shiftDoc) {
+        const shiftDocs = await repository.findMatchingAsramaShift(targetWaktu);
+        if (!shiftDocs || shiftDocs.length === 0) {
           return response.failed(
             `Validasi Gagal: Waktu absen [${targetWaktu}] tidak masuk dalam window shift ASRAMA manapun.`,
             422,
             res
           );
         }
-        final_id_shift = shiftDoc.getDataValue('id_shift');
+        final_id_shift = shiftDocs[0].getDataValue('id_shift');
       }
 
       // Susun payload final untuk disimpan ke database
@@ -524,7 +524,10 @@ export default class Controller {
       let id_shift_presensi = validBody.id_shift_presensi || null;
 
       // Tentukan Shift Presensi ASRAMA yang sedang berjalan berdasarkan waktu scan saat ini
-      shiftDoc = await repository.findMatchingAsramaShift(targetWaktu);
+      const shiftDocs = await repository.findMatchingAsramaShift(targetWaktu);
+      if (shiftDocs && shiftDocs.length > 0) {
+        shiftDoc = shiftDocs[0];
+      }
 
       // Fallback: Jika tidak ditemukan berdasarkan kecocokan waktu, gunakan id_shift_presensi dari payload
       if (!shiftDoc && id_shift_presensi) {
@@ -764,10 +767,10 @@ export default class Controller {
           final_id_shift === 'undefined' ||
           final_id_shift === ''
         ) {
-          const autoShift =
+          const autoShifts =
             await repository.findMatchingAsramaShift(targetWaktu);
-          if (autoShift) {
-            final_id_shift = autoShift.getDataValue('id_shift');
+          if (autoShifts && autoShifts.length > 0) {
+            final_id_shift = autoShifts[0].getDataValue('id_shift');
           } else {
             errors.push(
               `Tidak ada shift ASRAMA aktif yang memayungi waktu [${targetWaktu}]`
