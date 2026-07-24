@@ -17,17 +17,28 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public async findMatchingJamPelajaran(waktu_absen: string) {
     const time = moment(waktu_absen, ['HH:mm:ss', 'HH:mm']).format('HH:mm:ss');
+    const userContext = getUserContextData();
+
+    const whereClause: any = {
+      status: 'A',
+      mulai: {
+        [Op.lte]: time,
+      },
+      selesai: {
+        [Op.gte]: time,
+      },
+    };
+
+    if (userContext && userContext?.lembaga_type) {
+      whereClause.lembaga_type = userContext?.lembaga_type;
+    }
+
+    if (userContext && userContext?.id_lembaga) {
+      whereClause.id_lembaga = userContext.id_lembaga;
+    }
 
     const result = await JamPelajaran.findAll({
-      where: {
-        status: 'A',
-        mulai: {
-          [Op.lte]: time,
-        },
-        selesai: {
-          [Op.gte]: time,
-        },
-      },
+      where: whereClause,
     });
 
     return result;
