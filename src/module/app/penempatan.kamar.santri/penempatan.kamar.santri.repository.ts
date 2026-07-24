@@ -102,11 +102,17 @@ export default class Repository {
     return Model.findAll(query);
   }
 
-  public async index(data: any) {
-    let query: Object = {
-      where: {
-        is_deleted: false,
-      },
+public async index(data: any) {
+    let whereCondition: any = {
+      is_deleted: false,
+    };
+
+    if (data?.id_lokasi) {
+      whereCondition.id_lokasi = data.id_lokasi;
+    }
+
+    let query: any = {
+      where: whereCondition,
       order: [['updated_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
@@ -147,57 +153,54 @@ export default class Repository {
       ],
     };
 
-    if (data?.keyword && data?.keyword != undefined) {
+    if (data?.keyword && data?.keyword !== undefined) {
       const keyword = `%${data.keyword.toLowerCase()}%`;
-      query = {
-        ...query,
-        where: {
-          is_deleted: false,
-          [Op.or]: [
-            Sequelize.where(
-              Sequelize.fn(
-                'LOWER',
-                Sequelize.cast(
-                  Sequelize.col('PenempatanKamarSantri.status'),
-                  'TEXT'
-                )
-              ),
-              {
-                [Op.like]: keyword,
-              }
+      query.where = {
+        ...query.where, 
+        [Op.or]: [
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(
+                Sequelize.col('PenempatanKamarSantri.status'),
+                'TEXT'
+              )
             ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
-              {
-                [Op.like]: keyword,
-              }
+            {
+              [Op.iLike]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+            {
+              [Op.iLike]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
             ),
-            Sequelize.where(
-              Sequelize.fn(
-                'LOWER',
-                Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
-              ),
-              {
-                [Op.like]: keyword,
-              }
+            {
+              [Op.iLike]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')
             ),
-            Sequelize.where(
-              Sequelize.fn(
-                'LOWER',
-                Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')
-              ),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-          ],
-        },
+            {
+              [Op.iLike]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
+            {
+              [Op.iLike]: keyword,
+            }
+          ),
+        ],
       };
     }
 

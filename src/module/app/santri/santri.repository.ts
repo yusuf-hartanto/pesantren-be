@@ -8,6 +8,7 @@ import AreaDistrict from '../../area/districts.model';
 import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
+import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
 
 export default class Repository {
   public list(data: any) {
@@ -48,9 +49,7 @@ export default class Repository {
         where: {
           status: { [Op.ne]: 9 },
           [Op.or]: [
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('fullname')), {
-              [Op.like]: keyword,
-            }),
+            { fullname: { [Op.iLike]: keyword } }
           ],
         },
       };
@@ -104,6 +103,12 @@ export default class Repository {
           as: 'wali',
           required: false,
           attributes: ['id_wali', 'nama_wali', 'id_wali_sitrendi', 'no_hp'],
+        },
+        {
+          model: PenempatanKamarSantri,
+          as: 'penempatanKamar',
+          required: false,
+          // attributes: ['id_penempatan_kamar', 'status'],
         },
       ],
     });

@@ -1,6 +1,6 @@
 'use strict';
 
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, where } from 'sequelize';
 import PerizinanSantri from './perizinan.santri.model';
 import SuratPerizinanSantri from '../surat.perizinan.santri/surat.perizinan.santri.model';
 import LogGateSantri from '../log.gate.santri/log.gate.santri.model';
@@ -108,6 +108,16 @@ export class PerizinanSantriRepository {
     // Filter Jenis Izin
     if (data?.jenis_izin) {
       query.where.jenis_izin = data.jenis_izin;
+    }
+
+    // Filter Lokasi (Lokasi Kamar untuk Santri / Lokasi Kerja untuk Pegawai)
+    const idLokasiFilter = data?.id_lokasi;
+    if (idLokasiFilter) {
+      if (data?.is_pegawai) {
+        query.where.id_lokasi_kerja = idLokasiFilter;
+      } else {
+        query.where.id_lokasi_kamar = idLokasiFilter;
+      }
     }
 
     if (data?.is_pegawai) {
@@ -426,6 +436,7 @@ export class PerizinanSantriRepository {
     limit?: number;
     is_pegawai?: boolean;
     id_pegawai?: string;
+    id_lokasi?: string;
   }) {
     const {
       keyword,
@@ -437,10 +448,19 @@ export class PerizinanSantriRepository {
       limit,
       is_pegawai,
       id_pegawai,
+      id_lokasi
     } = params;
     const q = keyword ? `%${keyword}%` : null;
 
     let whereClause: any = {};
+
+    if (id_lokasi) {
+      if (is_pegawai) {
+        whereClause.id_lokasi_kerja = id_lokasi;
+      } else {
+        whereClause.id_lokasi_kamar = id_lokasi;
+      }
+    }
 
     if (is_pegawai) {
       whereClause.sumber_pengajuan = 'Pegawai';

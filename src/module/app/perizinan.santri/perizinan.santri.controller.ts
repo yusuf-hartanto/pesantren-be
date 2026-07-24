@@ -310,6 +310,7 @@ export default class Controller {
         is_canceled: req.query.is_canceled,
         kondisi: req.query.kondisi,
         is_pegawai: req.query.is_pegawai === 'true' ? true : false,
+        id_lokasi: req.query.id_lokasi
       };
 
       const { count, rows } = await repository.index(filter);
@@ -1221,6 +1222,7 @@ export default class Controller {
         template,
         is_pegawai,
         id_pegawai,
+        id_lokasi
       } = req.body;
       const isTemplate: boolean = template && template == '1';
       const isPegawaiActive: boolean =
@@ -1235,6 +1237,7 @@ export default class Controller {
         isTemplate,
         is_pegawai: isPegawaiActive,
         id_pegawai: isPegawaiActive ? id_pegawai : undefined,
+        id_lokasi
       });
 
       const workbook = new ExcelJS.Workbook();

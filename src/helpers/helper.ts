@@ -352,6 +352,7 @@ export default class Helper {
     const keyword: any = req?.query?.q || req?.query?.keyword;
     const id_pegawai: any = req?.query?.id_pegawai;
     const tanggal: any = req?.query?.tanggal;
+    const id_lokasi: any = req?.query?.id_lokasi;
 
     return {
       limit: parseInt(limit),
@@ -359,6 +360,7 @@ export default class Helper {
       keyword,
       tanggal,
       id_pegawai,
+      id_lokasi
     };
   }
 
