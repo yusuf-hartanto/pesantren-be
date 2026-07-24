@@ -6,6 +6,9 @@ import { response } from '../../../helpers/response';
 import { repository } from './absen.harian.santri.repository';
 import { repository as shiftPresensiRepo } from '../shift.presensi/shift.presensi.repository';
 import { repository as kesehatanRepo } from '../kesehatan.santri/kesehatan.santri.repository';
+import { Op } from 'sequelize';
+import PerizinanSantri from '../perizinan.santri/perizinan.santri.model';
+import KesehatanSantri from '../kesehatan.santri/kesehatan.santri.model';
 import {
   absenHarianSantriSchema,
   bulkAbsenHarianSantriSchema,
@@ -158,17 +161,81 @@ export default class Controller {
         tanggal
       );
 
-      const listSantri = await Promise.all(activePenempatan.map(async (p: any) => {
-        const isDirawat = await kesehatanRepo.isSantriDirawat(p.santri?.id_santri);
-        return {
-          id_santri: p.santri?.id_santri,
-          fullname: p.santri?.fullname,
-          nis: p.santri?.nis,
-          gender: p.santri?.gender,
-          id_lokasi_kamar: p.id_lokasi,
-          status_kehadiran_default: isDirawat ? 'Sakit' : 'Hadir',
-        };
-      }));
+      let listSantri: any[] = [];
+
+      if (activePenempatan && activePenempatan.length > 0) {
+        const studentIds = activePenempatan.map((p: any) => p.santri?.id_santri).filter(Boolean);
+        const today = moment(tanggal).format('YYYY-MM-DD');
+
+        // Fetch active permissions (jenis_izin: 'Izin')
+        const activeIzinList = await PerizinanSantri.findAll({
+          where: {
+            id_santri: { [Op.in]: studentIds },
+            jenis_izin: 'Izin',
+            status_approval: 'Disetujui',
+            is_canceled: false,
+            tanggal_mulai: { [Op.lte]: today },
+            tanggal_selesai: { [Op.gte]: today },
+          },
+        });
+
+        // Fetch active medical events (latest per student)
+        const latestMedicalEvents = await KesehatanSantri.findAll({
+          where: {
+            id_santri: { [Op.in]: studentIds },
+            is_deleted: false,
+          },
+          order: [
+            ['tanggal_event', 'DESC'],
+            ['created_at', 'DESC'],
+          ],
+        });
+
+        // Map to build a lookup of the latest medical event per student
+        const latestEventMap = new Map();
+        for (const event of latestMedicalEvents) {
+          const idSantri = event.getDataValue('id_santri');
+          if (idSantri && !latestEventMap.has(idSantri)) {
+            latestEventMap.set(idSantri, event);
+          }
+        }
+
+        listSantri = activePenempatan.map((p: any) => {
+          const idSantri = p.santri?.id_santri;
+
+          const latestEvent = latestEventMap.get(idSantri);
+          const isSakit = latestEvent
+            ? latestEvent.progres_status === 'Dirawat' || latestEvent.progres_status === 'Dirujuk'
+            : false;
+
+          const hasIzin = activeIzinList.find((permit: any) => permit.id_santri === idSantri);
+
+          let status = null;
+          let status_kehadiran_default = 'Hadir';
+          let keterangan = null;
+
+          if (isSakit) {
+            status = 'Sakit';
+            status_kehadiran_default = 'Sakit';
+            keterangan = `${latestEvent.progres_status || 'Sakit'}: ${latestEvent.keluhan || '-'}`;
+          } else if (hasIzin) {
+            status = 'Izin';
+            status_kehadiran_default = 'Izin';
+            keterangan = `${hasIzin.jenis_izin || 'Izin'}: ${hasIzin.alasan || '-'}`;
+          }
+
+          return {
+            id_santri: p.santri?.id_santri,
+            fullname: p.santri?.fullname,
+            nis: p.santri?.nis,
+            gender: p.santri?.gender,
+            id_lokasi_kamar: p.id_lokasi,
+            status_kehadiran_default,
+            status,
+            keterangan,
+          };
+        });
+      }
 
       if (listSantri.length === 0) {
         return response.success(

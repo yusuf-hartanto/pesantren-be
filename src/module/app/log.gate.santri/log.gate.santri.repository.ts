@@ -5,6 +5,7 @@ import Model from './log.gate.santri.model';
 import PerizinanSantri from '../perizinan.santri/perizinan.santri.model';
 import Santri from '../santri/santri.model';
 import Location from '../location/location.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   /**
@@ -95,19 +96,36 @@ export default class Repository {
   }
 
   public async list(data: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
     const query: any = {
       order: [['id_gate', 'DESC']],
       include: [
         {
           model: PerizinanSantri,
           as: 'perizinanSantri',
+          required: true,
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
+            { model: Location, as: 'lokasiKamar', required: false, attributes: ['nama_lokasi'] },
+            { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
           ],
         },
       ],
+      where: {},
     };
+
+    if (idCabang) {
+      query.where = {
+        ...query.where,
+        [Op.or]: [
+          { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+          { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+        ],
+      };
+    }
+
     const rows = await Model.findAll(query);
     return this.mapTransformRows(rows);
   }
@@ -125,7 +143,18 @@ export default class Repository {
   }
 
   public async index(data: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
     const andConditions: any[] = [];
+
+    if (idCabang) {
+      andConditions.push({
+        [Op.or]: [
+          { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+          { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+        ],
+      });
+    }
 
     const query: any = {
       order: [['created_at', 'DESC']],
@@ -140,7 +169,8 @@ export default class Repository {
           required: true,
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
+            { model: Location, as: 'lokasiKamar', required: false, attributes: ['nama_lokasi'] },
+            { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
           ],
         },
       ],
@@ -228,7 +258,18 @@ export default class Repository {
   }
 
   public async getSummary(filters: { date?: string; status?: string }) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
     const andConditions: any[] = [];
+
+    if (idCabang) {
+      andConditions.push({
+        [Op.or]: [
+          { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+          { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+        ],
+      });
+    }
 
     if (filters?.date) {
       andConditions.push({
@@ -261,9 +302,17 @@ export default class Repository {
       andConditions.length > 0 ? { [Op.and]: andConditions } : {};
 
     const baseInclude = [
-      { model: PerizinanSantri, as: 'perizinanSantri', required: true },
+      {
+        model: PerizinanSantri,
+        as: 'perizinanSantri',
+        required: true,
+        include: [
+          { model: Location, as: 'lokasiKamar', required: false, attributes: [] },
+          { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
+        ],
+      },
     ];
-    const needsInclude = !!(filters?.status && filters?.status !== 'Semua');
+    const needsInclude = !!(idCabang || (filters?.status && filters?.status !== 'Semua'));
 
     const totalScan = await Model.count({
       where: baseWhereClause,
@@ -344,6 +393,20 @@ export default class Repository {
   }
 
   public detail(condition: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
+    const whereClause: any = {
+      ...condition,
+    };
+
+    if (idCabang) {
+      whereClause[Op.or] = [
+        { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+        { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+      ];
+    }
+
     return Model.findOne({
       include: [
         {
@@ -352,10 +415,11 @@ export default class Repository {
           include: [
             { model: Santri, as: 'santri' },
             { model: Location, as: 'lokasiKamar' },
+            { model: Location, as: 'lokasiKerja', required: false },
           ],
         },
       ],
-      where: condition,
+      where: whereClause,
     });
   }
 
@@ -384,8 +448,20 @@ export default class Repository {
   }) {
     const { q, isTemplate, limit, date, status } = params;
 
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
     // Samakan struktur andConditions dengan fungsi index agar hasil export sinkron dengan tabel UI
     const andConditions: any[] = [];
+
+    if (idCabang) {
+      andConditions.push({
+        [Op.or]: [
+          { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+          { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+        ],
+      });
+    }
 
     const query: any = {
       limit: limit || (isTemplate ? 5 : undefined),
@@ -394,9 +470,11 @@ export default class Repository {
         {
           model: PerizinanSantri,
           as: 'perizinanSantri',
+          required: true,
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', attributes: ['nama_lokasi'] },
+            { model: Location, as: 'lokasiKamar', required: false, attributes: ['nama_lokasi'] },
+            { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
           ],
         },
       ],

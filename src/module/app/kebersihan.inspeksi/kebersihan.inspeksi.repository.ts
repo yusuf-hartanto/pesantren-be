@@ -9,10 +9,11 @@ import JadwalInspeksiKebersihan from '../jadwal.inspeksi.kebersihan/jadwal.inspe
 import KebersihanTemuan from '../kebersihan.temuan/kebersihan.temuan.model';
 import { rawQuery } from '../../../helpers/rawQuery';
 import moment from 'moment';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['created_at', 'DESC']],
     };
 
@@ -22,6 +23,14 @@ export default class Repository {
         where: {
           kode_slot: { [Op.eq]: data?.kode_slot },
         },
+      };
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext?.id_cabang,
       };
     }
 
@@ -94,6 +103,11 @@ export default class Repository {
     // Filter lokasi
     if (data?.id_lokasi) {
       where.id_lokasi = data.id_lokasi;
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      where.id_cabang = userContext?.id_cabang;
     }
 
     let query: Object = {
@@ -220,6 +234,9 @@ export default class Repository {
 
   public async indexPetugasList(data: any) {
     const conn = await rawQuery.getConnection();
+    const userContext = getUserContextData();
+    const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
+    const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
 
     const q = `
       WITH tanggal AS (
@@ -241,6 +258,7 @@ export default class Repository {
           JOIN pegawai p
             ON p.id_pegawai = jik.id_petugas
           WHERE jik.is_active = true
+            ${idCabangFilter}
       ),
       temuan AS (
           SELECT
@@ -266,6 +284,7 @@ export default class Repository {
             ON ki.tanggal = j.tanggal
             AND ki.kode_slot::text = j.kode_slot::text
             AND ki.id_petugas = j.id_petugas
+            ${idCabangKiFilter}
 
       LEFT JOIN temuan t
             ON t.id_inspeksi = ki.id_inspeksi
@@ -283,6 +302,7 @@ export default class Repository {
       replacements: {
         startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
         endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+        ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
       },
     });
 
@@ -291,6 +311,9 @@ export default class Repository {
 
   public async indexPetugas(data: any) {
     const conn = await rawQuery.getConnection();
+    const userContext = getUserContextData();
+    const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
+    const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
 
     const q = `
     WITH tanggal AS (
@@ -312,6 +335,7 @@ export default class Repository {
         JOIN pegawai p
           ON p.id_pegawai = jik.id_petugas
         WHERE jik.is_active = true
+          ${idCabangFilter}
     ),
     temuan AS (
         SELECT
@@ -337,6 +361,7 @@ export default class Repository {
           ON ki.tanggal = j.tanggal
           AND ki.kode_slot::text = j.kode_slot::text
           AND ki.id_petugas = j.id_petugas
+          ${idCabangKiFilter}
 
     LEFT JOIN temuan t
           ON t.id_inspeksi = ki.id_inspeksi
@@ -358,6 +383,7 @@ export default class Repository {
         offset: data?.offset,
         startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
         endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+        ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
       },
     });
 
@@ -383,6 +409,7 @@ export default class Repository {
         JOIN pegawai p
           ON p.id_pegawai = jik.id_petugas
         WHERE jik.is_active = true
+          ${idCabangFilter}
     ),
     temuan AS (
         SELECT
@@ -408,6 +435,7 @@ export default class Repository {
           ON ki.tanggal = j.tanggal
           AND ki.kode_slot::text = j.kode_slot::text
           AND ki.id_petugas = j.id_petugas
+          ${idCabangKiFilter}
 
     LEFT JOIN temuan t
           ON t.id_inspeksi = ki.id_inspeksi
@@ -423,6 +451,7 @@ export default class Repository {
       replacements: {
         startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
         endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+        ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
       },
     })) as any[];
 

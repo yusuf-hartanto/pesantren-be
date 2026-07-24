@@ -6,21 +6,42 @@ import Pegawai from '../pegawai/pegawai.model';
 import JamKerjaPegawai from '../pegawai.jam.kerja/pegawai.jam.kerja.model';
 import Lokasi from '../location/location.model';
 import GeoArea from '../geo.areas/geo.areas.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
+    const pegawaiInclude: any = {
+      model: Pegawai,
+      as: 'pegawai',
+      attributes: ['id_pegawai', 'nama_lengkap', 'nik', 'nip'],
+      required: !!idCabang,
+    };
+
+    if (idCabang) {
+      pegawaiInclude.include = [
+        {
+          model: OrganizationUnit,
+          as: 'organizationUnit',
+          attributes: [],
+          required: true,
+          where: {
+            id_cabang: idCabang,
+          },
+        },
+      ];
+    }
+
     let query: any = {
       order: [
         ['tanggal', 'DESC'],
         ['created_at', 'DESC'],
       ],
       include: [
-        {
-          model: Pegawai,
-          as: 'pegawai',
-          attributes: ['id_pegawai', 'nama_lengkap', 'nik', 'nip'],
-          required: false,
-        },
+        pegawaiInclude,
         {
           model: JamKerjaPegawai,
           as: 'jamKerjaPegawai',
@@ -58,6 +79,30 @@ export default class Repository {
   }
 
   public async index(data: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
+    const pegawaiInclude: any = {
+      model: Pegawai,
+      as: 'pegawai',
+      attributes: ['id_pegawai', 'nama_lengkap', 'nik', 'nip'],
+      required: !!idCabang,
+    };
+
+    if (idCabang) {
+      pegawaiInclude.include = [
+        {
+          model: OrganizationUnit,
+          as: 'organizationUnit',
+          attributes: [],
+          required: true,
+          where: {
+            id_cabang: idCabang,
+          },
+        },
+      ];
+    }
+
     const query: any = {
       order: [['tanggal', 'DESC']],
       offset: data?.offset,
@@ -65,12 +110,7 @@ export default class Repository {
       distinct: true,
       subQuery: false,
       include: [
-        {
-          model: Pegawai,
-          as: 'pegawai',
-          attributes: ['id_pegawai', 'nama_lengkap', 'nik', 'nip'],
-          required: false,
-        },
+        pegawaiInclude,
         {
           model: JamKerjaPegawai,
           as: 'jamKerjaPegawai',
@@ -202,6 +242,30 @@ export default class Repository {
     const keyword = q ? `%${q}%` : null;
     let whereClause: any = {};
 
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
+    const pegawaiInclude: any = {
+      model: Pegawai,
+      as: 'pegawai',
+      attributes: ['id_pegawai', 'nama_lengkap', 'nik'],
+      required: !!idCabang,
+    };
+
+    if (idCabang) {
+      pegawaiInclude.include = [
+        {
+          model: OrganizationUnit,
+          as: 'organizationUnit',
+          attributes: [],
+          required: true,
+          where: {
+            id_cabang: idCabang,
+          },
+        },
+      ];
+    }
+
     if (id_pegawai) {
       whereClause.id_pegawai = id_pegawai;
     }
@@ -241,13 +305,7 @@ export default class Repository {
       where: whereClause,
       limit: limit || (isTemplate ? 5 : undefined),
       subQuery: false,
-      include: [
-        {
-          model: Pegawai,
-          as: 'pegawai',
-          attributes: ['id_pegawai', 'nama_lengkap', 'nik'],
-        },
-      ],
+      include: [pegawaiInclude],
       order: [['tanggal', 'DESC']],
     });
   }

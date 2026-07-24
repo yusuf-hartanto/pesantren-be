@@ -5,14 +5,18 @@ import Model from './kebersihan.scan.log.model';
 import Pegawai from '../pegawai/pegawai.model';
 import Lokasi from '../location/location.model';
 import KebersihanInspeksi from '../kebersihan.inspeksi/kebersihan.inspeksi.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    const userContext = getUserContextData();
+    const idCabang = data?.id_cabang || userContext?.id_cabang;
+
+    let query: any = {
       order: [['scan_at', 'DESC']],
     };
 
-    if (data?.id_scan_log != '') {
+    if (data?.id_scan_log && data?.id_scan_log != '') {
       query = {
         ...query,
         where: {
@@ -27,7 +31,7 @@ export default class Repository {
         {
           model: KebersihanInspeksi,
           as: 'kebersihan_inspeksi',
-          required: false,
+          required: !!idCabang,
           attributes: [
             'id_inspeksi',
             'tanggal',
@@ -35,6 +39,7 @@ export default class Repository {
             'kode_slot',
             'status_kondisi',
           ],
+          ...(idCabang && { where: { id_cabang: idCabang } }),
         },
         {
           model: Lokasi,
@@ -53,7 +58,10 @@ export default class Repository {
   }
 
   public index(data: any) {
-    let query: Object = {
+    const userContext = getUserContextData();
+    const idCabang = data?.id_cabang || userContext?.id_cabang;
+
+    let query: any = {
       order: [['scan_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
@@ -86,7 +94,7 @@ export default class Repository {
         {
           model: KebersihanInspeksi,
           as: 'kebersihan_inspeksi',
-          required: false,
+          required: !!idCabang,
           attributes: [
             'id_inspeksi',
             'tanggal',
@@ -94,6 +102,7 @@ export default class Repository {
             'kode_slot',
             'status_kondisi',
           ],
+          ...(idCabang && { where: { id_cabang: idCabang } }),
         },
         {
           model: Lokasi,

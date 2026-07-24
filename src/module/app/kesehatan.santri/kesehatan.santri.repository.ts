@@ -10,22 +10,55 @@ import SuratPerizinanSantri from '../surat.perizinan.santri/surat.perizinan.sant
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
 import Lokasi from '../location/location.model';
 import AppResource from '../resource/resource.model';
+import Cabang from '../cabang/cabang.model';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export class KesehatanSantriRepository {
   public async index(data: any) {
     const limit = data?.limit ? parseInt(data.limit) : 10;
     const offset = data?.offset ? parseInt(data.offset) : 0;
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
 
     const includeClause: any[] = [
       {
         model: Santri,
         as: 'santri',
         attributes: ['id_santri', 'fullname', 'nis', 'gender'],
+        include: [
+          {
+            model: Cabang,
+            as: 'cabang',
+            attributes: [],
+            required: false,
+            on: Sequelize.literal(
+              `"santri->cabang".id_cabang = (
+                SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
+                FROM penempatan_kelas_santri pks
+                LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
+                LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
+                LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
+                LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
+                WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
+                LIMIT 1
+              )`
+            ),
+          },
+        ],
       },
       {
         model: Pegawai,
         as: 'pegawai',
         attributes: ['id_pegawai', 'nama_lengkap', 'nip', 'jenis_kelamin'],
+        include: [
+          {
+            model: OrganizationUnit,
+            as: 'organizationUnit',
+            attributes: [],
+            required: false,
+          },
+        ],
       },
       {
         model: AppResource,
@@ -39,76 +72,91 @@ export class KesehatanSantriRepository {
       },
     ];
 
-    const whereClause: any = {
-      is_deleted: false,
-    };
+    const andConditions: any[] = [
+      { is_deleted: false }
+    ];
 
     if (data?.progres_status) {
-      whereClause.progres_status = data.progres_status;
+      andConditions.push({ progres_status: data.progres_status });
     }
 
     if (data?.kategori_sakit) {
-      whereClause.kategori_sakit = data.kategori_sakit;
+      andConditions.push({ kategori_sakit: data.kategori_sakit });
     }
 
     if (data?.id_santri) {
-      whereClause.id_santri = data.id_santri;
+      andConditions.push({ id_santri: data.id_santri });
     }
 
     if (data?.id_pegawai) {
-      whereClause.id_pegawai = data.id_pegawai;
+      andConditions.push({ id_pegawai: data.id_pegawai });
     }
 
     if (data?.subject_type === 'santri') {
-      whereClause.id_santri = { [Op.ne]: null };
+      andConditions.push({ id_santri: { [Op.ne]: null } });
     } else if (data?.subject_type === 'pegawai') {
-      whereClause.id_pegawai = { [Op.ne]: null };
+      andConditions.push({ id_pegawai: { [Op.ne]: null } });
     }
 
     if (data?.tanggal_awal && data?.tanggal_akhir) {
-      whereClause.tanggal_event = {
-        [Op.between]: [
-          moment(data.tanggal_awal).startOf('day').toDate(),
-          moment(data.tanggal_akhir).endOf('day').toDate(),
+      andConditions.push({
+        tanggal_event: {
+          [Op.between]: [
+            moment(data.tanggal_awal).startOf('day').toDate(),
+            moment(data.tanggal_akhir).endOf('day').toDate(),
+          ],
+        },
+      });
+    }
+
+    if (idCabang) {
+      andConditions.push({
+        [Op.or]: [
+          { '$santri.cabang.id_cabang$': idCabang },
+          { '$pegawai.organizationUnit.id_cabang$': idCabang },
         ],
-      };
+      });
     }
 
     if (data?.keyword) {
       const keywordLower = `%${data.keyword.toLowerCase()}%`;
-      whereClause[Op.or] = [
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
-          {
-            [Op.like]: keywordLower,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
-          {
-            [Op.like]: keywordLower,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
-          {
-            [Op.like]: keywordLower,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('pegawai.nip'), 'TEXT')),
-          {
-            [Op.like]: keywordLower,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('petugas.full_name')),
-          {
-            [Op.like]: keywordLower,
-          }
-        ),
-      ];
+      andConditions.push({
+        [Op.or]: [
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+            {
+              [Op.like]: keywordLower,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+            {
+              [Op.like]: keywordLower,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+            {
+              [Op.like]: keywordLower,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('pegawai.nip'), 'TEXT')),
+            {
+              [Op.like]: keywordLower,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('petugas.full_name')),
+            {
+              [Op.like]: keywordLower,
+            }
+          ),
+        ],
+      });
     }
+
+    const whereClause = { [Op.and]: andConditions };
 
     const rows = await KesehatanSantri.findAll({
       where: whereClause,
@@ -124,23 +172,23 @@ export class KesehatanSantriRepository {
     });
 
     const ringan = await KesehatanSantri.count({
-      where: { ...whereClause, kategori_sakit: 'Ringan' },
+      where: { [Op.and]: [...andConditions, { kategori_sakit: 'Ringan' }] },
       include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
     });
     const sedang = await KesehatanSantri.count({
-      where: { ...whereClause, kategori_sakit: 'Sedang' },
+      where: { [Op.and]: [...andConditions, { kategori_sakit: 'Sedang' }] },
       include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
     });
     const berat = await KesehatanSantri.count({
-      where: { ...whereClause, kategori_sakit: 'Berat' },
+      where: { [Op.and]: [...andConditions, { kategori_sakit: 'Berat' }] },
       include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
     });
     const dirawat = await KesehatanSantri.count({
-      where: { ...whereClause, progres_status: 'Dirawat' },
+      where: { [Op.and]: [...andConditions, { progres_status: 'Dirawat' }] },
       include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
     });
     const dirujuk = await KesehatanSantri.count({
-      where: { ...whereClause, progres_status: 'Dirujuk' },
+      where: { [Op.and]: [...andConditions, { progres_status: 'Dirujuk' }] },
       include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
     });
 
@@ -158,21 +206,61 @@ export class KesehatanSantriRepository {
   }
 
   public async detail(condition: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
+    const whereClause: any = {
+      ...condition,
+      is_deleted: false,
+    };
+
+    if (idCabang) {
+      whereClause[Op.or] = [
+        { '$santri.cabang.id_cabang$': idCabang },
+        { '$pegawai.organizationUnit.id_cabang$': idCabang },
+      ];
+    }
+
     return await KesehatanSantri.findOne({
-      where: {
-        ...condition,
-        is_deleted: false,
-      },
+      where: whereClause,
       include: [
         {
           model: Santri,
           as: 'santri',
           attributes: ['id_santri', 'fullname', 'nis', 'gender'],
+          include: [
+            {
+              model: Cabang,
+              as: 'cabang',
+              attributes: ['id_cabang', 'nama_cabang'],
+              required: false,
+              on: Sequelize.literal(
+                `"santri->cabang".id_cabang = (
+                  SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
+                  FROM penempatan_kelas_santri pks
+                  LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
+                  LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
+                  LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
+                  LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
+                  WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
+                  LIMIT 1
+                )`
+              ),
+            },
+          ],
         },
         {
           model: Pegawai,
           as: 'pegawai',
           attributes: ['id_pegawai', 'nama_lengkap', 'nip', 'jenis_kelamin'],
+          include: [
+            {
+              model: OrganizationUnit,
+              as: 'organizationUnit',
+              attributes: ['id_orgunit', 'nama_orgunit'],
+              required: false,
+            },
+          ],
         },
         {
           model: AppResource,

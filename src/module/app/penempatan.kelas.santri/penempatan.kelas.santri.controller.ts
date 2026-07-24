@@ -119,6 +119,10 @@ export default class Controller {
         ...helper.fetchQueryRequest(req),
         id_santri: req?.query?.id_santri || '',
         status: req?.query?.status || '',
+        id_tahun_ajaran: req?.query?.id_tahun_ajaran || '',
+        id_kelas_formal: req?.query?.id_kelas_formal || '',
+        id_kelas_mda: req?.query?.id_kelas_mda || '',
+        status_santri: req?.query?.status_santri || '',
       };
 
       const { count, rows } = await repository.index(query);
@@ -258,7 +262,7 @@ export default class Controller {
   public async export(req: Request, res: Response) {
     try {
       let condition: any = {};
-      const { q, template } = req?.body;
+      const { q, template, id_tahun_ajaran, id_kelas_formal, id_kelas_mda, status, status_santri } = req?.body;
       const isTemplate: boolean = template && template == '1';
       if (q) {
         const keyword = `%${q.toLowerCase()}%`;
@@ -304,6 +308,12 @@ export default class Controller {
           ],
         };
       }
+
+      if (id_tahun_ajaran) condition.id_tahun_ajaran = id_tahun_ajaran;
+      if (id_kelas_formal) condition.id_kelas_formal = id_kelas_formal;
+      if (id_kelas_mda) condition.id_kelas_mda = id_kelas_mda;
+      if (status) condition.status = status;
+      if (status_santri) condition.status_santri = status_santri;
 
       let result: any = [];
       if (!isTemplate) {

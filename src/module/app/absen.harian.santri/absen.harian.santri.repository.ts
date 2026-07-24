@@ -9,6 +9,7 @@ import Lokasi from '../location/location.model';
 import ShiftPresensi from '../shift.presensi/shift.presensi.model';
 import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   /**
@@ -230,6 +231,7 @@ export default class Repository {
    * Ambil data history absensi (Standard Index API)
    */
   public async index(data: any) {
+    const userContext = getUserContextData();
     const santriAttributes = ['id_santri', 'fullname', 'nis', 'nik', 'gender'];
     if (data?.isOpenApi) {
       santriAttributes.push(
@@ -270,6 +272,13 @@ export default class Repository {
         is_deleted: false,
       },
     };
+
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$lokasiKamar.id_cabang$': userContext.id_cabang,
+      };
+    }
 
     // 1. Filter Tanggal (jika data.tanggal dikirim)
     if (data?.tanggal) {
@@ -428,9 +437,17 @@ export default class Repository {
       tanggal_akhir,
     } = params;
 
+    const userContext = getUserContextData();
     let whereClause: any = {
       is_deleted: false,
     };
+
+    if (userContext && userContext?.id_cabang) {
+      whereClause = {
+        ...whereClause,
+        '$lokasiKamar.id_cabang$': userContext.id_cabang,
+      };
+    }
 
     if (!isTemplate) {
       // 1. Filter Tanggal
@@ -527,6 +544,7 @@ export default class Repository {
     const targetDate = params.tanggal
       ? moment(params.tanggal).format('YYYY-MM-DD')
       : moment().format('YYYY-MM-DD');
+    const userContext = getUserContextData();
     let condition: any = {
       status: 'Aktif',
       is_deleted: false,
@@ -545,6 +563,13 @@ export default class Repository {
         },
       ],
     };
+
+    if (userContext && userContext?.id_cabang) {
+      condition = {
+        ...condition,
+        '$lokasi.id_cabang$': userContext.id_cabang,
+      };
+    }
 
     if (params.id_lokasi_kamar) condition.id_lokasi = params.id_lokasi_kamar;
 

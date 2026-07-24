@@ -7,6 +7,9 @@ import { repository } from './absen.kelas.santri.repository';
 import { repository as repoJamPelajaran } from '../jam.pelajaran/jam.pelajaran.repository';
 import { repository as repoJurnalKelas } from '../jurnal.kelas/jurnal.kelas.repository';
 import { repository as kesehatanRepo } from '../kesehatan.santri/kesehatan.santri.repository';
+import { Op } from 'sequelize';
+import PerizinanSantri from '../perizinan.santri/perizinan.santri.model';
+import KesehatanSantri from '../kesehatan.santri/kesehatan.santri.model';
 import {
   absenKelasSantriSchema,
   bulkAbsenKelasSantriSchema,
@@ -185,6 +188,72 @@ export default class Controller {
       }
 
       let result: any = await repository.findKelasSantri(id_kelas as string);
+
+      if (result && result.length > 0) {
+        const studentIds = result.map((s: any) => s.id_santri);
+        const today = moment().format('YYYY-MM-DD');
+
+        // Fetch active permissions (jenis_izin: 'Izin')
+        const activeIzinList = await PerizinanSantri.findAll({
+          where: {
+            id_santri: { [Op.in]: studentIds },
+            jenis_izin: 'Izin',
+            status_approval: 'Disetujui',
+            is_canceled: false,
+            tanggal_mulai: { [Op.lte]: today },
+            tanggal_selesai: { [Op.gte]: today },
+          },
+        });
+
+        // Fetch active medical events (latest per student)
+        const latestMedicalEvents = await KesehatanSantri.findAll({
+          where: {
+            id_santri: { [Op.in]: studentIds },
+            is_deleted: false,
+          },
+          order: [
+            ['tanggal_event', 'DESC'],
+            ['created_at', 'DESC'],
+          ],
+        });
+
+        // Map to build a lookup of the latest medical event per student
+        const latestEventMap = new Map();
+        for (const event of latestMedicalEvents) {
+          const idSantri = event.getDataValue('id_santri');
+          if (idSantri && !latestEventMap.has(idSantri)) {
+            latestEventMap.set(idSantri, event);
+          }
+        }
+
+        result = result.map((item: any) => {
+          const plain = item.toJSON();
+          const idSantri = plain.id_santri;
+
+          const latestEvent = latestEventMap.get(idSantri);
+          const isSakit = latestEvent
+            ? latestEvent.progres_status === 'Dirawat' || latestEvent.progres_status === 'Dirujuk'
+            : false;
+
+          const hasIzin = activeIzinList.find((p: any) => p.id_santri === idSantri);
+
+          let status = null;
+          let keterangan = null;
+          if (isSakit) {
+            status = 'Sakit';
+            keterangan = `${latestEvent.progres_status || 'Sakit'}: ${latestEvent.keluhan || '-'}`;
+          } else if (hasIzin) {
+            status = 'Izin';
+            keterangan = `${hasIzin.jenis_izin || 'Izin'}: ${hasIzin.alasan || '-'}`;
+          }
+
+          return {
+            ...plain,
+            status,
+            keterangan,
+          };
+        });
+      }
 
       return response.success('Berhasil menemukan santri', result, res);
     } catch (error: any) {

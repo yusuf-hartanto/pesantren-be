@@ -6,6 +6,7 @@ import { rawQuery } from '../../../helpers/rawQuery';
 import JenisPenilaian from '../jenis.penilaian/jenis.penilaian.model';
 import Tingkat from '../tingkat/tingkat.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public async validateBobotLogic(data: any, id_bobot?: string) {
@@ -68,9 +69,22 @@ export default class Repository {
 
   public async list(data: any) {
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
+    const userContext = getUserContextData();
 
-    const whereClause = keyword
-      ? `WHERE LOWER(jp.singkatan) LIKE :keyword`
+    let whereConditions: string[] = [];
+    let replacements: any = { keyword };
+
+    if (keyword) {
+      whereConditions.push(`LOWER(jp.singkatan) LIKE :keyword`);
+    }
+
+    if (userContext && userContext?.id_lembaga) {
+      whereConditions.push(`jpb.id_lembaga = :id_lembaga`);
+      replacements.id_lembaga = userContext.id_lembaga;
+    }
+
+    const whereClause = whereConditions.length > 0
+      ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
 
     const query = `
@@ -106,9 +120,7 @@ export default class Repository {
     const conn = await rawQuery.getConnection();
     const results = await conn.query(query, {
       type: QueryTypes.SELECT,
-      replacements: {
-        keyword,
-      },
+      replacements,
     });
 
     return results;
@@ -122,9 +134,20 @@ export default class Repository {
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     const limit = data?.limit ? parseInt(data.limit.toString(), 10) : 10;
     const offset = data?.offset ? parseInt(data.offset.toString(), 10) : 0;
+    const userContext = getUserContextData();
+
+    const replacements: any = { keyword };
+    if (userContext && userContext?.id_lembaga) {
+      replacements.id_lembaga = userContext.id_lembaga;
+    }
 
     const whereClause = `
         WHERE jpb.deleted_at IS NULL
+        ${
+          userContext && userContext?.id_lembaga
+            ? `AND jpb.id_lembaga = :id_lembaga`
+            : ''
+        }
         ${
           keyword
             ? `AND (
@@ -191,11 +214,11 @@ export default class Repository {
       const [dataResult, countResult]: [any[], any[]] = await Promise.all([
         conn.query(queryData, {
           type: QueryTypes.SELECT,
-          replacements: { keyword, limit, offset },
+          replacements: { ...replacements, limit, offset },
         }),
         conn.query(queryCount, {
           type: QueryTypes.SELECT,
-          replacements: { keyword },
+          replacements,
         }),
       ]);
 
@@ -290,6 +313,11 @@ export default class Repository {
     const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      whereClause.id_lembaga = userContext.id_lembaga;
+    }
 
     if (!isTemplate && keyword) {
       whereClause[Op.or] = [

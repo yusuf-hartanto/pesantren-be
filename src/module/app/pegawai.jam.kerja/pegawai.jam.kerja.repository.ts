@@ -4,6 +4,7 @@ import { Op, Sequelize } from 'sequelize';
 import Model from './pegawai.jam.kerja.model';
 import Pegawai from '../pegawai/pegawai.model';
 import Lokasi from '../location/location.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
@@ -47,6 +48,14 @@ export default class Repository {
       };
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$lokasiKerja.id_cabang$': userContext?.id_cabang,
+      };
+    }
+
     return Model.findAll(query);
   }
 
@@ -86,7 +95,6 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query.where[Op.or] = [
         Sequelize.where(
@@ -128,6 +136,14 @@ export default class Repository {
       ];
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$lokasiKerja.id_cabang$': userContext?.id_cabang,
+      };
+    }
+
     return await Model.findAndCountAll(query);
   }
 
@@ -166,6 +182,14 @@ export default class Repository {
     const keyword = q ? `%${q.toLowerCase()}%` : null;
 
     let whereClause: any = {};
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      whereClause = {
+        ...whereClause,
+        '$lokasiKerja.id_cabang$': userContext?.id_cabang,
+      };
+    }
 
     if (!isTemplate && keyword) {
       whereClause[Op.or] = [

@@ -356,10 +356,11 @@ export default class Controller {
         if (row.nama_mapel) {
           const mapel = await repoMapel.detail({
             nama_mapel: row.nama_mapel,
+            id_lembaga: id_lembaga
           });
 
           if (!mapel) {
-            errors.push(`Mata Pelajaran "${row.nama_mapel}" tidak ditemukan`);
+            errors.push(`Mata Pelajaran "${row.nama_mapel}" tidak ditemukan di lembaga ${row.nama_lembaga}`);
           } else {
             id_mapel = mapel.id_mapel;
             nama_mapel = mapel.getDataValue('nama_mapel');

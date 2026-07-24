@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { helper } from '../../helpers/helper';
-import { repository as repoCabang } from '../app/cabang/cabang.repository';
 import { repository as repoSantri } from '../app/santri/santri.repository';
 import { repository as repoWali } from '../app/orang.tua.wali/orang.tua.wali.repository';
 import { repository as repoInstitution } from '../app/institution/institution.repository';
@@ -14,8 +13,19 @@ import PerizinanSantri from '../app/perizinan.santri/perizinan.santri.model';
 import Pegawai from '../app/pegawai/pegawai.model';
 import AbsenHarianPegawai from '../app/pegawai.absen.harian/pegawai.absen.harian.model';
 import JurnalKelas from '../app/jurnal.kelas/jurnal.kelas.model';
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, QueryTypes } from 'sequelize';
 import moment from 'moment';
+import { rawQuery } from '../../helpers/rawQuery';
+import { getUserContextData } from '../../context/userContext';
+import Lokasi from '../app/location/location.model';
+import OrganizationUnit from '../app/organization.unit/organization.unit.model';
+import KelasFormal from '../app/kelas.formal/kelas.formal.model';
+import KelasMda from '../app/kelas.mda/kelas.mda.model';
+import LembagaPendidikanFormal from '../app/lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import PenempatanKelasSantri from '../app/penempatan.kelas.santri/penempatan.kelas.santri.model';
+import PenempatanKamarSantri from '../app/penempatan.kamar.santri/penempatan.kamar.santri.model';
+import LembagaPendidikanKepesantrenan from '../app/lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import Cabang from '../app/cabang/cabang.model';
 
 const BASE_URL = process.env.SITRENDI_URL || '';
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || '';
@@ -100,29 +110,49 @@ export default class Service {
 
     /*
     |--------------------------------------------------------------------------
-    | CABANG
+    | LEMBAGA PENDIDIKAN FORMAL
     |--------------------------------------------------------------------------
     */
-    const cabangMap = new Map();
+    const uniqueInstitutions = new Map<string, string>();
     for (const item of data) {
-      if (!cabangMap.has(item.institution_id)) {
-        cabangMap.set(item.institution_id, {
-          id_cabang: uuidv4(),
-          institution_id_sitrendi: item.institution_id,
-          nama_cabang: item.institution_name,
-        });
+      if (item.institution_id && item.institution_name) {
+        uniqueInstitutions.set(item.institution_id, item.institution_name.trim());
       }
     }
-    const cabang = Array.from(cabangMap.values());
-    await repoCabang.bulkUpsert(cabang);
 
-    const cabangDb = await repoCabang.all({});
-    const cabangPkMap = new Map(
-      cabangDb.map((item: any) => [
-        item.institution_id_sitrendi,
-        item.id_cabang,
-      ])
-    );
+    const lembagaFormalPkMap = new Map<string, string>();
+    const lembagaFormalCabangMap = new Map<string, string | null>();
+
+    for (const [institution_id, institution_name] of uniqueInstitutions.entries()) {
+      const existing = await LembagaPendidikanFormal.findOne({
+        where: {
+          [Op.or]: [
+            { institution_id_sitrendi: institution_id },
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('nama_lembaga')),
+              institution_name.toLowerCase()
+            ),
+          ],
+        },
+      });
+
+      if (existing) {
+        if (existing.institution_id_sitrendi !== institution_id) {
+          await existing.update({ institution_id_sitrendi: institution_id });
+        }
+        lembagaFormalPkMap.set(institution_id, existing.id_lembaga);
+        lembagaFormalCabangMap.set(institution_id, existing.id_cabang || null);
+      } else {
+        const created = await LembagaPendidikanFormal.create({
+          id_lembaga: uuidv4(),
+          nama_lembaga: institution_name,
+          institution_id_sitrendi: institution_id,
+          id_cabang: null,
+        });
+        lembagaFormalPkMap.set(institution_id, created.id_lembaga);
+        lembagaFormalCabangMap.set(institution_id, null);
+      }
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -162,6 +192,9 @@ export default class Service {
     */
     const santriMap = new Map();
     for (const item of data) {
+      if (item.is_active !== true) {
+        continue;
+      }
       const key = `${item.id}_${item.institution_id}`;
 
       if (!santriMap.has(key)) {
@@ -175,8 +208,8 @@ export default class Service {
           birth_date: item.birth_date,
           phone: item.phone,
 
-          id_cabang: cabangPkMap.get(item.institution_id) || null,
-          nama_cabang: item.institution_name,
+          id_cabang: lembagaFormalCabangMap.get(item.institution_id) || null,
+          nama_cabang: item.nama_cabang || null,
 
           id_institution: institutionPkMap.get(item.institution_id) || null,
           institution_name: item.institution_name,
@@ -195,6 +228,7 @@ export default class Service {
           institution_id_sitrendi: item.institution_id,
           id_wali_sitrendi: item.user_id,
           id_wali: waliPkMap.get(item.user_id) || null,
+          id_lembaga_formal: lembagaFormalPkMap.get(item.institution_id) || null,
         });
       }
     }
@@ -213,16 +247,23 @@ export default class Service {
     tanggal_mulai?: string,
     tanggal_selesai?: string
   ) {
+    const userContext = getUserContextData();
     let dateFilter: any;
     let dateTimeFilter: any;
+    let startD: string;
+    let endD: string;
 
     if (tanggal_mulai && tanggal_selesai) {
       dateFilter = { [Op.between]: [tanggal_mulai, tanggal_selesai] };
       dateTimeFilter = { [Op.between]: [`${tanggal_mulai} 00:00:00`, `${tanggal_selesai} 23:59:59`] };
+      startD = tanggal_mulai;
+      endD = tanggal_selesai;
     } else {
       const targetDate = tanggal || moment().format('YYYY-MM-DD');
       dateFilter = targetDate;
       dateTimeFilter = { [Op.between]: [`${targetDate} 00:00:00`, `${targetDate} 23:59:59`] };
+      startD = targetDate;
+      endD = targetDate;
     }
 
     const [
@@ -235,13 +276,15 @@ export default class Service {
       absensiPegawaiStats,
       totalSesiGuru,
       kebersihanInspeksiStats,
-      perizinanPegawaiStats
+      perizinanPegawaiStats,
+      inspeksiProgress
     ] = await Promise.all([
       AppSantri.findAll({
         attributes: [
           'status',
           [Sequelize.fn('COUNT', Sequelize.col('id_santri')), 'count'],
         ],
+        where: userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {},
         group: ['status'],
         raw: true,
       }),
@@ -249,11 +292,22 @@ export default class Service {
         attributes: [
           'status_kehadiran',
           [
-            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT "AbsenHarianSantri".id_santri')),
             'count',
           ],
         ],
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_cabang ? { '$santri.id_cabang$': userContext.id_cabang } : {}),
+        },
+        include: userContext?.id_cabang ? [
+          {
+            model: AppSantri,
+            as: 'santri',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: ['status_kehadiran'],
         raw: true,
       }),
@@ -261,11 +315,22 @@ export default class Service {
         attributes: [
           'status_kehadiran',
           [
-            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_santri')),
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT "AbsenKelasSantri".id_santri')),
             'count',
           ],
         ],
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_cabang ? { '$santri.id_cabang$': userContext.id_cabang } : {}),
+        },
+        include: userContext?.id_cabang ? [
+          {
+            model: AppSantri,
+            as: 'santri',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: ['status_kehadiran'],
         raw: true,
       }),
@@ -282,7 +347,18 @@ export default class Service {
           ],
           [Sequelize.fn('COUNT', Sequelize.col('id_pegawai')), 'count'],
         ],
-        where: { status_pegawai: 'Aktif' },
+        where: {
+          status_pegawai: 'Aktif',
+          ...(userContext?.id_cabang ? { '$organizationUnit.id_cabang$': userContext.id_cabang } : {}),
+        },
+        include: userContext?.id_cabang ? [
+          {
+            model: OrganizationUnit,
+            as: 'organizationUnit',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: [
           Sequelize.literal(`
           CASE 
@@ -300,6 +376,7 @@ export default class Service {
             as: 'kebersihan_inspeksi',
             attributes: [],
             required: true,
+            where: userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {},
           },
         ],
         attributes: [
@@ -323,7 +400,16 @@ export default class Service {
           created_at: dateTimeFilter,
           is_canceled: false,
           id_santri: { [Op.ne]: null },
+          ...(userContext?.id_cabang ? { '$santri.id_cabang$': userContext.id_cabang } : {}),
         },
+        include: userContext?.id_cabang ? [
+          {
+            model: AppSantri,
+            as: 'santri',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: ['status_approval', 'kondisi'],
         raw: true,
       }),
@@ -336,11 +422,52 @@ export default class Service {
           ],
         ],
         where: { tanggal: dateFilter },
+        include: userContext?.id_cabang ? [
+          {
+            model: Pegawai,
+            as: 'pegawai',
+            attributes: [],
+            required: true,
+            include: [
+              {
+                model: OrganizationUnit,
+                as: 'organizationUnit',
+                attributes: [],
+                required: true,
+                where: {
+                  id_cabang: userContext.id_cabang,
+                },
+              }
+            ]
+          }
+        ] : [],
         group: ['status_kehadiran'],
         raw: true,
       }),
       JurnalKelas.count({
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_lembaga ? {
+            [Op.or]: [
+              { '$kelasMda.id_lembaga$': userContext.id_lembaga },
+              { '$kelasFormal.id_lembaga$': userContext.id_lembaga },
+            ]
+          } : {})
+        },
+        include: userContext?.id_lembaga ? [
+          {
+            model: KelasMda,
+            as: 'kelasMda',
+            attributes: [],
+            required: false,
+          },
+          {
+            model: KelasFormal,
+            as: 'kelasFormal',
+            attributes: [],
+            required: false,
+          }
+        ] : []
       }),
       KebersihanInspeksi.findOne({
         attributes: [
@@ -349,7 +476,10 @@ export default class Service {
             'count',
           ],
         ],
-        where: { tanggal: dateFilter },
+        where: {
+          tanggal: dateFilter,
+          ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
+        },
         raw: true,
       }),
       PerizinanSantri.findAll({
@@ -362,10 +492,66 @@ export default class Service {
           created_at: dateTimeFilter,
           is_canceled: false,
           id_pegawai: { [Op.ne]: null },
+          ...(userContext?.id_cabang ? { '$lokasiKerja.id_cabang$': userContext.id_cabang } : {}),
         },
+        include: userContext?.id_cabang ? [
+          {
+            model: Lokasi,
+            as: 'lokasiKerja',
+            attributes: [],
+            required: true,
+          }
+        ] : [],
         group: ['status_approval', 'kondisi'],
         raw: true,
-      })
+      }),
+      (async () => {
+        const conn = await rawQuery.getConnection();
+        const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
+        const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
+
+        const summaryQuery = `
+        WITH tanggal AS (
+          SELECT generate_series(
+              DATE :startperiod,
+              DATE :endperiod,
+              INTERVAL '1 day'
+          )::date AS tanggal
+        ),
+        jadwal AS (
+            SELECT
+                t.tanggal,
+                jik.id_petugas,
+                jik.kode_slot
+            FROM tanggal t
+            JOIN jadwal_inspeksi_kebersihan jik
+              ON jik.hari = EXTRACT(ISODOW FROM t.tanggal)
+            JOIN pegawai p
+              ON p.id_pegawai = jik.id_petugas
+            WHERE jik.is_active = true
+              ${idCabangFilter}
+        )
+        SELECT
+            COUNT(*) AS total_jadwal,
+            COUNT(ki.id_inspeksi) AS inspeksi
+        FROM jadwal j
+        LEFT JOIN kebersihan_inspeksi ki
+              ON ki.tanggal = j.tanggal
+              AND ki.kode_slot::text = j.kode_slot::text
+              AND ki.id_petugas = j.id_petugas
+              ${idCabangKiFilter}
+        `;
+
+        const [rows]: any = await conn.query(summaryQuery, {
+          type: QueryTypes.SELECT,
+          replacements: {
+            startperiod: startD,
+            endperiod: endD,
+            ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
+          },
+        });
+        return rows;
+      })()
     ]) as any;
 
     let activeSantri = 0;
@@ -618,6 +804,10 @@ export default class Service {
       },
       total_sesi_guru: totalSesiGuru,
       total_petugas_inspeksi: totalPetugasInspeksi,
+      petugas_inspeksi_progress: {
+        target: parseInt(inspeksiProgress?.total_jadwal, 10) || 0,
+        actual: parseInt(inspeksiProgress?.inspeksi, 10) || 0,
+      },
       total_perizinan_pegawai: {
         total: total_perizinan_pegawai,
         menunggu: perizinan_pegawai_menunggu,
@@ -657,6 +847,110 @@ export default class Service {
     const result = await response.json();
 
     return result;
+  }
+
+  public async mapSantriRelations() {
+    const santris = await AppSantri.findAll({
+      where: {
+        status: { [Op.ne]: 9 }
+      }
+    });
+
+    let mappedCount = 0;
+
+    for (const santri of santris) {
+      const activeClass = await PenempatanKelasSantri.findOne({
+        where: { id_santri: santri.id_santri, status: 'Aktif' },
+        include: [
+          {
+            model: KelasFormal,
+            as: 'kelasFormal',
+            include: [
+              {
+                model: LembagaPendidikanFormal,
+                as: 'lembaga',
+                include: [
+                  {
+                    model: Cabang,
+                    as: 'cabang'
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            model: KelasMda,
+            as: 'kelasMda',
+            include: [
+              {
+                model: LembagaPendidikanKepesantrenan,
+                as: 'lembaga',
+                include: [
+                  {
+                    model: Cabang,
+                    as: 'cabang'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
+      const activeRoom = await PenempatanKamarSantri.findOne({
+        where: { id_santri: santri.id_santri, status: 'Aktif' },
+        include: [
+          {
+            model: Lokasi,
+            as: 'lokasi',
+            include: [
+              {
+                model: Cabang,
+                as: 'cabang'
+              }
+            ]
+          }
+        ]
+      });
+
+      if (activeClass || activeRoom) {
+        let id_kelas_formal = activeClass?.id_kelas_formal || null;
+        let id_kelas_mda = activeClass?.id_kelas_mda || null;
+        let id_lembaga_formal = activeClass?.kelasFormal?.id_lembaga || null;
+        let id_lembaga_mda = activeClass?.kelasMda?.id_lembaga || null;
+        
+        let id_cabang: string | null = null;
+        let nama_cabang: string | null = null;
+
+        if (activeClass?.kelasFormal?.lembaga?.id_cabang) {
+          id_cabang = activeClass.kelasFormal.lembaga.id_cabang;
+          nama_cabang = activeClass.kelasFormal.lembaga.cabang?.nama_cabang || null;
+        } else if (activeClass?.kelasMda?.lembaga?.id_cabang) {
+          id_cabang = activeClass.kelasMda.lembaga.id_cabang;
+          nama_cabang = activeClass.kelasMda.lembaga.cabang?.nama_cabang || null;
+        } else if (activeRoom?.lokasi?.id_cabang) {
+          id_cabang = activeRoom.lokasi.id_cabang;
+          nama_cabang = activeRoom.lokasi.cabang?.nama_cabang || null;
+        }
+
+        await santri.update({
+          id_cabang,
+          nama_cabang,
+          id_lembaga_formal,
+          id_lembaga_mda,
+          id_kelas_formal,
+          id_kelas_mda,
+          updated_at: helper.date(),
+        });
+
+        mappedCount++;
+      }
+    }
+
+    return {
+      total_santri_processed: santris.length,
+      mapped_count: mappedCount
+    };
   }
 }
 

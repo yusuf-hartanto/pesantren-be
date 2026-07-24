@@ -48,4 +48,9 @@ export const lembagaFormalSchema = z.object({
     .regex(/^[0-9]*$/, 'NPSN hanya boleh berisi angka') // Menggunakan * agar field kosong tidak error
     .nullable()
     .optional(),
+
+  institution_id_sitrendi: z
+    .string()
+    .nullable()
+    .optional(),
 });

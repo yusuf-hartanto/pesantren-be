@@ -9,6 +9,7 @@ export default class Variable {
       'jenis_lembaga',
       'status_akreditasi',
       'nomor_npsn',
+      'institution_id_sitrendi',
     ];
     return field;
   }

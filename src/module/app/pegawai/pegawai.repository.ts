@@ -12,10 +12,12 @@ import AppResource from '../resource/resource.model';
 import AppRole from '../role/role.model';
 import { v4 as uuidv4 } from 'uuid';
 import { helper } from '../../../helpers/helper';
+import { getUserContextData } from '../../../context/userContext';
+import { query } from 'express';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['id_pegawai', 'DESC']],
       include: [
         {
@@ -34,7 +36,6 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query = {
         ...query,
@@ -44,6 +45,14 @@ export default class Repository {
             { [Op.like]: keyword }
           ),
         },
+      };
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$organizationUnit.id_cabang$': userContext?.id_cabang,
       };
     }
 
@@ -110,7 +119,6 @@ export default class Repository {
     }
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query.where[Op.or] = [
         Sequelize.where(
@@ -154,6 +162,14 @@ export default class Repository {
           { [Op.like]: keyword }
         ),
       ];
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$organizationUnit.id_cabang$': userContext?.id_cabang,
+      };
     }
 
     return await Model.findAndCountAll(query);
@@ -269,6 +285,14 @@ export default class Repository {
 
     let whereClause: any = {};
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      whereClause = {
+        ...whereClause,
+        '$organizationUnit.id_cabang$': userContext?.id_cabang,
+      };
+    }
+    
     if (!isTemplate) {
       if (id_jabatan && id_jabatan !== '') {
         whereClause.id_jabatan = id_jabatan;

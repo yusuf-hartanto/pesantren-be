@@ -7,6 +7,7 @@ import KelasFormal from '../kelas.formal/kelas.formal.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import AppResource from '../resource/resource.model';
 import Model from './penempatan.kelas.santri.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
@@ -17,7 +18,9 @@ export default class Repository {
           model: Santri,
           as: 'santri',
           attributes: ['id_santri', 'fullname', 'nis'],
-          required: false,
+          where: {
+            status: { [Op.ne]: 9 },
+          },
         },
         {
           model: KelasMda,
@@ -49,6 +52,36 @@ export default class Repository {
       query.where.id_santri = data.id_santri;
     }
 
+    if (data?.id_tahun_ajaran) {
+      query.where.id_tahun_ajaran = data.id_tahun_ajaran;
+    }
+
+    if (data?.id_kelas_formal) {
+      query.where.id_kelas_formal = data.id_kelas_formal;
+    }
+
+    if (data?.id_kelas_mda) {
+      query.where.id_kelas_mda = data.id_kelas_mda;
+    }
+
+    const santriInclude = query.include.find((inc: any) => inc.as === 'santri');
+    if (santriInclude && data?.status_santri) {
+      santriInclude.where = {
+        status: data.status_santri,
+      };
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      query.where = {
+        ...query.where,
+        [Op.or]: [
+          { '$kelasMda.id_lembaga$': userContext?.id_lembaga },
+          { '$kelasFormal.id_lembaga$': userContext?.id_lembaga },
+        ]
+      };
+    }
+
     return Model.findAll(query);
   }
 
@@ -61,6 +94,18 @@ export default class Repository {
 
     if (data?.id_santri) {
       where.id_santri = data.id_santri;
+    }
+
+    if (data?.id_tahun_ajaran) {
+      where.id_tahun_ajaran = data.id_tahun_ajaran;
+    }
+
+    if (data?.id_kelas_formal) {
+      where.id_kelas_formal = data.id_kelas_formal;
+    }
+
+    if (data?.id_kelas_mda) {
+      where.id_kelas_mda = data.id_kelas_mda;
     }
 
     if (data?.keyword) {
@@ -123,6 +168,14 @@ export default class Repository {
       ];
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      where[Op.or] = [
+        { '$kelasMda.id_lembaga$': userContext?.id_lembaga },
+        { '$kelasFormal.id_lembaga$': userContext?.id_lembaga },
+      ];
+    }
+
     const query: any = {
       order: [['updated_at', 'DESC']],
       offset: data?.offset,
@@ -133,8 +186,10 @@ export default class Repository {
         {
           model: Santri,
           as: 'santri',
-          attributes: ['id_santri', 'fullname', 'nis', 'nik'],
-          required: false,
+          attributes: ['id_santri', 'fullname', 'nis', 'nik', 'status'],
+          where: {
+            status: data?.status_santri ? data.status_santri : { [Op.ne]: 9 },
+          },
         },
         {
           model: KelasMda,

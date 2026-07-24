@@ -5,6 +5,7 @@ import Model from './location.model';
 import { helper } from '../../../helpers/helper';
 import { number } from 'zod';
 import Cabang from '../cabang/cabang.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any, limit?: number) {
@@ -38,6 +39,14 @@ export default class Repository {
         jenis_lokasi: data?.jenis_lokasi,
       };
     }
+    
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext?.id_cabang,
+      };
+    }
 
     return Model.findAll(query);
   }
@@ -55,9 +64,18 @@ export default class Repository {
 
     let whereClause: any = {};
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      whereClause = {
+        ...whereClause,
+        id_cabang: userContext?.id_cabang,
+      };
+    }
+
     if (!isTemplate && keyword) {
       const keywordLower = keyword.toLowerCase();
       whereClause = {
+        ...whereClause,
         [Op.or]: [
           Sequelize.where(
             Sequelize.fn('LOWER', Sequelize.col('Lokasi.nama_lokasi')),
@@ -145,7 +163,6 @@ export default class Repository {
     };
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
     if (keyword) {
       query.where = {
         [Op.or]: [
@@ -186,6 +203,14 @@ export default class Repository {
             { [Op.like]: keyword }
           ),
         ],
+      };
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext?.id_cabang,
       };
     }
 

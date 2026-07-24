@@ -6,6 +6,7 @@ import AppResource from '../resource/resource.model';
 import KelasFormal from '../kelas.formal/kelas.formal.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public async findActiveJurnal(criteria: {
@@ -88,6 +89,9 @@ export default class Repository {
   }
 
   public async index(data: any) {
+    const userContext = getUserContextData();
+    const idLembaga = userContext?.id_lembaga;
+
     const query: any = {
       order: [
         ['tanggal', 'DESC'],
@@ -119,74 +123,93 @@ export default class Repository {
       query.limit = data.limit;
     }
 
+    const andConditions: any[] = [];
+
     if (data?.tanggal) {
-      query.where.tanggal = data.tanggal;
+      andConditions.push({ tanggal: data.tanggal });
     }
 
     if (data?.id_jam_pelajaran) {
-      query.where.id_jam_pelajaran = data.id_jam_pelajaran;
+      andConditions.push({ id_jam_pelajaran: data.id_jam_pelajaran });
     }
 
     if (data?.id_lokasi) {
-      query.where.id_lokasi = data.id_lokasi;
+      andConditions.push({ id_lokasi: data.id_lokasi });
     }
 
     if (data?.id_petugas) {
-      query.where.id_petugas = data.id_petugas;
+      andConditions.push({ id_petugas: data.id_petugas });
     }
 
     if (data?.tanggal_awal && data?.tanggal_akhir) {
-      query.where.tanggal = {
-        [Op.between]: [data.tanggal_awal, data.tanggal_akhir],
-      };
+      andConditions.push({
+        tanggal: {
+          [Op.between]: [data.tanggal_awal, data.tanggal_akhir],
+        },
+      });
+    }
+
+    if (idLembaga) {
+      andConditions.push({
+        [Op.or]: [
+          { '$kelasMda.id_lembaga$': idLembaga },
+          { '$kelasFormal.id_lembaga$': idLembaga },
+        ],
+      });
     }
 
     if (data?.keyword) {
       const keyword = `%${data.keyword.toLowerCase()}%`;
-      query.where[Op.or] = [
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('JurnalKelas.materi'), 'TEXT')
+      andConditions.push({
+        [Op.or]: [
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('JurnalKelas.materi'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
           ),
-          {
-            [Op.like]: keyword,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('JurnalKelas.catatan'), 'TEXT')
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('JurnalKelas.catatan'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
           ),
-          {
-            [Op.like]: keyword,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('petugas.full_name')),
-          {
-            [Op.like]: keyword,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
-          {
-            [Op.like]: keyword,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
-          {
-            [Op.like]: keyword,
-          }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('jamPelajaran.nama_jampel')),
-          {
-            [Op.like]: keyword,
-          }
-        ),
-      ];
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('petugas.full_name')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('jamPelajaran.nama_jampel')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      query.where = { [Op.and]: andConditions };
     }
 
     return await Model.findAndCountAll(query);

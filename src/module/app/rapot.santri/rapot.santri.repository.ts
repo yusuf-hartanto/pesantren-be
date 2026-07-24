@@ -11,9 +11,12 @@ import KelasFormal from '../kelas.formal/kelas.formal.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
+    const userContext = getUserContextData();
+    
     const query: any = {
       order: [['created_at', 'DESC']],
       include: [
@@ -21,6 +24,53 @@ export default class Repository {
           model: Santri,
           as: 'santri',
           attributes: ['id_santri', 'fullname', 'nis'],
+          include: [
+            {
+              model: PenempatanKelasSantri,
+              as: 'penempatanKelas',
+              required: false,
+              on: Sequelize.literal(
+                `"santri->penempatanKelas".id_santri = "santri".id_santri AND "santri->penempatanKelas".id_tahun_ajaran = (
+                  SELECT id_tahunajaran
+                  FROM tahun_ajaran
+                  WHERE tahun_ajaran = "RapotSantri".tahun_ajaran
+                  LIMIT 1
+                )`
+              ),
+              include: [
+                {
+                  model: KelasMda,
+                  as: 'kelasMda',
+                  attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+                  include: [
+                    {
+                      model: LembagaPendidikanKepesantrenan,
+                      as: 'lembaga',
+                      attributes: ['id_lembaga', 'nama_lembaga', 'id_cabang'],
+                    },
+                  ],
+                },
+                {
+                  model: KelasFormal,
+                  as: 'kelasFormal',
+                  attributes: ['id_kelas', 'nama_kelas'],
+                  include: [
+                    {
+                      model: LembagaPendidikanFormal,
+                      as: 'lembaga',
+                      attributes: ['id_lembaga', 'nama_lembaga', 'id_cabang'],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              model: Cabang,
+              as: 'cabang',
+              attributes: ['id_cabang', 'nama_cabang'],
+              required: false,
+            },
+          ],
         },
       ],
       where: {},
@@ -32,6 +82,21 @@ export default class Repository {
 
     if (data?.status) {
       query.where.status = data.status;
+    }
+    
+    if (userContext && userContext?.id_cabang) {
+      query.where['$santri.id_cabang$'] = userContext.id_cabang;
+    }
+
+    if (userContext && userContext?.id_lembaga) {
+      query.where[Op.and] = [
+        {
+          [Op.or]: [
+            { '$santri.id_lembaga_formal$': userContext.id_lembaga },
+            { '$santri.id_lembaga_mda$': userContext.id_lembaga },
+          ],
+        }
+      ];
     }
 
     return RapotSantri.findAll(query);
@@ -47,6 +112,7 @@ export default class Repository {
       );
     }
 
+    const userContext = getUserContextData();
     const where: any = {};
     if (data?.id_santri) {
       where.id_santri = data.id_santri;
@@ -61,7 +127,9 @@ export default class Repository {
     }
 
     if (data?.id_cabang && data?.id_cabang != '') {
-      where['$santri.cabang.id_cabang$'] = data?.id_cabang;
+      where['$santri.id_cabang$'] = data?.id_cabang;
+    } else if (userContext && userContext?.id_cabang) {
+      where['$santri.id_cabang$'] = userContext.id_cabang;
     }
 
     const whereAnd: any[] = [];
@@ -102,6 +170,13 @@ export default class Repository {
         [Op.or]: [
           { '$santri.penempatanKelas.id_kelas_formal$': data.id_kelas },
           { '$santri.penempatanKelas.id_kelas_mda$': data.id_kelas },
+        ],
+      });
+    } else if (userContext && userContext?.id_lembaga) {
+      whereAnd.push({
+        [Op.or]: [
+          { '$santri.id_lembaga_formal$': userContext.id_lembaga },
+          { '$santri.id_lembaga_mda$': userContext.id_lembaga },
         ],
       });
     }
@@ -198,18 +273,6 @@ export default class Repository {
               as: 'cabang',
               attributes: ['id_cabang', 'nama_cabang'],
               required: false,
-              on: Sequelize.literal(
-                `"santri->cabang".id_cabang = (
-                  SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
-                  FROM penempatan_kelas_santri pks
-                  LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
-                  LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
-                  LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
-                  LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
-                  WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
-                  LIMIT 1
-                )`
-              ),
             },
           ],
         },

@@ -11,6 +11,8 @@ import Cabang from '../cabang/cabang.model';
 import PenempatanKelasSantri from '../penempatan.kelas.santri/penempatan.kelas.santri.model';
 import KelasFormal from '../kelas.formal/kelas.formal.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
+import Lokasi from '../location/location.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public async findMatchingJamPelajaran(waktu_absen: string) {
@@ -148,6 +150,7 @@ export default class Repository {
   }
 
   public async index(data: any) {
+    const userContext = getUserContextData();
     const santriAttributes = ['id_santri', 'fullname', 'nis', 'nik', 'gender'];
     if (data?.isOpenApi) {
       santriAttributes.push(
@@ -189,6 +192,18 @@ export default class Repository {
         is_deleted: false,
       },
     };
+
+    if (userContext && userContext?.id_cabang) {
+      query.include.push({
+        model: Lokasi,
+        as: 'lokasi',
+        required: true,
+        attributes: [],
+        where: {
+          id_cabang: userContext.id_cabang,
+        },
+      });
+    }
 
     // 1. Filter Tanggal (jika data.tanggal dikirim)
     if (data?.tanggal) {
@@ -321,6 +336,7 @@ export default class Repository {
       tanggal_akhir,
     } = params;
 
+    const userContext = getUserContextData();
     let whereClause: any = {
       is_deleted: false,
     };
@@ -376,38 +392,52 @@ export default class Repository {
       }
     }
 
+    const includes: any[] = [
+      { model: AppSantri, as: 'santri', attributes: ['fullname', 'nis'] },
+      {
+        model: KelasFormal,
+        as: 'kelasFormal',
+        attributes: ['id_kelas', 'nama_kelas'],
+      },
+      {
+        model: KelasMda,
+        as: 'kelasMda',
+        attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+      },
+      {
+        model: JamPelajaran,
+        as: 'jamPelajaran',
+        attributes: ['id_jampel', 'nama_jampel'],
+      },
+      {
+        model: Pegawai,
+        as: 'petugas',
+        attributes: ['id_pegawai', 'nama_lengkap'],
+      },
+      {
+        model: AppResource,
+        as: 'resource',
+        attributes: ['resource_id', 'full_name'],
+      },
+    ];
+
+    if (userContext && userContext?.id_cabang) {
+      includes.push({
+        model: Lokasi,
+        as: 'lokasi',
+        required: true,
+        attributes: [],
+        where: {
+          id_cabang: userContext.id_cabang,
+        },
+      });
+    }
+
     return await Model.findAll({
       where: whereClause,
       limit: limit || (isTemplate ? 5 : undefined),
       subQuery: false,
-      include: [
-        { model: AppSantri, as: 'santri', attributes: ['fullname', 'nis'] },
-        {
-          model: KelasFormal,
-          as: 'kelasFormal',
-          attributes: ['id_kelas', 'nama_kelas'],
-        },
-        {
-          model: KelasMda,
-          as: 'kelasMda',
-          attributes: ['id_kelas_mda', 'nama_kelas_mda'],
-        },
-        {
-          model: JamPelajaran,
-          as: 'jamPelajaran',
-          attributes: ['id_jampel', 'nama_jampel'],
-        },
-        {
-          model: Pegawai,
-          as: 'petugas',
-          attributes: ['id_pegawai', 'nama_lengkap'],
-        },
-        {
-          model: AppResource,
-          as: 'resource',
-          attributes: ['resource_id', 'full_name'],
-        },
-      ],
+      include: includes,
       order: [
         ['tanggal', 'DESC'],
         [{ model: AppSantri, as: 'santri' }, 'fullname', 'ASC'],
@@ -530,13 +560,22 @@ export default class Repository {
   }
 
   public async findAllClasses() {
+    const userContext = getUserContextData();
+    let where: any = {
+      status: 'Aktif'
+    };
+
+    if (userContext && userContext?.id_lembaga) {
+      where.id_lembaga = userContext.id_lembaga;
+    }
+
     const formal = await KelasFormal.findAll({
-      where: { status: 'Aktif' },
+      where: where,
       attributes: ['id_kelas', 'nama_kelas'],
     });
 
     const mda = await KelasMda.findAll({
-      where: { status: 'Aktif' },
+      where: where,
       attributes: ['id_kelas_mda', 'nama_kelas_mda'],
     });
 

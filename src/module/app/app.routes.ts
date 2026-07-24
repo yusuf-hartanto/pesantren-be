@@ -80,6 +80,7 @@ import { guruPengganti } from './guru.pengganti/guru.pengganti.controller';
 import { guruPenggantiSchema } from './guru.pengganti/guru.pengganti.schema';
 import { controller as kesehatanSantri } from './kesehatan.santri/kesehatan.santri.controller';
 import { createKesehatanSchema, updateKesehatanSchema } from './kesehatan.santri/kesehatan.santri.schema';
+import { institution } from './institution/institution.controller';
 
 const router: Router = Router();
 
@@ -338,6 +339,10 @@ router.delete('/lembaga-formal/:id', LembagaPendidikanFormal.delete);
 router.post('/lembaga-formal/export', LembagaPendidikanFormal.export);
 router.post('/lembaga-formal/import', LembagaPendidikanFormal.import);
 router.post('/lembaga-formal/insert', LembagaPendidikanFormal.insert);
+
+router.get('/institution/all-data', institution.list);
+router.get('/institution', institution.index);
+router.get('/institution/:id', institution.detail);
 
 router.get('/organization-unit/all-data', OrganizationUnit.list);
 router.get('/organization-unit', OrganizationUnit.index);

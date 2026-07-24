@@ -5,10 +5,10 @@ import { Op } from 'sequelize';
 import { helper } from '../../helpers/helper';
 import { response } from '../../helpers/response';
 import { helperauth } from '../../helpers/auth.helper';
-import { setUserLogin } from '../../context/userContext';
+import { setUserLogin, setUserContextData } from '../../context/userContext';
 import { Request, Response, NextFunction } from 'express';
 import { repository } from '../app/resource/resource.repository';
-import { INVALID, NOT_FOUND, REQUIRED, ROLE_ADMIN } from '../../utils/constant';
+import { NOT_FOUND, REQUIRED, ROLE_ADMIN } from '../../utils/constant';
 import { repository as repoRoleMenu } from '../app/role.menu/role.menu.repository';
 
 moment().locale('id');
@@ -111,12 +111,6 @@ export default class Middleware {
       if (typeof auth == 'string')
         return response.failed('Invalid token', 400, res);
 
-      const id: string = req?.params?.id || '';
-      // if (id && id != undefined) {
-      //   if (!helper.isValidUUID(id))
-      //     return response.failed(`id: ${id} ${INVALID}`, 400, res);
-      // }
-
       const admin: string = auth?.role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
       const user = await repository.detail({ token }, admin);
       if (!user)
@@ -144,17 +138,16 @@ export default class Middleware {
         });
       }
 
-      const basePath: string = helper.getOriginUrl(req);
-      // const { code, status, message } = await checkAccess(
-      //   req,
-      //   auth?.role_name,
-      //   basePath
-      // );
-      // if (!status) {
-      //   return response.failed(message, code, res);
-      // }
-
       setUserLogin(auth?.username || 'sistem');
+      const pegawai: any = user?.getDataValue("pegawai") || null;
+      if (pegawai) {
+        setUserContextData({
+          id_cabang: pegawai?.getDataValue("organizationUnit")?.id_cabang || null,
+          id_lembaga: pegawai?.getDataValue("organizationUnit")?.id_lembaga || null,
+          lembaga_type: pegawai?.getDataValue("organizationUnit")?.lembaga_type || null,
+          id_orgunit: pegawai?.getDataValue("organizationUnit")?.id_orgunit || null,
+        });
+      }
       req.user = auth;
       next();
       return;

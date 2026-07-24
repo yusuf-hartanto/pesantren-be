@@ -5,12 +5,25 @@ import Model from './jam.pelajaran.model';
 import JenisJamPelajaran from '../jenis.jampel/jenis.jampel.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['nomor_urut', 'DESC']],
     };
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.lembaga_type) {
+      query = { 
+        ...query,
+        where: {
+          ...query.where,
+          lembaga_type: userContext?.lembaga_type,
+        }
+      }
+    }
+    
     if (data?.nama_jampel !== undefined && data?.nama_jampel != null) {
       query = {
         ...query,
@@ -23,7 +36,8 @@ export default class Repository {
       query = {
         ...query,
         where: {
-          lembaga_type: { [Op.eq]: data?.lembaga_type },
+          ...query.where,
+          lembaga_type: data?.lembaga_type,
         },
       };
     }
@@ -54,16 +68,26 @@ export default class Repository {
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['nomor_urut', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
     };
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.lembaga_type) {
+      query = { 
+        ...query,
+        where: { lembaga_type: userContext?.lembaga_type }
+      }
+    }
+
     if (data?.keyword && data?.keyword != undefined) {
       const keyword = `%${data.keyword.toLowerCase()}%`;
       query = {
         ...query,
         where: {
+          ...query.where,
           [Op.or]: [
             Sequelize.where(
               Sequelize.fn('LOWER', Sequelize.col('JamPelajaran.nama_jampel')),

@@ -2,12 +2,21 @@
 
 import { Op, Sequelize } from 'sequelize';
 import Model from './tingkat.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
     let query: Object = {
       order: [['created_at', 'DESC']],
     };
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.lembaga_type) {
+      query = { 
+        ...query,
+        where: { tingkat_type: userContext?.lembaga_type, }
+      }
+    }
 
     if (data?.type != '') {
       query = {
@@ -57,6 +66,11 @@ export default class Repository {
     // Filter type
     if (data?.type) {
       where.tingkat_type = data.type;
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.lembaga_type) {
+      where.tingkat_type = { [Op.eq]: userContext?.lembaga_type, }
     }
 
     const query: any = {

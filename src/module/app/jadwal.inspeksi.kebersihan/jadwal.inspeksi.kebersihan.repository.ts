@@ -5,10 +5,11 @@ import Model from './jadwal.inspeksi.kebersihan.model';
 import Pegawai from '../pegawai/pegawai.model';
 import Cabang from '../cabang/cabang.model';
 import MasterSlotWaktu from '../master.slot.waktu/master.slot.waktu.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['created_at', 'DESC']],
     };
 
@@ -28,6 +29,15 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext?.id_cabang,
+      };
+    }
+
     return Model.findAll({
       ...query,
       include: [
@@ -53,7 +63,7 @@ export default class Repository {
     });
   }
 
-  public index(data: any) {
+  public async index(data: any) {
     let where: any = {};
 
     // Filter keyword
@@ -115,15 +125,95 @@ export default class Repository {
       where.id_cabang = data.id_cabang;
     }
 
-    let query: Object = {
-      order: [['created_at', 'DESC']],
-      offset: data?.offset,
-      limit: data?.limit,
-      where,
-    };
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      where.id_cabang = userContext?.id_cabang;
+    }
 
-    return Model.findAndCountAll({
-      ...query,
+    const paginatedGroups = await Model.findAll({
+      attributes: [
+        'id_cabang',
+        'id_petugas',
+        'kode_slot',
+        'is_active',
+        'keterangan',
+        [Sequelize.fn('MAX', Sequelize.col('JadwalInspeksiKebersihan.updated_at')), 'max_updated_at'],
+      ],
+      where,
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          required: false,
+          attributes: [],
+        },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          required: false,
+          attributes: [],
+        },
+      ],
+      group: [
+        'JadwalInspeksiKebersihan.id_cabang',
+        'JadwalInspeksiKebersihan.id_petugas',
+        'JadwalInspeksiKebersihan.kode_slot',
+        'JadwalInspeksiKebersihan.is_active',
+        'JadwalInspeksiKebersihan.keterangan',
+      ],
+      order: [[Sequelize.literal('max_updated_at'), 'DESC']],
+      offset: data?.offset ? Number(data.offset) : undefined,
+      limit: data?.limit ? Number(data.limit) : undefined,
+      raw: true,
+    });
+
+    if (paginatedGroups.length === 0) {
+      return { count: 0, rows: [] };
+    }
+
+    const totalGroups = await Model.findAll({
+      attributes: [
+        'id_cabang',
+        'id_petugas',
+        'kode_slot',
+        'is_active',
+        'keterangan',
+      ],
+      where,
+      include: [
+        {
+          model: Cabang,
+          as: 'cabang',
+          required: false,
+          attributes: [],
+        },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          required: false,
+          attributes: [],
+        },
+      ],
+      group: [
+        'JadwalInspeksiKebersihan.id_cabang',
+        'JadwalInspeksiKebersihan.id_petugas',
+        'JadwalInspeksiKebersihan.kode_slot',
+        'JadwalInspeksiKebersihan.is_active',
+        'JadwalInspeksiKebersihan.keterangan',
+      ],
+    });
+    const total = totalGroups.length;
+
+    const rows = await Model.findAll({
+      where: {
+        [Op.or]: paginatedGroups.map((g: any) => ({
+          id_cabang: g.id_cabang || null,
+          id_petugas: g.id_petugas || null,
+          kode_slot: g.kode_slot || null,
+          is_active: g.is_active,
+          keterangan: g.keterangan || null,
+        })),
+      },
       include: [
         {
           model: Cabang,
@@ -144,7 +234,10 @@ export default class Repository {
           attributes: ['kode_slot', 'jam_mulai', 'jam_selesai'],
         },
       ],
+      order: [['updated_at', 'DESC']],
     });
+
+    return { count: total, rows };
   }
 
   public detail(condition: any) {

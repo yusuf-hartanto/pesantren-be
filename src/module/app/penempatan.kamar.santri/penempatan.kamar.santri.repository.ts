@@ -5,10 +5,11 @@ import Santri from '../santri/santri.model';
 import Model from './penempatan.kamar.santri.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import Lokasi from '../location/location.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       where: {
         is_deleted: false,
       },
@@ -18,7 +19,9 @@ export default class Repository {
           model: Santri,
           as: 'santri',
           attributes: ['id_santri', 'fullname'],
-          required: false,
+          where: {
+            status: { [Op.ne]: 9 },
+          },
         },
         {
           model: Lokasi,
@@ -99,6 +102,30 @@ export default class Repository {
       };
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$lokasi.id_cabang$': userContext?.id_cabang,
+      };
+    }
+
+    if (data?.status) {
+      query.where.status = data.status;
+    }
+    if (data?.id_lokasi) {
+      query.where.id_lokasi = data.id_lokasi;
+    }
+    if (data?.id_tahunajaran) {
+      query.where.id_tahunajaran = data.id_tahunajaran;
+    }
+    const santriInclude = query.include.find((inc: any) => inc.as === 'santri');
+    if (santriInclude && data?.status_santri) {
+      santriInclude.where = {
+        status: data.status_santri,
+      };
+    }
+
     return Model.findAll(query);
   }
 
@@ -122,8 +149,10 @@ public async index(data: any) {
         {
           model: Santri,
           as: 'santri',
-          attributes: ['id_santri', 'fullname', 'nis', 'nik'],
-          required: false,
+          attributes: ['id_santri', 'fullname', 'nis', 'nik', 'status'],
+          where: {
+            status: data?.status_santri ? data.status_santri : { [Op.ne]: 9 },
+          },
         },
         {
           model: Lokasi,
@@ -200,8 +229,47 @@ public async index(data: any) {
               [Op.iLike]: keyword,
             }
           ),
-        ],
+          Sequelize.where(
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')
+            ),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('lokasi.nama_lokasi')),
+            {
+              [Op.like]: keyword,
+            }
+          )
+        ]
       };
+    }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        '$lokasi.id_cabang$': userContext?.id_cabang,
+      };
+    }
+
+    if (data?.status) {
+      query.where.status = data.status;
+    }
+    if (data?.id_lokasi) {
+      query.where.id_lokasi = data.id_lokasi;
+    }
+    if (data?.id_tahunajaran) {
+      query.where.id_tahunajaran = data.id_tahunajaran;
     }
 
     return Model.findAndCountAll(query);

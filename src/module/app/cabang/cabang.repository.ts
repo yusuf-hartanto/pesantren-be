@@ -6,10 +6,11 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['id_cabang', 'DESC']],
       include: [
         {
@@ -56,11 +57,19 @@ export default class Repository {
       };
     }
 
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext?.id_cabang,
+      };
+    }
+
     return Model.findAll(query);
   }
 
   public index(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['id_cabang', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
@@ -142,6 +151,14 @@ export default class Repository {
         },
       };
     }
+    
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext?.id_cabang,
+      };
+    }
 
     return Model.findAndCountAll(query);
   }
@@ -179,6 +196,14 @@ export default class Repository {
     const keyword = q ? `%${q}%` : null;
 
     let whereClause: any = {};
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_cabang) {
+      whereClause = {
+        ...whereClause,
+        id_cabang: userContext?.id_cabang,
+      };
+    }
 
     if (!isTemplate && keyword) {
       const keywordLower = keyword.toLowerCase();

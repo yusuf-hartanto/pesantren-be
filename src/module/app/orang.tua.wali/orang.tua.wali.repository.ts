@@ -6,49 +6,89 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
-//import Santri from '../santri/santri.model';
+import Santri from '../santri/santri.model';
+import Cabang from '../cabang/cabang.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    const userContext = getUserContextData();
+    let query: any = {
       order: [['created_at', 'DESC']],
       where: {
         is_deleted: false,
       },
     };
+
+    let includes: any[] = [
+      {
+        model: AreaProvince,
+        as: 'province',
+        required: true,
+        attributes: ['name'],
+      },
+      {
+        model: AreaRegency,
+        as: 'city',
+        required: true,
+        attributes: ['name'],
+      },
+      {
+        model: AreaDistrict,
+        as: 'district',
+        required: true,
+        attributes: ['name'],
+      },
+      {
+        model: AreaSubDistrict,
+        as: 'sub_district',
+        required: true,
+        attributes: ['name'],
+      },
+    ];
+
+    const idCabang = data?.id_cabang || userContext?.id_cabang;
+    if (idCabang) {
+      includes.push({
+        model: Santri,
+        as: 'santri',
+        required: true,
+        attributes: [],
+        include: [
+          {
+            model: Cabang,
+            as: 'cabang',
+            attributes: [],
+            required: true,
+            on: Sequelize.literal(
+              `"santri->cabang".id_cabang = (
+                SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
+                FROM penempatan_kelas_santri pks
+                LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
+                LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
+                LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
+                LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
+                WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
+                LIMIT 1
+              )`
+            ),
+            where: {
+              id_cabang: idCabang,
+            },
+          },
+        ],
+      });
+    }
+
     return Model.findAll({
       ...query,
-      include: [
-        {
-          model: AreaProvince,
-          as: 'province',
-          required: true,
-          attributes: ['name'],
-        },
-        {
-          model: AreaRegency,
-          as: 'city',
-          required: true,
-          attributes: ['name'],
-        },
-        {
-          model: AreaDistrict,
-          as: 'district',
-          required: true,
-          attributes: ['name'],
-        },
-        {
-          model: AreaSubDistrict,
-          as: 'sub_district',
-          required: true,
-          attributes: ['name'],
-        },
-      ],
+      include: includes,
     });
   }
 
   public index(data: any) {
-    let query: Object = {
+    const userContext = getUserContextData();
+    let query: any = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
@@ -61,6 +101,7 @@ export default class Repository {
       query = {
         ...query,
         where: {
+          is_deleted: false,
           [Op.or]: [
             Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('nama_wali')), {
               [Op.like]: keyword,
@@ -69,34 +110,72 @@ export default class Repository {
         },
       };
     }
+
+    let includes: any[] = [
+      {
+        model: AreaProvince,
+        as: 'province',
+        required: false,
+        attributes: ['name'],
+      },
+      {
+        model: AreaRegency,
+        as: 'city',
+        required: false,
+        attributes: ['name'],
+      },
+      {
+        model: AreaDistrict,
+        as: 'district',
+        required: false,
+        attributes: ['name'],
+      },
+      {
+        model: AreaSubDistrict,
+        as: 'sub_district',
+        required: false,
+        attributes: ['name'],
+      },
+    ];
+
+    const idCabang = data?.id_cabang || userContext?.id_cabang;
+    if (idCabang) {
+      includes.push({
+        model: Santri,
+        as: 'santri',
+        required: true,
+        attributes: [],
+        include: [
+          {
+            model: Cabang,
+            as: 'cabang',
+            attributes: [],
+            required: true,
+            on: Sequelize.literal(
+              `"santri->cabang".id_cabang = (
+                SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
+                FROM penempatan_kelas_santri pks
+                LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
+                LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
+                LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
+                LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
+                WHERE pks.id_santri = "santri".id_santri AND pks.status = 'Aktif'
+                LIMIT 1
+              )`
+            ),
+            where: {
+              id_cabang: idCabang,
+            },
+          },
+        ],
+      });
+    }
+
     return Model.findAndCountAll({
       ...query,
-      include: [
-        {
-          model: AreaProvince,
-          as: 'province',
-          required: false,
-          attributes: ['name'],
-        },
-        {
-          model: AreaRegency,
-          as: 'city',
-          required: false,
-          attributes: ['name'],
-        },
-        {
-          model: AreaDistrict,
-          as: 'district',
-          required: false,
-          attributes: ['name'],
-        },
-        {
-          model: AreaSubDistrict,
-          as: 'sub_district',
-          required: false,
-          attributes: ['name'],
-        },
-      ],
+      include: includes,
+      distinct: true,
+      subQuery: false,
     });
   }
 

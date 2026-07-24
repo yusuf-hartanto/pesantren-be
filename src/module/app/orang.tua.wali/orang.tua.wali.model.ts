@@ -6,6 +6,7 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
+import Santri from '../santri/santri.model';
 
 export class OrangTuaWali extends Model {
   declare id_wali: string;
@@ -141,10 +142,11 @@ export function initOrangTuaWali(sequelize: Sequelize) {
 }
 
 export function associateOrangTuaWali() {
-  // OrangTuaWali.belongsTo(Santri, {
-  //   as: 'santri',
-  //   foreignKey: 'id_santri',
-  // });
+  OrangTuaWali.hasOne(Santri, {
+    as: 'santri',
+    foreignKey: 'id_wali',
+    sourceKey: 'id_wali',
+  });
 
   OrangTuaWali.belongsTo(AreaProvince, {
     as: 'province',

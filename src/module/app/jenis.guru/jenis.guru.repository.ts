@@ -7,10 +7,11 @@ import Tingkat from '../tingkat/tingkat.model';
 import MataPelajaran from '../mata.pelajaran/mata.pelajaran.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       order: [['nomor_urut', 'DESC']],
     };
     if (data?.nama_jenis_guru !== undefined && data?.nama_jenis_guru != null) {
@@ -21,6 +22,18 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      query = { 
+        ...query,
+        where: { 
+          ...query.where,
+          id_lembaga: userContext?.id_lembaga,
+        }
+      }
+    }
+
     return Model.findAll({
       ...query,
       include: [
@@ -116,6 +129,18 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (userContext && userContext?.id_lembaga) {
+      query = { 
+        ...query,
+        where: { 
+          ...query.where,
+          id_lembaga: userContext?.id_lembaga,
+        }
+      }
+    }
+
     return Model.findAndCountAll({
       ...query,
       include: [

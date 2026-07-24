@@ -9,10 +9,13 @@ import AreaProvince from '../../area/provinces.model';
 import AreaRegency from '../../area/regencies.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
+import { getUserContextData } from '../../../context/userContext';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
+    let query: any = {
       where: {
         status: { [Op.ne]: 9 },
       },
@@ -28,6 +31,20 @@ export default class Repository {
         },
       };
     }
+
+    const userContext = getUserContextData();
+    if (data?.id_cabang && data?.id_cabang != '') {
+      query.where = {
+        ...query.where,
+        id_cabang: data.id_cabang,
+      };
+    } else if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext.id_cabang,
+      };
+    }
+
     return Model.findAll(query);
   }
 
@@ -49,7 +66,22 @@ export default class Repository {
         where: {
           status: { [Op.ne]: 9 },
           [Op.or]: [
-            { fullname: { [Op.iLike]: keyword } }
+            { fullname: { [Op.iLike]: keyword } },
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('AppSantri.fullname')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('AppSantri.nis'), 'TEXT')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('AppSantri.nik'), 'TEXT')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('wali.nama_wali')), {
+              [Op.like]: keyword,
+            }),
+            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('wali.no_hp'), 'TEXT')), {
+              [Op.like]: keyword,
+            }),
           ],
         },
       };
@@ -66,10 +98,35 @@ export default class Repository {
         status: data?.status,
       };
     }
+    const userContext = getUserContextData();
     if (data?.id_cabang && data?.id_cabang != '') {
       query.where = {
         ...query.where,
-        '$cabang.id_cabang$': data?.id_cabang,
+        id_cabang: data?.id_cabang,
+      };
+    } else if (userContext && userContext?.id_cabang) {
+      query.where = {
+        ...query.where,
+        id_cabang: userContext.id_cabang,
+      };
+    }
+    if (data?.id_lembaga_formal && data?.id_lembaga_formal != '') {
+      query.where = {
+        ...query.where,
+        id_lembaga_formal: data.id_lembaga_formal,
+      };
+    }
+    if (data?.id_lembaga_mda && data?.id_lembaga_mda != '') {
+      query.where = {
+        ...query.where,
+        id_lembaga_mda: data.id_lembaga_mda,
+      };
+    }
+
+    if (!data?.id_lembaga_mda && !data?.id_lembaga_formal && userContext && userContext?.id_lembaga) {
+      query.where = {
+        ...query.where,
+        [Op.or]: [{ id_lembaga_formal: userContext.id_lembaga }, { id_lembaga_mda: userContext.id_lembaga }],
       };
     }
     return Model.findAndCountAll({
@@ -85,18 +142,24 @@ export default class Repository {
             'nama_cabang',
             'email',
           ],
-          on: Sequelize.literal(
-            `"cabang".id_cabang = (
-              SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
-              FROM penempatan_kelas_santri pks
-              LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
-              LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
-              LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
-              LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
-              WHERE pks.id_santri = "AppSantri".id_santri AND pks.status = 'Aktif'
-              LIMIT 1
-            )`
-          ),
+        },
+        {
+          model: LembagaPendidikanFormal,
+          as: 'lembagaFormal',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
+          ],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembagaMda',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
+          ],
         },
         {
           model: OrangTuaWali,
@@ -125,18 +188,6 @@ export default class Repository {
           model: Cabang,
           as: 'cabang',
           required: false,
-          on: Sequelize.literal(
-            `"cabang".id_cabang = (
-              SELECT COALESCE(lpf.id_cabang, lpk.id_cabang)
-              FROM penempatan_kelas_santri pks
-              LEFT JOIN kelas_formal kf ON pks.id_kelas_formal = kf.id_kelas
-              LEFT JOIN kelas_mda km ON pks.id_kelas_mda = km.id_kelas_mda
-              LEFT JOIN lembaga_pendidikan_formal lpf ON kf.id_lembaga = lpf.id_lembaga
-              LEFT JOIN lembaga_pendidikan_kepesantrenan lpk ON km.id_lembaga = lpk.id_lembaga
-              WHERE pks.id_santri = "AppSantri".id_santri AND pks.status = 'Aktif'
-              LIMIT 1
-            )`
-          ),
           include: [
             {
               model: AreaProvince,
@@ -195,6 +246,24 @@ export default class Repository {
             },
           ],
         },
+        {
+          model: LembagaPendidikanFormal,
+          as: 'lembagaFormal',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
+          ],
+        },
+        {
+          model: LembagaPendidikanKepesantrenan,
+          as: 'lembagaMda',
+          required: false,
+          attributes: [
+            'id_lembaga',
+            'nama_lembaga',
+          ],
+        },
       ],
     });
   }
@@ -238,7 +307,7 @@ export default class Repository {
         'id_cabang',
         'nama_cabang',
 
-        'institution_id',
+        'id_institution',
         'institution_name',
 
         'group_code_1',
@@ -250,6 +319,7 @@ export default class Repository {
         'kartu_santri',
 
         'status',
+        'id_lembaga_formal',
         'updated_at',
       ],
     });

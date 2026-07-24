@@ -10,44 +10,47 @@ import AreaDistrict from '../../area/districts.model';
 import AreaSubDistrict from '../../area/subdistricts.model';
 import AppResource from '../resource/resource.model';
 import PerizinanSantri from '../perizinan.santri/perizinan.santri.model';
+import Lokasi from '../location/location.model';
+import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
-    let query: Object = {
-      order: [['id_pegawai', 'DESC']],
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
+    const query: any = {
+      order: [['created_at', 'DESC']],
       include: [
         {
-          model: OrganizationUnit,
-          as: 'organizationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit'],
-          required: false,
-        },
-        {
-          model: Jabatan,
-          as: 'jabatan',
-          attributes: ['id_jabatan', 'nama_jabatan'],
-          required: false,
+          model: PerizinanSantri,
+          as: 'perizinanSantri',
+          required: true,
+          include: [
+            {
+              model: Lokasi,
+              as: 'lokasiKamar',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+            {
+              model: Lokasi,
+              as: 'lokasiKerja',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+          ],
         },
       ],
+      where: {},
     };
 
-    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
-
-    if (keyword) {
-      query = {
-        ...query,
-        where: {
-          nama_orgunit: Sequelize.where(
-            Sequelize.fn(
-              'LOWER',
-              Sequelize.cast(
-                Sequelize.col('SuratPerizinanSantri.nama_orgunit'),
-                'TEXT'
-              )
-            ),
-            { [Op.like]: keyword }
-          ),
-        },
+    if (idCabang) {
+      query.where = {
+        ...query.where,
+        [Op.or]: [
+          { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+          { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+        ],
       };
     }
 
@@ -69,6 +72,9 @@ export default class Repository {
   }
 
   public async index(data: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
     const query: any = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
@@ -77,69 +83,52 @@ export default class Repository {
       subQuery: false,
       include: [
         {
-          model: OrganizationUnit,
-          as: 'organizationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit'],
-          required: false,
+          model: PerizinanSantri,
+          as: 'perizinanSantri',
+          required: true,
+          include: [
+            {
+              model: Lokasi,
+              as: 'lokasiKamar',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+            {
+              model: Lokasi,
+              as: 'lokasiKerja',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+          ],
         },
         {
-          model: Jabatan,
-          as: 'jabatan',
-          attributes: ['id_jabatan', 'nama_jabatan'],
+          model: AppResource,
+          as: 'pencetak',
           required: false,
+          attributes: ['resource_id', 'full_name'],
         },
       ],
       where: {},
     };
 
-    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
+    if (idCabang) {
+      query.where = {
+        ...query.where,
+        [Op.or]: [
+          { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+          { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+        ],
+      };
+    }
 
+    const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     if (keyword) {
       query.where[Op.or] = [
         Sequelize.where(
           Sequelize.fn(
             'LOWER',
-            Sequelize.col('SuratPerizinanSantri.nama_lengkap')
+            Sequelize.col('SuratPerizinanSantri.nomor_surat')
           ),
-          { [Op.like]: keyword }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('SuratPerizinanSantri.nik'), 'TEXT')
-          ),
-          { [Op.like]: keyword }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('SuratPerizinanSantri.nip'), 'TEXT')
-          ),
-          { [Op.like]: keyword }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('SuratPerizinanSantri.email'), 'TEXT')
-          ),
-          { [Op.like]: keyword }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(
-              Sequelize.col('SuratPerizinanSantri.status_pegawai'),
-              'text'
-            )
-          ),
-          { [Op.like]: keyword }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('organizationUnit.nama_orgunit')),
-          { [Op.like]: keyword }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('jabatan.nama_jabatan')),
           { [Op.like]: keyword }
         ),
       ];
@@ -149,12 +138,43 @@ export default class Repository {
   }
 
   public detail(condition: any, trx?: any) {
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
+    const whereClause: any = {
+      ...condition,
+    };
+
+    if (idCabang) {
+      whereClause[Op.or] = [
+        { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+        { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+      ];
+    }
+
     return Model.findOne({
       include: [
-        { model: PerizinanSantri, as: 'perizinanSantri' },
+        {
+          model: PerizinanSantri,
+          as: 'perizinanSantri',
+          include: [
+            {
+              model: Lokasi,
+              as: 'lokasiKamar',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+            {
+              model: Lokasi,
+              as: 'lokasiKerja',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+          ],
+        },
         { model: AppResource, as: 'pencetak' },
       ],
-      where: condition,
+      where: whereClause,
       transaction: trx,
     });
   }
@@ -186,56 +206,30 @@ export default class Repository {
     const { q, isTemplate, limit } = params;
     const keyword = q ? `%${q}%` : null;
 
+    const userContext = getUserContextData();
+    const idCabang = userContext?.id_cabang;
+
     let whereClause: any = {};
 
-    // Jika bukan template dan ada keyword, terapkan filter pencarian
+    if (idCabang) {
+      whereClause = {
+        ...whereClause,
+        [Op.or]: [
+          { '$perizinanSantri.lokasiKamar.id_cabang$': idCabang },
+          { '$perizinanSantri.lokasiKerja.id_cabang$': idCabang },
+        ],
+      };
+    }
+
     if (!isTemplate && keyword) {
       const keywordLower = keyword.toLowerCase();
       whereClause[Op.or] = [
+        ...(whereClause[Op.or] || []),
         Sequelize.where(
           Sequelize.fn(
             'LOWER',
-            Sequelize.col('SuratPerizinanSantri.nama_lengkap')
+            Sequelize.col('SuratPerizinanSantri.nomor_surat')
           ),
-          { [Op.like]: keywordLower }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('SuratPerizinanSantri.nik'), 'TEXT')
-          ),
-          { [Op.like]: keywordLower }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('SuratPerizinanSantri.nip'), 'TEXT')
-          ),
-          { [Op.like]: keywordLower }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(Sequelize.col('SuratPerizinanSantri.email'), 'TEXT')
-          ),
-          { [Op.like]: keywordLower }
-        ),
-        Sequelize.where(
-          Sequelize.fn(
-            'LOWER',
-            Sequelize.cast(
-              Sequelize.col('SuratPerizinanSantri.status_pegawai'),
-              'text'
-            )
-          ),
-          { [Op.like]: keywordLower }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('organizationUnit.nama_orgunit')),
-          { [Op.like]: keywordLower }
-        ),
-        Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('jabatan.nama_jabatan')),
           { [Op.like]: keywordLower }
         ),
       ];
@@ -247,25 +241,26 @@ export default class Repository {
       subQuery: false,
       include: [
         {
-          model: OrganizationUnit,
-          as: 'organizationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit'],
-        },
-        {
-          model: Jabatan,
-          as: 'jabatan',
-          attributes: ['id_jabatan', 'nama_jabatan'],
-        },
-        { model: AreaProvince, as: 'province', attributes: ['id', 'name'] },
-        { model: AreaRegency, as: 'city', attributes: ['id', 'name'] },
-        { model: AreaDistrict, as: 'district', attributes: ['id', 'name'] },
-        {
-          model: AreaSubDistrict,
-          as: 'subDistrict',
-          attributes: ['id', 'name'],
+          model: PerizinanSantri,
+          as: 'perizinanSantri',
+          required: true,
+          include: [
+            {
+              model: Lokasi,
+              as: 'lokasiKamar',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+            {
+              model: Lokasi,
+              as: 'lokasiKerja',
+              required: false,
+              attributes: ['id_lokasi', 'nama_lokasi'],
+            },
+          ],
         },
       ],
-      order: [['nama_lengkap', 'ASC']],
+      order: [['created_at', 'DESC']],
     });
   }
 
