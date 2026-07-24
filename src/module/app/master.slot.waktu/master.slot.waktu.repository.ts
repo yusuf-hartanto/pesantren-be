@@ -6,7 +6,7 @@ import Model from './master.slot.waktu.model';
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['kode_slot', 'DESC']],
+      order: [['jam_mulai', 'ASC']],
     };
 
     if (data?.is_active != '') {

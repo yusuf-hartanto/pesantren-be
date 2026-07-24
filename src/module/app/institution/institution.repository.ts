@@ -10,7 +10,7 @@ export default class Repository {
         ...condition,
         status: { [Op.ne]: 9 },
       },
-      order: [['updated_at', 'DESC']],
+      order: [['institution_name', 'ASC']],
     });
   }
 

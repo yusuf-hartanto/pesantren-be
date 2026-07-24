@@ -186,7 +186,8 @@ export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const jenis_lokasi: any = req?.query?.jenis_lokasi || '';
-      const result = await repository.list({ jenis_lokasi });
+      const orderWithParent: any = req?.query?.orderWithParent || '';
+      const result = await repository.list({ jenis_lokasi, orderWithParent });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);

@@ -10,7 +10,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [['nomor_urut', 'DESC']],
+      order: [['mulai', 'ASC']],
     };
 
     const userContext = getUserContextData();

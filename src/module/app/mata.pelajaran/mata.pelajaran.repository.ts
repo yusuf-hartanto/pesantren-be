@@ -10,7 +10,7 @@ import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [['nomor_urut', 'DESC']],
+      order: [['nama_mapel', 'ASC']],
     };
 
     const userContext = getUserContextData();

@@ -11,7 +11,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [['id_cabang', 'DESC']],
+      order: [['nama_cabang', 'ASC'], [Sequelize.fn('LENGTH', Sequelize.col('nama_cabang')), 'ASC']],
       include: [
         {
           model: AreaProvince,

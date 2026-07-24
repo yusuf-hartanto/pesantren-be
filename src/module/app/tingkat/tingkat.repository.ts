@@ -7,7 +7,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: Object = {
-      order: [['created_at', 'DESC']],
+      order: [[Sequelize.fn('LENGTH', Sequelize.col('tingkat')), 'ASC']],
     };
 
     const userContext = getUserContextData();

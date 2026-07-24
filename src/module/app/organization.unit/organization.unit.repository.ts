@@ -38,7 +38,7 @@ export default class Repository {
           LEFT JOIN lembaga_pendidikan_formal lf ON o.id_lembaga = lf.id_lembaga AND o.lembaga_type = 'FORMAL'
           LEFT JOIN lembaga_pendidikan_kepesantrenan lp ON o.id_lembaga = lp.id_lembaga AND o.lembaga_type = 'PESANTREN'
           ${whereClause}
-          ORDER BY o.created_at DESC
+          ORDER BY o.nama_orgunit ASC
         `;
 
     const conn = await rawQuery.getConnection();

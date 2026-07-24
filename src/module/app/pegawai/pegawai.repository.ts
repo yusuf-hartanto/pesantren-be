@@ -18,7 +18,7 @@ import { query } from 'express';
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [['id_pegawai', 'DESC']],
+      order: [['nama_lengkap', 'ASC']],
       include: [
         {
           model: OrganizationUnit,
@@ -44,6 +44,15 @@ export default class Repository {
             Sequelize.fn('LOWER', Sequelize.col('Pegawai.nama_lengkap')),
             { [Op.like]: keyword }
           ),
+        },
+      };
+    }
+
+    if (data?.status_pegawai && data?.status_pegawai !== '') {
+      query = {
+        ...query,
+        where: {
+          status_pegawai: data.status_pegawai,
         },
       };
     }

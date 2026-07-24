@@ -17,7 +17,7 @@ export default class Repository {
 
     return Model.findAll({
       where: condition,
-      order: [['updated_at', 'DESC']],
+      order: [['nama_jenis_jam', 'ASC']],
     });
   }
 
