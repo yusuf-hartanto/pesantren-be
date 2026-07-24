@@ -11,6 +11,7 @@ import moment from 'moment';
 import Pegawai from '../pegawai/pegawai.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
 import { getUserContextData } from '../../../context/userContext';
+import OrganizationUnit from '../organization.unit/organization.unit.model';
 
 export class PerizinanSantriRepository {
   /**
@@ -51,6 +52,13 @@ export class PerizinanSantriRepository {
             'nip',
             'nik',
             'jenis_kelamin',
+          ],
+          include: [
+            {
+              model: OrganizationUnit,
+              as: 'organizationUnit',
+              attributes: ['id_orgunit', 'id_lembaga'],
+            },
           ],
         },
         {
@@ -134,6 +142,14 @@ export class PerizinanSantriRepository {
       } else {
         query.where.id_lokasi_kamar = idLokasiFilter;
       }
+    }
+
+    // Filter lembaga
+    const idLembagaFilter = data?.id_lembaga;
+    if (idLembagaFilter) {
+      if (data?.is_pegawai) {
+        query.where['$pegawai.organizationUnit.id_lembaga$'] = idLembagaFilter;
+      } 
     }
 
     if (data?.is_pegawai) {
@@ -453,6 +469,7 @@ export class PerizinanSantriRepository {
     is_pegawai?: boolean;
     id_pegawai?: string;
     id_lokasi?: string;
+    id_lembaga?: string;
   }) {
     const {
       keyword,
