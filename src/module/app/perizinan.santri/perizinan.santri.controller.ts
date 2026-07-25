@@ -396,7 +396,7 @@ export default class Controller {
 
       // Send notification
       if (result) {
-        const receiver = await helper.receiverByRole(['administrator', 'pegawai_kedisiplinan']);
+        const receiver = await helper.receiverByRole(['administrator', 'pegawai_kedisiplinan', 'wali_asuh']);
 
         let dataMessage: any;
         if (isPegawai) {
@@ -507,10 +507,9 @@ export default class Controller {
    * Fungsi approve perizinan (Diterima / Ditolak oleh petugas_kedisiplinan)
    */
   public async approve(req: Request, res: Response) {
-    if (
-      req?.user?.role_name !== 'pegawai_kedisiplinan' &&
-      req?.user?.role_name !== 'administrator'
-    ) {
+    const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
+
+    if (!allowedRoles.includes(req?.user?.role_name)) {
       return helper.catchError(
         'Akses Ditolak: Hanya Petugas Kedisiplinan atau Administrator yang dapat memproses instruksi ini.',
         403,
@@ -710,6 +709,8 @@ export default class Controller {
    */
   public async cancel(req: Request, res: Response) {
     const trx = await PerizinanSantri.sequelize?.transaction();
+    const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
+
     try {
       const id = req.params.id;
       const check = await repository.detail({ id_izin: id });
@@ -722,10 +723,7 @@ export default class Controller {
       if (check.status_approval === 'Menunggu') {
         // Bisa dibatalkan langsung
       } else if (check.status_approval === 'Disetujui') {
-        if (
-          userRole !== 'pegawai_kedisiplinan' &&
-          userRole !== 'administrator'
-        ) {
+        if (!allowedRoles.includes(userRole)) {
           throw new Error(
             'Pembatalan izin yang telah disetujui hanya bisa dilakukan oleh Petugas Kedisiplinan atau Administrator.'
           );
@@ -744,7 +742,7 @@ export default class Controller {
           kondisi: 'Arsip',
           alasan_penutupan:
             req.body.alasan_penutupan ||
-            `Dibatalkan oleh ${userRole == 'administrator' || userRole == 'pegawai_kedisiplinan' ? 'Petugas' : 'Pengguna'}`,
+            `Dibatalkan oleh ${allowedRoles.includes(userRole) ? 'Petugas' : 'Pengguna'}`,
         },
         { id_izin: id },
         trx
