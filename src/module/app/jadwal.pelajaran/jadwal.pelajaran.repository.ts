@@ -140,6 +140,31 @@ export default class Repository {
       where.id_lokasi = data.id_lokasi;
     }
 
+    // Filter lokasi parent
+    if (data?.id_lokasi_parent) {
+      where['$lokasi.parent_id$'] = data.id_lokasi_parent;
+    }
+
+    // Filter kelas formal
+    if (data?.id_kelas) {
+      where.id_kelas = data.id_kelas;
+    }
+
+    // Filter kelas mda
+    if (data?.id_kelas_mda) {
+      where.id_kelas_mda = data.id_kelas_mda;
+    }
+
+    // Filter hari
+    if (data?.hari) {
+      where.hari = data.hari;
+    }
+
+    // Filter guru (pegawai)
+    if (data?.id_pegawai) {
+      where['$jenis_guru.pegawai.id_pegawai$'] = data.id_pegawai;
+    }
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
       where = { 

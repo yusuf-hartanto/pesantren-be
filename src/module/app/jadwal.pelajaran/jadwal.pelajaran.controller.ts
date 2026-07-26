@@ -135,6 +135,11 @@ export default class Controller {
         ...helper.fetchQueryRequest(req),
         status: req?.query?.status || '',
         id_lokasi: req?.query?.id_lokasi || '',
+        id_kelas: req?.query?.id_kelas || '',
+        id_kelas_mda: req?.query?.id_kelas_mda || '',
+        hari: req?.query?.hari || '',
+        id_pegawai: req?.query?.id_pegawai || '',
+        id_lokasi_parent: req?.query?.id_lokasi_parent || '',
       };
 
       const { count, rows } = await repository.index(query);

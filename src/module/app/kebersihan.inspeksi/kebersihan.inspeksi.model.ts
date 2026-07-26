@@ -49,7 +49,7 @@ export function initKebersihanInspeksi(sequelize: Sequelize) {
         type: DataTypes.TIME,
       },
       kode_slot: {
-        type: DataTypes.ENUM('PAGI', 'SIANG', 'SORE', 'MALAM'),
+        type: DataTypes.STRING(255),
       },
       status_kondisi: {
         type: DataTypes.ENUM('BERSIH', 'KOTOR', 'RUSAK'),

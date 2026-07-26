@@ -58,7 +58,7 @@ export default class Repository {
     }
 
     const userContext = getUserContextData();
-    if (userContext && userContext?.id_cabang) {
+    if (userContext && userContext?.id_cabang && !data?.all_cabang) {
       query.where = {
         ...query.where,
         id_cabang: userContext?.id_cabang,
