@@ -53,7 +53,7 @@ export default class Repository {
         model: Santri,
         as: 'santri',
         required: true,
-        attributes: [],
+        attributes: ['id_santri', 'fullname'],
         include: [
           {
             model: Cabang,
@@ -77,6 +77,13 @@ export default class Repository {
             },
           },
         ],
+      });
+    } else {
+      includes.push({
+        model: Santri,
+        as: 'santri',
+        required: false,
+        attributes: ['id_santri', 'fullname'],
       });
     }
 
@@ -144,7 +151,7 @@ export default class Repository {
         model: Santri,
         as: 'santri',
         required: true,
-        attributes: [],
+        attributes: ['id_santri', 'fullname'],
         include: [
           {
             model: Cabang,
@@ -169,6 +176,13 @@ export default class Repository {
           },
         ],
       });
+    } else {
+      includes.push({
+        model: Santri,
+        as: 'santri',
+        required: false,
+        attributes: ['id_santri', 'fullname'],
+      });
     }
 
     return Model.findAndCountAll({
@@ -186,27 +200,33 @@ export default class Repository {
       },
       include: [
         {
+          model: Santri,
+          as: 'santri',
+          required: false,
+          attributes: ['id_santri', 'fullname'],
+        },
+        {
           model: AreaProvince,
           as: 'province',
-          required: true,
+          required: false,
           attributes: ['id', 'name'],
         },
         {
           model: AreaRegency,
           as: 'city',
-          required: true,
+          required: false,
           attributes: ['id', 'name'],
         },
         {
           model: AreaDistrict,
           as: 'district',
-          required: true,
+          required: false,
           attributes: ['id', 'name'],
         },
         {
           model: AreaSubDistrict,
           as: 'sub_district',
-          required: true,
+          required: false,
           attributes: ['id', 'name'],
         },
       ],
