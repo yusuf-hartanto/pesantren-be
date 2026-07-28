@@ -319,6 +319,8 @@ export default class Helper {
   public async updateSesiGuru() {
     try {
       let result: any;
+      let affectedRows = 0;
+
       if (process.env.DB_DIALECT == POSTGRES) {
         result = await AppResource.sequelize?.query(
           `
@@ -331,6 +333,7 @@ export default class Helper {
           `,
           { type: QueryTypes.UPDATE }
         );
+        affectedRows = result?.[1] ?? 0;
       }
       if (process.env.DB_DIALECT == MYSQL) {
         result = await AppResource.sequelize?.query(
@@ -345,8 +348,11 @@ export default class Helper {
             type: QueryTypes.UPDATE,
           }
         );
+        affectedRows = result?.[0]?.affectedRows ?? 0;
       }
-      if (result) await this.sendNotif(`[cron] success update jam selesai: ${result}`);
+      if (affectedRows > 0) {
+        await this.sendNotif(`[cron] success update jam selesai: ${affectedRows} baris`);
+      }
     } catch (err: any) {
       await this.sendNotif(`[cron] failed update jam selesai: ${err?.message}`);
     }
