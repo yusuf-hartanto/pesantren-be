@@ -418,7 +418,7 @@ export default class Service {
         attributes: [
           'status_kehadiran',
           [
-            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT id_pegawai')),
+            Sequelize.fn('COUNT', Sequelize.literal('DISTINCT "AbsenHarianPegawai"."id_pegawai"')),
             'count',
           ],
         ],

@@ -346,7 +346,7 @@ export default class Helper {
           }
         );
       }
-      await this.sendNotif(`[cron] success update jam selesai: ${result}`);
+      if (result) await this.sendNotif(`[cron] success update jam selesai: ${result}`);
     } catch (err: any) {
       await this.sendNotif(`[cron] failed update jam selesai: ${err?.message}`);
     }
