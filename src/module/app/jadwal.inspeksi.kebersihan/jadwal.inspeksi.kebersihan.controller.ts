@@ -22,6 +22,7 @@ import JadwalInspeksiKebersihan from './jadwal.inspeksi.kebersihan.model';
 import { repository as cabangRepository } from '../cabang/cabang.repository';
 import { repository as slotRepository } from '../master.slot.waktu/master.slot.waktu.repository';
 import { repository as pegawaiRepository } from '../pegawai/pegawai.repository';
+import { Op } from 'sequelize';
 
 const date: string = helper.date();
 
@@ -329,11 +330,14 @@ export default class Controller {
 
       // 2. Update remaining existing days
       if (daysToUpdate.length > 0) {
-        await JadwalInspeksiKebersihan.update(updatePayload, {
+        const { hari, ...payloadTanpaHari } = updatePayload as { hari?: number[] };
+        await JadwalInspeksiKebersihan.update(payloadTanpaHari, {
           where: {
             id_cabang: check.id_cabang,
             kode_slot: check.kode_slot,
-            hari: daysToUpdate,
+            hari: {
+              [Op.in]: daysToUpdate,
+            }
           },
           individualHooks: true,
         });
