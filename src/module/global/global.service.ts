@@ -26,6 +26,7 @@ import PenempatanKelasSantri from '../app/penempatan.kelas.santri/penempatan.kel
 import PenempatanKamarSantri from '../app/penempatan.kamar.santri/penempatan.kamar.santri.model';
 import LembagaPendidikanKepesantrenan from '../app/lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 import Cabang from '../app/cabang/cabang.model';
+import { TIMEZONE } from '../../utils/constant';
 
 const BASE_URL = process.env.SITRENDI_URL || '';
 const SECRET_KEY = process.env.SITRENDI_SECRET_KEY || '';
@@ -259,7 +260,7 @@ export default class Service {
       startD = tanggal_mulai;
       endD = tanggal_selesai;
     } else {
-      const targetDate = tanggal || moment().format('YYYY-MM-DD');
+      const targetDate = tanggal || moment().tz(TIMEZONE).format('YYYY-MM-DD');
       dateFilter = targetDate;
       dateTimeFilter = { [Op.between]: [`${targetDate} 00:00:00`, `${targetDate} 23:59:59`] };
       startD = targetDate;

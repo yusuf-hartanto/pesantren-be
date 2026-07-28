@@ -13,6 +13,7 @@ import AppResource from '../resource/resource.model';
 import Cabang from '../cabang/cabang.model';
 import OrganizationUnit from '../organization.unit/organization.unit.model';
 import { getUserContextData } from '../../../context/userContext';
+import { TIMEZONE } from '../../../utils/constant';
 
 export class KesehatanSantriRepository {
   public async index(data: any) {
@@ -294,7 +295,7 @@ export class KesehatanSantriRepository {
   }
 
   public async checkActivePerizinan(id_santri: string | null, id_pegawai: string | null = null, transaction?: any) {
-    const today = moment().format('YYYY-MM-DD');
+    const today = moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     if (id_pegawai) {
       return await PerizinanSantri.findOne({
@@ -340,7 +341,7 @@ export class KesehatanSantriRepository {
   }
 
   public async getActiveKamar(id_santri: string, tanggal?: string) {
-    const targetDate = tanggal ? moment(tanggal).format('YYYY-MM-DD') : moment().format('YYYY-MM-DD');
+    const targetDate = tanggal ? moment(tanggal).format('YYYY-MM-DD') : moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     const placement = await PenempatanKamarSantri.findOne({
       where: {

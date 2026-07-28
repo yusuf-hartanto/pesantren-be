@@ -22,6 +22,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import moment from 'moment';
 import { z } from 'zod';
@@ -544,9 +545,9 @@ export default class Controller {
       );
 
       if (body.status_approval === 'Disetujui') {
-        const tahun = moment().year();
+        const tahun = moment().tz(TIMEZONE).year();
         const urut = await repository.getNextUrutSurat(tahun);
-        const bulanRomawi = helper.convertToRomawi(moment().month());
+        const bulanRomawi = helper.convertToRomawi(moment().tz(TIMEZONE).month());
 
         if (isPegawai) {
           // --- LOGIKA UTAMA APPROVAL PEGAWAI ---
@@ -878,7 +879,7 @@ export default class Controller {
         throw new Error('Data santri terkait perizinan ini tidak ditemukan!');
       }
 
-      const todayStr = moment().format('YYYY-MM-DD');
+      const todayStr = moment().tz(TIMEZONE).format('YYYY-MM-DD');
       const tglSelesaiStr = moment(perizinan.tanggal_selesai).format(
         'YYYY-MM-DD'
       );
@@ -1035,7 +1036,7 @@ export default class Controller {
         throw new Error('Struktur data profil santri tidak ditemukan!');
       }
 
-      const todayStr = moment().format('YYYY-MM-DD HH:mm:ss');
+      const todayStr = moment().tz(TIMEZONE).format('YYYY-MM-DD HH:mm:ss');
       const tglSelesaiStr = moment(perizinan.tanggal_selesai).format(
         'YYYY-MM-DD HH:mm:ss'
       );
@@ -1259,7 +1260,7 @@ export default class Controller {
       const filePrefix = isPegawaiActive
         ? 'perizinan-pegawai'
         : 'perizinan-santri';
-      const filename = `${filePrefix}-${isTemplate ? 'template' : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename = `${filePrefix}-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
       await workbook.xlsx.writeFile(`${path}/${filename}`);
 
       return response.success(
@@ -1433,13 +1434,13 @@ export default class Controller {
               if (item.status_approval === 'Disetujui') {
                 const tahun = item.tanggal_mulai
                   ? moment(item.tanggal_mulai).year()
-                  : moment().year();
+                  : moment().tz(TIMEZONE).year();
                 const urut = await repository.getNextUrutSurat(tahun);
                 const codeUnit = item.kode_unit || 'IZN';
                 const bulanRomawi = helper.convertToRomawi(
                   item.tanggal_mulai
                     ? moment(item.tanggal_mulai).month()
-                    : moment().month()
+                    : moment().tz(TIMEZONE).month()
                 );
 
                 const jenisKodeSurat = item.id_pegawai ? 'IZN-PEG' : 'IZN-SAN';
@@ -1567,14 +1568,14 @@ export default class Controller {
         if (item.status_approval === 'Disetujui' && !item.is_canceled) {
           const tahun = item.tanggal_mulai
             ? moment(item.tanggal_mulai).year()
-            : moment().year();
+            : moment().tz(TIMEZONE).year();
           const urut = await repository.getNextUrutSurat(tahun);
 
           const codeUnit = item.kode_unit || 'IZN';
           const bulanRomawi = helper.convertToRomawi(
             item.tanggal_mulai
               ? moment(item.tanggal_mulai).month()
-              : moment().month()
+              : moment().tz(TIMEZONE).month()
           );
 
           // Penentuan jenis kode surat berdasarkan entitas pengaju (Pegawai vs Santri)
@@ -1810,8 +1811,8 @@ export default class Controller {
       } finally {
         // --- PENYIMPANAN LOG KE FILE .TXT ---
         try {
-          const dateStr = moment().format('YYYYMMDD');
-          const timeStr = moment().format('HHmmss');
+          const dateStr = moment().tz(TIMEZONE).format('YYYYMMDD');
+          const timeStr = moment().tz(TIMEZONE).format('HHmmss');
           const fileName = `perizinan-santri-massal-${dateStr}-${timeStr}.txt`;
           const logDirectory = path.join(process.cwd(), 'logs');
 

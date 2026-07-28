@@ -12,6 +12,7 @@ import Pegawai from '../pegawai/pegawai.model';
 import PenempatanKamarSantri from '../penempatan.kamar.santri/penempatan.kamar.santri.model';
 import { getUserContextData } from '../../../context/userContext';
 import OrganizationUnit from '../organization.unit/organization.unit.model';
+import { TIMEZONE } from '../../../utils/constant';
 
 export class PerizinanSantriRepository {
   /**
@@ -247,7 +248,7 @@ export class PerizinanSantriRepository {
    * Aturan: Status wajib 'Disetujui', belum dibatalkan, dan hari ini berada di dalam rentang izin.
    */
   public async findActiveIzinByCardNumber(nomorKartu: string) {
-    const today = moment().format('YYYY-MM-DD');
+    const today = moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     return await PerizinanSantri.findOne({
       where: {
@@ -310,7 +311,7 @@ export class PerizinanSantriRepository {
     id_pegawai: string,
     transaction?: any
   ) {
-    const today = moment().format('YYYY-MM-DD');
+    const today = moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     return await PerizinanSantri.findOne({
       where: {

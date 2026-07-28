@@ -9,6 +9,7 @@ import {
   NOT_FOUND,
   SUCCESS_RETRIEVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import moment from 'moment';
 import { z } from 'zod';
@@ -140,7 +141,7 @@ export default class Controller {
     try {
       const validBody = endJurnalKelasSchema.parse(req.body);
       const id_petugas = req.user?.id;
-      const jam_selesai = moment().format('HH:mm:ss');
+      const jam_selesai = moment().tz(TIMEZONE).format('HH:mm:ss');
 
       const updated = await repository.endJurnal(
         validBody.id_jurnal,
@@ -226,7 +227,7 @@ export default class Controller {
       const { rows } = await repository.index(filterData);
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `jurnal-kelas-${moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename = `jurnal-kelas-${moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('LAPORAN JURNAL KELAS');
 

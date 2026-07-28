@@ -21,6 +21,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import ExcelJS from 'exceljs';
 import fs from 'fs/promises';
@@ -146,7 +147,7 @@ export default class Controller {
     try {
       const id_lokasi_kamar = req.query.id_lokasi_kamar as string;
       const tanggal =
-        (req.query.tanggal as string) || moment().format('YYYY-MM-DD');
+        (req.query.tanggal as string) || moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
       if (!id_lokasi_kamar) {
         return response.failed(
@@ -304,7 +305,7 @@ export default class Controller {
       const validBody = bulkAbsenHarianSantriSchema.parse(req.body);
 
       const targetTanggal = moment(validBody.tanggal).format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_absen || moment().format('HH:mm:ss');
+      const targetWaktu = validBody.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
 
       const id_petugas = req.user?.id || null;
 
@@ -516,8 +517,8 @@ export default class Controller {
       const validBody = scanQrAbsenSchema.parse(req.body);
 
       const targetTanggal =
-        validBody.tanggal_custom || moment().format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_custom || moment().format('HH:mm:ss');
+        validBody.tanggal_custom || moment().tz(TIMEZONE).format('YYYY-MM-DD');
+      const targetWaktu = validBody.waktu_custom || moment().tz(TIMEZONE).format('HH:mm:ss');
       const id_petugas = req.user?.id || null;
 
       let shiftDoc: any = null;
@@ -685,7 +686,7 @@ export default class Controller {
       });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `absen-santri-${isTemplate ? 'template-' + moment().format('HHmmss') : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename = `absen-santri-${isTemplate ? 'template-' + moment().tz(TIMEZONE).format('HHmmss') : moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('ABSEN HARIAN SANTRI');
 
@@ -735,8 +736,8 @@ export default class Controller {
         let final_id_shift = row.id_shift_presensi;
         const targetTanggal = row.tanggal
           ? moment(row.tanggal).format('YYYY-MM-DD')
-          : moment().format('YYYY-MM-DD');
-        const targetWaktu = row.waktu_absen || moment().format('HH:mm:ss');
+          : moment().tz(TIMEZONE).format('YYYY-MM-DD');
+        const targetWaktu = row.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
 
         // Resolve ID & Nama Santri berdasarkan NIS
         const santriDoc: any = await repository.findSantriByNisOnly(row.nis);

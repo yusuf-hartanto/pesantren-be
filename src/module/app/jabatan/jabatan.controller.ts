@@ -13,6 +13,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import z from 'zod';
 import { jabatanSchema } from './jabatan.schema';
@@ -292,7 +293,7 @@ export default class Controller {
 
       const { dir, path } = await helper.checkDirExport('excel');
       const name: string = 'jabatan';
-      const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename: string = `${name}-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('DATA JABATAN');

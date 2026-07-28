@@ -13,6 +13,7 @@ import KelasFormal from '../kelas.formal/kelas.formal.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
 import Lokasi from '../location/location.model';
 import { getUserContextData } from '../../../context/userContext';
+import { TIMEZONE } from '../../../utils/constant';
 
 export default class Repository {
   public async findMatchingJamPelajaran(waktu_absen: string) {
@@ -471,7 +472,7 @@ export default class Repository {
     };
 
     if (id_kelas) {
-      const targetDate = moment().format('YYYY-MM-DD');
+      const targetDate = moment().tz(TIMEZONE).format('YYYY-MM-DD');
       const placements = await PenempatanKelasSantri.findAll({
         where: {
           status: 'Aktif',

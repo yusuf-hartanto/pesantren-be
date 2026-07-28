@@ -3,6 +3,7 @@
 import { QueryInterface } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
+import { TIMEZONE } from '../../utils/constant';
 
 /** @type {import('sequelize-cli').Migration} */
 export default {
@@ -45,9 +46,9 @@ export default {
         id_lokasi_kamar: kamarId1,
         sumber_pengajuan: 'Orang Tua',
         jenis_izin: 'Izin',
-        tanggal_pengajuan: moment().subtract(1, 'days').toDate(),
-        tanggal_mulai: moment().add(1, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().add(4, 'days').format('YYYY-MM-DD'),
+        tanggal_pengajuan: moment().tz(TIMEZONE).subtract(1, 'days').toDate(),
+        tanggal_mulai: moment().tz(TIMEZONE).add(1, 'days').format('YYYY-MM-DD'),
+        tanggal_selesai: moment().tz(TIMEZONE).add(4, 'days').format('YYYY-MM-DD'),
         alasan: 'Menghadiri acara pernikahan kakak kandung di luar kota',
         status_approval: 'Menunggu',
         id_approver: null,
@@ -68,14 +69,14 @@ export default {
         id_lokasi_kamar: kamarId2,
         sumber_pengajuan: 'Waliasuh',
         jenis_izin: 'Sakit',
-        tanggal_pengajuan: moment().subtract(3, 'days').toDate(),
-        tanggal_mulai: moment().subtract(2, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().add(1, 'days').format('YYYY-MM-DD'),
+        tanggal_pengajuan: moment().tz(TIMEZONE).subtract(3, 'days').toDate(),
+        tanggal_mulai: moment().tz(TIMEZONE).subtract(2, 'days').format('YYYY-MM-DD'),
+        tanggal_selesai: moment().tz(TIMEZONE).add(1, 'days').format('YYYY-MM-DD'),
         alasan:
           'Santri mengalami demam tinggi berdarah dan direkomendasikan istirahat di rumah',
         status_approval: 'Disetujui',
         id_approver: activePegawaiId,
-        tanggal_approval: moment().subtract(2, 'days').toDate(),
+        tanggal_approval: moment().tz(TIMEZONE).subtract(2, 'days').toDate(),
         catatan_approval:
           'Disetujui, harap membawa surat keterangan dokter saat kembali ke asrama',
         is_canceled: false,
@@ -93,13 +94,13 @@ export default {
         id_lokasi_kamar: kamarId1,
         sumber_pengajuan: 'Orang Tua',
         jenis_izin: 'Izin',
-        tanggal_pengajuan: moment().subtract(2, 'days').toDate(),
-        tanggal_mulai: moment().add(2, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().add(3, 'days').format('YYYY-MM-DD'),
+        tanggal_pengajuan: moment().tz(TIMEZONE).subtract(2, 'days').toDate(),
+        tanggal_mulai: moment().tz(TIMEZONE).add(2, 'days').format('YYYY-MM-DD'),
+        tanggal_selesai: moment().tz(TIMEZONE).add(3, 'days').format('YYYY-MM-DD'),
         alasan: 'Izin liburan keluarga ke luar kota di hari efektif KBM',
         status_approval: 'Ditolak',
         id_approver: activePegawaiId,
-        tanggal_approval: moment().subtract(1, 'days').toDate(),
+        tanggal_approval: moment().tz(TIMEZONE).subtract(1, 'days').toDate(),
         catatan_approval:
           'Mohon maaf, perizinan tidak mendesak di hari efektif sekolah tidak diperkenankan',
         is_canceled: false,
@@ -118,16 +119,16 @@ export default {
         id_lokasi_kamar: kamarId2,
         sumber_pengajuan: 'Kesehatan',
         jenis_izin: 'Sakit',
-        tanggal_pengajuan: moment().subtract(5, 'days').toDate(),
-        tanggal_mulai: moment().subtract(4, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().add(2, 'days').format('YYYY-MM-DD'),
+        tanggal_pengajuan: moment().tz(TIMEZONE).subtract(5, 'days').toDate(),
+        tanggal_mulai: moment().tz(TIMEZONE).subtract(4, 'days').format('YYYY-MM-DD'),
+        tanggal_selesai: moment().tz(TIMEZONE).add(2, 'days').format('YYYY-MM-DD'),
         alasan: 'Gejala tipes ringan, perlu observasi di ruang kesehatan pusat',
         status_approval: 'Disetujui',
         id_approver: activePegawaiId,
-        tanggal_approval: moment().subtract(5, 'days').toDate(),
+        tanggal_approval: moment().tz(TIMEZONE).subtract(5, 'days').toDate(),
         catatan_approval: 'Ditempatkan di Poskes sampai kondisi membaik',
         is_canceled: true,
-        canceled_at: moment().subtract(1, 'days').toDate(),
+        canceled_at: moment().tz(TIMEZONE).subtract(1, 'days').toDate(),
         canceled_by: activePegawaiId,
         alasan_penutupan:
           'Santri sudah dinyatakan sembuh total oleh tim medis lebih cepat dari jadwal',
@@ -142,9 +143,9 @@ export default {
         id_lokasi_kamar: kamarId2,
         sumber_pengajuan: 'Kesehatan',
         jenis_izin: 'Izin',
-        tanggal_pengajuan: moment().toDate(),
-        tanggal_mulai: moment().format('YYYY-MM-DD'),
-        tanggal_selesai: moment().add(1, 'days').format('YYYY-MM-DD'),
+        tanggal_pengajuan: moment().tz(TIMEZONE).toDate(),
+        tanggal_mulai: moment().tz(TIMEZONE).format('YYYY-MM-DD'),
+        tanggal_selesai: moment().tz(TIMEZONE).add(1, 'days').format('YYYY-MM-DD'),
         alasan:
           'Izin pergi ke RS Daerah untuk kontrol rutin kesehatan gigi pasca operasi',
         status_approval: 'Menunggu',

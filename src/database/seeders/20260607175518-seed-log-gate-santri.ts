@@ -3,6 +3,7 @@
 import { QueryInterface } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
+import { TIMEZONE } from '../../utils/constant';
 
 /** @type {import('sequelize-cli').Migration} */
 export default {
@@ -103,7 +104,7 @@ export default {
         logSeeds.push({
           id_gate: uuidv4(),
           id_izin: izin.id_izin,
-          waktu_keluar: moment().subtract(2, 'hours').toDate(),
+          waktu_keluar: moment().tz(TIMEZONE).subtract(2, 'hours').toDate(),
           petugas_keluar: petugasKeluarId,
           waktu_masuk: null,
           petugas_masuk: null,

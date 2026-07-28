@@ -2,6 +2,7 @@
 
 import moment from 'moment';
 import { z } from 'zod';
+import { TIMEZONE } from '../../../utils/constant';
 
 export const pengajuanIzinSchema = z
   .object({
@@ -56,7 +57,7 @@ export const pengajuanIzinSchema = z
     }
   ).refine(
     (data) => {
-      const hariIni = moment().startOf('day');
+      const hariIni = moment().tz(TIMEZONE).startOf('day');
       return !moment(data.tanggal_mulai).isBefore(hariIni) && !moment(data.tanggal_selesai).isBefore(hariIni);
     },
     {

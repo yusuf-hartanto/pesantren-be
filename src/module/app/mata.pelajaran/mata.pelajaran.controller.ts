@@ -18,6 +18,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import { repository as repoKelPelajaran } from '../kelompok.pelajaran/kelompok.pelajaran.repository';
 import { repository as repoLembagaFormal } from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.repository';
@@ -252,7 +253,7 @@ export default class Controller {
       const { dir, path } = await helper.checkDirExport('excel');
 
       const name: string = 'mata-pelajaran';
-      const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename: string = `${name}-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
       const title: string = `${name.replace(/-/g, ' ').toUpperCase()}`;
       const urlExcel: string = `${dir}/${filename}`;
       const workbook = new ExcelJS.Workbook();

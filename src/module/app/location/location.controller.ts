@@ -11,6 +11,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import { Op, QueryTypes } from 'sequelize';
 import { locationSchema, locationUpdateSchema } from './location.schema';
@@ -441,7 +442,7 @@ export default class Controller {
       const flatValues = flattenLocationTree(tree);
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `master-lokasi-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename = `master-lokasi-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
       const urlExcel = `${dir}/${filename}`;
 
       const workbook = new ExcelJS.Workbook();

@@ -15,14 +15,14 @@ import { appConfig } from '../config/config.app';
 import { mailConfig } from '../config/config.mail';
 import { parse as ParseCSV } from 'csv-parse/sync';
 import { teleConfig } from '../config/config.telegram';
-import { APP_NAME, MYSQL, POSTGRES } from '../utils/constant';
+import { APP_NAME, MYSQL, POSTGRES, TIMEZONE } from '../utils/constant';
 import AppResource from '../module/app/resource/resource.model';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { service } from '../module/global/global.service';
 import { rawQuery } from './rawQuery';
 import { repository as notificationRepository } from '../module/app/notification/notification.repository';
 
-const month: string = moment().format('YYYY-MM');
+const month: string = moment().tz(TIMEZONE).format('YYYY-MM');
 const parseTimeToSeconds = (time: string): number => {
   if (!time) return 0;
 
@@ -45,7 +45,7 @@ interface NotificationPayload {
 }
 export default class Helper {
   public date() {
-    return moment().locale('id').format('YYYY-MM-DD HH:mm:ss');
+    return moment().tz(TIMEZONE).locale('id').format('YYYY-MM-DD HH:mm:ss');
   }
 
   public dateFormat(date: string) {
@@ -53,11 +53,11 @@ export default class Helper {
   }
 
   public dateForNumber() {
-    return moment().locale('id').format('DDMMYYYY');
+    return moment().tz(TIMEZONE).locale('id').format('DDMMYYYY');
   }
 
   public dateAdd(num: number, type: any) {
-    return moment().add(num, type).locale('id').format('YYYY-MM-DD HH:mm:ss');
+    return moment().tz(TIMEZONE).add(num, type).locale('id').format('YYYY-MM-DD HH:mm:ss');
   }
 
   public dateSubtract(num: number, type: any) {
@@ -193,7 +193,7 @@ export default class Helper {
   }
 
   public async checkDirExport(type: string) {
-    const month: string = moment().format('YYYY-MM');
+    const month: string = moment().tz(TIMEZONE).format('YYYY-MM');
     const path: string = `./public/${type}/${month}`;
     if (!fs.existsSync(path)) {
       fs.mkdirSync(path, { recursive: true });
@@ -290,7 +290,7 @@ export default class Helper {
           ) AS subquery
           WHERE ar.resource_id = subquery.resource_id;
           `,
-          { type: QueryTypes.SELECT }
+          { type: QueryTypes.UPDATE }
         );
       }
       if (process.env.DB_DIALECT == MYSQL) {
@@ -310,9 +310,45 @@ export default class Helper {
           }
         );
       }
-      await this.sendNotif(`success update usia: ${result}`);
+      await this.sendNotif(`[cron] success update usia: ${result}`);
     } catch (err: any) {
-      await this.sendNotif(`failed update usia: ${err?.message}`);
+      await this.sendNotif(`[cron] failed update usia: ${err?.message}`);
+    }
+  }
+
+  public async updateSesiGuru() {
+    try {
+      let result: any;
+      if (process.env.DB_DIALECT == POSTGRES) {
+        result = await AppResource.sequelize?.query(
+          `
+          UPDATE jurnal_kelas jk
+          SET jam_selesai = jp.selesai
+          FROM jam_pelajaran jp
+          WHERE jp.id_jampel = jk.id_jam_pelajaran
+            AND jk.jam_selesai IS NULL
+            AND jp.selesai < (NOW() AT TIME ZONE 'Asia/Jakarta')::time
+          `,
+          { type: QueryTypes.UPDATE }
+        );
+      }
+      if (process.env.DB_DIALECT == MYSQL) {
+        result = await AppResource.sequelize?.query(
+          `
+          UPDATE jurnal_kelas jk
+          JOIN jam_pelajaran jp ON jp.id_jampel = jk.id_jam_pelajaran
+          SET jk.jam_selesai = jp.selesai
+          WHERE jk.jam_selesai IS NULL
+            AND jp.selesai < TIME(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+          `,
+          {
+            type: QueryTypes.UPDATE,
+          }
+        );
+      }
+      await this.sendNotif(`[cron] success update jam selesai: ${result}`);
+    } catch (err: any) {
+      await this.sendNotif(`[cron] failed update jam selesai: ${err?.message}`);
     }
   }
 

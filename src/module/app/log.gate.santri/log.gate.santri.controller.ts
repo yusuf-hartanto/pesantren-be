@@ -15,6 +15,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
@@ -283,7 +284,7 @@ export default class Controller {
       });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `log-gate-santri-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename = `log-gate-santri-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('DATA LOG GATE SANTRI');

@@ -29,3 +29,6 @@ export const SUCCESS_GENERATED: string = 'Data successfully generated';
 // database
 export const MYSQL: string = 'mysql';
 export const POSTGRES: string = 'postgres';
+
+// timezone
+export const TIMEZONE: string = 'Asia/Jakarta';

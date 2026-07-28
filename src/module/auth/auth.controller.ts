@@ -17,9 +17,10 @@ import {
   NOT_FOUND,
   REQUIRED,
   ROLE_CLIENT,
+  TIMEZONE,
 } from '../../utils/constant';
 
-moment().locale('id');
+moment().tz(TIMEZONE).locale('id');
 const date: string = helper.date();
 const otpExpired: number = 15;
 const loginOtp: boolean = process.env.LOGIN_OTP == 'true';

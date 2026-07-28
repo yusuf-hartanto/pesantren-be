@@ -11,6 +11,7 @@ import AppResource from '../resource/resource.model';
 import KelasFormal from '../kelas.formal/kelas.formal.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
 import JurnalKelas from '../jurnal.kelas/jurnal.kelas.model';
+import { TIMEZONE } from '../../../utils/constant';
 
 export class AbsenKelasSantri extends Model {
   declare id_absen: string;
@@ -85,7 +86,7 @@ export function initAbsenKelasSantri(sequelize: Sequelize) {
       waktu_absen: {
         type: DataTypes.TIME,
         allowNull: false,
-        defaultValue: () => moment().format('HH:mm:ss'),
+        defaultValue: () => moment().tz(TIMEZONE).format('HH:mm:ss'),
       },
       status_kehadiran: {
         type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Alfa'),

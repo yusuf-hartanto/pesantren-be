@@ -8,6 +8,7 @@ import Lokasi from '../location/location.model';
 import ShiftPresensi from '../shift.presensi/shift.presensi.model';
 import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
+import { TIMEZONE } from '../../../utils/constant';
 
 export class AbsenHarianSantri extends Model {
   declare id_absen: string;
@@ -68,7 +69,7 @@ export function initAbsenHarianSantri(sequelize: Sequelize) {
       waktu_absen: {
         type: DataTypes.TIME,
         allowNull: false,
-        defaultValue: () => moment().format('HH:mm:ss'),
+        defaultValue: () => moment().tz(TIMEZONE).format('HH:mm:ss'),
       },
       status_kehadiran: {
         type: DataTypes.ENUM('Hadir', 'Izin', 'Sakit', 'Alfa'),

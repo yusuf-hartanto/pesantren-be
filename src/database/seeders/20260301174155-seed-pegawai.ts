@@ -3,6 +3,7 @@
 import { QueryInterface, Sequelize } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
+import { TIMEZONE } from '../../utils/constant';
 
 /** @type {import('sequelize-cli').Migration} */
 export default {
@@ -57,7 +58,7 @@ export default {
         jenis_kelamin: 'Laki-laki',
         tempat_lahir: 'Jakarta',
         tanggal_lahir: '1985-05-15',
-        umur: moment().diff(moment('1985-05-15'), 'years'),
+        umur: moment().tz(TIMEZONE).diff(moment('1985-05-15'), 'years'),
         alamat: 'Jl. Merdeka No. 10, RT 01/RW 02',
 
         // Data Wilayah
@@ -86,7 +87,7 @@ export default {
         jenis_kelamin: 'Perempuan',
         tempat_lahir: 'Bandung',
         tanggal_lahir: '1992-08-12',
-        umur: moment().diff(moment('1992-08-12'), 'years'),
+        umur: moment().tz(TIMEZONE).diff(moment('1992-08-12'), 'years'),
         alamat: 'Griya Asri Blok C4 No. 12',
 
         // Data Wilayah

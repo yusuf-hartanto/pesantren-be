@@ -20,6 +20,8 @@ import { initializeMail } from './config/config.mail';
 import { initializeDatabase } from './database/connection';
 import { initializeTelegram } from './config/config.telegram';
 import { initializeModels } from './module/models/models.index';
+import { TIMEZONE } from './utils/constant';
+import { rawQuery } from './helpers/rawQuery';
 
 async function bootstrap() {
   const dataConfig = await Config.initialize();
@@ -33,7 +35,7 @@ async function bootstrap() {
   initializeModels(sequelize);
 
   const app: Express = express();
-  const day: string = moment().format('YYYY-MM-DD');
+  const day: string = moment().tz(TIMEZONE).format('YYYY-MM-DD');
   const options: cors.CorsOptions = {
     allowedHeaders: [
       'Origin',
@@ -79,13 +81,13 @@ async function bootstrap() {
   app.use(routes);
 
   cron.schedule(
-    '1 0 * * *',
+    '0 * * * *',
     async () => {
-      await helper.updateUsia();
+      await helper.updateSesiGuru();
     },
     {
       scheduled: true,
-      timezone: 'Asia/Jakarta',
+      timezone: TIMEZONE,
     }
   );
 

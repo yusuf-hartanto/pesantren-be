@@ -15,6 +15,7 @@ import {
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
   SUCCESS_DELETED,
+  TIMEZONE,
 } from '../../../utils/constant';
 
 const generateDataExcel = (sheet: any, details: any, baseUrl: string) => {
@@ -438,7 +439,7 @@ export default class Controller {
         return response.success(NOT_FOUND, null, res, false);
 
       const { dir, path: exportPath } = await helper.checkDirExport('excel');
-      const filename = `rapor-santri-${moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename = `rapor-santri-${moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
       const title = 'RAPOR SANTRI';
       const urlExcel = `${dir}/${filename}`;
 

@@ -15,6 +15,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import moment from 'moment';
 import ExcelJS from 'exceljs';
@@ -177,8 +178,8 @@ export class KesehatanSantriController {
         izin_auto_created = true;
         sumber_pengajuan = 'Kesehatan';
 
-        const year = moment().year();
-        const month = moment().month();
+        const year = moment().tz(TIMEZONE).year();
+        const month = moment().tz(TIMEZONE).month();
         const urut = await repository.getNextUrutSurat(year);
         const bulanRomawi = helper.convertToRomawi(month);
 
@@ -239,7 +240,7 @@ export class KesehatanSantriController {
               await AbsenHarianPegawaiRepository.update({
                 payload: {
                   status_kehadiran: 'Sakit',
-                  waktu_keluar: moment().format('HH:mm:ss'),
+                  waktu_keluar: moment().tz(TIMEZONE).format('HH:mm:ss'),
                   keterangan_keluar: `Sakit (${validData.progres_status}): ${validData.keluhan || 'Pemeriksaan Kesehatan'}`,
                   updated_by: userLogin,
                 },
@@ -358,7 +359,7 @@ export class KesehatanSantriController {
 
       const { dir, path } = await helper.checkDirExport('excel');
       const label = subject_type === 'santri' ? 'Santri' : subject_type === 'pegawai' ? 'Pegawai' : 'Santri-Pegawai';
-      const filename = `kesehatan-${label}-${moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename = `kesehatan-${label}-${moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
       
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet(`LAPORAN KESEHATAN ${label.toUpperCase()}`);

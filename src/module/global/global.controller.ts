@@ -12,7 +12,7 @@ import { appConfig } from '../../config/config.app';
 import { sequelize } from '../../database/connection';
 import { repository as RepoMenu } from '../app/menu/menu.repository';
 import { repository as RoleMenu } from '../app/role.menu/role.menu.repository';
-import { NOT_FOUND, REQUIRED, SUCCESS_RETRIEVED } from '../../utils/constant';
+import { NOT_FOUND, REQUIRED, SUCCESS_RETRIEVED, TIMEZONE } from '../../utils/constant';
 import { transformer as resourceTransformer } from '../app/resource/resource.transformer';
 
 const nestedChildren = (
@@ -365,7 +365,7 @@ export default class Controller {
 
       const name: string =
         flag && flag != 'false' ? flag.replace(/,/g, '-') : 'dashboard';
-      const filename: string = `${name}-${moment().format('DDMMYYYY')}.xlsx`;
+      const filename: string = `${name}-${moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
       const title: string = `DATA ${name.replace(/_/g, ' ').toUpperCase()}`;
       const urlExcel: string = `${dir}/${filename}`;
       const workbook = new ExcelJS.Workbook();
@@ -401,7 +401,7 @@ export default class Controller {
 
       const name: string =
         flag && flag != 'false' ? flag.replace(/,/g, '-') : 'dashboard';
-      const filename: string = `${name}-${moment().format('DDMMYYYY')}.pdf`;
+      const filename: string = `${name}-${moment().tz(TIMEZONE).format('DDMMYYYY')}.pdf`;
       const title: string = `DATA ${name.replace(/_/g, ' ').toUpperCase()}`;
       const urlPDF: string = `${dir}/${filename}`;
 

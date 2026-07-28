@@ -10,6 +10,7 @@ import ShiftPresensi from '../shift.presensi/shift.presensi.model';
 import Pegawai from '../pegawai/pegawai.model';
 import AppResource from '../resource/resource.model';
 import { getUserContextData } from '../../../context/userContext';
+import { TIMEZONE } from '../../../utils/constant';
 
 export default class Repository {
   /**
@@ -525,7 +526,7 @@ export default class Repository {
   }) {
     const targetDate = params.tanggal
       ? moment(params.tanggal).format('YYYY-MM-DD')
-      : moment().format('YYYY-MM-DD');
+      : moment().tz(TIMEZONE).format('YYYY-MM-DD');
     const userContext = getUserContextData();
     let condition: any = {
       status: 'Aktif',

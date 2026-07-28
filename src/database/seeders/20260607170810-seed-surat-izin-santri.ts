@@ -3,6 +3,7 @@
 import { QueryInterface } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
+import { TIMEZONE } from '../../utils/constant';
 
 /** @type {import('sequelize-cli').Migration} */
 export default {
@@ -34,7 +35,7 @@ export default {
 
     const kodeUnitTarget = asramas.length > 0 ? asramas[0].kode_lokasi : 'ASM-PST';
     const pencetakResourceId = pegawais.length > 0 ? pegawais[0].resource_id : 'SYSTEM';
-    const tahunSekarang = moment().year();
+    const tahunSekarang = moment().tz(TIMEZONE).year();
 
     const suratSeeds = perizinans.map((perizinan: any, index: number) => {
       const nomorUrut = index + 1;
@@ -54,7 +55,7 @@ export default {
         kode_unit: kodeUnitTarget,
         nomor_surat: nomorSuratGenerated,
         qrcode_token: `tok_qr_${uuidv4().substring(0, 8)}_${nomorUrut}`,
-        tanggal_cetak: moment().subtract(index, 'hours').toDate(),
+        tanggal_cetak: moment().tz(TIMEZONE).subtract(index, 'hours').toDate(),
         dicetak_oleh: pencetakResourceId,
         versi_surat: versiSurat,
         status_surat: statusSurat,

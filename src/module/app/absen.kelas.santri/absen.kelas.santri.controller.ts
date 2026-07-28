@@ -22,6 +22,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import ExcelJS from 'exceljs';
 import fs from 'fs/promises';
@@ -191,7 +192,7 @@ export default class Controller {
 
       if (result && result.length > 0) {
         const studentIds = result.map((s: any) => s.id_santri);
-        const today = moment().format('YYYY-MM-DD');
+        const today = moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
         // Fetch active permissions (jenis_izin: 'Izin')
         const activeIzinList = await PerizinanSantri.findAll({
@@ -285,7 +286,7 @@ export default class Controller {
       const validBody = bulkAbsenKelasSantriSchema.parse(req.body);
 
       const targetTanggal = moment(validBody.tanggal).format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_absen || moment().format('HH:mm:ss');
+      const targetWaktu = validBody.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
       const id_petugas = req.user?.id || null;
 
       const jamPelajarans =
@@ -497,8 +498,8 @@ export default class Controller {
       const validBody = scanQrAbsenSchema.parse(req.body);
 
       const targetTanggal =
-        validBody.tanggal_custom || moment().format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_custom || moment().format('HH:mm:ss');
+        validBody.tanggal_custom || moment().tz(TIMEZONE).format('YYYY-MM-DD');
+      const targetWaktu = validBody.waktu_custom || moment().tz(TIMEZONE).format('HH:mm:ss');
       if (!validBody.id_lokasi) {
         return response.failed(
           'Gagal Scan: ID Lokasi/Kelas wajib ditentukan.',
@@ -675,7 +676,7 @@ export default class Controller {
       });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `absen-kelas-santri-${isTemplate ? 'template-' + moment().format('HHmmss') : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename = `absen-kelas-santri-${isTemplate ? 'template-' + moment().tz(TIMEZONE).format('HHmmss') : moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('ABSEN KELAS SANTRI');
 
@@ -725,8 +726,8 @@ export default class Controller {
         let final_id_jampel = row.id_jam_pelajaran;
         const targetTanggal = row.tanggal
           ? moment(row.tanggal).format('YYYY-MM-DD')
-          : moment().format('YYYY-MM-DD');
-        const targetWaktu = row.waktu_absen || moment().format('HH:mm:ss');
+          : moment().tz(TIMEZONE).format('YYYY-MM-DD');
+        const targetWaktu = row.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
 
         const santriDoc: any = await repository.findSantriByNisOnly(row.nis);
         if (santriDoc) {

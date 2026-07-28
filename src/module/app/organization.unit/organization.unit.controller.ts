@@ -9,7 +9,7 @@ import { repository as cabangRepo } from '../cabang/cabang.repository';
 import { repository as formalRepo } from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.repository';
 import { repository as pesantrenRepo } from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.repository';
 import {
-  ALREADY_EXIST,
+  TIMEZONE,
   NOT_FOUND,
   SUCCESS_DELETED,
   SUCCESS_RETRIEVED,
@@ -288,7 +288,7 @@ export default class Controller {
       const { dir, path } = await helper.checkDirExport('excel');
 
       const name: string = 'organization-unit';
-      const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY-HHmmss')}.xlsx`;
+      const filename: string = `${name}-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('ORGANIZATION UNIT');

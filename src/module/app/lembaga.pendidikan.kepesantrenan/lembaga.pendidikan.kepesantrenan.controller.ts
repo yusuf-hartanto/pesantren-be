@@ -12,6 +12,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import { Op } from 'sequelize';
 import { lembagaSchema } from './lembaga.pendidikan.kepesantrenan.schema';
@@ -271,7 +272,7 @@ export default class Controller {
 
       const { dir, path } = await helper.checkDirExport('excel');
       const name: string = 'lembaga-kepesantrenan';
-      const filename: string = `${name}-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename: string = `${name}-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
       const title: string = 'DATA LEMBAGA KEPESANTRENAN';
       const urlExcel: string = `${dir}/${filename}`;
 

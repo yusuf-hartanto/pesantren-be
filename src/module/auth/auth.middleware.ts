@@ -8,10 +8,10 @@ import { helperauth } from '../../helpers/auth.helper';
 import { setUserLogin, setUserContextData } from '../../context/userContext';
 import { Request, Response, NextFunction } from 'express';
 import { repository } from '../app/resource/resource.repository';
-import { NOT_FOUND, REQUIRED, ROLE_ADMIN } from '../../utils/constant';
+import { NOT_FOUND, REQUIRED, ROLE_ADMIN, TIMEZONE } from '../../utils/constant';
 import { repository as repoRoleMenu } from '../app/role.menu/role.menu.repository';
 
-moment().locale('id');
+moment().tz(TIMEZONE).locale('id');
 type RequestBody<T> = Request<{}, {}, T>;
 interface UserBody {
   username: string;

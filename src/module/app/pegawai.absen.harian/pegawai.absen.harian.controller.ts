@@ -14,13 +14,11 @@ import {
   NOT_FOUND,
   SUCCESS_DELETED,
   SUCCESS_RETRIEVED,
-  SUCCESS_SAVED,
-  SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import { clockInSchema, clockOutSchema } from './pegawai.absen.harian.schema';
 import z from 'zod';
 
-const TIMEZONE = 'Asia/Jakarta';
 const generateDataExcel = (
   sheet: any,
   details: any,
@@ -120,7 +118,7 @@ const normalizeRow = (row: any) => {
   };
 
   const parseDateStr = (val: any) => {
-    if (!val) return moment().format('YYYY-MM-DD');
+    if (!val) return moment().tz(TIMEZONE).format('YYYY-MM-DD');
     if (moment(val, 'YYYY-MM-DD', true).isValid()) return String(val).trim();
     if (moment(val).isValid()) return moment(val).format('YYYY-MM-DD');
     return String(val).trim();
@@ -192,7 +190,7 @@ export default class Controller {
       const validBody = clockInSchema.parse(req.body);
       const { id_pegawai, latitude, longitude, catatan } = validBody;
 
-      const tanggalHariIni = moment().format('YYYY-MM-DD');
+      const tanggalHariIni = moment().tz(TIMEZONE).format('YYYY-MM-DD');
       const waktuSekarang = moment().tz(TIMEZONE);
 
       const jamKerjaMaster =
@@ -303,7 +301,7 @@ export default class Controller {
       const validBody = clockOutSchema.parse(req.body);
       const { id_pegawai, latitude, longitude, catatan } = validBody;
 
-      const tanggalHariIni = moment().format('YYYY-MM-DD');
+      const tanggalHariIni = moment().tz(TIMEZONE).format('YYYY-MM-DD');
       const waktuSekarang = moment.tz(TIMEZONE);
 
       const attendance = await repository.findAttendanceToday(
@@ -414,7 +412,7 @@ export default class Controller {
         );
       }
 
-      const tanggalHariIni = moment().format('YYYY-MM-DD');
+      const tanggalHariIni = moment().tz(TIMEZONE).format('YYYY-MM-DD');
       const attendance = await repository.findAttendanceToday(
         String(id_pegawai),
         tanggalHariIni
@@ -454,7 +452,7 @@ export default class Controller {
       });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `absen-harian-pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename = `absen-harian-pegawai-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('LOG ABSENSI HARIAN');

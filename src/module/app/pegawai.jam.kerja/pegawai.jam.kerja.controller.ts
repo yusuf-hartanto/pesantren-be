@@ -17,6 +17,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 
 const generateDataExcel = (
@@ -293,7 +294,7 @@ export default class Controller {
       let result = await repository.listForExport({ q, isTemplate });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `jam-kerja-pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename = `jam-kerja-pegawai-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('MASTER JAM KERJA');

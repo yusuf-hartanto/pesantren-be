@@ -16,6 +16,7 @@ import {
   SUCCESS_RETRIEVED,
   SUCCESS_SAVED,
   SUCCESS_UPDATED,
+  TIMEZONE,
 } from '../../../utils/constant';
 import fs from 'fs/promises';
 import ExcelJS from 'exceljs';
@@ -200,7 +201,7 @@ export default class Controller {
     if (item.tanggal_lahir) {
       const birthDate = moment(item.tanggal_lahir);
       if (birthDate.isValid()) {
-        item.umur = moment().diff(birthDate, 'years');
+        item.umur = moment().tz(TIMEZONE).diff(birthDate, 'years');
       }
     }
 
@@ -401,7 +402,7 @@ export default class Controller {
       });
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const filename = `pegawai-${isTemplate ? 'template' : moment().format('DDMMYYYY')}.xlsx`;
+      const filename = `pegawai-${isTemplate ? 'template' : moment().tz(TIMEZONE).format('DDMMYYYY')}.xlsx`;
 
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet('DATA PEGAWAI');
