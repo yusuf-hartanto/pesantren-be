@@ -394,6 +394,8 @@ export default class Helper {
     const keyword: any = req?.query?.q || req?.query?.keyword;
     const id_pegawai: any = req?.query?.id_pegawai;
     const tanggal: any = req?.query?.tanggal;
+    const tanggal_awal: any = req?.query?.tanggal_awal;
+    const tanggal_akhir: any = req?.query?.tanggal_akhir;
     const id_lokasi: any = req?.query?.id_lokasi;
 
     return {
@@ -401,8 +403,10 @@ export default class Helper {
       offset: parseInt(limit) * (parseInt(offset) - 1),
       keyword,
       tanggal,
+      tanggal_awal,
+      tanggal_akhir,
       id_pegawai,
-      id_lokasi
+      id_lokasi,
     };
   }
 

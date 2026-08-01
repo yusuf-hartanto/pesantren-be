@@ -457,6 +457,7 @@ export default class Controller {
   public async exportPetugas(req: Request, res: Response) {
     try {
       const query = {
+        keyword: req?.body?.q || '',
         tanggal_awal: req?.body?.tanggal_awal || '',
         tanggal_akhir: req?.body?.tanggal_akhir || '',
       };

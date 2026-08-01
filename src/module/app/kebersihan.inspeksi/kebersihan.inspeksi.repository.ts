@@ -84,9 +84,41 @@ export default class Repository {
 
     // Filter keyword
     if (data?.keyword) {
+      const keyword = `%${data.keyword.toLowerCase()}%`;
       where[Op.or] = [
-        { kode_slot: { [Op.like]: `%${data?.keyword}%` } },
-        { catatan_umum: { [Op.like]: `%${data?.keyword}%` } },
+        Sequelize.where(
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.cast(Sequelize.col('KebersihanInspeksi.kode_slot'), 'TEXT')
+          ),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('KebersihanInspeksi.catatan_umum')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('cabang.nama_cabang')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('lokasi.nama_lokasi')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('pegawai.nama_lengkap')),
+          {
+            [Op.like]: keyword,
+          }
+        ),
       ];
     }
 
@@ -105,16 +137,33 @@ export default class Repository {
       where.id_lokasi = data.id_lokasi;
     }
 
+    // Filter tanggal
+    if (data?.tanggal_awal && data?.tanggal_akhir) {
+      where.tanggal = {
+        [Op.between]: [data.tanggal_awal, data.tanggal_akhir],
+      };
+    } else if (data?.tanggal_awal) {
+      where.tanggal = {
+        [Op.gte]: data.tanggal_awal,
+      };
+    } else if (data?.tanggal_akhir) {
+      where.tanggal = {
+        [Op.lte]: data.tanggal_akhir,
+      };
+    }
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_cabang) {
       where.id_cabang = userContext?.id_cabang;
     }
 
-    let query: Object = {
+    let query: any = {
       order: [['created_at', 'DESC']],
       offset: data?.offset,
       limit: data?.limit,
       where,
+      distinct: true,
+      subQuery: false,
     };
 
     return Model.findAndCountAll({
@@ -237,6 +286,19 @@ export default class Repository {
     const userContext = getUserContextData();
     const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
     const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
+    
+    
+    const replacements: any = {
+      startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
+      endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+      ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
+    };
+    
+    let whereClause = '';
+    if (data?.keyword) {
+      replacements.keyword = `%${data.keyword.toLowerCase()}%`;
+      whereClause = `WHERE LOWER(j.nama_lengkap) LIKE :keyword`;
+    }
 
     const q = `
       WITH tanggal AS (
@@ -271,11 +333,11 @@ export default class Repository {
           j.id_petugas,
           j.nama_lengkap,
 
-          COUNT(*) AS total_jadwal,
+          COUNT(DISTINCT (j.tanggal, j.kode_slot, j.id_petugas)) AS total_jadwal,
 
-          COUNT(ki.id_inspeksi) AS inspeksi,
+          COUNT(DISTINCT (j.tanggal, j.kode_slot, j.id_petugas)) FILTER (WHERE ki.id_inspeksi IS NOT NULL) AS inspeksi,
 
-          COUNT(*) - COUNT(ki.id_inspeksi) AS tidak_inspeksi,
+          COUNT(DISTINCT (j.tanggal, j.kode_slot, j.id_petugas)) FILTER (WHERE ki.id_inspeksi IS NULL) AS tidak_inspeksi,
 
           COALESCE(SUM(t.jumlah_temuan), 0) AS total_temuan
 
@@ -289,6 +351,7 @@ export default class Repository {
       LEFT JOIN temuan t
             ON t.id_inspeksi = ki.id_inspeksi
 
+      ${whereClause}
       GROUP BY
           j.id_petugas,
           j.nama_lengkap
@@ -299,11 +362,7 @@ export default class Repository {
 
     const rows = await conn.query(q, {
       type: QueryTypes.SELECT,
-      replacements: {
-        startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
-        endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
-        ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
-      },
+      replacements,
     });
 
     return rows;
@@ -314,6 +373,25 @@ export default class Repository {
     const userContext = getUserContextData();
     const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
     const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
+
+    const replacements: any = {
+      startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
+      endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
+      ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
+    };
+
+    let whereClause = '';
+    if (data?.keyword) {
+      replacements.keyword = `%${data.keyword.toLowerCase()}%`;
+      whereClause = `WHERE LOWER(j.nama_lengkap) LIKE :keyword`;
+    }
+
+    const limitOffset = [
+      data?.limit != null ? `LIMIT ${data.limit}` : null,
+      data?.offset != null ? `OFFSET ${data.offset}` : null,
+    ]
+      .filter(Boolean)
+      .join(' ');
 
     const q = `
     WITH tanggal AS (
@@ -348,11 +426,11 @@ export default class Repository {
         j.id_petugas,
         j.nama_lengkap,
 
-        COUNT(*) AS total_jadwal,
+        COUNT(DISTINCT (j.tanggal, j.kode_slot, j.id_petugas)) AS total_jadwal,
 
-        COUNT(ki.id_inspeksi) AS inspeksi,
+        COUNT(DISTINCT (j.tanggal, j.kode_slot, j.id_petugas)) FILTER (WHERE ki.id_inspeksi IS NOT NULL) AS inspeksi,
 
-        COUNT(*) - COUNT(ki.id_inspeksi) AS tidak_inspeksi,
+        COUNT(DISTINCT (j.tanggal, j.kode_slot, j.id_petugas)) FILTER (WHERE ki.id_inspeksi IS NULL) AS tidak_inspeksi,
 
         COALESCE(SUM(t.jumlah_temuan), 0) AS total_temuan
 
@@ -365,26 +443,19 @@ export default class Repository {
 
     LEFT JOIN temuan t
           ON t.id_inspeksi = ki.id_inspeksi
-
+    ${whereClause}
     GROUP BY
         j.id_petugas,
         j.nama_lengkap
 
     ORDER BY
         j.nama_lengkap
-      LIMIT :limit
-      OFFSET :offset
+      ${limitOffset}
       `;
 
     const rows = await conn.query(q, {
       type: QueryTypes.SELECT,
-      replacements: {
-        limit: data?.limit,
-        offset: data?.offset,
-        startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
-        endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
-        ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
-      },
+      replacements,
     });
 
     const countQuery = `
@@ -439,7 +510,7 @@ export default class Repository {
 
     LEFT JOIN temuan t
           ON t.id_inspeksi = ki.id_inspeksi
-
+    ${whereClause}
     GROUP BY
         j.id_petugas,
         j.nama_lengkap
@@ -448,11 +519,7 @@ export default class Repository {
 
     const [{ count }] = (await conn.query(countQuery, {
       type: QueryTypes.SELECT,
-      replacements: {
-        startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
-        endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
-        ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
-      },
+      replacements,
     })) as any[];
 
     return { count, rows };
