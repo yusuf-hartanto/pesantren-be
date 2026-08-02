@@ -67,21 +67,45 @@ export default class Repository {
           status: { [Op.ne]: 9 },
           [Op.or]: [
             { fullname: { [Op.iLike]: keyword } },
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('AppSantri.fullname')), {
-              [Op.like]: keyword,
-            }),
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('AppSantri.nis'), 'TEXT')), {
-              [Op.like]: keyword,
-            }),
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('AppSantri.nik'), 'TEXT')), {
-              [Op.like]: keyword,
-            }),
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('wali.nama_wali')), {
-              [Op.like]: keyword,
-            }),
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('wali.no_hp'), 'TEXT')), {
-              [Op.like]: keyword,
-            }),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('AppSantri.fullname')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('AppSantri.nis'), 'TEXT')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('AppSantri.nik'), 'TEXT')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('wali.nama_wali')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(Sequelize.col('wali.no_hp'), 'TEXT')
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };
@@ -123,10 +147,18 @@ export default class Repository {
       };
     }
 
-    if (!data?.id_lembaga_mda && !data?.id_lembaga_formal && userContext && userContext?.id_lembaga) {
+    if (
+      !data?.id_lembaga_mda &&
+      !data?.id_lembaga_formal &&
+      userContext &&
+      userContext?.id_lembaga
+    ) {
       query.where = {
         ...query.where,
-        [Op.or]: [{ id_lembaga_formal: userContext.id_lembaga }, { id_lembaga_mda: userContext.id_lembaga }],
+        [Op.or]: [
+          { id_lembaga_formal: userContext.id_lembaga },
+          { id_lembaga_mda: userContext.id_lembaga },
+        ],
       };
     }
     return Model.findAndCountAll({
@@ -147,19 +179,13 @@ export default class Repository {
           model: LembagaPendidikanFormal,
           as: 'lembagaFormal',
           required: false,
-          attributes: [
-            'id_lembaga',
-            'nama_lembaga',
-          ],
+          attributes: ['id_lembaga', 'nama_lembaga'],
         },
         {
           model: LembagaPendidikanKepesantrenan,
           as: 'lembagaMda',
           required: false,
-          attributes: [
-            'id_lembaga',
-            'nama_lembaga',
-          ],
+          attributes: ['id_lembaga', 'nama_lembaga'],
         },
         {
           model: OrangTuaWali,
@@ -250,19 +276,13 @@ export default class Repository {
           model: LembagaPendidikanFormal,
           as: 'lembagaFormal',
           required: false,
-          attributes: [
-            'id_lembaga',
-            'nama_lembaga',
-          ],
+          attributes: ['id_lembaga', 'nama_lembaga'],
         },
         {
           model: LembagaPendidikanKepesantrenan,
           as: 'lembagaMda',
           required: false,
-          attributes: [
-            'id_lembaga',
-            'nama_lembaga',
-          ],
+          attributes: ['id_lembaga', 'nama_lembaga'],
         },
       ],
     });

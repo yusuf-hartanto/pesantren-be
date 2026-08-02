@@ -78,7 +78,7 @@ export default class Repository {
         [Op.or]: [
           { '$kelasMda.id_lembaga$': userContext?.id_lembaga },
           { '$kelasFormal.id_lembaga$': userContext?.id_lembaga },
-        ]
+        ],
       };
     }
 

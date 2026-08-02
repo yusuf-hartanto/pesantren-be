@@ -31,9 +31,12 @@ export default class Repository {
         where: {
           status: { [Op.ne]: 9 },
           [Op.or]: [
-            Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('institution_name')), {
-              [Op.like]: keyword,
-            }),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('institution_name')),
+              {
+                [Op.like]: keyword,
+              }
+            ),
           ],
         },
       };

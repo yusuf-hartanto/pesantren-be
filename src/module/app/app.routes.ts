@@ -79,7 +79,10 @@ import { activityLog } from './activity.log/activity.log.controller';
 import { guruPengganti } from './guru.pengganti/guru.pengganti.controller';
 import { guruPenggantiSchema } from './guru.pengganti/guru.pengganti.schema';
 import { controller as kesehatanSantri } from './kesehatan.santri/kesehatan.santri.controller';
-import { createKesehatanSchema, updateKesehatanSchema } from './kesehatan.santri/kesehatan.santri.schema';
+import {
+  createKesehatanSchema,
+  updateKesehatanSchema,
+} from './kesehatan.santri/kesehatan.santri.schema';
 import { institution } from './institution/institution.controller';
 
 const router: Router = Router();
@@ -1008,11 +1011,7 @@ router.post('/guru-pengganti/import', guruPengganti.import);
 router.post('/guru-pengganti/insert', guruPengganti.insert);
 
 // ROUTE KESEHATAN SANTRI
-router.get(
-  '/kesehatan-santri',
-  auth.checkBearerToken,
-  kesehatanSantri.index
-);
+router.get('/kesehatan-santri', auth.checkBearerToken, kesehatanSantri.index);
 router.get(
   '/kesehatan-santri/:id',
   auth.checkBearerToken,

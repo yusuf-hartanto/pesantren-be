@@ -263,7 +263,15 @@ export default class Controller {
   public async export(req: Request, res: Response) {
     try {
       let condition: any = {};
-      const { q, template, id_tahun_ajaran, id_kelas_formal, id_kelas_mda, status, status_santri } = req?.body;
+      const {
+        q,
+        template,
+        id_tahun_ajaran,
+        id_kelas_formal,
+        id_kelas_mda,
+        status,
+        status_santri,
+      } = req?.body;
       const isTemplate: boolean = template && template == '1';
       if (q) {
         const keyword = `%${q.toLowerCase()}%`;

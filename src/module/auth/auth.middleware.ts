@@ -8,7 +8,12 @@ import { helperauth } from '../../helpers/auth.helper';
 import { setUserLogin, setUserContextData } from '../../context/userContext';
 import { Request, Response, NextFunction } from 'express';
 import { repository } from '../app/resource/resource.repository';
-import { NOT_FOUND, REQUIRED, ROLE_ADMIN, TIMEZONE } from '../../utils/constant';
+import {
+  NOT_FOUND,
+  REQUIRED,
+  ROLE_ADMIN,
+  TIMEZONE,
+} from '../../utils/constant';
 import { repository as repoRoleMenu } from '../app/role.menu/role.menu.repository';
 
 moment().tz(TIMEZONE).locale('id');
@@ -139,13 +144,17 @@ export default class Middleware {
       }
 
       setUserLogin(auth?.username || 'sistem');
-      const pegawai: any = user?.getDataValue("pegawai") || null;
+      const pegawai: any = user?.getDataValue('pegawai') || null;
       if (pegawai) {
         setUserContextData({
-          id_cabang: pegawai?.getDataValue("organizationUnit")?.id_cabang || null,
-          id_lembaga: pegawai?.getDataValue("organizationUnit")?.id_lembaga || null,
-          lembaga_type: pegawai?.getDataValue("organizationUnit")?.lembaga_type || null,
-          id_orgunit: pegawai?.getDataValue("organizationUnit")?.id_orgunit || null,
+          id_cabang:
+            pegawai?.getDataValue('organizationUnit')?.id_cabang || null,
+          id_lembaga:
+            pegawai?.getDataValue('organizationUnit')?.id_lembaga || null,
+          lembaga_type:
+            pegawai?.getDataValue('organizationUnit')?.lembaga_type || null,
+          id_orgunit:
+            pegawai?.getDataValue('organizationUnit')?.id_orgunit || null,
         });
       }
       req.user = auth;

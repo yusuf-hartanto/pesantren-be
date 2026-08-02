@@ -11,7 +11,10 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [['nama_cabang', 'ASC'], [Sequelize.fn('LENGTH', Sequelize.col('nama_cabang')), 'ASC']],
+      order: [
+        ['nama_cabang', 'ASC'],
+        [Sequelize.fn('LENGTH', Sequelize.col('nama_cabang')), 'ASC'],
+      ],
       include: [
         {
           model: AreaProvince,
@@ -151,7 +154,7 @@ export default class Repository {
         },
       };
     }
-    
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_cabang) {
       query.where = {

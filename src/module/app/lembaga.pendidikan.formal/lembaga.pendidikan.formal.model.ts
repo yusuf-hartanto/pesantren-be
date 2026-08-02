@@ -122,18 +122,22 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
     });
   });
 
-  async function syncSantriRelations(lembaga: LembagaPendidikanFormal, transaction: any) {
+  async function syncSantriRelations(
+    lembaga: LembagaPendidikanFormal,
+    transaction: any
+  ) {
     if (!lembaga.institution_id_sitrendi) return;
 
     try {
       const AppSantri = require('../santri/santri.model').default;
       const CabangModel = require('../cabang/cabang.model').default;
-      const InstituionModel = require('../institution/institution.model').default;
+      const InstituionModel =
+        require('../institution/institution.model').default;
 
       let payload: any = {
         id_cabang: lembaga.id_cabang,
         id_lembaga_formal: lembaga.id_lembaga,
-      }
+      };
 
       if (lembaga.id_cabang) {
         const cabang = await CabangModel.findOne({
@@ -141,7 +145,8 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
           attributes: ['nama_cabang'],
           transaction,
         });
-        if (cabang && cabang?.nama_cabang) payload.nama_cabang = cabang?.nama_cabang;
+        if (cabang && cabang?.nama_cabang)
+          payload.nama_cabang = cabang?.nama_cabang;
       }
 
       if (lembaga.institution_id_sitrendi) {
@@ -158,17 +163,17 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
         }
       }
 
-      await AppSantri.update(payload,
-        {
-          where: {
-            institution_id_sitrendi: lembaga.institution_id_sitrendi,
-            status: { [Op.ne]: 9 },
-          },
-          transaction,
-        }
-      );
+      await AppSantri.update(payload, {
+        where: {
+          institution_id_sitrendi: lembaga.institution_id_sitrendi,
+          status: { [Op.ne]: 9 },
+        },
+        transaction,
+      });
     } catch (err: any) {
-      console.error(`Error syncing santri relations on Lembaga change: ${err.message}`);
+      console.error(
+        `Error syncing santri relations on Lembaga change: ${err.message}`
+      );
     }
   }
 

@@ -4,7 +4,10 @@ import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './kesehatan.santri.repository';
-import { createKesehatanSchema, updateKesehatanSchema } from './kesehatan.santri.schema';
+import {
+  createKesehatanSchema,
+  updateKesehatanSchema,
+} from './kesehatan.santri.schema';
 import KesehatanSantri from './kesehatan.santri.model';
 import PerizinanSantri from '../perizinan.santri/perizinan.santri.model';
 import SuratPerizinanSantri from '../surat.perizinan.santri/surat.perizinan.santri.model';
@@ -49,7 +52,9 @@ const generateDataExcel = (sheet: any, details: any) => {
     const row = details[i];
     const isSantri = !!row.id_santri;
     const subjek = isSantri ? 'Santri' : 'Pegawai';
-    const namaPasien = isSantri ? row.santri?.fullname : row.pegawai?.nama_lengkap;
+    const namaPasien = isSantri
+      ? row.santri?.fullname
+      : row.pegawai?.nama_lengkap;
     const identitas = isSantri ? row.santri?.nis : row.pegawai?.nip;
 
     let lokasiRawatRujukan = '-';
@@ -82,7 +87,15 @@ export class KesehatanSantriController {
     try {
       const query = helper.fetchQueryRequest(req);
 
-      const { progres_status, kategori_sakit, id_santri, id_pegawai, tanggal_awal, tanggal_akhir, subject_type } = req?.query;
+      const {
+        progres_status,
+        kategori_sakit,
+        id_santri,
+        id_pegawai,
+        tanggal_awal,
+        tanggal_akhir,
+        subject_type,
+      } = req?.query;
       const filterData = {
         ...query,
         progres_status,
@@ -92,7 +105,7 @@ export class KesehatanSantriController {
         tanggal_awal,
         tanggal_akhir,
         subject_type,
-      }
+      };
       const result = await repository.index(filterData);
       return response.success(SUCCESS_RETRIEVED, result, res);
     } catch (err: any) {
@@ -126,7 +139,11 @@ export class KesehatanSantriController {
       let sumber_pengajuan: 'Kesehatan' | null = null;
 
       if (validData.progres_status == 'Dirujuk') {
-        const hasActive = await repository.checkActivePerizinan(validData.id_santri || null, validData.id_pegawai || null, trx);
+        const hasActive = await repository.checkActivePerizinan(
+          validData.id_santri || null,
+          validData.id_pegawai || null,
+          trx
+        );
         if (hasActive) {
           return response.success(
             'Santri/Pegawai masih memiliki izin aktif.',
@@ -141,16 +158,27 @@ export class KesehatanSantriController {
         let codeUnit = 'IZN';
 
         if (isPegawaiPatient) {
-          const activeWorkLocation = activeWorkLocationId ? await repository.getLocation(activeWorkLocationId) : null;
+          const activeWorkLocation = activeWorkLocationId
+            ? await repository.getLocation(activeWorkLocationId)
+            : null;
           codeUnit = activeWorkLocation?.kode_lokasi || 'IZN';
         } else {
-          activeKamarId = await repository.getActiveKamar(validData.id_santri as string, validData.tanggal_dirujuk || undefined);
-          const activeKamar = activeKamarId ? await repository.getLocation(activeKamarId) : null;
+          activeKamarId = await repository.getActiveKamar(
+            validData.id_santri as string,
+            validData.tanggal_dirujuk || undefined
+          );
+          const activeKamar = activeKamarId
+            ? await repository.getLocation(activeKamarId)
+            : null;
           codeUnit = activeKamar?.kode_lokasi || 'IZN';
         }
 
-        const tanggalMulai = moment(validData.tanggal_dirujuk).format('YYYY-MM-DD');
-        const tanggalSelesai = moment(tanggalMulai).add(validData.estimasi_hari, 'days').format('YYYY-MM-DD');
+        const tanggalMulai = moment(validData.tanggal_dirujuk).format(
+          'YYYY-MM-DD'
+        );
+        const tanggalSelesai = moment(tanggalMulai)
+          .add(validData.estimasi_hari, 'days')
+          .format('YYYY-MM-DD');
 
         const userLogin = req?.user?.id || 'ADMIN';
         const perizinanPayload = {
@@ -173,7 +201,9 @@ export class KesehatanSantriController {
           created_by: userLogin,
         };
 
-        const perizinan = await PerizinanSantri.create(perizinanPayload, { transaction: trx });
+        const perizinan = await PerizinanSantri.create(perizinanPayload, {
+          transaction: trx,
+        });
         perizinan_id = perizinan.id_izin;
         izin_auto_created = true;
         sumber_pengajuan = 'Kesehatan';
@@ -186,30 +216,46 @@ export class KesehatanSantriController {
         const letterType = isPegawaiPatient ? 'IZN-PEG' : 'IZN-SAN';
         const nomorSurat = `${String(urut).padStart(3, '0')}/${letterType}/${codeUnit}/${bulanRomawi}/${year}`;
 
-        await SuratPerizinanSantri.create({
-          id_izin: perizinan_id,
-          urut,
-          tahun: year,
-          kode_unit: codeUnit,
-          nomor_surat: nomorSurat,
-          qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
-          tanggal_cetak: new Date(),
-          dicetak_oleh: userLogin,
-          versi_surat: 1,
-          status_surat: 'Aktif',
-        }, { transaction: trx });
+        await SuratPerizinanSantri.create(
+          {
+            id_izin: perizinan_id,
+            urut,
+            tahun: year,
+            kode_unit: codeUnit,
+            nomor_surat: nomorSurat,
+            qrcode_token: `QR-${uuidv4().substring(0, 8).toUpperCase()}-${Date.now()}`,
+            tanggal_cetak: new Date(),
+            dicetak_oleh: userLogin,
+            versi_surat: 1,
+            status_surat: 'Aktif',
+          },
+          { transaction: trx }
+        );
       }
 
-      if (isPegawaiPatient && (validData.progres_status == 'Dirawat' || validData.progres_status == 'Dirujuk')) {
+      if (
+        isPegawaiPatient &&
+        (validData.progres_status == 'Dirawat' ||
+          validData.progres_status == 'Dirujuk')
+      ) {
         const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({
           id_pegawai: validData.id_pegawai,
         });
         if (jamKerjaMaster) {
-          const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || jamKerjaMaster?.id_jamkerja || 1;
+          const idJamKerja =
+            jamKerjaMaster?.dataValues?.id_jamkerja ||
+            jamKerjaMaster?.id_jamkerja ||
+            1;
 
-          const dateStartStr = validData.progres_status == 'Dirawat' ? validData.tanggal_mulai_rawat : validData.tanggal_dirujuk;
+          const dateStartStr =
+            validData.progres_status == 'Dirawat'
+              ? validData.tanggal_mulai_rawat
+              : validData.tanggal_dirujuk;
           const start = moment(dateStartStr);
-          const end = moment(dateStartStr).add((validData.estimasi_hari || 0) as number, 'days');
+          const end = moment(dateStartStr).add(
+            (validData.estimasi_hari || 0) as number,
+            'days'
+          );
 
           const userLogin = req?.user?.id || 'ADMIN';
 
@@ -237,15 +283,18 @@ export class KesehatanSantriController {
             if (!existingAbsen) {
               await AbsenHarianPegawaiRepository.create([dataPayload], trx);
             } else {
-              await AbsenHarianPegawaiRepository.update({
-                payload: {
-                  status_kehadiran: 'Sakit',
-                  waktu_keluar: moment().tz(TIMEZONE).format('HH:mm:ss'),
-                  keterangan_keluar: `Sakit (${validData.progres_status}): ${validData.keluhan || 'Pemeriksaan Kesehatan'}`,
-                  updated_by: userLogin,
+              await AbsenHarianPegawaiRepository.update(
+                {
+                  payload: {
+                    status_kehadiran: 'Sakit',
+                    waktu_keluar: moment().tz(TIMEZONE).format('HH:mm:ss'),
+                    keterangan_keluar: `Sakit (${validData.progres_status}): ${validData.keluhan || 'Pemeriksaan Kesehatan'}`,
+                    updated_by: userLogin,
+                  },
+                  condition: { id_absen: existingAbsen.id_absen },
                 },
-                condition: { id_absen: existingAbsen.id_absen }
-              }, trx);
+                trx
+              );
             }
 
             start.add(1, 'days');
@@ -259,11 +308,20 @@ export class KesehatanSantriController {
         perizinan_id,
         izin_auto_created,
         sumber_pengajuan,
-        tanggal_event: validData.tanggal_event ? new Date(validData.tanggal_event) : new Date(),
-        tanggal_mulai_rawat: validData.tanggal_mulai_rawat ? new Date(validData.tanggal_mulai_rawat) : null,
-        tanggal_dirujuk: validData.tanggal_dirujuk ? new Date(validData.tanggal_dirujuk) : null,
+        tanggal_event: validData.tanggal_event
+          ? new Date(validData.tanggal_event)
+          : new Date(),
+        tanggal_mulai_rawat: validData.tanggal_mulai_rawat
+          ? new Date(validData.tanggal_mulai_rawat)
+          : null,
+        tanggal_dirujuk: validData.tanggal_dirujuk
+          ? new Date(validData.tanggal_dirujuk)
+          : null,
       };
-      const dataInsert: Object = helper.only(variable.fillable(), kesehatanPayload);
+      const dataInsert: Object = helper.only(
+        variable.fillable(),
+        kesehatanPayload
+      );
 
       const result = await repository.create(dataInsert, trx);
       await trx?.commit();
@@ -288,7 +346,12 @@ export class KesehatanSantriController {
       }
 
       if (check.perizinan_id || check.izin_auto_created) {
-        return response.success('Event kesehatan yang telah memicu perizinan tidak boleh diubah.', null, res, false);
+        return response.success(
+          'Event kesehatan yang telah memicu perizinan tidak boleh diubah.',
+          null,
+          res,
+          false
+        );
       }
 
       const validData = updateKesehatanSchema.parse(req.body);
@@ -321,7 +384,12 @@ export class KesehatanSantriController {
       }
 
       if (check.perizinan_id || check.izin_auto_created) {
-        return response.success('Event kesehatan yang telah memicu perizinan tidak boleh dihapus.', null, res, false);
+        return response.success(
+          'Event kesehatan yang telah memicu perizinan tidak boleh dihapus.',
+          null,
+          res,
+          false
+        );
       }
 
       await repository.update(
@@ -340,7 +408,17 @@ export class KesehatanSantriController {
 
   public async export(req: Request, res: Response) {
     try {
-      const { progres_status, kategori_sakit, id_santri, id_pegawai, tanggal_awal, tanggal_akhir, subject_type, keyword, q } = req.body;
+      const {
+        progres_status,
+        kategori_sakit,
+        id_santri,
+        id_pegawai,
+        tanggal_awal,
+        tanggal_akhir,
+        subject_type,
+        keyword,
+        q,
+      } = req.body;
       const filterData = {
         page: 1,
         perPage: 100000, // Fetch all matching records
@@ -358,11 +436,18 @@ export class KesehatanSantriController {
       const rows = result.values || [];
 
       const { dir, path } = await helper.checkDirExport('excel');
-      const label = subject_type === 'santri' ? 'Santri' : subject_type === 'pegawai' ? 'Pegawai' : 'Santri-Pegawai';
+      const label =
+        subject_type === 'santri'
+          ? 'Santri'
+          : subject_type === 'pegawai'
+            ? 'Pegawai'
+            : 'Santri-Pegawai';
       const filename = `kesehatan-${label}-${moment().tz(TIMEZONE).format('DDMMYYYY-HHmmss')}.xlsx`;
-      
+
       const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet(`LAPORAN KESEHATAN ${label.toUpperCase()}`);
+      const sheet = workbook.addWorksheet(
+        `LAPORAN KESEHATAN ${label.toUpperCase()}`
+      );
 
       generateDataExcel(sheet, rows);
       await workbook.xlsx.writeFile(`${path}/${filename}`);
@@ -373,7 +458,11 @@ export class KesehatanSantriController {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`export excel kesehatan: ${err.message}`, 500, res);
+      return helper.catchError(
+        `export excel kesehatan: ${err.message}`,
+        500,
+        res
+      );
     }
   }
 }

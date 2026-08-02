@@ -239,9 +239,9 @@ export default class Controller {
           url: `/app/kebersihan-inspeksi/form?id=${result.id_inspeksi}&view=true`,
           receiver: receiver,
           type: 'Inspeksi',
-        }
-        
-        helper.sendNotification(req, dataMessage)
+        };
+
+        helper.sendNotification(req, dataMessage);
       }
 
       return response.success(SUCCESS_SAVED, result, res);

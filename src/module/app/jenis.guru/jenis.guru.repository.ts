@@ -12,7 +12,10 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     let query: any = {
-      order: [[Sequelize.col('pegawai.nama_lengkap'), 'ASC'], [Sequelize.col('mata_pelajaran.nama_mapel'), 'ASC']],
+      order: [
+        [Sequelize.col('pegawai.nama_lengkap'), 'ASC'],
+        [Sequelize.col('mata_pelajaran.nama_mapel'), 'ASC'],
+      ],
     };
     if (data?.nama_jenis_guru !== undefined && data?.nama_jenis_guru != null) {
       query = {
@@ -25,13 +28,13 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
-      query = { 
+      query = {
         ...query,
-        where: { 
+        where: {
           ...query.where,
           id_lembaga: userContext?.id_lembaga,
-        }
-      }
+        },
+      };
     }
 
     return Model.findAll({
@@ -132,13 +135,13 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
-      query = { 
+      query = {
         ...query,
-        where: { 
+        where: {
           ...query.where,
           id_lembaga: userContext?.id_lembaga,
-        }
-      }
+        },
+      };
     }
 
     return Model.findAndCountAll({

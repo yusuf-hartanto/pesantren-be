@@ -206,7 +206,8 @@ export default class Controller {
   public async export(req: Request, res: Response) {
     try {
       let condition: any = {};
-      const { q, template, id_lokasi, id_tahunajaran, status, status_santri } = req?.body;
+      const { q, template, id_lokasi, id_tahunajaran, status, status_santri } =
+        req?.body;
       const isTemplate: boolean = template && template == '1';
       if (q) {
         condition = {

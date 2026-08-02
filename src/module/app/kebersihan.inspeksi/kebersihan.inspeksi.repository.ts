@@ -89,14 +89,20 @@ export default class Repository {
         Sequelize.where(
           Sequelize.fn(
             'LOWER',
-            Sequelize.cast(Sequelize.col('KebersihanInspeksi.kode_slot'), 'TEXT')
+            Sequelize.cast(
+              Sequelize.col('KebersihanInspeksi.kode_slot'),
+              'TEXT'
+            )
           ),
           {
             [Op.like]: keyword,
           }
         ),
         Sequelize.where(
-          Sequelize.fn('LOWER', Sequelize.col('KebersihanInspeksi.catatan_umum')),
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.col('KebersihanInspeksi.catatan_umum')
+          ),
           {
             [Op.like]: keyword,
           }
@@ -284,16 +290,19 @@ export default class Repository {
   public async indexPetugasList(data: any) {
     const conn = await rawQuery.getConnection();
     const userContext = getUserContextData();
-    const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
-    const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
-    
-    
+    const idCabangFilter = userContext?.id_cabang
+      ? 'AND jik.id_cabang = :id_cabang'
+      : '';
+    const idCabangKiFilter = userContext?.id_cabang
+      ? 'AND ki.id_cabang = :id_cabang'
+      : '';
+
     const replacements: any = {
       startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),
       endperiod: moment(data?.tanggal_akhir).format('YYYY-MM-DD'),
       ...(userContext?.id_cabang ? { id_cabang: userContext.id_cabang } : {}),
     };
-    
+
     let whereClause = '';
     if (data?.keyword) {
       replacements.keyword = `%${data.keyword.toLowerCase()}%`;
@@ -371,8 +380,12 @@ export default class Repository {
   public async indexPetugas(data: any) {
     const conn = await rawQuery.getConnection();
     const userContext = getUserContextData();
-    const idCabangFilter = userContext?.id_cabang ? 'AND jik.id_cabang = :id_cabang' : '';
-    const idCabangKiFilter = userContext?.id_cabang ? 'AND ki.id_cabang = :id_cabang' : '';
+    const idCabangFilter = userContext?.id_cabang
+      ? 'AND jik.id_cabang = :id_cabang'
+      : '';
+    const idCabangKiFilter = userContext?.id_cabang
+      ? 'AND ki.id_cabang = :id_cabang'
+      : '';
 
     const replacements: any = {
       startperiod: moment(data?.tanggal_awal).format('YYYY-MM-DD'),

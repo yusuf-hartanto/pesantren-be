@@ -137,7 +137,13 @@ export default class Repository {
         'kode_slot',
         'is_active',
         'keterangan',
-        [Sequelize.fn('MAX', Sequelize.col('JadwalInspeksiKebersihan.updated_at')), 'max_updated_at'],
+        [
+          Sequelize.fn(
+            'MAX',
+            Sequelize.col('JadwalInspeksiKebersihan.updated_at')
+          ),
+          'max_updated_at',
+        ],
       ],
       where,
       include: [

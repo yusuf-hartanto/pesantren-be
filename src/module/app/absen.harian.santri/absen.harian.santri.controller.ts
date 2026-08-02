@@ -147,7 +147,8 @@ export default class Controller {
     try {
       const id_lokasi_kamar = req.query.id_lokasi_kamar as string;
       const tanggal =
-        (req.query.tanggal as string) || moment().tz(TIMEZONE).format('YYYY-MM-DD');
+        (req.query.tanggal as string) ||
+        moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
       if (!id_lokasi_kamar) {
         return response.failed(
@@ -165,7 +166,9 @@ export default class Controller {
       let listSantri: any[] = [];
 
       if (activePenempatan && activePenempatan.length > 0) {
-        const studentIds = activePenempatan.map((p: any) => p.santri?.id_santri).filter(Boolean);
+        const studentIds = activePenempatan
+          .map((p: any) => p.santri?.id_santri)
+          .filter(Boolean);
         const today = moment(tanggal).format('YYYY-MM-DD');
 
         // Fetch active permissions (jenis_izin: 'Izin')
@@ -206,10 +209,13 @@ export default class Controller {
 
           const latestEvent = latestEventMap.get(idSantri);
           const isSakit = latestEvent
-            ? latestEvent.progres_status === 'Dirawat' || latestEvent.progres_status === 'Dirujuk'
+            ? latestEvent.progres_status === 'Dirawat' ||
+              latestEvent.progres_status === 'Dirujuk'
             : false;
 
-          const hasIzin = activeIzinList.find((permit: any) => permit.id_santri === idSantri);
+          const hasIzin = activeIzinList.find(
+            (permit: any) => permit.id_santri === idSantri
+          );
 
           let status = null;
           let status_kehadiran_default = 'Hadir';
@@ -305,7 +311,8 @@ export default class Controller {
       const validBody = bulkAbsenHarianSantriSchema.parse(req.body);
 
       const targetTanggal = moment(validBody.tanggal).format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
+      const targetWaktu =
+        validBody.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
 
       const id_petugas = req.user?.id || null;
 
@@ -342,7 +349,9 @@ export default class Controller {
         let finalKeterangan = item.keterangan || null;
         if (isDirawat) {
           finalStatus = 'Sakit';
-          finalKeterangan = finalKeterangan ? `${finalKeterangan} (Dirawat)` : 'Sakit (Dirawat)';
+          finalKeterangan = finalKeterangan
+            ? `${finalKeterangan} (Dirawat)`
+            : 'Sakit (Dirawat)';
         }
 
         // Siapkan struktur payload database lengkap
@@ -518,7 +527,8 @@ export default class Controller {
 
       const targetTanggal =
         validBody.tanggal_custom || moment().tz(TIMEZONE).format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_custom || moment().tz(TIMEZONE).format('HH:mm:ss');
+      const targetWaktu =
+        validBody.waktu_custom || moment().tz(TIMEZONE).format('HH:mm:ss');
       const id_petugas = req.user?.id || null;
 
       let shiftDoc: any = null;
@@ -570,7 +580,9 @@ export default class Controller {
 
       const idLokasiSantri = penempatanAktif.id_lokasi;
 
-      const isDirawat = await kesehatanRepo.isSantriDirawat(santriKamar.id_santri);
+      const isDirawat = await kesehatanRepo.isSantriDirawat(
+        santriKamar.id_santri
+      );
       if (isDirawat) {
         return response.failed(
           `Gagal Scan: Santri [${santriKamar.fullname}] sedang dalam status Dirawat.`,
@@ -737,7 +749,8 @@ export default class Controller {
         const targetTanggal = row.tanggal
           ? moment(row.tanggal).format('YYYY-MM-DD')
           : moment().tz(TIMEZONE).format('YYYY-MM-DD');
-        const targetWaktu = row.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
+        const targetWaktu =
+          row.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
 
         // Resolve ID & Nama Santri berdasarkan NIS
         const santriDoc: any = await repository.findSantriByNisOnly(row.nis);

@@ -69,13 +69,17 @@ export class KesehatanSantriRepository {
       {
         model: PerizinanSantri,
         as: 'perizinan',
-        attributes: ['id_izin', 'status_approval', 'is_canceled', 'tanggal_mulai', 'tanggal_selesai'],
+        attributes: [
+          'id_izin',
+          'status_approval',
+          'is_canceled',
+          'tanggal_mulai',
+          'tanggal_selesai',
+        ],
       },
     ];
 
-    const andConditions: any[] = [
-      { is_deleted: false }
-    ];
+    const andConditions: any[] = [{ is_deleted: false }];
 
     if (data?.progres_status) {
       andConditions.push({ progres_status: data.progres_status });
@@ -130,7 +134,10 @@ export class KesehatanSantriRepository {
             }
           ),
           Sequelize.where(
-            Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')),
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('santri.nis'), 'TEXT')
+            ),
             {
               [Op.like]: keywordLower,
             }
@@ -142,7 +149,10 @@ export class KesehatanSantriRepository {
             }
           ),
           Sequelize.where(
-            Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('pegawai.nip'), 'TEXT')),
+            Sequelize.fn(
+              'LOWER',
+              Sequelize.cast(Sequelize.col('pegawai.nip'), 'TEXT')
+            ),
             {
               [Op.like]: keywordLower,
             }
@@ -164,33 +174,48 @@ export class KesehatanSantriRepository {
       include: includeClause,
       limit,
       offset,
-      order: [['tanggal_event', 'DESC'], ['created_at', 'DESC']],
+      order: [
+        ['tanggal_event', 'DESC'],
+        ['created_at', 'DESC'],
+      ],
     });
 
     const count = await KesehatanSantri.count({
       where: whereClause,
-      include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
+      include: includeClause.filter(
+        (inc) => inc.model === Santri || inc.model === Pegawai
+      ),
     });
 
     const ringan = await KesehatanSantri.count({
       where: { [Op.and]: [...andConditions, { kategori_sakit: 'Ringan' }] },
-      include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
+      include: includeClause.filter(
+        (inc) => inc.model === Santri || inc.model === Pegawai
+      ),
     });
     const sedang = await KesehatanSantri.count({
       where: { [Op.and]: [...andConditions, { kategori_sakit: 'Sedang' }] },
-      include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
+      include: includeClause.filter(
+        (inc) => inc.model === Santri || inc.model === Pegawai
+      ),
     });
     const berat = await KesehatanSantri.count({
       where: { [Op.and]: [...andConditions, { kategori_sakit: 'Berat' }] },
-      include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
+      include: includeClause.filter(
+        (inc) => inc.model === Santri || inc.model === Pegawai
+      ),
     });
     const dirawat = await KesehatanSantri.count({
       where: { [Op.and]: [...andConditions, { progres_status: 'Dirawat' }] },
-      include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
+      include: includeClause.filter(
+        (inc) => inc.model === Santri || inc.model === Pegawai
+      ),
     });
     const dirujuk = await KesehatanSantri.count({
       where: { [Op.and]: [...andConditions, { progres_status: 'Dirujuk' }] },
-      include: includeClause.filter(inc => inc.model === Santri || inc.model === Pegawai),
+      include: includeClause.filter(
+        (inc) => inc.model === Santri || inc.model === Pegawai
+      ),
     });
 
     return {
@@ -202,7 +227,7 @@ export class KesehatanSantriRepository {
         berat,
         dirawat,
         dirujuk,
-      }
+      },
     };
   }
 
@@ -271,7 +296,13 @@ export class KesehatanSantriRepository {
         {
           model: PerizinanSantri,
           as: 'perizinan',
-          attributes: ['id_izin', 'status_approval', 'is_canceled', 'tanggal_mulai', 'tanggal_selesai'],
+          attributes: [
+            'id_izin',
+            'status_approval',
+            'is_canceled',
+            'tanggal_mulai',
+            'tanggal_selesai',
+          ],
           include: [
             {
               model: SuratPerizinanSantri,
@@ -294,7 +325,11 @@ export class KesehatanSantriRepository {
     });
   }
 
-  public async checkActivePerizinan(id_santri: string | null, id_pegawai: string | null = null, transaction?: any) {
+  public async checkActivePerizinan(
+    id_santri: string | null,
+    id_pegawai: string | null = null,
+    transaction?: any
+  ) {
     const today = moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     if (id_pegawai) {
@@ -341,7 +376,9 @@ export class KesehatanSantriRepository {
   }
 
   public async getActiveKamar(id_santri: string, tanggal?: string) {
-    const targetDate = tanggal ? moment(tanggal).format('YYYY-MM-DD') : moment().tz(TIMEZONE).format('YYYY-MM-DD');
+    const targetDate = tanggal
+      ? moment(tanggal).format('YYYY-MM-DD')
+      : moment().tz(TIMEZONE).format('YYYY-MM-DD');
 
     const placement = await PenempatanKamarSantri.findOne({
       where: {
@@ -376,7 +413,10 @@ export class KesehatanSantriRepository {
     });
   }
 
-  public async getLatestMedicalEvent(id_santri: string | null, id_pegawai: string | null = null) {
+  public async getLatestMedicalEvent(
+    id_santri: string | null,
+    id_pegawai: string | null = null
+  ) {
     const whereClause: any = { is_deleted: false };
     if (id_santri) whereClause.id_santri = id_santri;
     if (id_pegawai) whereClause.id_pegawai = id_pegawai;
@@ -390,7 +430,10 @@ export class KesehatanSantriRepository {
     });
   }
 
-  public async isSantriDirawat(id_santri: string | null, id_pegawai: string | null = null): Promise<boolean> {
+  public async isSantriDirawat(
+    id_santri: string | null,
+    id_pegawai: string | null = null
+  ): Promise<boolean> {
     const latestEvent = await this.getLatestMedicalEvent(id_santri, id_pegawai);
     return latestEvent ? latestEvent.progres_status == 'Dirawat' : false;
   }

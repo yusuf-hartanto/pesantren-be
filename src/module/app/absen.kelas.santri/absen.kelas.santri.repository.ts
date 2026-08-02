@@ -557,7 +557,7 @@ export default class Repository {
   public async findAllClasses() {
     const userContext = getUserContextData();
     let where: any = {
-      status: 'Aktif'
+      status: 'Aktif',
     };
 
     if (userContext && userContext?.id_lembaga) {

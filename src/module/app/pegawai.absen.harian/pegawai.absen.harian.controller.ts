@@ -448,7 +448,7 @@ export default class Controller {
         isTemplate,
         id_pegawai,
         tanggal_awal,
-        tanggal_akhir
+        tanggal_akhir,
       });
 
       const { dir, path } = await helper.checkDirExport('excel');

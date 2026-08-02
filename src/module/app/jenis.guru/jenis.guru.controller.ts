@@ -184,7 +184,8 @@ export default class Controller {
 
   public async update(req: Request, res: Response) {
     try {
-      const { nama_jenis_guru, id_guru, id_lembaga, id_mapel, id_tingkat } = req?.body;
+      const { nama_jenis_guru, id_guru, id_lembaga, id_mapel, id_tingkat } =
+        req?.body;
       const id: string = req?.params?.id || '';
       const check = await repository.detail({ id_jenisguru: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
@@ -357,11 +358,13 @@ export default class Controller {
         if (row.nama_mapel) {
           const mapel = await repoMapel.detail({
             nama_mapel: row.nama_mapel,
-            id_lembaga: id_lembaga
+            id_lembaga: id_lembaga,
           });
 
           if (!mapel) {
-            errors.push(`Mata Pelajaran "${row.nama_mapel}" tidak ditemukan di lembaga ${row.nama_lembaga}`);
+            errors.push(
+              `Mata Pelajaran "${row.nama_mapel}" tidak ditemukan di lembaga ${row.nama_lembaga}`
+            );
           } else {
             id_mapel = mapel.id_mapel;
             nama_mapel = mapel.getDataValue('nama_mapel');

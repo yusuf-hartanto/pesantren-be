@@ -18,13 +18,13 @@ export default class Repository {
         },
       ],
     };
-    
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_cabang) {
-      query = { 
+      query = {
         ...query,
-        where: { id_cabang: userContext?.id_cabang, }
-      }
+        where: { id_cabang: userContext?.id_cabang },
+      };
     }
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
@@ -66,13 +66,13 @@ export default class Repository {
         },
       ],
     };
-    
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_cabang) {
-      query = { 
+      query = {
         ...query,
-        where: { id_cabang: userContext?.id_cabang, }
-      }
+        where: { id_cabang: userContext?.id_cabang },
+      };
     }
 
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
@@ -162,12 +162,12 @@ export default class Repository {
     const { q, isTemplate, limit } = params;
 
     let whereClause: any = {};
-    
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_cabang) {
-      whereClause = { 
+      whereClause = {
         id_cabang: userContext?.id_cabang,
-      }
+      };
     }
 
     const keyword = q ? `%${q.toLowerCase()}%` : null;

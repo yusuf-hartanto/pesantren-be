@@ -49,8 +49,5 @@ export const lembagaFormalSchema = z.object({
     .nullable()
     .optional(),
 
-  institution_id_sitrendi: z
-    .string()
-    .nullable()
-    .optional(),
+  institution_id_sitrendi: z.string().nullable().optional(),
 });

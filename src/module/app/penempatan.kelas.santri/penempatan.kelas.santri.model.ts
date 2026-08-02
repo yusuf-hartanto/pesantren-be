@@ -164,8 +164,12 @@ export function initPenempatanKelasSantri(sequelize: Sequelize) {
   });
 
   PenempatanKelasSantri.afterBulkCreate(async (rows, options) => {
-    const mdaIds = rows.map((r) => r.id_kelas_mda).filter((id): id is string => !!id);
-    const formalIds = rows.map((r) => r.id_kelas_formal).filter((id): id is string => !!id);
+    const mdaIds = rows
+      .map((r) => r.id_kelas_mda)
+      .filter((id): id is string => !!id);
+    const formalIds = rows
+      .map((r) => r.id_kelas_formal)
+      .filter((id): id is string => !!id);
 
     const [mdaList, formalList] = await Promise.all([
       mdaIds.length > 0
@@ -183,11 +187,17 @@ export function initPenempatanKelasSantri(sequelize: Sequelize) {
     ]);
 
     const mdaMap = new Map(mdaList.map((m) => [m.id_kelas_mda, m.id_lembaga]));
-    const formalMap = new Map(formalList.map((f) => [f.id_kelas, f.id_lembaga]));
+    const formalMap = new Map(
+      formalList.map((f) => [f.id_kelas, f.id_lembaga])
+    );
 
     for (const row of rows) {
-      const id_lembaga_mda = row.id_kelas_mda ? (mdaMap.get(row.id_kelas_mda) || null) : null;
-      const id_lembaga_formal = row.id_kelas_formal ? (formalMap.get(row.id_kelas_formal) || null) : null;
+      const id_lembaga_mda = row.id_kelas_mda
+        ? mdaMap.get(row.id_kelas_mda) || null
+        : null;
+      const id_lembaga_formal = row.id_kelas_formal
+        ? formalMap.get(row.id_kelas_formal) || null
+        : null;
 
       await Santri.update(
         {

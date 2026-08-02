@@ -99,7 +99,7 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         },
       },
       tanggal_mulai: {
-        type: DataTypes.DATE, 
+        type: DataTypes.DATE,
         allowNull: false,
         get() {
           const value = this.getDataValue('tanggal_mulai');

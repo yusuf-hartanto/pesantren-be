@@ -161,14 +161,19 @@ export default class Controller {
           };
         } else {
           grouped[key].haris.push(rowData.hari);
-          if (new Date(rowData.updated_at) > new Date(grouped[key].updated_at)) {
+          if (
+            new Date(rowData.updated_at) > new Date(grouped[key].updated_at)
+          ) {
             grouped[key].updated_at = rowData.updated_at;
           }
         }
       }
 
       const groupedArray = Object.values(grouped);
-      groupedArray.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+      groupedArray.sort(
+        (a: any, b: any) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
 
       if (groupedArray.length < 1)
         return response.success(NOT_FOUND, null, res, false);
@@ -199,7 +204,7 @@ export default class Controller {
         where: {
           id_cabang: data.id_cabang,
           kode_slot: data.kode_slot,
-        }
+        },
       });
       data.hari = siblingSchedules.map((s: any) => s.hari);
 
@@ -233,12 +238,16 @@ export default class Controller {
 
         if (check) {
           const dayName = haris.find((r) => r.id == h)?.label || h;
-          return response.failed(`${ALREADY_EXIST} (Hari: ${dayName})`, 400, res);
+          return response.failed(
+            `${ALREADY_EXIST} (Hari: ${dayName})`,
+            400,
+            res
+          );
         }
       }
 
       const data: Object = helper.only(variable.fillable(), req?.body);
-      
+
       for (const h of days) {
         await repository.create({
           payload: {
@@ -282,11 +291,16 @@ export default class Controller {
         });
 
         if (
-          duplicate && 
-          (duplicate.id_cabang !== check.id_cabang || duplicate.kode_slot !== check.kode_slot)
+          duplicate &&
+          (duplicate.id_cabang !== check.id_cabang ||
+            duplicate.kode_slot !== check.kode_slot)
         ) {
           const dayName = haris.find((r) => r.id == h)?.label || h;
-          return response.failed(`${ALREADY_EXIST} (Hari: ${dayName})`, 400, res);
+          return response.failed(
+            `${ALREADY_EXIST} (Hari: ${dayName})`,
+            400,
+            res
+          );
         }
       }
 
@@ -295,16 +309,20 @@ export default class Controller {
         where: {
           id_cabang: check.id_cabang,
           kode_slot: check.kode_slot,
-        }
+        },
       });
 
       const existingDays = existingRecords.map((r: any) => r.hari);
 
       // Days to delete: in existingDays but not in new days
-      const daysToDelete = existingDays.filter((d: number) => !days.includes(d));
+      const daysToDelete = existingDays.filter(
+        (d: number) => !days.includes(d)
+      );
 
       // Days to create: in new days but not in existingDays
-      const daysToCreate = days.filter((d: number) => !existingDays.includes(d));
+      const daysToCreate = days.filter(
+        (d: number) => !existingDays.includes(d)
+      );
 
       // Days to update: in new days and in existingDays
       const daysToUpdate = days.filter((d: number) => existingDays.includes(d));
@@ -331,14 +349,16 @@ export default class Controller {
 
       // 2. Update remaining existing days
       if (daysToUpdate.length > 0) {
-        const { hari, ...payloadTanpaHari } = updatePayload as { hari?: number[] };
+        const { hari, ...payloadTanpaHari } = updatePayload as {
+          hari?: number[];
+        };
         await JadwalInspeksiKebersihan.update(payloadTanpaHari, {
           where: {
             id_cabang: check.id_cabang,
             kode_slot: check.kode_slot,
             hari: {
               [Op.in]: daysToUpdate,
-            }
+            },
           },
           individualHooks: true,
         });
@@ -350,7 +370,7 @@ export default class Controller {
           payload: {
             ...updatePayload,
             hari: d,
-          }
+          },
         });
       }
 
@@ -369,7 +389,7 @@ export default class Controller {
       const id: string = req?.params?.id || '';
       const check = await repository.detail({ id_jadwal: id });
       if (!check) return response.success(NOT_FOUND, null, res, false);
-      
+
       await JadwalInspeksiKebersihan.destroy({
         where: {
           id_cabang: check.id_cabang,

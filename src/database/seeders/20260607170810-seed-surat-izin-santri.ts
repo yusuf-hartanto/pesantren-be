@@ -33,8 +33,10 @@ export default {
       return;
     }
 
-    const kodeUnitTarget = asramas.length > 0 ? asramas[0].kode_lokasi : 'ASM-PST';
-    const pencetakResourceId = pegawais.length > 0 ? pegawais[0].resource_id : 'SYSTEM';
+    const kodeUnitTarget =
+      asramas.length > 0 ? asramas[0].kode_lokasi : 'ASM-PST';
+    const pencetakResourceId =
+      pegawais.length > 0 ? pegawais[0].resource_id : 'SYSTEM';
     const tahunSekarang = moment().tz(TIMEZONE).year();
 
     const suratSeeds = perizinans.map((perizinan: any, index: number) => {

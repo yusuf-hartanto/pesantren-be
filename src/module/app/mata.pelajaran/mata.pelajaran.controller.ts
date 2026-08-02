@@ -112,7 +112,7 @@ export default class Controller {
     try {
       const lembaga_type: any = req?.query?.lembaga_type || '';
       const id_lembaga: any = req?.query?.id_lembaga || '';
-      const result = await repository.list({lembaga_type, id_lembaga});
+      const result = await repository.list({ lembaga_type, id_lembaga });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);

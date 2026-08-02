@@ -27,16 +27,16 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.id_orgunit) {
-      query = { 
+      query = {
         ...query,
         where: {
           ...query.where,
           [Op.or]: [
             { '$guru_asli.id_orgunit$': userContext.id_orgunit },
-            { '$guru_pengganti.id_orgunit$': userContext.id_orgunit }
-          ]
-        }
-      }
+            { '$guru_pengganti.id_orgunit$': userContext.id_orgunit },
+          ],
+        },
+      };
     }
 
     return Model.findAll({
@@ -117,16 +117,16 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.id_orgunit) {
-      query = { 
+      query = {
         ...query,
         where: {
           ...where,
           [Op.or]: [
             { '$guru_asli.id_orgunit$': userContext.id_orgunit },
-            { '$guru_pengganti.id_orgunit$': userContext.id_orgunit }
-          ]
-        }
-      }
+            { '$guru_pengganti.id_orgunit$': userContext.id_orgunit },
+          ],
+        },
+      };
     }
 
     return Model.findAndCountAll({

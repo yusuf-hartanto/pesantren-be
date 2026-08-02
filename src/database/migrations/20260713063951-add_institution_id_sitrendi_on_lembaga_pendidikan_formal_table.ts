@@ -4,8 +4,9 @@ import { QueryInterface, DataTypes } from 'sequelize';
 
 export const up = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-    const tableDesc: any =
-      await queryInterface.describeTable('lembaga_pendidikan_formal');
+    const tableDesc: any = await queryInterface.describeTable(
+      'lembaga_pendidikan_formal'
+    );
 
     if (!tableDesc.institution_id_sitrendi) {
       await queryInterface.addColumn(
@@ -29,8 +30,9 @@ export const up = async (queryInterface: QueryInterface) => {
 
 export const down = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-    const tableDesc: any =
-      await queryInterface.describeTable('lembaga_pendidikan_formal');
+    const tableDesc: any = await queryInterface.describeTable(
+      'lembaga_pendidikan_formal'
+    );
 
     if (tableDesc.institution_id_sitrendi) {
       await queryInterface.removeColumn(

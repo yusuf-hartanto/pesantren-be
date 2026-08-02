@@ -47,8 +47,14 @@ export default {
         sumber_pengajuan: 'Orang Tua',
         jenis_izin: 'Izin',
         tanggal_pengajuan: moment().tz(TIMEZONE).subtract(1, 'days').toDate(),
-        tanggal_mulai: moment().tz(TIMEZONE).add(1, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().tz(TIMEZONE).add(4, 'days').format('YYYY-MM-DD'),
+        tanggal_mulai: moment()
+          .tz(TIMEZONE)
+          .add(1, 'days')
+          .format('YYYY-MM-DD'),
+        tanggal_selesai: moment()
+          .tz(TIMEZONE)
+          .add(4, 'days')
+          .format('YYYY-MM-DD'),
         alasan: 'Menghadiri acara pernikahan kakak kandung di luar kota',
         status_approval: 'Menunggu',
         id_approver: null,
@@ -70,8 +76,14 @@ export default {
         sumber_pengajuan: 'Waliasuh',
         jenis_izin: 'Sakit',
         tanggal_pengajuan: moment().tz(TIMEZONE).subtract(3, 'days').toDate(),
-        tanggal_mulai: moment().tz(TIMEZONE).subtract(2, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().tz(TIMEZONE).add(1, 'days').format('YYYY-MM-DD'),
+        tanggal_mulai: moment()
+          .tz(TIMEZONE)
+          .subtract(2, 'days')
+          .format('YYYY-MM-DD'),
+        tanggal_selesai: moment()
+          .tz(TIMEZONE)
+          .add(1, 'days')
+          .format('YYYY-MM-DD'),
         alasan:
           'Santri mengalami demam tinggi berdarah dan direkomendasikan istirahat di rumah',
         status_approval: 'Disetujui',
@@ -95,8 +107,14 @@ export default {
         sumber_pengajuan: 'Orang Tua',
         jenis_izin: 'Izin',
         tanggal_pengajuan: moment().tz(TIMEZONE).subtract(2, 'days').toDate(),
-        tanggal_mulai: moment().tz(TIMEZONE).add(2, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().tz(TIMEZONE).add(3, 'days').format('YYYY-MM-DD'),
+        tanggal_mulai: moment()
+          .tz(TIMEZONE)
+          .add(2, 'days')
+          .format('YYYY-MM-DD'),
+        tanggal_selesai: moment()
+          .tz(TIMEZONE)
+          .add(3, 'days')
+          .format('YYYY-MM-DD'),
         alasan: 'Izin liburan keluarga ke luar kota di hari efektif KBM',
         status_approval: 'Ditolak',
         id_approver: activePegawaiId,
@@ -120,8 +138,14 @@ export default {
         sumber_pengajuan: 'Kesehatan',
         jenis_izin: 'Sakit',
         tanggal_pengajuan: moment().tz(TIMEZONE).subtract(5, 'days').toDate(),
-        tanggal_mulai: moment().tz(TIMEZONE).subtract(4, 'days').format('YYYY-MM-DD'),
-        tanggal_selesai: moment().tz(TIMEZONE).add(2, 'days').format('YYYY-MM-DD'),
+        tanggal_mulai: moment()
+          .tz(TIMEZONE)
+          .subtract(4, 'days')
+          .format('YYYY-MM-DD'),
+        tanggal_selesai: moment()
+          .tz(TIMEZONE)
+          .add(2, 'days')
+          .format('YYYY-MM-DD'),
         alasan: 'Gejala tipes ringan, perlu observasi di ruang kesehatan pusat',
         status_approval: 'Disetujui',
         id_approver: activePegawaiId,
@@ -145,7 +169,10 @@ export default {
         jenis_izin: 'Izin',
         tanggal_pengajuan: moment().tz(TIMEZONE).toDate(),
         tanggal_mulai: moment().tz(TIMEZONE).format('YYYY-MM-DD'),
-        tanggal_selesai: moment().tz(TIMEZONE).add(1, 'days').format('YYYY-MM-DD'),
+        tanggal_selesai: moment()
+          .tz(TIMEZONE)
+          .add(1, 'days')
+          .format('YYYY-MM-DD'),
         alasan:
           'Izin pergi ke RS Daerah untuk kontrol rutin kesehatan gigi pasca operasi',
         status_approval: 'Menunggu',

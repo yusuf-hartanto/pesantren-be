@@ -231,7 +231,7 @@ export default class Controller {
   public async list(req: Request, res: Response) {
     try {
       const status_pegawai: any = req?.query?.status_pegawai || '';
-      const result = await repository.list({status_pegawai});
+      const result = await repository.list({ status_pegawai });
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);

@@ -12,7 +12,12 @@ import { appConfig } from '../../config/config.app';
 import { sequelize } from '../../database/connection';
 import { repository as RepoMenu } from '../app/menu/menu.repository';
 import { repository as RoleMenu } from '../app/role.menu/role.menu.repository';
-import { NOT_FOUND, REQUIRED, SUCCESS_RETRIEVED, TIMEZONE } from '../../utils/constant';
+import {
+  NOT_FOUND,
+  REQUIRED,
+  SUCCESS_RETRIEVED,
+  TIMEZONE,
+} from '../../utils/constant';
 import { transformer as resourceTransformer } from '../app/resource/resource.transformer';
 
 const nestedChildren = (
@@ -274,7 +279,10 @@ export default class Controller {
         if (!result) return response.success(NOT_FOUND, null, res, false);
         navigation = formatNavigationRole(result);
 
-        const getUser: any = await resourceTransformer.detail({...req?.user, dataValues: result?.dataValues});
+        const getUser: any = await resourceTransformer.detail({
+          ...req?.user,
+          dataValues: result?.dataValues,
+        });
         if (getUser?.ability?.length) {
           ability = getUser?.ability;
         }
@@ -511,7 +519,11 @@ export default class Controller {
   public async mapSantriRelations(req: Request, res: Response) {
     try {
       const result = await service.mapSantriRelations();
-      return response.success('Mapping santri relations successful', result, res);
+      return response.success(
+        'Mapping santri relations successful',
+        result,
+        res
+      );
     } catch (err: any) {
       return helper.catchError(`mapSantriRelations: ${err?.message}`, 500, res);
     }

@@ -7,7 +7,11 @@ import { Request, Response } from 'express';
 import { helper } from '../../../helpers/helper';
 import { response } from '../../../helpers/response';
 import { repository } from './institution.repository';
-import { NOT_FOUND, SUCCESS_RETRIEVED, TIMEZONE } from '../../../utils/constant';
+import {
+  NOT_FOUND,
+  SUCCESS_RETRIEVED,
+  TIMEZONE,
+} from '../../../utils/constant';
 
 const generateDataExcel = (sheet: any, details: any) => {
   sheet.addRow([

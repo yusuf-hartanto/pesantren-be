@@ -12,10 +12,10 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.lembaga_type) {
-      query = { 
+      query = {
         ...query,
-        where: { tingkat_type: userContext?.lembaga_type, }
-      }
+        where: { tingkat_type: userContext?.lembaga_type },
+      };
     }
 
     if (data?.type != '') {
@@ -70,7 +70,7 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.lembaga_type) {
-      where.tingkat_type = { [Op.eq]: userContext?.lembaga_type, }
+      where.tingkat_type = { [Op.eq]: userContext?.lembaga_type };
     }
 
     const query: any = {

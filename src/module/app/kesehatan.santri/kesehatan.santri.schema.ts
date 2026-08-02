@@ -53,7 +53,10 @@ export const createKesehatanSchema = z
   })
   .refine(
     (data) => {
-      return (!!data.id_santri && !data.id_pegawai) || (!data.id_santri && !!data.id_pegawai);
+      return (
+        (!!data.id_santri && !data.id_pegawai) ||
+        (!data.id_santri && !!data.id_pegawai)
+      );
     },
     {
       message: 'Harus diisi salah satu dari ID Santri atau ID Pegawai.',
@@ -68,7 +71,8 @@ export const createKesehatanSchema = z
       return true;
     },
     {
-      message: 'Tanggal mulai rawat dan tempat dirawat wajib diisi jika status Dirawat',
+      message:
+        'Tanggal mulai rawat dan tempat dirawat wajib diisi jika status Dirawat',
       path: ['tanggal_mulai_rawat'],
     }
   )
@@ -85,7 +89,8 @@ export const createKesehatanSchema = z
       return true;
     },
     {
-      message: 'Tanggal dirujuk, tempat rujukan, dan estimasi hari wajib diisi jika status Dirujuk',
+      message:
+        'Tanggal dirujuk, tempat rujukan, dan estimasi hari wajib diisi jika status Dirujuk',
       path: ['tanggal_dirujuk'],
     }
   );

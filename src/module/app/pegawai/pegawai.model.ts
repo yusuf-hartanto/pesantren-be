@@ -24,7 +24,7 @@ export class Pegawai extends Model {
   declare umur: number;
   declare alamat: string;
   declare id_lembaga?: string | null;
-  
+
   // Tambahan Wilayah
   declare province_id: string;
   declare city_id: string;
@@ -134,7 +134,9 @@ export function initPegawai(sequelize: Sequelize) {
       id_lembaga: {
         type: DataTypes.VIRTUAL,
         get() {
-          return this.organizationUnit ? this.organizationUnit.id_lembaga : null;
+          return this.organizationUnit
+            ? this.organizationUnit.id_lembaga
+            : null;
         },
       },
       id_orgunit: {

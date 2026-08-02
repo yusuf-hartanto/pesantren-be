@@ -83,9 +83,10 @@ export default class Repository {
       replacements.id_lembaga = userContext.id_lembaga;
     }
 
-    const whereClause = whereConditions.length > 0
-      ? `WHERE ${whereConditions.join(' AND ')}`
-      : '';
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
 
     const query = `
 		SELECT 

@@ -33,13 +33,13 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
-      query = { 
+      query = {
         ...query,
-        where: { 
+        where: {
           ...condition,
           id_lembaga: userContext?.id_lembaga,
-        }
-      }
+        },
+      };
     }
 
     return Model.findAll({
@@ -120,13 +120,13 @@ export default class Repository {
     if (data?.status) {
       where.status = data.status;
     }
-    
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
-      where = { 
+      where = {
         ...where,
         id_lembaga: userContext?.id_lembaga,
-      }
+      };
     }
 
     let query: Object = {

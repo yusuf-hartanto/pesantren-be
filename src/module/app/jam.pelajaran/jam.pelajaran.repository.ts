@@ -15,15 +15,15 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.lembaga_type) {
-      query = { 
+      query = {
         ...query,
         where: {
           ...query.where,
           lembaga_type: userContext?.lembaga_type,
-        }
-      }
+        },
+      };
     }
-    
+
     if (data?.nama_jampel !== undefined && data?.nama_jampel != null) {
       query = {
         ...query,
@@ -76,19 +76,19 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.lembaga_type) {
-      query = { 
+      query = {
         ...query,
-        where: { lembaga_type: userContext?.lembaga_type }
-      }
+        where: { lembaga_type: userContext?.lembaga_type },
+      };
     }
     if (userContext && userContext?.id_lembaga) {
-      query = { 
+      query = {
         ...query,
-        where: { 
+        where: {
           ...query.where,
-          id_lembaga: userContext?.id_lembaga 
-        }
-      }
+          id_lembaga: userContext?.id_lembaga,
+        },
+      };
     }
 
     if (data?.keyword && data?.keyword != undefined) {

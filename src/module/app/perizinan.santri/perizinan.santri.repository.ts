@@ -150,7 +150,7 @@ export class PerizinanSantriRepository {
     if (idLembagaFilter) {
       if (data?.is_pegawai) {
         query.where['$pegawai.organizationUnit.id_lembaga$'] = idLembagaFilter;
-      } 
+      }
     }
 
     if (data?.is_pegawai) {
@@ -170,7 +170,7 @@ export class PerizinanSantriRepository {
     // Filter Date Range Picker (Berdasarkan tanggal_mulai dan tanggal_selesai)
     if (data?.start_date && data?.end_date) {
       query.where[Op.and] = [
-        { tanggal_mulai: { [Op.lte]: data.end_date } },    
+        { tanggal_mulai: { [Op.lte]: data.end_date } },
         { tanggal_selesai: { [Op.gte]: data.start_date } },
       ];
     }
@@ -271,7 +271,7 @@ export class PerizinanSantriRepository {
           attributes: ['nama_lokasi'],
         },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
     });
   }
 
@@ -279,9 +279,9 @@ export class PerizinanSantriRepository {
    * Cek aturan overlap izin santri aktif
    */
   public async checkActiveLicense(
-    id_santri: string, 
-    startDateInput: string, 
-    endDateInput: string,  
+    id_santri: string,
+    startDateInput: string,
+    endDateInput: string,
     transaction?: any
   ) {
     const start = moment(startDateInput).format('YYYY-MM-DD');
@@ -293,11 +293,11 @@ export class PerizinanSantriRepository {
         deleted_at: null,
         status_approval: { [Op.in]: ['Menunggu', 'Disetujui'] },
         is_canceled: false,
-        
+
         [Op.and]: [
-          { tanggal_mulai: { [Op.lte]: end } },   
-          { tanggal_selesai: { [Op.gte]: start } } 
-        ]
+          { tanggal_mulai: { [Op.lte]: end } },
+          { tanggal_selesai: { [Op.gte]: start } },
+        ],
       },
       order: [['created_at', 'DESC']],
       transaction,
@@ -381,14 +381,14 @@ export class PerizinanSantriRepository {
     return await Santri.findAll({
       where: {
         id_cabang: id_cabang,
-        status: 1, 
+        status: 1,
       },
       include: [
         {
           model: PenempatanKamarSantri,
           as: 'penempatanKamar',
           where: { status: 'Aktif' },
-          required: false, 
+          required: false,
         },
       ],
       transaction,
@@ -482,7 +482,7 @@ export class PerizinanSantriRepository {
       limit,
       is_pegawai,
       id_pegawai,
-      id_lokasi
+      id_lokasi,
     } = params;
     const q = keyword ? `%${keyword}%` : null;
 
@@ -496,7 +496,7 @@ export class PerizinanSantriRepository {
         whereClause.id_lokasi_kamar = id_lokasi;
       }
     }
-    
+
     if (userContext && userContext?.id_cabang) {
       if (is_pegawai) {
         whereClause = {
@@ -546,7 +546,7 @@ export class PerizinanSantriRepository {
 
       if (start_date && end_date) {
         whereClause[Op.and] = [
-          { tanggal_mulai: { [Op.lte]: end_date } },     // Mulai sebelum/saat filter berakhir
+          { tanggal_mulai: { [Op.lte]: end_date } }, // Mulai sebelum/saat filter berakhir
           { tanggal_selesai: { [Op.gte]: start_date } },
         ];
       }

@@ -31,15 +31,15 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
-      query = { 
+      query = {
         ...query,
-        where: { 
+        where: {
           ...query.where,
           [Op.or]: [
             { '$kelas_formal.id_lembaga$': userContext?.id_lembaga },
             { '$kelas_mda.id_lembaga$': userContext?.id_lembaga },
           ],
-        }
+        },
       };
     }
 
@@ -167,7 +167,7 @@ export default class Repository {
 
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
-      where = { 
+      where = {
         ...where,
         [Op.or]: [
           { '$kelas_formal.id_lembaga$': userContext?.id_lembaga },

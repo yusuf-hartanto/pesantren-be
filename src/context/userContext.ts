@@ -13,13 +13,16 @@ export interface UserContextStore {
 const userContext = new AsyncLocalStorage<UserContextStore>();
 
 export function runWithUser(username: string | null, fn: () => any) {
-  return userContext.run({ 
-    username, 
-    id_cabang: null, 
-    id_orgunit: null, 
-    id_lembaga: null,
-    lembaga_type: null,
-  }, fn);
+  return userContext.run(
+    {
+      username,
+      id_cabang: null,
+      id_orgunit: null,
+      id_lembaga: null,
+      lembaga_type: null,
+    },
+    fn
+  );
 }
 
 export function setUserLogin(username: string = 'sistem') {
@@ -32,7 +35,9 @@ export function getUserLogin() {
   return store?.username || 'sistem';
 }
 
-export function setUserContextData(data: Partial<Omit<UserContextStore, 'username'>>) {
+export function setUserContextData(
+  data: Partial<Omit<UserContextStore, 'username'>>
+) {
   const store = userContext.getStore();
   if (store) {
     if (data.id_cabang !== undefined) store.id_cabang = data.id_cabang;

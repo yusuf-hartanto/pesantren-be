@@ -129,7 +129,7 @@ export default class Repository {
     return Model.findAll(query);
   }
 
-public async index(data: any) {
+  public async index(data: any) {
     let whereCondition: any = {
       is_deleted: false,
     };
@@ -185,7 +185,7 @@ public async index(data: any) {
     if (data?.keyword && data?.keyword !== undefined) {
       const keyword = `%${data.keyword.toLowerCase()}%`;
       query.where = {
-        ...query.where, 
+        ...query.where,
         [Op.or]: [
           Sequelize.where(
             Sequelize.fn(
@@ -249,8 +249,8 @@ public async index(data: any) {
             {
               [Op.like]: keyword,
             }
-          )
-        ]
+          ),
+        ],
       };
     }
 

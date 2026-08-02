@@ -6,13 +6,12 @@ import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(condition: any) {
-  
     const userContext = getUserContextData();
     if (userContext && userContext?.lembaga_type) {
-      condition = { 
+      condition = {
         ...condition,
-        where: { lembaga_type: userContext?.lembaga_type, }
-      }
+        where: { lembaga_type: userContext?.lembaga_type },
+      };
     }
 
     return Model.findAll({
@@ -27,13 +26,13 @@ export default class Repository {
       offset: data?.offset,
       limit: data?.limit,
     };
-    
+
     const userContext = getUserContextData();
     if (userContext && userContext?.lembaga_type) {
-      query.where = { 
+      query.where = {
         ...query.where,
-        lembaga_type: userContext?.lembaga_type, 
-      }
+        lembaga_type: userContext?.lembaga_type,
+      };
     }
 
     if (data?.keyword && data?.keyword != undefined) {

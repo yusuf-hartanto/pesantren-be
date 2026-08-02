@@ -55,21 +55,28 @@ export const pengajuanIzinSchema = z
         'Data subjek perizinan (Santri/Pegawai) beserta lokasinya wajib diisi sesuai dengan sumber pengajuan',
       path: ['sumber_pengajuan'],
     }
-  ).refine(
+  )
+  .refine(
     (data) => {
       const hariIni = moment().tz(TIMEZONE).startOf('day');
-      return !moment(data.tanggal_mulai).isBefore(hariIni) && !moment(data.tanggal_selesai).isBefore(hariIni);
+      return (
+        !moment(data.tanggal_mulai).isBefore(hariIni) &&
+        !moment(data.tanggal_selesai).isBefore(hariIni)
+      );
     },
     {
-      message: 'Tanggal mulai dan tanggal selesai tidak boleh lebih kecil dari hari ini',
+      message:
+        'Tanggal mulai dan tanggal selesai tidak boleh lebih kecil dari hari ini',
       path: ['tanggal_mulai'], // Pesan error akan mengarah ke property tanggal_mulai
     }
-  ).refine(
+  )
+  .refine(
     (data) => {
       return !moment(data.tanggal_selesai).isBefore(moment(data.tanggal_mulai));
     },
     {
-      message: 'Tanggal selesai harus lebih besar atau sama dengan tanggal mulai',
+      message:
+        'Tanggal selesai harus lebih besar atau sama dengan tanggal mulai',
       path: ['tanggal_selesai'], // Pesan error akan mengarah ke property tanggal_selesai
     }
   );

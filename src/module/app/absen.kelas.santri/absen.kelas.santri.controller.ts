@@ -233,10 +233,13 @@ export default class Controller {
 
           const latestEvent = latestEventMap.get(idSantri);
           const isSakit = latestEvent
-            ? latestEvent.progres_status === 'Dirawat' || latestEvent.progres_status === 'Dirujuk'
+            ? latestEvent.progres_status === 'Dirawat' ||
+              latestEvent.progres_status === 'Dirujuk'
             : false;
 
-          const hasIzin = activeIzinList.find((p: any) => p.id_santri === idSantri);
+          const hasIzin = activeIzinList.find(
+            (p: any) => p.id_santri === idSantri
+          );
 
           let status = null;
           let keterangan = null;
@@ -286,7 +289,8 @@ export default class Controller {
       const validBody = bulkAbsenKelasSantriSchema.parse(req.body);
 
       const targetTanggal = moment(validBody.tanggal).format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
+      const targetWaktu =
+        validBody.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
       const id_petugas = req.user?.id || null;
 
       const jamPelajarans =
@@ -333,7 +337,9 @@ export default class Controller {
         let finalKeterangan = item.keterangan || null;
         if (isDirawat) {
           finalStatus = 'Sakit';
-          finalKeterangan = finalKeterangan ? `${finalKeterangan} (Dirawat)` : 'Sakit (Dirawat)';
+          finalKeterangan = finalKeterangan
+            ? `${finalKeterangan} (Dirawat)`
+            : 'Sakit (Dirawat)';
         }
 
         validatedPayloads.push({
@@ -499,7 +505,8 @@ export default class Controller {
 
       const targetTanggal =
         validBody.tanggal_custom || moment().tz(TIMEZONE).format('YYYY-MM-DD');
-      const targetWaktu = validBody.waktu_custom || moment().tz(TIMEZONE).format('HH:mm:ss');
+      const targetWaktu =
+        validBody.waktu_custom || moment().tz(TIMEZONE).format('HH:mm:ss');
       if (!validBody.id_lokasi) {
         return response.failed(
           'Gagal Scan: ID Lokasi/Kelas wajib ditentukan.',
@@ -511,7 +518,8 @@ export default class Controller {
       let jamPelajaran: any = null;
       let id_jam_pelajaran = validBody.id_jam_pelajaran || null;
 
-      const jamPelajarans = await repository.findMatchingJamPelajaran(targetWaktu);
+      const jamPelajarans =
+        await repository.findMatchingJamPelajaran(targetWaktu);
       if (jamPelajarans && jamPelajarans.length > 0) {
         jamPelajaran = jamPelajarans[0];
       }
@@ -539,7 +547,9 @@ export default class Controller {
         );
       }
 
-      const isDirawat = await kesehatanRepo.isSantriDirawat(santri.getDataValue('id_santri'));
+      const isDirawat = await kesehatanRepo.isSantriDirawat(
+        santri.getDataValue('id_santri')
+      );
       if (isDirawat) {
         return response.failed(
           `Gagal Scan: Santri [${santri.getDataValue('fullname')}] sedang dalam status Dirawat.`,
@@ -727,7 +737,8 @@ export default class Controller {
         const targetTanggal = row.tanggal
           ? moment(row.tanggal).format('YYYY-MM-DD')
           : moment().tz(TIMEZONE).format('YYYY-MM-DD');
-        const targetWaktu = row.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
+        const targetWaktu =
+          row.waktu_absen || moment().tz(TIMEZONE).format('HH:mm:ss');
 
         const santriDoc: any = await repository.findSantriByNisOnly(row.nis);
         if (santriDoc) {

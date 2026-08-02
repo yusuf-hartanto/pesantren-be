@@ -108,8 +108,18 @@ export default class Repository {
           required: true,
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', required: false, attributes: ['nama_lokasi'] },
-            { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
+            {
+              model: Location,
+              as: 'lokasiKamar',
+              required: false,
+              attributes: ['nama_lokasi'],
+            },
+            {
+              model: Location,
+              as: 'lokasiKerja',
+              required: false,
+              attributes: [],
+            },
           ],
         },
       ],
@@ -169,8 +179,18 @@ export default class Repository {
           required: true,
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', required: false, attributes: ['nama_lokasi'] },
-            { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
+            {
+              model: Location,
+              as: 'lokasiKamar',
+              required: false,
+              attributes: ['nama_lokasi'],
+            },
+            {
+              model: Location,
+              as: 'lokasiKerja',
+              required: false,
+              attributes: [],
+            },
           ],
         },
       ],
@@ -307,12 +327,25 @@ export default class Repository {
         as: 'perizinanSantri',
         required: true,
         include: [
-          { model: Location, as: 'lokasiKamar', required: false, attributes: [] },
-          { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
+          {
+            model: Location,
+            as: 'lokasiKamar',
+            required: false,
+            attributes: [],
+          },
+          {
+            model: Location,
+            as: 'lokasiKerja',
+            required: false,
+            attributes: [],
+          },
         ],
       },
     ];
-    const needsInclude = !!(idCabang || (filters?.status && filters?.status !== 'Semua'));
+    const needsInclude = !!(
+      idCabang ||
+      (filters?.status && filters?.status !== 'Semua')
+    );
 
     const totalScan = await Model.count({
       where: baseWhereClause,
@@ -473,8 +506,18 @@ export default class Repository {
           required: true,
           include: [
             { model: Santri, as: 'santri', attributes: ['fullname', 'nis'] },
-            { model: Location, as: 'lokasiKamar', required: false, attributes: ['nama_lokasi'] },
-            { model: Location, as: 'lokasiKerja', required: false, attributes: [] },
+            {
+              model: Location,
+              as: 'lokasiKamar',
+              required: false,
+              attributes: ['nama_lokasi'],
+            },
+            {
+              model: Location,
+              as: 'lokasiKerja',
+              required: false,
+              attributes: [],
+            },
           ],
         },
       ],

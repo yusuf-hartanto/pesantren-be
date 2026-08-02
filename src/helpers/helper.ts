@@ -57,7 +57,11 @@ export default class Helper {
   }
 
   public dateAdd(num: number, type: any) {
-    return moment().tz(TIMEZONE).add(num, type).locale('id').format('YYYY-MM-DD HH:mm:ss');
+    return moment()
+      .tz(TIMEZONE)
+      .add(num, type)
+      .locale('id')
+      .format('YYYY-MM-DD HH:mm:ss');
   }
 
   public dateSubtract(num: number, type: any) {
@@ -351,7 +355,9 @@ export default class Helper {
         affectedRows = result?.[0]?.affectedRows ?? 0;
       }
       if (affectedRows > 0) {
-        await this.sendNotif(`[cron] success update jam selesai: ${affectedRows} baris`);
+        await this.sendNotif(
+          `[cron] success update jam selesai: ${affectedRows} baris`
+        );
       }
     } catch (err: any) {
       await this.sendNotif(`[cron] failed update jam selesai: ${err?.message}`);
@@ -710,7 +716,7 @@ export default class Helper {
 
     return res.length > 0 ? res.map((r: any) => r.username) : [];
   }
-  
+
   public convertToRomawi(month: number): string {
     const romawi = [
       'I',
@@ -731,4 +737,3 @@ export default class Helper {
 }
 
 export const helper = new Helper();
-

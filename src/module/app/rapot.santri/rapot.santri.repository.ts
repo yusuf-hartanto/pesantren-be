@@ -16,7 +16,7 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any) {
     const userContext = getUserContextData();
-    
+
     const query: any = {
       order: [['created_at', 'DESC']],
       include: [
@@ -83,7 +83,7 @@ export default class Repository {
     if (data?.status) {
       query.where.status = data.status;
     }
-    
+
     if (userContext && userContext?.id_cabang) {
       query.where['$santri.id_cabang$'] = userContext.id_cabang;
     }
@@ -95,7 +95,7 @@ export default class Repository {
             { '$santri.id_lembaga_formal$': userContext.id_lembaga },
             { '$santri.id_lembaga_mda$': userContext.id_lembaga },
           ],
-        }
+        },
       ];
     }
 
@@ -163,7 +163,10 @@ export default class Repository {
         Sequelize.where(
           Sequelize.fn('LOWER', Sequelize.col('RapotSantri.tahun_ajaran')),
           Op.eq,
-          Sequelize.fn('LOWER', Sequelize.col('santri->penempatanKelas->tahunAjaran.tahun_ajaran'))
+          Sequelize.fn(
+            'LOWER',
+            Sequelize.col('santri->penempatanKelas->tahunAjaran.tahun_ajaran')
+          )
         )
       );
       whereAnd.push({

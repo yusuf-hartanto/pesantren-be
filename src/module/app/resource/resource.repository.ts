@@ -66,10 +66,7 @@ export default class Repository {
             }
           ),
           Sequelize.where(
-            Sequelize.fn(
-              'LOWER',
-              Sequelize.col('AppResource.place_of_birth')
-            ),
+            Sequelize.fn('LOWER', Sequelize.col('AppResource.place_of_birth')),
             {
               [Op.like]: keyword,
             }
@@ -162,12 +159,18 @@ export default class Repository {
           model: Pegawai,
           as: 'pegawai',
           required: !!idOrgunit,
-          attributes: ['id_pegawai', 'nama_lengkap', "id_orgunit"],
+          attributes: ['id_pegawai', 'nama_lengkap', 'id_orgunit'],
           include: [
             {
               model: OrganizationUnit,
               as: 'organizationUnit',
-              attributes: ['id_orgunit', 'nama_orgunit', "id_cabang", "id_lembaga", "lembaga_type"],
+              attributes: [
+                'id_orgunit',
+                'nama_orgunit',
+                'id_cabang',
+                'id_lembaga',
+                'lembaga_type',
+              ],
               required: false,
               include: [
                 {

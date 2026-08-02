@@ -40,7 +40,9 @@ const generateDataExcel = (sheet: any, details: any, baseUrl: string) => {
 
   details.forEach((row: any, i: number) => {
     const placement = (row.santri?.penempatanKelas || []).find(
-      (p: any) => p.tahunAjaran?.tahun_ajaran?.toLowerCase() == row.tahun_ajaran?.toLowerCase()
+      (p: any) =>
+        p.tahunAjaran?.tahun_ajaran?.toLowerCase() ==
+        row.tahun_ajaran?.toLowerCase()
     );
     const kelasFormalName = placement?.kelasFormal?.nama_kelas || '-';
     const kelasMdaName = placement?.kelasMda?.nama_kelas_mda || '-';
@@ -190,7 +192,9 @@ export default class Controller {
       }
 
       const timestamp = Date.now();
-      const santriName = studentExists.fullname.toLowerCase().replace(/\s+/g, '_');
+      const santriName = studentExists.fullname
+        .toLowerCase()
+        .replace(/\s+/g, '_');
 
       let file_rapot: any = null;
       if (req?.files && req?.files.file_rapot) {
@@ -216,7 +220,9 @@ export default class Controller {
       let file_rapot_mda: any = null;
       if (req?.files && req?.files.file_rapot_mda) {
         const fileMdaFormal = req?.files?.file_rapot_mda;
-        const fileMda = Array.isArray(fileMdaFormal) ? fileMdaFormal[0] : fileMdaFormal;
+        const fileMda = Array.isArray(fileMdaFormal)
+          ? fileMdaFormal[0]
+          : fileMdaFormal;
         const checkFileMda = helper.checkExtention(fileMda, 'file');
         if (checkFileMda != 'allowed') {
           if (trx) await trx.rollback();
@@ -325,7 +331,9 @@ export default class Controller {
 
       let fullname = check.santri?.fullname || '';
       if (!fullname) {
-        const santri = await Santri.findByPk(check.id_santri, { transaction: trx });
+        const santri = await Santri.findByPk(check.id_santri, {
+          transaction: trx,
+        });
         if (santri) {
           fullname = santri.fullname;
         }
@@ -358,7 +366,9 @@ export default class Controller {
 
       if (req?.files && req?.files.file_rapot_mda) {
         const fileMdaFormal = req?.files?.file_rapot_mda;
-        const fileMda = Array.isArray(fileMdaFormal) ? fileMdaFormal[0] : fileMdaFormal;
+        const fileMda = Array.isArray(fileMdaFormal)
+          ? fileMdaFormal[0]
+          : fileMdaFormal;
         const checkFileMda = helper.checkExtention(fileMda, 'file');
         if (checkFileMda != 'allowed') {
           if (trx) await trx.rollback();

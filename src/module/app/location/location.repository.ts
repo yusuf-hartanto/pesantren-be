@@ -10,7 +10,12 @@ import { getUserContextData } from '../../../context/userContext';
 export default class Repository {
   public list(data: any, limit?: number) {
     let query: any = {
-      order: data?.orderWithParent ? [[Sequelize.col('parent.nama_lokasi'), 'ASC'], ['nama_lokasi', 'ASC']] : [['nama_lokasi', 'ASC']],
+      order: data?.orderWithParent
+        ? [
+            [Sequelize.col('parent.nama_lokasi'), 'ASC'],
+            ['nama_lokasi', 'ASC'],
+          ]
+        : [['nama_lokasi', 'ASC']],
       include: [
         {
           model: Model,
@@ -39,7 +44,7 @@ export default class Repository {
         jenis_lokasi: data?.jenis_lokasi,
       };
     }
-    
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_cabang && !data?.all_cabang) {
       query.where = {

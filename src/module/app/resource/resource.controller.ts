@@ -160,7 +160,7 @@ export default class Controller {
       return helper.catchError(`resource create: ${err?.message}`, 500, res);
     }
 
-    if (req?.body?.status != "A") {
+    if (req?.body?.status != 'A') {
       try {
         await helper.sendEmail({
           to: req?.body?.email,

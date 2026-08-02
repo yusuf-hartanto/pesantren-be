@@ -301,7 +301,7 @@ export default class Repository {
         '$organizationUnit.id_cabang$': userContext?.id_cabang,
       };
     }
-    
+
     if (!isTemplate) {
       if (id_jabatan && id_jabatan !== '') {
         whereClause.id_jabatan = id_jabatan;

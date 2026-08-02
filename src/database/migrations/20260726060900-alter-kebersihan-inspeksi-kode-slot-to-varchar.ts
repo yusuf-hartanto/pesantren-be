@@ -15,7 +15,7 @@ export const up = async (queryInterface: QueryInterface) => {
 
 export const down = async (queryInterface: QueryInterface) => {
   await queryInterface.sequelize.query(
-    'CREATE TYPE "enum_kebersihan_inspeksi_kode_slot" AS ENUM(\'PAGI\', \'SIANG\', \'SORE\', \'MALAM\');'
+    "CREATE TYPE \"enum_kebersihan_inspeksi_kode_slot\" AS ENUM('PAGI', 'SIANG', 'SORE', 'MALAM');"
   );
 
   await queryInterface.changeColumn('kebersihan_inspeksi', 'kode_slot', {

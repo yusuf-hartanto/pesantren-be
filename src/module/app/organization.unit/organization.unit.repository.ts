@@ -44,7 +44,7 @@ export default class Repository {
     const conn = await rawQuery.getConnection();
     return await conn.query(query, {
       type: QueryTypes.SELECT,
-      replacements: { 
+      replacements: {
         keyword,
         id_cabang: userContext?.id_cabang || null,
       },
@@ -110,14 +110,14 @@ export default class Repository {
     const [dataResult, countResult] = await Promise.all([
       conn.query(queryData, {
         type: QueryTypes.SELECT,
-        replacements: { 
+        replacements: {
           keyword,
           id_cabang: userContext?.id_cabang || null,
         },
       }),
       conn.query<any>(queryCount, {
         type: QueryTypes.SELECT,
-        replacements: { 
+        replacements: {
           keyword,
           id_cabang: userContext?.id_cabang || null,
         },
@@ -202,7 +202,9 @@ export default class Repository {
     if (!isTemplate && keyword) {
       whereClause = [
         { deleted_at: null },
-        ...(userContext && userContext?.id_cabang ? [{ id_cabang: userContext.id_cabang }] : []),
+        ...(userContext && userContext?.id_cabang
+          ? [{ id_cabang: userContext.id_cabang }]
+          : []),
         {
           [Op.or]: [
             Sequelize.where(

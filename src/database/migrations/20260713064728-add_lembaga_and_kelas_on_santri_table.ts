@@ -23,7 +23,7 @@ export const up = async (queryInterface: QueryInterface) => {
         { transaction }
       );
     }
-    
+
     if (!tableDesc.id_lembaga_mda) {
       await queryInterface.addColumn(
         'santri',
@@ -82,47 +82,30 @@ export const up = async (queryInterface: QueryInterface) => {
 
 export const down = async (queryInterface: QueryInterface) => {
   return queryInterface.sequelize.transaction(async (transaction) => {
-    const tableDesc: any =
-      await queryInterface.describeTable('santri');
+    const tableDesc: any = await queryInterface.describeTable('santri');
 
     if (tableDesc.id_lembaga_formal) {
-      await queryInterface.removeColumn(
-        'santri',
-        'id_lembaga_formal',
-        {
-          transaction,
-        }
-      );
+      await queryInterface.removeColumn('santri', 'id_lembaga_formal', {
+        transaction,
+      });
     }
-    
+
     if (tableDesc.id_lembaga_mda) {
-      await queryInterface.removeColumn(
-        'santri',
-        'id_lembaga_mda',
-        {
-          transaction,
-        }
-      );
+      await queryInterface.removeColumn('santri', 'id_lembaga_mda', {
+        transaction,
+      });
     }
 
     if (tableDesc.id_kelas_formal) {
-      await queryInterface.removeColumn(
-        'santri',
-        'id_kelas_formal',
-        {
-          transaction,
-        }
-      );
+      await queryInterface.removeColumn('santri', 'id_kelas_formal', {
+        transaction,
+      });
     }
-    
+
     if (tableDesc.id_kelas_mda) {
-      await queryInterface.removeColumn(
-        'santri',
-        'id_kelas_mda',
-        {
-          transaction,
-        }
-      );
+      await queryInterface.removeColumn('santri', 'id_kelas_mda', {
+        transaction,
+      });
     }
   });
 };
