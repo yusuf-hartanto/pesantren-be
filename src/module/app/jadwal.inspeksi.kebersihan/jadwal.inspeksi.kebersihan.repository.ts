@@ -291,6 +291,25 @@ export default class Repository {
       individualHooks: true,
     });
   }
+
+  public async findAllByDayAndTime(day: number, jam: string) {
+    return Model.findAll({
+      where: {
+        hari: day,
+      },
+      include: [
+        {
+          model: MasterSlotWaktu,
+          as: 'master_slot_waktu',
+          required: true,
+          attributes: ['kode_slot', 'jam_mulai', 'jam_selesai'],
+          where: {
+            jam_mulai: jam
+          }
+        },
+      ],
+    });
+  }
 }
 
 export const repository = new Repository();

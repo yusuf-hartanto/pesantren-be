@@ -21,6 +21,8 @@ import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { service } from '../module/global/global.service';
 import { rawQuery } from './rawQuery';
 import { repository as notificationRepository } from '../module/app/notification/notification.repository';
+import { repository as jadwalInspeksiKebersihanRepository } from '../module/app/jadwal.inspeksi.kebersihan/jadwal.inspeksi.kebersihan.repository';
+import { repository as appResourceRepository } from '../module/app/resource/resource.repository';
 
 const month: string = moment().tz(TIMEZONE).format('YYYY-MM');
 const parseTimeToSeconds = (time: string): number => {
@@ -361,6 +363,40 @@ export default class Helper {
       }
     } catch (err: any) {
       await this.sendNotif(`[cron] failed update jam selesai: ${err?.message}`);
+    }
+  }
+
+  public async reminderInspeksi() {
+    try {
+      const day: number = moment().tz(TIMEZONE).day() == 0 ? 7 : moment().tz(TIMEZONE).day();
+      const jam: string = moment().tz(TIMEZONE).format('HH:mm');
+      const result = await jadwalInspeksiKebersihanRepository.findAllByDayAndTime(day, jam);
+
+      if (result.length < 1) return;
+      
+      for (const item of result) {
+        const resource = await appResourceRepository.detail({ id_eksternal: item.id_petugas }, '');
+
+        if (resource) {
+          const dataMessage = {
+            title: 'Jadwal Inspeksi Kebersihan',
+            message: `${item.kode_slot} (${item.master_slot_waktu?.jam_mulai?.toString().slice(0, -3)} - ${item.master_slot_waktu?.jam_selesai?.toString().slice(0, -3)})`,
+            url: `/app/kebersihan-inspeksi/form`,
+            receiver: [resource.username],
+            type: 'Inspeksi',
+          };
+
+          helper.sendNotification({} as Request, dataMessage);
+        }
+      }
+
+      if (result.length > 0) {
+        await this.sendNotif(
+          `[cron] success reminder inspeksi: ${result.length} baris`
+        );
+      }
+    } catch (err: any) {
+      await this.sendNotif(`[cron] failed reminder inspeksi: ${err?.message}`);
     }
   }
 

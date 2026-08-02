@@ -91,6 +91,17 @@ async function bootstrap() {
     }
   );
 
+  cron.schedule(
+    '* * * * *',
+    async () => {
+      await helper.reminderInspeksi();
+    },
+    {
+      scheduled: true,
+      timezone: TIMEZONE,
+    }
+  );
+
   app.listen(dataConfig?.port, () => {
     console.log(`⚡️[server]: Server is running on port: ${dataConfig?.port}`);
   });

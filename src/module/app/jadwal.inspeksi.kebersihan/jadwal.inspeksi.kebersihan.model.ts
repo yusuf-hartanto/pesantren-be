@@ -14,6 +14,7 @@ export class JadwalInspeksiKebersihan extends Model {
   declare hari: number;
   declare keterangan: string;
   declare is_active: boolean;
+  declare master_slot_waktu?: MasterSlotWaktu;
 }
 
 export function initJadwalInspeksiKebersihan(sequelize: Sequelize) {
