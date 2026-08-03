@@ -11,13 +11,14 @@ export default class Repository {
   public async list(data: any) {
     const keyword = data?.keyword ? `%${data.keyword.toLowerCase()}%` : null;
     const userContext = getUserContextData();
+    const idCabangFilter = data?.id_cabang || userContext?.id_cabang || null;
 
     // Gunakan array untuk menampung kondisi
     const conditions = ['o.deleted_at IS NULL'];
     if (keyword) {
       conditions.push(`LOWER(o.nama_orgunit) LIKE :keyword`);
     }
-    if (userContext && userContext?.id_cabang) {
+    if (idCabangFilter) {
       conditions.push(`o.id_cabang = :id_cabang`);
     }
 
@@ -46,7 +47,7 @@ export default class Repository {
       type: QueryTypes.SELECT,
       replacements: {
         keyword,
-        id_cabang: userContext?.id_cabang || null,
+        id_cabang: idCabangFilter,
       },
     });
   }
