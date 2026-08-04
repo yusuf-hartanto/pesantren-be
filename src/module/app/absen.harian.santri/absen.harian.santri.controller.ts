@@ -178,8 +178,8 @@ export default class Controller {
             jenis_izin: 'Izin',
             status_approval: 'Disetujui',
             is_canceled: false,
-            tanggal_mulai: { [Op.lte]: today },
-            tanggal_selesai: { [Op.gte]: today },
+            tanggal_mulai: { [Op.lte]: `${today} 23:59:59` },
+            tanggal_selesai: { [Op.gte]: `${today} 00:00:00` },
           },
         });
 

@@ -333,8 +333,8 @@ export class KesehatanSantriRepository {
             {
               status_approval: 'Disetujui',
               kondisi: 'Normal',
-              tanggal_mulai: { [Op.lte]: today },
-              tanggal_selesai: { [Op.gte]: today },
+              tanggal_mulai: { [Op.lte]: `${today} 23:59:59` },
+              tanggal_selesai: { [Op.gte]: `${today} 00:00:00` },
             },
           ],
         },
@@ -354,8 +354,8 @@ export class KesehatanSantriRepository {
           {
             status_approval: 'Disetujui',
             kondisi: 'Normal',
-            tanggal_mulai: { [Op.lte]: today },
-            tanggal_selesai: { [Op.gte]: today },
+            tanggal_mulai: { [Op.lte]: `${today} 23:59:59` },
+            tanggal_selesai: { [Op.gte]: `${today} 00:00:00` },
           },
         ],
       },

@@ -170,8 +170,16 @@ export class PerizinanSantriRepository {
     // Filter Date Range Picker (Berdasarkan tanggal_mulai dan tanggal_selesai)
     if (data?.start_date && data?.end_date) {
       query.where[Op.and] = [
-        { tanggal_mulai: { [Op.lte]: data.end_date } },
-        { tanggal_selesai: { [Op.gte]: data.start_date } },
+        {
+          tanggal_mulai: {
+            [Op.lte]: `${data.end_date} 23:59:59`
+          },
+        },
+        {
+          tanggal_selesai: {
+            [Op.gte]: `${data.start_date} 00:00:00`,
+          },
+        },
       ];
     }
 
@@ -255,8 +263,8 @@ export class PerizinanSantriRepository {
         status_approval: 'Disetujui',
         is_canceled: false,
         deleted_at: null,
-        tanggal_mulai: { [Op.lte]: today },
-        tanggal_selesai: { [Op.gte]: today },
+        tanggal_mulai: { [Op.lte]: `${today} 23:59:59` },
+        tanggal_selesai: { [Op.gte]: `${today} 00:00:00` },
       },
       include: [
         {
@@ -325,8 +333,8 @@ export class PerizinanSantriRepository {
           {
             status_approval: 'Disetujui',
             is_canceled: false,
-            tanggal_mulai: { [Op.lte]: today },
-            tanggal_selesai: { [Op.gte]: today },
+            tanggal_mulai: { [Op.lte]: `${today} 23:59:59` },
+            tanggal_selesai: { [Op.gte]: `${today} 00:00:00` },
           },
         ],
       },
