@@ -355,7 +355,21 @@ export default class Controller {
         });
       }
 
-      await repository.upsertBulkAbsen(validatedPayloads);
+      const result = await repository.upsertBulkAbsen(validatedPayloads);
+
+      const firstAbsenId = result?.[0]?.id_absen || '';
+      const namaJampel = encodeURIComponent(
+        jamPelajarans[0]?.getDataValue('nama_jampel') || ''
+      );
+
+      const dataMessage = {
+        title: 'Absen Kelas Santri',
+        message: `Presensi Kelas Santri (Manual) pada tanggal ${targetTanggal} berhasil`,
+        url: `/app/absen-kelas-santri/form?id=${firstAbsenId}&view=true&mode=kolektif&tanggal=${targetTanggal}&id_lokasi=${validBody.id_lokasi}&id_jam_pelajaran=${validBody.id_jam_pelajaran || id_jam_pelajaran}&nama_jampel=${namaJampel}`,
+        receiver: req.user?.username,
+        type: 'Absen Kelas Santri',
+      };
+      helper.sendNotification(req, dataMessage);
 
       return response.success(
         SUCCESS_SAVED,
@@ -633,7 +647,21 @@ export default class Controller {
         id_jurnal,
       };
 
-      await repository.upsertSingleAbsen(payload);
+      const result = await repository.upsertSingleAbsen(payload);
+
+      const firstAbsenId = result?.id_absen || '';
+      const namaJampel = encodeURIComponent(
+        jamPelajaran?.getDataValue('nama_jampel') || ''
+      );
+
+      const dataMessage = {
+        title: 'Absen Kelas Santri',
+        message: `Presensi Kelas Santri (Scan QR) pada tanggal ${targetTanggal} berhasil`,
+        url: `/app/absen-kelas-santri/form?id=${firstAbsenId}&view=true&mode=kolektif&tanggal=${targetTanggal}&id_lokasi=${validBody.id_lokasi}&id_jam_pelajaran=${id_jam_pelajaran}&nama_jampel=${namaJampel}`,
+        receiver: req.user?.username,
+        type: 'Absen Kelas Santri',
+      };
+      helper.sendNotification(req, dataMessage);
 
       return response.success(
         status_kehadiran === 'Alfa'

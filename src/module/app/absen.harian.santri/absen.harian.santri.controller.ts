@@ -367,7 +367,24 @@ export default class Controller {
         });
       }
 
-      await repository.upsertBulkAbsen(validatedPayloads);
+      const result = await repository.upsertBulkAbsen(validatedPayloads);
+
+      const firstAbsenId = result?.[0]?.id_absen || '';
+      const namaShift = encodeURIComponent(
+        shiftDocs[0]?.getDataValue('nama_shift') || ''
+      );
+      const namaLokasi = encodeURIComponent(
+        shiftDocs[0]?.getDataValue('nama_lokasi') || ''
+      );
+
+      const dataMessage = {
+        title: 'Absen Kamar Santri',
+        message: `Presensi Kamar Santri (Manual) pada tanggal ${targetTanggal} berhasil`,
+        url: `/app/absen-harian-santri/form?id=${firstAbsenId}&view=true&mode=kolektif&tanggal=${targetTanggal}&id_lokasi_kamar=${validBody.id_lokasi_kamar}&id_shift_presensi=${validBody.id_shift_presensi || id_shift_presensi}&nama_shift=${namaShift}&nama_lokasi=${namaLokasi}`,
+        receiver: req.user?.username,
+        type: 'Absen Kamar Santri',
+      };
+      helper.sendNotification(req, dataMessage);
 
       return response.success(
         SUCCESS_SAVED,
@@ -644,7 +661,24 @@ export default class Controller {
       };
 
       // Jalankan eksekusi Upsert data ke Database Log Presensi
-      await repository.upsertSingleAbsen(payload);
+      const result = await repository.upsertSingleAbsen(payload);
+
+      const firstAbsenId = result?.id_absen || '';
+      const namaShift = encodeURIComponent(
+        shiftDoc?.getDataValue('nama_shift') || ''
+      );
+      const namaLokasi = encodeURIComponent(
+        shiftDoc?.getDataValue('nama_lokasi') || ''
+      );
+
+      const dataMessage = {
+        title: 'Absen Kamar Santri',
+        message: `Presensi Kamar Santri (Scan QR) pada tanggal ${targetTanggal} berhasil`,
+        url: `/app/absen-harian-santri/form?id=${firstAbsenId}&view=true&mode=kolektif&tanggal=${targetTanggal}&id_lokasi_kamar=${idLokasiSantri}&id_shift_presensi=${id_shift_presensi}&nama_shift=${namaShift}&nama_lokasi=${namaLokasi}`,
+        receiver: req.user?.username,
+        type: 'Absen Kamar Santri',
+      };
+      helper.sendNotification(req, dataMessage);
 
       // Berikan data response sukses balik yang informatif untuk dipajang di layar monitor frontend scanner
       return response.success(

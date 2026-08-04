@@ -282,6 +282,16 @@ export default class Controller {
       };
 
       await repository.create([payloadAbsen]);
+
+      const dataMessage = {
+        title: 'Absen Harian Pegawai',
+        message: `Absen Masuk (Clock In) pada tanggal ${tanggalHariIni} berhasil`,
+        url: `/app/pegawai-absen-harian`,
+        receiver: req.user?.username,
+        type: 'Absen Harian Pegawai',
+      };
+      helper.sendNotification(req, dataMessage);
+
       return response.success(
         'Berhasil melakukan absensi masuk (Clock In). Selamat Bekerja!',
         null,
@@ -385,6 +395,15 @@ export default class Controller {
         },
         condition: { id_absen: attendance.id_absen },
       });
+
+      const dataMessage = {
+        title: 'Absen Harian Pegawai',
+        message: `Absen Pulang (Clock Out) pada tanggal ${tanggalHariIni} berhasil`,
+        url: `/app/pegawai-absen-harian`,
+        receiver: req.user?.username,
+        type: 'Absen Harian Pegawai',
+      };
+      helper.sendNotification(req, dataMessage);
 
       return response.success(
         'Berhasil melakukan absensi pulang (Clock Out). Terima kasih atas kerja keras Anda!',

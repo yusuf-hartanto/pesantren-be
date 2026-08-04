@@ -222,6 +222,38 @@ export default class Controller {
         condition: { id_temuan: id },
       });
 
+
+      const receiver = await helper.receiverByRole(['administrator', 'pendidikan_kebersihan']);
+      const oldStatus = Number(
+        check?.getDataValue ? check.getDataValue('status') : check?.status ?? 0
+      );
+      const rawStatus =
+        typeof req?.body?.status === 'object'
+          ? req?.body?.status?.value
+          : req?.body?.status;
+      const newStatus =
+        rawStatus !== undefined && rawStatus !== null
+          ? Number(rawStatus)
+          : undefined;
+
+      if (oldStatus === 0 && newStatus !== undefined && newStatus !== 0) {
+        const statusLabels: Record<number, string> = {
+          0: 'Belum Diproses',
+          1: 'Sedang Diproses',
+          2: 'Sudah Diproses',
+          3: 'Tidak Dapat Diproses',
+        };
+        const labelStatus = statusLabels[newStatus] || 'Diproses';
+        const dataMessage = {
+          title: 'Kebersihan Temuan',
+          message: `Status Temuan Kebersihan telah diubah menjadi "${labelStatus}"`,
+          url: `/app/kebersihan-temuan/form?id=${id}&view=true`,
+          receiver: receiver,
+          type: 'Kebersihan Temuan',
+        };
+        helper.sendNotification(req, dataMessage);
+      }
+
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
       return helper.catchError(

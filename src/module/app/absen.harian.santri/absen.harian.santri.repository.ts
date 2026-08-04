@@ -185,6 +185,7 @@ export default class Repository {
   public async upsertBulkAbsen(payloads: any[]) {
     const trx = await Model.sequelize?.transaction();
     try {
+      const results: any[] = [];
       for (const item of payloads) {
         const existing = await Model.findOne({
           where: {
@@ -197,13 +198,15 @@ export default class Repository {
         });
 
         if (existing) {
-          await existing.update(item, { transaction: trx });
+          const updated = await existing.update(item, { transaction: trx });
+          results.push(updated);
         } else {
-          await Model.create(item, { transaction: trx });
+          const created = await Model.create(item, { transaction: trx });
+          results.push(created);
         }
       }
       await trx?.commit();
-      return true;
+      return results;
     } catch (error) {
       await trx?.rollback();
       throw error;
