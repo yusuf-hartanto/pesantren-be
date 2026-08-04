@@ -33,6 +33,7 @@ const generateToken = async (user: any) => {
     province_id: user?.getDataValue('area_province_id'),
     regency_id: user?.getDataValue('area_regencies_id'),
     role_name: role?.getDataValue('role_name'),
+    role_id: role?.getDataValue('role_id')
   };
 
   const token: string = helperauth.newToken(payload);

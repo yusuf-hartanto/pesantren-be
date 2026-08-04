@@ -11,6 +11,7 @@ import { repository as LogGateRepository } from '../log.gate.santri/log.gate.san
 import { repository as paramRepository } from '../param.global/param.global.repository';
 import { repository as santriRepository } from '../santri/santri.repository';
 import { repository as pegawaiRepository } from '../pegawai/pegawai.repository';
+import { repository as roleMenuRepository } from '../role.menu/role.menu.repository';
 import { variable } from './perizinan.santri.variable';
 import {
   pengajuanIzinSchema,
@@ -520,13 +521,42 @@ export default class Controller {
     }
   }
 
+  public async checkPerizinanAccessMenu(roleId: number) {
+    const result = await roleMenuRepository.detailRole({ role_id: roleId });
+    
+    const roleData = result ? result.get({ plain: true }) : null;
+
+    if (!roleData || !roleData.role_menu) {
+        return false;
+    }
+
+    const hasAccess = roleData.role_menu.some((roleMenu: any) => {
+        const menu = roleMenu.menu;
+        if (!menu || !menu.module_name) return false;
+
+        // Cek apakah module_name mengandung kata "perizinan-santri" atau "perizinan-pegawai"
+        const isTargetModule = 
+            menu.module_name.includes("perizinan-santri") || 
+            menu.module_name.includes("perizinan-pegawai");
+
+        // Cek apakah kondisi terpenuhi dan nilai approve === 1 (atau true tergantung tipe data database Anda)
+        const isApproved = roleMenu.approve === 1; // Sesuaikan properti 'approve' jika namanya berbeda di tabel perantara
+
+        return isTargetModule && isApproved;
+    });
+
+    return hasAccess;
+}
+
   /**
    * Fungsi approve perizinan (Diterima / Ditolak oleh petugas_kedisiplinan)
    */
   public async approve(req: Request, res: Response) {
-    const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
+  
+    // const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
+    const allowedRoles = await this.checkPerizinanAccessMenu(req?.user?.role_id);
 
-    if (!allowedRoles.includes(req?.user?.role_name)) {
+    if (!allowedRoles) {
       return helper.catchError(
         'Akses Ditolak: Hanya Petugas Kedisiplinan atau Administrator yang dapat memproses instruksi ini.',
         403,
@@ -732,7 +762,9 @@ export default class Controller {
    */
   public async cancel(req: Request, res: Response) {
     const trx = await PerizinanSantri.sequelize?.transaction();
-    const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
+    // const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
+    const allowedRoles = await this.checkPerizinanAccessMenu(req?.user?.role_id);
+
 
     try {
       const id = req.params.id;
@@ -746,7 +778,7 @@ export default class Controller {
       if (check.status_approval === 'Menunggu') {
         // Bisa dibatalkan langsung
       } else if (check.status_approval === 'Disetujui') {
-        if (!allowedRoles.includes(userRole)) {
+        if (!allowedRoles) {
           throw new Error(
             'Pembatalan izin yang telah disetujui hanya bisa dilakukan oleh Petugas Kedisiplinan atau Administrator.'
           );
@@ -765,7 +797,7 @@ export default class Controller {
           kondisi: 'Arsip',
           alasan_penutupan:
             req.body.alasan_penutupan ||
-            `Dibatalkan oleh ${allowedRoles.includes(userRole) ? 'Petugas' : 'Pengguna'}`,
+            `Dibatalkan oleh ${allowedRoles ? 'Petugas' : 'Pengguna'}`,
         },
         { id_izin: id },
         trx
