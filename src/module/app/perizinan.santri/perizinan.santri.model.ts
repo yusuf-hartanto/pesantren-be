@@ -2,13 +2,14 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import moment from 'moment';
+import moment from 'moment-timezone';
 
 import Santri from '../santri/santri.model';
 import Pegawai from '../pegawai/pegawai.model';
 import Lokasi from '../location/location.model';
 import AppResource from '../resource/resource.model';
 import SuratPerizinanSantri from '../surat.perizinan.santri/surat.perizinan.santri.model';
+import { TIMEZONE } from '../../../utils/constant';
 
 export class PerizinanSantri extends Model {
   declare id_izin: string;
@@ -89,11 +90,11 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         allowNull: false,
         get() {
           const value = this.getDataValue('tanggal_pengajuan');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          return value ? moment(value).tz(TIMEZONE).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
           const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            ? moment.tz(value, TIMEZONE).format('YYYY-MM-DD HH:mm:ss')
             : null;
           this.setDataValue('tanggal_pengajuan', formattedValue);
         },
@@ -103,11 +104,11 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         allowNull: false,
         get() {
           const value = this.getDataValue('tanggal_mulai');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          return value ? moment(value).tz(TIMEZONE).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
           const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            ? moment.tz(value, TIMEZONE).format('YYYY-MM-DD HH:mm:ss')
             : null;
           this.setDataValue('tanggal_mulai', formattedValue);
         },
@@ -117,11 +118,11 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         allowNull: false,
         get() {
           const value = this.getDataValue('tanggal_selesai');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          return value ? moment(value).tz(TIMEZONE).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
           const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            ? moment.tz(value, TIMEZONE).format('YYYY-MM-DD HH:mm:ss')
             : null;
           this.setDataValue('tanggal_selesai', formattedValue);
         },
@@ -144,11 +145,11 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         allowNull: true,
         get() {
           const value = this.getDataValue('tanggal_approval');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          return value ? moment(value).tz(TIMEZONE).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
           const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            ? moment.tz(value, TIMEZONE).format('YYYY-MM-DD HH:mm:ss')
             : null;
           this.setDataValue('tanggal_approval', formattedValue);
         },
@@ -180,11 +181,11 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         allowNull: true,
         get() {
           const value = this.getDataValue('request_canceled_at');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          return value ? moment(value).tz(TIMEZONE).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
           const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            ? moment.tz(value, TIMEZONE).format('YYYY-MM-DD HH:mm:ss')
             : null;
           this.setDataValue('request_canceled_at', formattedValue);
         },
@@ -194,11 +195,11 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         allowNull: true,
         get() {
           const value = this.getDataValue('canceled_at');
-          return value ? moment(value).format('YYYY-MM-DD HH:mm:ss') : null;
+          return value ? moment(value).tz(TIMEZONE).format('YYYY-MM-DD HH:mm:ss') : null;
         },
         set(value) {
           const formattedValue = value
-            ? moment(value).format('YYYY-MM-DD HH:mm:ss')
+            ? moment.tz(value, TIMEZONE).format('YYYY-MM-DD HH:mm:ss')
             : null;
           this.setDataValue('canceled_at', formattedValue);
         },
