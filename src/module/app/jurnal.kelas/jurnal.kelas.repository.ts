@@ -98,6 +98,7 @@ export default class Repository {
         ['jam_mulai', 'DESC'],
       ],
       distinct: true,
+      subQuery: false,
       include: [
         {
           model: AppResource,

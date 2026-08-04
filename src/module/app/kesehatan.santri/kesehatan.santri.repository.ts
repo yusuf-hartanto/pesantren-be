@@ -177,7 +177,10 @@ export class KesehatanSantriRepository {
     });
 
     const countInclude = includeClause.filter(
-      (inc) => inc.model === Santri || inc.model === Pegawai
+      (inc) =>
+        inc.model === Santri ||
+        inc.model === Pegawai ||
+        inc.model === AppResource
     );
 
     const count = await KesehatanSantri.count({
