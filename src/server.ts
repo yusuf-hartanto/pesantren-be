@@ -1,5 +1,7 @@
 'use strict';
 
+process.env.TZ = 'Asia/Jakarta';
+
 import cors from 'cors';
 import moment from 'moment';
 import cron from 'node-cron';
@@ -21,7 +23,6 @@ import { initializeDatabase } from './database/connection';
 import { initializeTelegram } from './config/config.telegram';
 import { initializeModels } from './module/models/models.index';
 import { TIMEZONE } from './utils/constant';
-import { rawQuery } from './helpers/rawQuery';
 
 async function bootstrap() {
   const dataConfig = await Config.initialize();
