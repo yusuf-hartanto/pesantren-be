@@ -92,15 +92,6 @@ router.get('/param-global/all-data', auth.checkToken, paramGlobal.list);
 router.get('/param-global', auth.checkToken, paramGlobal.index);
 router.get('/param-global/detail', auth.checkToken, paramGlobal.detail);
 
-router.get('/notification', auth.checkToken, notification.index);
-router.put(
-  '/notification/:id',
-  sanitizeBody,
-  validate(notificationSchema),
-  notification.update
-);
-router.delete('/notification/:id', notification.delete);
-
 // required token
 router.use(auth.checkBearerToken);
 
@@ -1041,5 +1032,14 @@ router.post(
   auth.checkBearerToken,
   kesehatanSantri.export
 );
+
+router.get('/notification', notification.index);
+router.put(
+  '/notification/:id',
+  sanitizeBody,
+  validate(notificationSchema),
+  notification.update
+);
+router.delete('/notification/:id', notification.delete);
 
 export default router;
