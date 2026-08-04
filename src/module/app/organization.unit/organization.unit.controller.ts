@@ -106,7 +106,7 @@ const validateRow = (row: any) => {
 export default class Controller {
   public async list(req: Request, res: Response) {
     try {
-      const result = await repository.list({});
+      const result = await repository.list(req.query || {});
       if (result?.length < 1)
         return response.success(NOT_FOUND, null, res, false);
       return response.success(SUCCESS_RETRIEVED, result, res);

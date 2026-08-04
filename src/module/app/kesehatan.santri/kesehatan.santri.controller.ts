@@ -90,6 +90,8 @@ export class KesehatanSantriController {
       const {
         progres_status,
         kategori_sakit,
+        id_cabang,
+        id_orgunit,
         id_santri,
         id_pegawai,
         tanggal_awal,
@@ -100,6 +102,8 @@ export class KesehatanSantriController {
         ...query,
         progres_status,
         kategori_sakit,
+        id_cabang,
+        id_orgunit,
         id_santri,
         id_pegawai,
         tanggal_awal,
@@ -411,6 +415,8 @@ export class KesehatanSantriController {
       const {
         progres_status,
         kategori_sakit,
+        id_cabang,
+        id_orgunit,
         id_santri,
         id_pegawai,
         tanggal_awal,
@@ -421,9 +427,11 @@ export class KesehatanSantriController {
       } = req.body;
       const filterData = {
         page: 1,
-        perPage: 100000, // Fetch all matching records
+        perPage: 100000,
         progres_status,
         kategori_sakit,
+        id_cabang,
+        id_orgunit,
         id_santri,
         id_pegawai,
         tanggal_awal,
