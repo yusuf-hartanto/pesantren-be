@@ -331,11 +331,14 @@ export default class Helper {
         result = await AppResource.sequelize?.query(
           `
           UPDATE jurnal_kelas jk
-          SET jam_selesai = jp.selesai
+          SET jam_selesai = CASE
+            WHEN jk.jam_mulai > jp.selesai THEN jk.jam_mulai
+            ELSE jp.selesai
+          END
           FROM jam_pelajaran jp
           WHERE jp.id_jampel = jk.id_jam_pelajaran
             AND jk.jam_selesai IS NULL
-            AND jp.selesai < (NOW() AT TIME ZONE 'Asia/Jakarta')::time
+            AND (jp.selesai + INTERVAL '1 hour') < (NOW() AT TIME ZONE 'Asia/Jakarta')::time
           `,
           { type: QueryTypes.UPDATE }
         );
@@ -346,9 +349,12 @@ export default class Helper {
           `
           UPDATE jurnal_kelas jk
           JOIN jam_pelajaran jp ON jp.id_jampel = jk.id_jam_pelajaran
-          SET jk.jam_selesai = jp.selesai
+          SET jk.jam_selesai = CASE
+            WHEN jk.jam_mulai > jp.selesai THEN jk.jam_mulai
+            ELSE jp.selesai
+          END
           WHERE jk.jam_selesai IS NULL
-            AND jp.selesai < TIME(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+            AND ADDTIME(jp.selesai, '01:00:00') < TIME(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
           `,
           {
             type: QueryTypes.UPDATE,
