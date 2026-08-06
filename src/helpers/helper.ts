@@ -332,7 +332,7 @@ export default class Helper {
           `
           UPDATE jurnal_kelas jk
           SET jam_selesai = CASE
-            WHEN jk.jam_mulai > jp.selesai THEN jk.jam_mulai
+            WHEN jk.jam_mulai > jp.selesai THEN (jk.jam_mulai + INTERVAL '1 minute')::time
             ELSE jp.selesai
           END
           FROM jam_pelajaran jp
@@ -350,7 +350,7 @@ export default class Helper {
           UPDATE jurnal_kelas jk
           JOIN jam_pelajaran jp ON jp.id_jampel = jk.id_jam_pelajaran
           SET jk.jam_selesai = CASE
-            WHEN jk.jam_mulai > jp.selesai THEN jk.jam_mulai
+            WHEN jk.jam_mulai > jp.selesai THEN ADDTIME(jk.jam_mulai, '00:01:00')
             ELSE jp.selesai
           END
           WHERE jk.jam_selesai IS NULL
