@@ -604,7 +604,7 @@ export default class Helper {
   }
 
   public checkExtentionBase64(base64: string, type: string = 'image') {
-    if (!base64) return 'file tidak valid';
+    if (!base64 || /\/uploads\//.test(base64)) return 'file tidak valid';
 
     let mimeType = '';
     let data = '';
