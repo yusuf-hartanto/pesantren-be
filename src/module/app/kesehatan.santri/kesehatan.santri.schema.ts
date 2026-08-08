@@ -96,7 +96,48 @@ export const createKesehatanSchema = z
   );
 
 export const updateKesehatanSchema = z.object({
+  id_santri: z
+    .string()
+    .uuid({ message: 'Format ID Santri harus berupa UUID' })
+    .nullable()
+    .optional(),
+
+  id_pegawai: z
+    .string()
+    .uuid({ message: 'Format ID Pegawai harus berupa UUID' })
+    .nullable()
+    .optional(),
+
+  id_lokasi_kerja: z
+    .string()
+    .uuid({ message: 'Format ID Lokasi Kerja harus berupa UUID' })
+    .nullable()
+    .optional(),
+
+  kategori_sakit: z.enum(['Ringan', 'Sedang', 'Berat']).optional(),
+
+  progres_status: z.enum(['Selesai', 'Dirawat', 'Dirujuk']).optional(),
+
+  keluhan: z.string().optional(),
+
   tindakan: z.string().nullable().optional(),
+
   obat_diberikan: z.string().nullable().optional(),
+
+  tanggal_mulai_rawat: z.string().nullable().optional(),
+
+  tempat_dirawat: z.string().nullable().optional(),
+
+  estimasi_hari: z
+    .number()
+    .nullable()
+    .optional(),
+
+  tanggal_dirujuk: z.string().nullable().optional(),
+
+  tempat_rujukan: z.string().nullable().optional(),
+
   keterangan: z.string().nullable().optional(),
+
+  tanggal_event: z.string().nullable().optional(),
 });

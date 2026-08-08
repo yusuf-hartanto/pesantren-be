@@ -188,7 +188,7 @@ export default class Controller {
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       const data: Object = helper.only(variable.fillable(), req?.body, true);
-console.log(foto_path, '-->')
+
       let fotoPath = null;
       let checkFile = helper.checkExtentionBase64(foto_path);
       if (checkFile == 'allowed') {

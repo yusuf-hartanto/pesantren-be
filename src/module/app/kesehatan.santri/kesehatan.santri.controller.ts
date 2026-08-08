@@ -349,15 +349,6 @@ export class KesehatanSantriController {
         return response.success(NOT_FOUND, null, res, false);
       }
 
-      if (check.perizinan_id || check.izin_auto_created) {
-        return response.success(
-          'Event kesehatan yang telah memicu perizinan tidak boleh diubah.',
-          null,
-          res,
-          false
-        );
-      }
-
       const validData = updateKesehatanSchema.parse(req.body);
       const dataUpdate: Object = helper.only(variable.fillable(), validData);
 
