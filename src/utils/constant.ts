@@ -41,4 +41,3 @@ export const ALLOWED_ACTIVITY_LOG_TABLES: string[] = [
   'kebersihan_temuan',
   'kebersihan_inspeksi',
 ];
-

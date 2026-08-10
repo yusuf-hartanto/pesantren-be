@@ -22,7 +22,13 @@ export default class Repository {
         {
           model: OrganizationUnit,
           as: 'organizationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit', 'id_cabang', 'id_lembaga', 'lembaga_type'],
+          attributes: [
+            'id_orgunit',
+            'nama_orgunit',
+            'id_cabang',
+            'id_lembaga',
+            'lembaga_type',
+          ],
           required: false,
         },
         {

@@ -122,11 +122,20 @@ export function initAppResourceRole(sequelize: Sequelize) {
 }
 
 export function associateAppResourceRole() {
-  AppResourceRole.belongsTo(AppResource, { as: 'resource', foreignKey: 'resource_id' });
+  AppResourceRole.belongsTo(AppResource, {
+    as: 'resource',
+    foreignKey: 'resource_id',
+  });
   AppResourceRole.belongsTo(AppRole, { as: 'role', foreignKey: 'role_id' });
-  AppResourceRole.belongsTo(Pegawai, { as: 'pegawai', foreignKey: 'id_pegawai' });
+  AppResourceRole.belongsTo(Pegawai, {
+    as: 'pegawai',
+    foreignKey: 'id_pegawai',
+  });
   AppResourceRole.belongsTo(Cabang, { as: 'cabang', foreignKey: 'id_cabang' });
-  AppResourceRole.belongsTo(OrganizationUnit, { as: 'organizationUnit', foreignKey: 'id_orgunit' });
+  AppResourceRole.belongsTo(OrganizationUnit, {
+    as: 'organizationUnit',
+    foreignKey: 'id_orgunit',
+  });
   AppResourceRole.belongsTo(LembagaPendidikanFormal, {
     foreignKey: 'id_lembaga',
     as: 'lembagaPendidikanFormal',

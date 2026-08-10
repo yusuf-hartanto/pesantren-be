@@ -231,7 +231,10 @@ export default class Controller {
 
       // Send notification
       if (result && result.status_kondisi === 'RUSAK') {
-        const receiver = await helper.receiverByRole(['administrator', 'pendidikan_kebersihan']);
+        const receiver = await helper.receiverByRole([
+          'administrator',
+          'pendidikan_kebersihan',
+        ]);
 
         const dataMessage = {
           title: 'Inspeksi',

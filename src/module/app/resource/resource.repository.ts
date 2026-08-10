@@ -245,6 +245,37 @@ export default class Repository {
             },
           ],
         },
+      ],
+    });
+  }
+
+  public detailResourceRoles(condition: any) {
+    const whereClause: any = {
+      ...condition,
+      status: { [Op.ne]: 'D' },
+    };
+
+    return Model.findOne({
+      where: whereClause,
+      include: [
+        {
+          model: AreaProvince,
+          attributes: ['id', 'name'],
+          as: 'province',
+          required: false,
+        },
+        {
+          model: AreaRegency,
+          attributes: ['id', 'name', 'area_province_id'],
+          as: 'regency',
+          required: false,
+        },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          required: false,
+          attributes: ['id_pegawai', 'nama_lengkap', 'id_orgunit'],
+        },
         {
           model: AppResourceRole,
           as: 'user_roles',

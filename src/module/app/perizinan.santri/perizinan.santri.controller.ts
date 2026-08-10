@@ -523,38 +523,39 @@ export default class Controller {
 
   public async checkPerizinanAccessMenu(roleId: number) {
     const result = await roleMenuRepository.detailRole({ role_id: roleId });
-    
+
     const roleData = result ? result.get({ plain: true }) : null;
 
     if (!roleData || !roleData.role_menu) {
-        return false;
+      return false;
     }
 
     const hasAccess = roleData.role_menu.some((roleMenu: any) => {
-        const menu = roleMenu.menu;
-        if (!menu || !menu.module_name) return false;
+      const menu = roleMenu.menu;
+      if (!menu || !menu.module_name) return false;
 
-        // Cek apakah module_name mengandung kata "perizinan-santri" atau "perizinan-pegawai"
-        const isTargetModule = 
-            menu.module_name.includes("perizinan-santri") || 
-            menu.module_name.includes("perizinan-pegawai");
+      // Cek apakah module_name mengandung kata "perizinan-santri" atau "perizinan-pegawai"
+      const isTargetModule =
+        menu.module_name.includes('perizinan-santri') ||
+        menu.module_name.includes('perizinan-pegawai');
 
-        // Cek apakah kondisi terpenuhi dan nilai approve === 1 (atau true tergantung tipe data database Anda)
-        const isApproved = roleMenu.approve === 1; // Sesuaikan properti 'approve' jika namanya berbeda di tabel perantara
+      // Cek apakah kondisi terpenuhi dan nilai approve === 1 (atau true tergantung tipe data database Anda)
+      const isApproved = roleMenu.approve === 1; // Sesuaikan properti 'approve' jika namanya berbeda di tabel perantara
 
-        return isTargetModule && isApproved;
+      return isTargetModule && isApproved;
     });
 
     return hasAccess;
-}
+  }
 
   /**
    * Fungsi approve perizinan (Diterima / Ditolak oleh petugas_kedisiplinan)
    */
   public async approve(req: Request, res: Response) {
-  
     // const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
-    const allowedRoles = await this.checkPerizinanAccessMenu(req?.user?.role_id);
+    const allowedRoles = await this.checkPerizinanAccessMenu(
+      req?.user?.role_id
+    );
 
     if (!allowedRoles) {
       return helper.catchError(
@@ -763,8 +764,9 @@ export default class Controller {
   public async cancel(req: Request, res: Response) {
     const trx = await PerizinanSantri.sequelize?.transaction();
     // const allowedRoles = ['pegawai_kedisiplinan', 'wali_asuh', 'administrator'];
-    const allowedRoles = await this.checkPerizinanAccessMenu(req?.user?.role_id);
-
+    const allowedRoles = await this.checkPerizinanAccessMenu(
+      req?.user?.role_id
+    );
 
     try {
       const id = req.params.id;

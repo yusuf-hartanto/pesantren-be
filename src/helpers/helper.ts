@@ -375,14 +375,19 @@ export default class Helper {
 
   public async reminderInspeksi() {
     try {
-      const day: number = moment().tz(TIMEZONE).day() == 0 ? 7 : moment().tz(TIMEZONE).day();
+      const day: number =
+        moment().tz(TIMEZONE).day() == 0 ? 7 : moment().tz(TIMEZONE).day();
       const jam: string = moment().tz(TIMEZONE).format('HH:mm');
-      const result = await jadwalInspeksiKebersihanRepository.findAllByDayAndTime(day, jam);
+      const result =
+        await jadwalInspeksiKebersihanRepository.findAllByDayAndTime(day, jam);
 
       if (result.length < 1) return;
-      
+
       for (const item of result) {
-        const resource = await appResourceRepository.detail({ id_eksternal: item.id_petugas }, '');
+        const resource = await appResourceRepository.detail(
+          { id_eksternal: item.id_petugas },
+          ''
+        );
 
         if (resource) {
           const dataMessage = {
@@ -423,7 +428,9 @@ export default class Helper {
         );
       }
     } catch (err: any) {
-      await this.sendNotif(`[cron] failed delete activity_logs: ${err?.message}`);
+      await this.sendNotif(
+        `[cron] failed delete activity_logs: ${err?.message}`
+      );
     }
   }
 

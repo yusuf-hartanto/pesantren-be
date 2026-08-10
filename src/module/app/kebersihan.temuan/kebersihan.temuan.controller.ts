@@ -222,10 +222,14 @@ export default class Controller {
         condition: { id_temuan: id },
       });
 
-
-      const receiver = await helper.receiverByRole(['administrator', 'pendidikan_kebersihan']);
+      const receiver = await helper.receiverByRole([
+        'administrator',
+        'pendidikan_kebersihan',
+      ]);
       const oldStatus = Number(
-        check?.getDataValue ? check.getDataValue('status') : check?.status ?? 0
+        check?.getDataValue
+          ? check.getDataValue('status')
+          : (check?.status ?? 0)
       );
       const rawStatus =
         typeof req?.body?.status === 'object'
