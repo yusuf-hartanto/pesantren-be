@@ -103,6 +103,17 @@ async function bootstrap() {
     }
   );
 
+  cron.schedule(
+    '0 1 * * *',
+    async () => {
+      await helper.deleteOldActivityLogs();
+    },
+    {
+      scheduled: true,
+      timezone: TIMEZONE,
+    }
+  );
+
   app.listen(dataConfig?.port, () => {
     console.log(`⚡️[server]: Server is running on port: ${dataConfig?.port}`);
   });

@@ -32,3 +32,13 @@ export const POSTGRES: string = 'postgres';
 
 // timezone
 export const TIMEZONE: string = 'Asia/Jakarta';
+
+// activity log allowed tables
+export const ALLOWED_ACTIVITY_LOG_TABLES: string[] = [
+  'perizinan_santri',
+  'absen_kelas_santri',
+  'absen_harian_santri',
+  'kebersihan_temuan',
+  'kebersihan_inspeksi',
+];
+

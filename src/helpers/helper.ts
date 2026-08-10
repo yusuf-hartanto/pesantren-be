@@ -8,7 +8,7 @@ import ExcelJS from 'exceljs';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import TelegramBot from 'tele-sender';
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, Op } from 'sequelize';
 import { Request, Response } from 'express';
 import { response } from '../helpers/response';
 import { appConfig } from '../config/config.app';
@@ -17,6 +17,7 @@ import { parse as ParseCSV } from 'csv-parse/sync';
 import { teleConfig } from '../config/config.telegram';
 import { APP_NAME, MYSQL, POSTGRES, TIMEZONE } from '../utils/constant';
 import AppResource from '../module/app/resource/resource.model';
+import ActivityLog from '../module/global/activity.log.model';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { service } from '../module/global/global.service';
 import { rawQuery } from './rawQuery';
@@ -403,6 +404,26 @@ export default class Helper {
       }
     } catch (err: any) {
       await this.sendNotif(`[cron] failed reminder inspeksi: ${err?.message}`);
+    }
+  }
+
+  public async deleteOldActivityLogs() {
+    try {
+      const oneMonthAgo = moment().subtract(1, 'month').toDate();
+      const deletedCount = await ActivityLog.destroy({
+        where: {
+          created_at: {
+            [Op.lt]: oneMonthAgo,
+          },
+        },
+      });
+      if (deletedCount > 0) {
+        await this.sendNotif(
+          `[cron] success delete activity_logs (> 1 month old): ${deletedCount} baris`
+        );
+      }
+    } catch (err: any) {
+      await this.sendNotif(`[cron] failed delete activity_logs: ${err?.message}`);
     }
   }
 

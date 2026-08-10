@@ -87,6 +87,7 @@ import ActivityLog, {
   associateActivityLog,
 } from '../global/activity.log.model';
 import { getUserLogin } from '../../context/userContext';
+import { ALLOWED_ACTIVITY_LOG_TABLES } from '../../utils/constant';
 import {
   associateLembagaPendidikanFormal,
   initLembagaPendidikanFormal,
@@ -349,14 +350,16 @@ Model.prototype.toJSON = function () {
 
 function addGlobalActivityHooks(sequelize: Sequelize) {
   sequelize.addHook('beforeUpdate', (instance: any) => {
-    if (instance?.constructor.tableName === 'activity_logs') return;
+    const tableName = instance?.constructor?.tableName;
+    if (!tableName || !ALLOWED_ACTIVITY_LOG_TABLES.includes(tableName)) return;
     instance._previousDataValuesSnapshot = { ...instance?._previousDataValues };
   });
 
   sequelize.addHook('afterUpdate', async (instance: any) => {
-    if (instance?.constructor.tableName === 'activity_logs') return;
+    const tableName = instance?.constructor?.tableName;
+    if (!tableName || !ALLOWED_ACTIVITY_LOG_TABLES.includes(tableName)) return;
     await ActivityLog.create({
-      table_name: instance?.constructor.tableName,
+      table_name: tableName,
       record_id: getPrimaryKey(instance),
       action: 'UPDATE',
       username: getUserLogin(),
@@ -366,9 +369,10 @@ function addGlobalActivityHooks(sequelize: Sequelize) {
   });
 
   sequelize.addHook('afterCreate', async (instance: any) => {
-    if (instance?.constructor.tableName === 'activity_logs') return;
+    const tableName = instance?.constructor?.tableName;
+    if (!tableName || !ALLOWED_ACTIVITY_LOG_TABLES.includes(tableName)) return;
     await ActivityLog.create({
-      table_name: instance?.constructor.tableName,
+      table_name: tableName,
       record_id: getPrimaryKey(instance),
       action: 'CREATE',
       username: getUserLogin(),
@@ -378,9 +382,10 @@ function addGlobalActivityHooks(sequelize: Sequelize) {
   });
 
   sequelize.addHook('afterDestroy', async (instance: any) => {
-    if (instance?.constructor.tableName === 'activity_logs') return;
+    const tableName = instance?.constructor?.tableName;
+    if (!tableName || !ALLOWED_ACTIVITY_LOG_TABLES.includes(tableName)) return;
     await ActivityLog.create({
-      table_name: instance?.constructor.tableName,
+      table_name: tableName,
       record_id: getPrimaryKey(instance),
       action: 'DELETE',
       username: getUserLogin(),
