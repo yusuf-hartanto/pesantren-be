@@ -13,6 +13,8 @@ import JamKerjaPegawai from '../pegawai.jam.kerja/pegawai.jam.kerja.model';
 import Lokasi from '../location/location.model';
 import AppResourceRole from '../resource.role/resource.role.model';
 import { getUserContextData } from '../../../context/userContext';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
 export default class Repository {
   public list(data: any) {
@@ -267,6 +269,16 @@ export default class Repository {
               model: OrganizationUnit,
               as: 'organizationUnit',
               attributes: ['id_orgunit', 'nama_orgunit'],
+            },
+            {
+              model: LembagaPendidikanFormal,
+              as: 'lembagaPendidikanFormal',
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+            {
+              model: LembagaPendidikanKepesantrenan,
+              as: 'lembagaPendidikanKepesantrenan',
+              attributes: ['id_lembaga', 'nama_lembaga'],
             },
           ],
         },
