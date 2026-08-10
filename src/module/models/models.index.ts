@@ -24,6 +24,10 @@ import {
   initAppResourceModel,
   associateAppResource,
 } from '../app/resource/resource.model';
+import {
+  initAppResourceRole,
+  associateAppResourceRole,
+} from '../app/resource.role/resource.role.model';
 import { initTahunAngkatan } from '../app/tahun.angkatan/tahun.angkatan.model';
 import { initTingkat } from '../app/tingkat/tingkat.model';
 import {
@@ -268,6 +272,7 @@ export function initializeModels(sequelize: Sequelize) {
 
   initGuruPengganti(sequelize);
   initKesehatanSantri(sequelize);
+  initAppResourceRole(sequelize);
 
   // associate
   associateAppRole();
@@ -324,6 +329,7 @@ export function initializeModels(sequelize: Sequelize) {
   addGlobalActivityHooks(sequelize);
   associateGuruPengganti();
   associateKesehatanSantri();
+  associateAppResourceRole();
 }
 
 Model.prototype.toJSON = function () {

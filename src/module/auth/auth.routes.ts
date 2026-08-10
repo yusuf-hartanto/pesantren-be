@@ -21,5 +21,6 @@ router.post('/forgot-password', controller.forgot);
 router.post('/reset-password', controller.reset);
 
 router.post('/verify-otp', controller.verifyOtp);
+router.post('/switch-role', auth.checkToken, controller.switchRole);
 
 export default router;

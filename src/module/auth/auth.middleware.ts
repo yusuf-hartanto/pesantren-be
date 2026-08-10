@@ -145,18 +145,24 @@ export default class Middleware {
 
       setUserLogin(auth?.username || 'sistem');
       const pegawai: any = user?.getDataValue('pegawai') || null;
-      if (pegawai) {
-        setUserContextData({
-          id_cabang:
-            pegawai?.getDataValue('organizationUnit')?.id_cabang || null,
-          id_lembaga:
-            pegawai?.getDataValue('organizationUnit')?.id_lembaga || null,
-          lembaga_type:
-            pegawai?.getDataValue('organizationUnit')?.lembaga_type || null,
-          id_orgunit:
-            pegawai?.getDataValue('organizationUnit')?.id_orgunit || null,
-        });
-      }
+      const orgUnit = pegawai?.getDataValue('organizationUnit') || null;
+
+      const idCabang = auth?.id_cabang ?? (orgUnit?.id_cabang || null);
+      const idOrgunit = auth?.id_orgunit ?? (orgUnit?.id_orgunit || null);
+      const idLembaga = auth?.id_lembaga ?? (orgUnit?.id_lembaga || null);
+      const lembagaType = auth?.lembaga_type ?? (orgUnit?.lembaga_type || null);
+      const roleId = auth?.role_id || user?.getDataValue('role_id') || null;
+      const idResourceRole = auth?.id_resource_role || null;
+
+      setUserContextData({
+        id_cabang: idCabang,
+        id_orgunit: idOrgunit,
+        id_lembaga: idLembaga,
+        lembaga_type: lembagaType,
+        role_id: roleId,
+        id_resource_role: idResourceRole,
+      });
+
       req.user = auth;
       next();
       return;

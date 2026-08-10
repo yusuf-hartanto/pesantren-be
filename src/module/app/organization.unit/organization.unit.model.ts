@@ -2,12 +2,9 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
-import LembagaPendidikan, {
-  LembagaPendidikanKepesantrenan,
-} from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export class OrganizationUnit extends Model {
   declare id_orgunit: string;

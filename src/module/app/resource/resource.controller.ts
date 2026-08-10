@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import { variable } from './resource.variable';
 import { helper } from '../../../helpers/helper';
 import { repository } from './resource.repository';
+import { repository as repoResourceRole } from '../resource.role/resource.role.repository';
 import { response } from '../../../helpers/response';
 import { transformer } from './resource.transformer';
 import { appConfig } from '../../../config/config.app';
@@ -140,7 +141,7 @@ export default class Controller {
       const password: string = await helper.hashIt(req?.body?.password);
       const only: Object = helper.only(variable.fillable(), req?.body);
 
-      await repository.create({
+      const createdUser: any = await repository.create({
         payload: {
           ...only,
           username: username,
@@ -154,6 +155,41 @@ export default class Controller {
           created_by: req?.user?.id || null,
         },
       });
+
+      // Handle user_roles mapping
+      let userRolesInput = req?.body?.user_roles;
+      if (typeof userRolesInput === 'string') {
+        try {
+          userRolesInput = JSON.parse(userRolesInput);
+        } catch (e) {
+          userRolesInput = null;
+        }
+      }
+
+      const resourceId = createdUser?.getDataValue('resource_id') || createdUser?.resource_id;
+
+      if (Array.isArray(userRolesInput) && userRolesInput.length > 0) {
+        const rolesToCreate = userRolesInput.map((ur: any, idx: number) => ({
+          resource_id: resourceId,
+          role_id: ur.role_id?.value || ur.role_id,
+          id_pegawai: ur.id_pegawai?.value || ur.id_pegawai || req.body.id_eksternal || null,
+          id_cabang: ur.id_cabang?.value || ur.id_cabang || null,
+          id_orgunit: ur.id_orgunit?.value || ur.id_orgunit || null,
+          id_lembaga: ur.id_lembaga?.value || ur.id_lembaga || null,
+          lembaga_type: ur.lembaga_type?.value || ur.lembaga_type || null,
+          is_default: ur.is_default !== undefined ? (ur.is_default ? 1 : 0) : (idx === 0 ? 1 : 0),
+          created_by: req?.user?.id || null,
+        }));
+        await repoResourceRole.bulkCreate(rolesToCreate);
+      } else if (role_id?.value) {
+        await repoResourceRole.create({
+          resource_id: resourceId,
+          role_id: role_id.value,
+          id_pegawai: req.body.id_eksternal || null,
+          is_default: 1,
+          created_by: req?.user?.id || null,
+        });
+      }
 
       message = SUCCESS_SAVED;
     } catch (err: any) {
@@ -241,6 +277,31 @@ export default class Controller {
         },
         condition: { resource_id: id },
       });
+
+      let userRolesInput = req?.body?.user_roles;
+      if (typeof userRolesInput === 'string') {
+        try {
+          userRolesInput = JSON.parse(userRolesInput);
+        } catch (e) {
+          userRolesInput = null;
+        }
+      }
+
+      if (Array.isArray(userRolesInput)) {
+        await repoResourceRole.delete({ resource_id: id });
+        const rolesToCreate = userRolesInput.map((ur: any, idx: number) => ({
+          resource_id: id,
+          role_id: ur.role_id?.value || ur.role_id,
+          id_pegawai: ur.id_pegawai?.value || ur.id_pegawai || null,
+          id_cabang: ur.id_cabang?.value || ur.id_cabang || null,
+          id_orgunit: ur.id_orgunit?.value || ur.id_orgunit || null,
+          id_lembaga: ur.id_lembaga?.value || ur.id_lembaga || null,
+          lembaga_type: ur.lembaga_type?.value || ur.lembaga_type || null,
+          is_default: ur.is_default !== undefined ? (ur.is_default ? 1 : 0) : (idx === 0 ? 1 : 0),
+          created_by: req?.user?.id || null,
+        }));
+        await repoResourceRole.bulkCreate(rolesToCreate);
+      }
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
@@ -358,6 +419,68 @@ export default class Controller {
       return response.success(SUCCESS_DELETED, null, res);
     } catch (err: any) {
       return helper.catchError(`resource delete: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async migrateRoles(req: Request, res: Response) {
+    try {
+      const users: any = await repository.list({ includePegawai: true });
+      let totalMigrated = 0;
+
+      for (const u of users) {
+        const resourceId = u.getDataValue('resource_id');
+        const roleId = u.getDataValue('role_id');
+        const pegawaiId = u.getDataValue('id_eksternal');
+
+        if (!roleId) continue;
+
+        const existing = await repoResourceRole.detail({
+          resource_id: resourceId,
+          role_id: roleId,
+        });
+
+        if (!existing) {
+          let orgUnitId: any = null;
+          let cabangId: any = null;
+          let lembagaId: any = null;
+          let lembagaType: any = null;
+
+          if (pegawaiId) {
+            const pegawai: any = u.getDataValue('pegawai');
+            if (pegawai) {
+              orgUnitId = pegawai.getDataValue('id_orgunit');
+              const ou = pegawai.getDataValue('organizationUnit');
+              if (ou) {
+                cabangId = ou.getDataValue('id_cabang');
+                lembagaId = ou.getDataValue('id_lembaga');
+                lembagaType = ou.getDataValue('lembaga_type');
+              }
+            }
+          }
+
+          await repoResourceRole.create({
+            resource_id: resourceId,
+            role_id: roleId,
+            id_pegawai: pegawaiId || null,
+            id_orgunit: orgUnitId || null,
+            id_cabang: cabangId || null,
+            id_lembaga: lembagaId || null,
+            lembaga_type: lembagaType || null,
+            is_default: 1,
+            status: 'ACTIVE',
+            created_by: req?.user?.id || 'system',
+          });
+          totalMigrated++;
+        }
+      }
+
+      return response.success(
+        `Migration completed successfully. Total ${totalMigrated} user role record(s) backfilled.`,
+        { total_migrated: totalMigrated },
+        res
+      );
+    } catch (err: any) {
+      return helper.catchError(`resource migrateRoles: ${err?.message}`, 500, res);
     }
   }
 }

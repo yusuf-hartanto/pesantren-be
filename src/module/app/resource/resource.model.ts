@@ -126,6 +126,8 @@ export function initAppResourceModel(sequelize: Sequelize) {
   return AppResource;
 }
 
+import AppResourceRole from '../resource.role/resource.role.model';
+
 export function associateAppResource() {
   AppResource.belongsTo(AppRole, { as: 'role', foreignKey: 'role_id' });
   AppResource.belongsTo(AreaProvince, {
@@ -139,6 +141,10 @@ export function associateAppResource() {
   AppResource.belongsTo(Pegawai, {
     as: 'pegawai',
     foreignKey: 'id_eksternal',
+  });
+  AppResource.hasMany(AppResourceRole, {
+    as: 'user_roles',
+    foreignKey: 'resource_id',
   });
 }
 

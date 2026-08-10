@@ -11,12 +11,59 @@ import OrganizationUnit from '../organization.unit/organization.unit.model';
 import Cabang from '../cabang/cabang.model';
 import JamKerjaPegawai from '../pegawai.jam.kerja/pegawai.jam.kerja.model';
 import Lokasi from '../location/location.model';
+import AppResourceRole from '../resource.role/resource.role.model';
 import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
   public list(data: any) {
+    let include: any[] = [];
+    if (data?.includePegawai) {
+      include.push({
+        model: Pegawai,
+        as: 'pegawai',
+        required: false,
+        attributes: ['id_pegawai', 'nama_lengkap', 'id_orgunit'],
+        include: [
+          {
+            model: OrganizationUnit,
+            as: 'organizationUnit',
+            attributes: [
+              'id_orgunit',
+              'nama_orgunit',
+              'id_cabang',
+              'id_lembaga',
+              'lembaga_type',
+            ],
+            required: false,
+            include: [
+              {
+                model: Cabang,
+                as: 'cabang',
+                attributes: ['id_cabang', 'nama_cabang'],
+                required: false,
+              },
+            ],
+          },
+          {
+            model: JamKerjaPegawai,
+            as: 'jamKerjaPegawai',
+            attributes: ['id_lokasi', 'waktu_mulai', 'waktu_selesai'],
+            required: false,
+            include: [
+              {
+                model: Lokasi,
+                as: 'lokasiKerja',
+                attributes: ['nama_lokasi'],
+              },
+            ],
+          },
+        ],
+      });
+    }
+
     return Model.findAll({
       where: data?.condition,
+      include: include.length > 0 ? include : undefined,
       order: [['created_date', 'DESC']],
     });
   }
@@ -193,6 +240,33 @@ export default class Repository {
                   attributes: ['nama_lokasi'],
                 },
               ],
+            },
+          ],
+        },
+        {
+          model: AppResourceRole,
+          as: 'user_roles',
+          required: false,
+          include: [
+            {
+              model: AppRole,
+              as: 'role',
+              attributes: ['role_id', 'role_name'],
+            },
+            {
+              model: Pegawai,
+              as: 'pegawai',
+              attributes: ['id_pegawai', 'nama_lengkap'],
+            },
+            {
+              model: Cabang,
+              as: 'cabang',
+              attributes: ['id_cabang', 'nama_cabang'],
+            },
+            {
+              model: OrganizationUnit,
+              as: 'organizationUnit',
+              attributes: ['id_orgunit', 'nama_orgunit'],
             },
           ],
         },

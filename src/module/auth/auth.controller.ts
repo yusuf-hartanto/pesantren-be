@@ -12,6 +12,7 @@ import { variable } from '../app/resource/resource.variable';
 import { repository } from '../app/resource/resource.repository';
 import { transformer } from '../app/resource/resource.transformer';
 import { repository as repoRole } from '../app/role/role.repository';
+import { repository as repoResourceRole } from '../app/resource.role/resource.role.repository';
 import {
   ALREADY_EXIST,
   NOT_FOUND,
@@ -26,19 +27,33 @@ const otpExpired: number = 15;
 const loginOtp: boolean = process.env.LOGIN_OTP == 'true';
 
 const generateToken = async (user: any) => {
+  const resourceId = user?.getDataValue('resource_id');
+  const userRoles: any = await repoResourceRole.listByUser(resourceId);
+
+  let activeRole: any = null;
+  if (userRoles && userRoles.length > 0) {
+    activeRole = userRoles.find((r: any) => r.is_default === 1) || userRoles[0];
+  }
+
   const role = user?.getDataValue('role');
-  const payload: Object = {
-    id: user?.getDataValue('resource_id'),
+  const payload: any = {
+    id: resourceId,
     username: user?.getDataValue('username'),
     province_id: user?.getDataValue('area_province_id'),
     regency_id: user?.getDataValue('area_regencies_id'),
-    role_name: role?.getDataValue('role_name'),
-    role_id: role?.getDataValue('role_id')
+    role_name: activeRole?.role?.role_name || role?.getDataValue('role_name'),
+    role_id: activeRole?.role_id || role?.getDataValue('role_id'),
+    id_resource_role: activeRole?.id_resource_role || null,
+    id_pegawai: activeRole?.id_pegawai || user?.getDataValue('id_eksternal') || null,
+    id_cabang: activeRole?.id_cabang || null,
+    id_orgunit: activeRole?.id_orgunit || null,
+    id_lembaga: activeRole?.id_lembaga || null,
+    lembaga_type: activeRole?.lembaga_type || null,
   };
 
   const token: string = helperauth.newToken(payload);
   const refresh: string = await helperauth.newToken({
-    id: user?.getDataValue('resource_id'),
+    id: resourceId,
   });
   const getUser: Object = await transformer.detail(user);
   const totalLogin: Number = user?.getDataValue('total_login') + 1;
@@ -49,13 +64,15 @@ const generateToken = async (user: any) => {
       token_expired: helper.dateAdd(7, 'days'),
       total_login: totalLogin,
     },
-    condition: { resource_id: user?.getDataValue('resource_id') },
+    condition: { resource_id: resourceId },
   });
 
   const data: Object = {
     userdata: {
       ...getUser,
       total_login: totalLogin,
+      active_role: activeRole,
+      available_roles: userRoles,
     },
     access_token: token,
     refresh_token: refresh,
@@ -407,6 +424,75 @@ export default class Controller {
       return response.success('verify otp success', data, res);
     } catch (err: any) {
       return helper.catchError(`verify otp: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async switchRole(req: Request, res: Response) {
+    try {
+      const resourceId = req?.user?.id;
+      const targetRoleId = req?.body?.id_resource_role || req?.body?.id;
+      if (!targetRoleId) {
+        return response.failed('id_resource_role is required', 422, res);
+      }
+
+      const selectedRole: any = await repoResourceRole.detail({
+        id_resource_role: targetRoleId,
+        resource_id: resourceId,
+        status: 'ACTIVE',
+      });
+
+      if (!selectedRole) {
+        return response.failed('Selected role assignment not found or inactive', 404, res);
+      }
+
+      await repoResourceRole.update({ is_default: 0 }, { resource_id: resourceId });
+      await repoResourceRole.update({ is_default: 1 }, { id_resource_role: targetRoleId });
+
+      selectedRole.is_default = 1;
+
+      const user = await repository.detail({ resource_id: resourceId }, '');
+      if (!user) return response.success(NOT_FOUND, null, res, false);
+
+      const payload: any = {
+        id: resourceId,
+        username: user?.getDataValue('username'),
+        province_id: user?.getDataValue('area_province_id'),
+        regency_id: user?.getDataValue('area_regencies_id'),
+        role_name: selectedRole?.role?.role_name,
+        role_id: selectedRole?.role_id,
+        id_resource_role: selectedRole?.id_resource_role,
+        id_pegawai: selectedRole?.id_pegawai,
+        id_cabang: selectedRole?.id_cabang,
+        id_orgunit: selectedRole?.id_orgunit,
+        id_lembaga: selectedRole?.id_lembaga,
+        lembaga_type: selectedRole?.lembaga_type,
+      };
+
+      const newToken: string = helperauth.newToken(payload);
+
+      await repository.update({
+        payload: {
+          role_id: selectedRole?.role_id,
+          token: newToken,
+          token_expired: helper.dateAdd(7, 'days'),
+        },
+        condition: { resource_id: resourceId },
+      });
+
+      const userRoles: any = await repoResourceRole.listByUser(resourceId);
+
+      const data = {
+        userdata: {
+          ...(await transformer.detail(user)),
+          active_role: selectedRole,
+          available_roles: userRoles,
+        },
+        access_token: newToken,
+      };
+
+      return response.success('Role switched successfully', data, res);
+    } catch (err: any) {
+      return helper.catchError(`switchRole: ${err?.message}`, 500, res);
     }
   }
 }
