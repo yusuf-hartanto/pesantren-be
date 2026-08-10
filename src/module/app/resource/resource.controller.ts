@@ -156,7 +156,6 @@ export default class Controller {
         },
       });
 
-      // Handle user_roles mapping
       let userRolesInput = req?.body?.user_roles;
       if (typeof userRolesInput === 'string') {
         try {
@@ -278,6 +277,20 @@ export default class Controller {
         condition: { resource_id: id },
       });
 
+      return response.success(SUCCESS_UPDATED, null, res);
+    } catch (err: any) {
+      return helper.catchError(`resource update: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async updateRoles(req: Request, res: Response) {
+    try {
+      const { role_name } = req?.user;
+      const id: string = req?.params?.id || '';
+      const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
+      const check = await repository.check({ resource_id: id }, admin);
+      if (!check) return response.success(NOT_FOUND, null, res, false);
+
       let userRolesInput = req?.body?.user_roles;
       if (typeof userRolesInput === 'string') {
         try {
@@ -301,11 +314,19 @@ export default class Controller {
           created_by: req?.user?.id || null,
         }));
         await repoResourceRole.bulkCreate(rolesToCreate);
+
+        const defaultRole = rolesToCreate.find((r: any) => r.is_default === 1);
+        if (defaultRole?.role_id) {
+          await repository.update({
+            payload: { role_id: defaultRole.role_id, modified_by: req?.user?.id },
+            condition: { resource_id: id }
+          });
+        }
       }
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(`resource update: ${err?.message}`, 500, res);
+      return helper.catchError(`resource updateRoles: ${err?.message}`, 500, res);
     }
   }
 

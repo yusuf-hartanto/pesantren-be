@@ -131,6 +131,7 @@ router.post('/param-global/insert', paramGlobal.insert);
 router.get('/resource', resource.index);
 router.get('/resource/check/:username', resource.check);
 router.post('/resource/migrate-roles', resource.migrateRoles);
+router.post('/resource/roles/:id', resource.updateRoles);
 router.get('/resource/:id', resource.detail);
 router.post('/resource', resource.create);
 router.put('/resource/update-password/:id', resource.updatePassword);
