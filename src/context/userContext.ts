@@ -52,7 +52,8 @@ export function setUserContextData(
     if (data.lembaga_type !== undefined) store.lembaga_type = data.lembaga_type;
     if (data.id_lokasi !== undefined) store.id_lokasi = data.id_lokasi;
     if (data.role_id !== undefined) store.role_id = data.role_id;
-    if (data.id_resource_role !== undefined) store.id_resource_role = data.id_resource_role;
+    if (data.id_resource_role !== undefined)
+      store.id_resource_role = data.id_resource_role;
   }
 }
 

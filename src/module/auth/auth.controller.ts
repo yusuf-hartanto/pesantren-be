@@ -28,12 +28,10 @@ const loginOtp: boolean = process.env.LOGIN_OTP == 'true';
 
 const generateToken = async (user: any) => {
   const resourceId = user?.getDataValue('resource_id');
-  const userRoles: any = await repoResourceRole.listByUser(resourceId);
-
-  let activeRole: any = null;
-  if (userRoles && userRoles.length > 0) {
-    activeRole = userRoles.find((r: any) => r.is_default === 1) || userRoles[0];
-  }
+  const activeRole: any = await repoResourceRole.detail({
+    resource_id: resourceId,
+    is_default: 1,
+  });
 
   const role = user?.getDataValue('role');
   const payload: any = {
@@ -44,7 +42,8 @@ const generateToken = async (user: any) => {
     role_name: activeRole?.role?.role_name || role?.getDataValue('role_name'),
     role_id: activeRole?.role_id || role?.getDataValue('role_id'),
     id_resource_role: activeRole?.id_resource_role || null,
-    id_pegawai: activeRole?.id_pegawai || user?.getDataValue('id_eksternal') || null,
+    id_pegawai:
+      activeRole?.id_pegawai || user?.getDataValue('id_eksternal') || null,
     id_cabang: activeRole?.id_cabang || null,
     id_orgunit: activeRole?.id_orgunit || null,
     id_lembaga: activeRole?.id_lembaga || null,
@@ -72,7 +71,6 @@ const generateToken = async (user: any) => {
       ...getUser,
       total_login: totalLogin,
       active_role: activeRole,
-      available_roles: userRoles,
     },
     access_token: token,
     refresh_token: refresh,
@@ -442,11 +440,21 @@ export default class Controller {
       });
 
       if (!selectedRole) {
-        return response.failed('Selected role assignment not found or inactive', 404, res);
+        return response.failed(
+          'Selected role assignment not found or inactive',
+          404,
+          res
+        );
       }
 
-      await repoResourceRole.update({ is_default: 0 }, { resource_id: resourceId });
-      await repoResourceRole.update({ is_default: 1 }, { id_resource_role: targetRoleId });
+      await repoResourceRole.update(
+        { is_default: 0 },
+        { resource_id: resourceId }
+      );
+      await repoResourceRole.update(
+        { is_default: 1 },
+        { id_resource_role: targetRoleId }
+      );
 
       selectedRole.is_default = 1;
 

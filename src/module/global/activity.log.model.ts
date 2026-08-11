@@ -3,6 +3,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Resource from '../app/resource/resource.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
+import { ALLOWED_ACTIVITY_LOG_TABLES } from '../../utils/constant';
 
 export class ActivityLog extends Model {
   declare id: string;
@@ -63,6 +64,11 @@ export function initActivityLog(sequelize: Sequelize) {
   );
 
   ActivityLog.beforeCreate((activity_logs) => {
+    if (!ALLOWED_ACTIVITY_LOG_TABLES.includes(activity_logs.table_name)) {
+      throw new Error(
+        `Insert activity log not allowed for table: ${activity_logs.table_name}`
+      );
+    }
     activity_logs?.setDataValue('id', uuidv4());
   });
 

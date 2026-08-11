@@ -172,7 +172,7 @@ export class PerizinanSantriRepository {
       query.where[Op.and] = [
         {
           tanggal_mulai: {
-            [Op.lte]: `${data.end_date} 23:59:59`
+            [Op.lte]: `${data.end_date} 23:59:59`,
           },
         },
         {

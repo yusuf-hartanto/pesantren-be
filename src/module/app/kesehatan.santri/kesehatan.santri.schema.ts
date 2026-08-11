@@ -128,10 +128,7 @@ export const updateKesehatanSchema = z.object({
 
   tempat_dirawat: z.string().nullable().optional(),
 
-  estimasi_hari: z
-    .number()
-    .nullable()
-    .optional(),
+  estimasi_hari: z.number().nullable().optional(),
 
   tanggal_dirujuk: z.string().nullable().optional(),
 

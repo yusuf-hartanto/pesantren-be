@@ -5,6 +5,7 @@ import { DataTypes, Model, Sequelize, Op } from 'sequelize';
 import moment from 'moment';
 import Cabang from '../cabang/cabang.model';
 import Institution from '../institution/institution.model';
+import AppSantri from '../santri/santri.model';
 
 export class LembagaPendidikanFormal extends Model {
   declare id_lembaga: string;
@@ -129,18 +130,13 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
     if (!lembaga.institution_id_sitrendi) return;
 
     try {
-      const AppSantri = require('../santri/santri.model').default;
-      const CabangModel = require('../cabang/cabang.model').default;
-      const InstituionModel =
-        require('../institution/institution.model').default;
-
       let payload: any = {
         id_cabang: lembaga.id_cabang,
         id_lembaga_formal: lembaga.id_lembaga,
       };
 
       if (lembaga.id_cabang) {
-        const cabang = await CabangModel.findOne({
+        const cabang = await Cabang.findOne({
           where: { id_cabang: lembaga.id_cabang },
           attributes: ['nama_cabang'],
           transaction,
@@ -150,7 +146,7 @@ export function initLembagaPendidikanFormal(sequelize: Sequelize) {
       }
 
       if (lembaga.institution_id_sitrendi) {
-        const institution = await InstituionModel.findOne({
+        const institution = await Institution.findOne({
           where: { institution_id_sitrendi: lembaga.institution_id_sitrendi },
           attributes: ['id_institution', 'institution_name'],
           transaction,

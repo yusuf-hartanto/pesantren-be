@@ -13,6 +13,8 @@ import JamKerjaPegawai from '../pegawai.jam.kerja/pegawai.jam.kerja.model';
 import Lokasi from '../location/location.model';
 import AppResourceRole from '../resource.role/resource.role.model';
 import { getUserContextData } from '../../../context/userContext';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
 
 export default class Repository {
   public list(data: any) {
@@ -166,17 +168,10 @@ export default class Repository {
   }
 
   public detail(condition: any, admin: string = ROLE_ADMIN) {
-    const userContext = getUserContextData();
-    const idOrgunit = userContext?.id_orgunit;
-
     const whereClause: any = {
       ...condition,
       status: { [Op.ne]: 'D' },
     };
-
-    if (idOrgunit) {
-      whereClause['$pegawai.id_orgunit$'] = idOrgunit;
-    }
 
     return Model.findOne({
       where: whereClause,
@@ -205,7 +200,7 @@ export default class Repository {
         {
           model: Pegawai,
           as: 'pegawai',
-          required: !!idOrgunit,
+          required: false,
           attributes: ['id_pegawai', 'nama_lengkap', 'id_orgunit'],
           include: [
             {
@@ -243,6 +238,37 @@ export default class Repository {
             },
           ],
         },
+      ],
+    });
+  }
+
+  public detailResourceRoles(condition: any) {
+    const whereClause: any = {
+      ...condition,
+      status: { [Op.ne]: 'D' },
+    };
+
+    return Model.findOne({
+      where: whereClause,
+      include: [
+        {
+          model: AreaProvince,
+          attributes: ['id', 'name'],
+          as: 'province',
+          required: false,
+        },
+        {
+          model: AreaRegency,
+          attributes: ['id', 'name', 'area_province_id'],
+          as: 'regency',
+          required: false,
+        },
+        {
+          model: Pegawai,
+          as: 'pegawai',
+          required: false,
+          attributes: ['id_pegawai', 'nama_lengkap', 'id_orgunit'],
+        },
         {
           model: AppResourceRole,
           as: 'user_roles',
@@ -267,6 +293,16 @@ export default class Repository {
               model: OrganizationUnit,
               as: 'organizationUnit',
               attributes: ['id_orgunit', 'nama_orgunit'],
+            },
+            {
+              model: LembagaPendidikanFormal,
+              as: 'lembagaPendidikanFormal',
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+            {
+              model: LembagaPendidikanKepesantrenan,
+              as: 'lembagaPendidikanKepesantrenan',
+              attributes: ['id_lembaga', 'nama_lembaga'],
             },
           ],
         },

@@ -6,6 +6,8 @@ import { rawQuery } from '../../../helpers/rawQuery';
 import Cabang from '../cabang/cabang.model';
 import { Op } from 'sequelize';
 import { getUserContextData } from '../../../context/userContext';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public async list(data: any) {
@@ -290,17 +292,13 @@ export default class Repository {
         { model: Cabang, as: 'cabang', attributes: ['nama_cabang'] },
         { model: Model, as: 'parent', attributes: ['nama_orgunit'] },
         {
-          model:
-            require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model')
-              .default,
+          model: LembagaPendidikanFormal,
           as: 'lembagaPendidikanFormal',
           attributes: ['nama_lembaga'],
           required: false,
         },
         {
-          model:
-            require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model')
-              .default,
+          model: LembagaPendidikanKepesantrenan,
           as: 'lembagaPendidikanKepesantrenan',
           attributes: ['nama_lembaga'],
           required: false,

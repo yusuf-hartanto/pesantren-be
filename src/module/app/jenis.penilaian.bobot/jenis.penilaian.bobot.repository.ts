@@ -7,6 +7,8 @@ import JenisPenilaian from '../jenis.penilaian/jenis.penilaian.model';
 import Tingkat from '../tingkat/tingkat.model';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import { getUserContextData } from '../../../context/userContext';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 
 export default class Repository {
   public async validateBobotLogic(data: any, id_bobot?: string) {
@@ -375,16 +377,12 @@ export default class Repository {
           attributes: ['id_tahunajaran', 'tahun_ajaran'],
         },
         {
-          model:
-            require('../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model')
-              .default,
+          model: LembagaPendidikanFormal,
           as: 'lembagaPendidikanFormal',
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
         {
-          model:
-            require('../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model')
-              .default,
+          model: LembagaPendidikanKepesantrenan,
           as: 'lembagaPendidikanKepesantrenan',
           attributes: ['id_lembaga', 'nama_lembaga'],
         },

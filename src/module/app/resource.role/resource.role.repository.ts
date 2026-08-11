@@ -34,7 +34,13 @@ export class ResourceRoleRepository {
         {
           model: OrganizationUnit,
           as: 'organizationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit', 'id_cabang', 'id_lembaga', 'lembaga_type'],
+          attributes: [
+            'id_orgunit',
+            'nama_orgunit',
+            'id_cabang',
+            'id_lembaga',
+            'lembaga_type',
+          ],
         },
         {
           model: LembagaPendidikanFormal,
@@ -47,7 +53,10 @@ export class ResourceRoleRepository {
           attributes: ['id_lembaga', 'nama_lembaga'],
         },
       ],
-      order: [['is_default', 'DESC'], ['created_at', 'ASC']],
+      order: [
+        ['is_default', 'DESC'],
+        ['created_at', 'ASC'],
+      ],
     });
   }
 
@@ -73,7 +82,13 @@ export class ResourceRoleRepository {
         {
           model: OrganizationUnit,
           as: 'organizationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit', 'id_cabang', 'id_lembaga', 'lembaga_type'],
+          attributes: [
+            'id_orgunit',
+            'nama_orgunit',
+            'id_cabang',
+            'id_lembaga',
+            'lembaga_type',
+          ],
         },
         {
           model: LembagaPendidikanFormal,
