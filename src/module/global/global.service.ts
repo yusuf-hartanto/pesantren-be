@@ -1013,6 +1013,208 @@ export default class Service {
       mapped_count: mappedCount,
     };
   }
+
+  public async getSummaryKepesantrenan(
+    tanggal?: string,
+    tanggal_mulai?: string,
+    tanggal_selesai?: string,
+    id_cabang?: string,
+    id_lokasi?: string
+  ) {
+
+    let dateFilter: any;
+    let dateTimeFilter: any;
+    let startD: string;
+    let endD: string;
+
+    if (tanggal_mulai && tanggal_selesai) {
+      dateFilter = { [Op.between]: [tanggal_mulai, tanggal_selesai] };
+      dateTimeFilter = {
+        [Op.between]: [
+          `${tanggal_mulai} 00:00:00`,
+          `${tanggal_selesai} 23:59:59`,
+        ],
+      };
+      startD = tanggal_mulai;
+      endD = tanggal_selesai;
+    } else {
+      const targetDate = tanggal || moment().tz(TIMEZONE).format('YYYY-MM-DD');
+      dateFilter = targetDate;
+      dateTimeFilter = {
+        [Op.between]: [`${targetDate} 00:00:00`, `${targetDate} 23:59:59`],
+      };
+      startD = targetDate;
+      endD = targetDate;
+    }
+
+    const [
+      santriStats,
+      absensiStats,
+      perizinanStats,
+    ] = (await Promise.all([
+      AppSantri.findAll({
+        attributes: [
+          'status',
+          [Sequelize.fn('COUNT', Sequelize.col('id_santri')), 'count'],
+        ],
+        where: { 
+          id_cabang: id_cabang,
+        },
+        group: ['status'],
+        raw: true,
+      }),
+      AbsenHarianSantri.findAll({
+        attributes: [
+          'status_kehadiran',
+          [
+            Sequelize.fn(
+              'COUNT',
+              Sequelize.literal('DISTINCT "AbsenHarianSantri".id_santri')
+            ),
+            'count',
+          ],
+        ],
+        where: {
+          tanggal: dateFilter,
+          ...({ '$santri.id_cabang$': id_cabang }),
+          ...(id_lokasi ? { id_lokasi_kamar: id_lokasi } : {})
+        },
+        include: [
+          {
+            model: AppSantri,
+            as: 'santri',
+            attributes: [],
+            required: true,
+          },
+        ],
+        group: ['status_kehadiran'],
+        raw: true,
+      }),
+      PerizinanSantri.findAll({
+        attributes: [
+          'status_approval',
+          'kondisi',
+          [Sequelize.fn('COUNT', Sequelize.col('id_izin')), 'count'],
+        ],
+        where: {
+          created_at: dateTimeFilter,
+          is_canceled: false,
+          id_santri: { [Op.ne]: null },
+          ...({ '$santri.id_cabang$': id_cabang }),
+          ...(id_lokasi ? { id_lokasi_kamar: id_lokasi } : {})
+        },
+        include: [
+          {
+            model: AppSantri,
+            as: 'santri',
+            attributes: [],
+            required: true,
+          },
+        ],
+        group: ['status_approval', 'kondisi'],
+        raw: true,
+      }),
+    ])) as any;
+
+    let activeSantri = 0;
+    let totalSantri = 0;
+    for (const item of santriStats) {
+      const countVal = parseInt(item.count, 10) || 0;
+      const statusVal = parseInt(item.status, 10);
+      if (statusVal == 1) {
+        activeSantri = countVal;
+      }
+      if (statusVal != 9) {
+        totalSantri += countVal;
+      }
+    }
+    const persentaseActive =
+      totalSantri > 0
+        ? parseFloat(((activeSantri / totalSantri) * 100).toFixed(1))
+        : 0;
+
+    let totalHadir = 0;
+    let totalIzin = 0;
+    let totalSakit = 0;
+    let totalAlfa = 0;
+
+    for (const item of absensiStats) {
+      const countVal = parseInt(item.count, 10) || 0;
+      if (item.status_kehadiran == 'Hadir') totalHadir = countVal;
+      else if (item.status_kehadiran == 'Izin') totalIzin = countVal;
+      else if (item.status_kehadiran == 'Sakit') totalSakit = countVal;
+      else if (item.status_kehadiran == 'Alfa') totalAlfa = countVal;
+    }
+
+    const persentaseAbsensi =
+      activeSantri > 0
+        ? parseFloat(((totalHadir / activeSantri) * 100).toFixed(1))
+        : 0;
+    const persentaseIzin =
+      activeSantri > 0
+        ? parseFloat(((totalIzin / activeSantri) * 100).toFixed(1))
+        : 0;
+    const persentaseSakit =
+      activeSantri > 0
+        ? parseFloat(((totalSakit / activeSantri) * 100).toFixed(1))
+        : 0;
+    const persentaseAlfa =
+      activeSantri > 0
+        ? parseFloat(((totalAlfa / activeSantri) * 100).toFixed(1))
+        : 0;
+
+    let total_perizinan = 0;
+    let perizinan_menunggu = 0;
+    let perizinan_disetujui = 0;
+    let perizinan_overdue = 0;
+
+    for (const item of perizinanStats) {
+      const countVal = parseInt(item.count, 10) || 0;
+      const status = item.status_approval;
+      const kondisi = item.kondisi;
+
+      if (
+        ['Rumah', 'Kembali', 'Menunggu', 'Disetujui'].includes(status) &&
+        (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
+      ) {
+        total_perizinan += countVal;
+      }
+
+      if (
+        status === 'Menunggu' &&
+        (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
+      ) {
+        perizinan_menunggu += countVal;
+      }
+
+      if (
+        status === 'Disetujui' &&
+        (!kondisi || !['Closed', 'Arsip'].includes(kondisi))
+      ) {
+        perizinan_disetujui += countVal;
+      }
+
+      if (kondisi === 'Overdue') {
+        perizinan_overdue += countVal;
+      }
+    }
+
+    return {
+      total_absensi: {
+        hadir: totalHadir,
+        persentase: persentaseAbsensi,
+        izin: totalIzin,
+        persentase_izin: persentaseIzin,
+        sakit: totalSakit,
+        persentase_sakit: persentaseSakit,
+        alfa: totalAlfa,
+        persentase_alfa: persentaseAlfa,
+      },
+      perizinan_menunggu,
+      perizinan_disetujui,
+      perizinan_overdue,
+    };
+  }
 }
 
 export const service = new Service();

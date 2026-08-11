@@ -14,5 +14,6 @@ router.get('/navigation', auth.checkToken, global.navigation);
 router.get('/summary', auth.checkBearerToken, global.summary);
 router.post('/sync-santri', global.syncSantri);
 router.post('/map-santri-relations', global.mapSantriRelations);
+router.get('/summary-kepesantrenan', auth.checkBearerToken, global.summaryKepesantrenan);
 
 export default router;
