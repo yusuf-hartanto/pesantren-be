@@ -168,17 +168,10 @@ export default class Repository {
   }
 
   public detail(condition: any, admin: string = ROLE_ADMIN) {
-    const userContext = getUserContextData();
-    const idOrgunit = userContext?.id_orgunit;
-
     const whereClause: any = {
       ...condition,
       status: { [Op.ne]: 'D' },
     };
-
-    if (idOrgunit) {
-      whereClause['$pegawai.id_orgunit$'] = idOrgunit;
-    }
 
     return Model.findOne({
       where: whereClause,
@@ -207,7 +200,7 @@ export default class Repository {
         {
           model: Pegawai,
           as: 'pegawai',
-          required: !!idOrgunit,
+          required: false,
           attributes: ['id_pegawai', 'nama_lengkap', 'id_orgunit'],
           include: [
             {
