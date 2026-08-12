@@ -84,6 +84,7 @@ import {
   updateKesehatanSchema,
 } from './kesehatan.santri/kesehatan.santri.schema';
 import { institution } from './institution/institution.controller';
+import { laporanPresensiController } from './monitoring/monitoring.controller';
 
 const router: Router = Router();
 
@@ -1043,5 +1044,11 @@ router.put(
   notification.update
 );
 router.delete('/notification/:id', notification.delete);
+
+router.get('/kamar-belum-absen', laporanPresensiController.getKamarBelumAbsen);
+router.get('/kelas-belum-absen', laporanPresensiController.getKelasBelumAbsen);
+router.get('/pegawai-belum-absen', laporanPresensiController.getPegawaiBelumAbsen);
+router.get('/guru-belum-absen', laporanPresensiController.getGuruBelumAbsen);
+router.get('/inspeksi-belum-dikerjakan', laporanPresensiController.getPetugasInspeksiBelumAbsen);
 
 export default router;

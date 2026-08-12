@@ -7,6 +7,7 @@ import Lokasi from '../location/location.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
 import Pegawai from '../pegawai/pegawai.model';
+import { AbsenHarianSantri } from '../absen.harian.santri/absen.harian.santri.model';
 
 export class PenempatanKamarSantri extends Model {
   declare id_penempatan: string;
@@ -136,6 +137,12 @@ export function associatePenempatanKamarSantri() {
     as: 'waliasuh',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
+  });
+  
+  PenempatanKamarSantri.hasMany(AbsenHarianSantri, {
+    foreignKey: 'id_santri',
+    sourceKey: 'id_santri',
+    as: 'absenHarian',
   });
 }
 
