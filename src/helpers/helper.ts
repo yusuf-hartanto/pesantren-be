@@ -631,8 +631,26 @@ export default class Helper {
     }
   }
 
+  public isBase64(str: string): boolean {
+    if (!str || typeof str !== 'string') return false;
+    if (/^data:(image|file|application)\/[a-zA-Z0-9.+]+;base64,/.test(str)) {
+      return true;
+    }
+    const prefix = str.substring(0, 15);
+    if (
+      prefix.startsWith('iVBORw0KGg') ||
+      prefix.startsWith('JVBERi') ||
+      prefix.startsWith('/9j/') ||
+      prefix.startsWith('R0lGOD') ||
+      prefix.startsWith('UEsDBB')
+    ) {
+      return true;
+    }
+    return false;
+  }
+
   public checkExtentionBase64(base64: string, type: string = 'image') {
-    if (!base64 || /\/uploads\//.test(base64)) return 'file tidak valid';
+    if (!base64 || !this.isBase64(base64)) return 'file tidak valid';
 
     let mimeType = '';
     let data = '';
