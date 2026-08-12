@@ -85,7 +85,6 @@ export default class Controller {
       const roles: any = req?.query?.roles || '';
       const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
 
-      console.warn(roles);
       let result: any;
       if (roles && roles == '1') {
         result = await repository.detailResourceRoles({ resource_id: id });
