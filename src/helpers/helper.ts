@@ -8,7 +8,7 @@ import ExcelJS from 'exceljs';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import TelegramBot from 'tele-sender';
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, Op } from 'sequelize';
 import { Request, Response } from 'express';
 import { response } from '../helpers/response';
 import { appConfig } from '../config/config.app';
@@ -17,6 +17,7 @@ import { parse as ParseCSV } from 'csv-parse/sync';
 import { teleConfig } from '../config/config.telegram';
 import { APP_NAME, MYSQL, POSTGRES, TIMEZONE } from '../utils/constant';
 import AppResource from '../module/app/resource/resource.model';
+import ActivityLog from '../module/global/activity.log.model';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { service } from '../module/global/global.service';
 import { rawQuery } from './rawQuery';
@@ -374,14 +375,19 @@ export default class Helper {
 
   public async reminderInspeksi() {
     try {
-      const day: number = moment().tz(TIMEZONE).day() == 0 ? 7 : moment().tz(TIMEZONE).day();
+      const day: number =
+        moment().tz(TIMEZONE).day() == 0 ? 7 : moment().tz(TIMEZONE).day();
       const jam: string = moment().tz(TIMEZONE).format('HH:mm');
-      const result = await jadwalInspeksiKebersihanRepository.findAllByDayAndTime(day, jam);
+      const result =
+        await jadwalInspeksiKebersihanRepository.findAllByDayAndTime(day, jam);
 
       if (result.length < 1) return;
-      
+
       for (const item of result) {
-        const resource = await appResourceRepository.detail({ id_eksternal: item.id_petugas }, '');
+        const resource = await appResourceRepository.detail(
+          { id_eksternal: item.id_petugas },
+          ''
+        );
 
         if (resource) {
           const dataMessage = {
@@ -403,6 +409,28 @@ export default class Helper {
       }
     } catch (err: any) {
       await this.sendNotif(`[cron] failed reminder inspeksi: ${err?.message}`);
+    }
+  }
+
+  public async deleteOldActivityLogs() {
+    try {
+      const oneMonthAgo = moment().subtract(1, 'month').toDate();
+      const deletedCount = await ActivityLog.destroy({
+        where: {
+          created_at: {
+            [Op.lt]: oneMonthAgo,
+          },
+        },
+      });
+      if (deletedCount > 0) {
+        await this.sendNotif(
+          `[cron] success delete activity_logs (> 1 month old): ${deletedCount} baris`
+        );
+      }
+    } catch (err: any) {
+      await this.sendNotif(
+        `[cron] failed delete activity_logs: ${err?.message}`
+      );
     }
   }
 
@@ -603,8 +631,26 @@ export default class Helper {
     }
   }
 
+  public isBase64(str: string): boolean {
+    if (!str || typeof str !== 'string') return false;
+    if (/^data:(image|file|application)\/[a-zA-Z0-9.+]+;base64,/.test(str)) {
+      return true;
+    }
+    const prefix = str.substring(0, 15);
+    if (
+      prefix.startsWith('iVBORw0KGg') ||
+      prefix.startsWith('JVBERi') ||
+      prefix.startsWith('/9j/') ||
+      prefix.startsWith('R0lGOD') ||
+      prefix.startsWith('UEsDBB')
+    ) {
+      return true;
+    }
+    return false;
+  }
+
   public checkExtentionBase64(base64: string, type: string = 'image') {
-    if (!base64 || /\/uploads\//.test(base64)) return 'file tidak valid';
+    if (!base64 || !this.isBase64(base64)) return 'file tidak valid';
 
     let mimeType = '';
     let data = '';

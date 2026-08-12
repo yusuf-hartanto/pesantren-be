@@ -13,7 +13,6 @@ import AppRole from '../role/role.model';
 import { v4 as uuidv4 } from 'uuid';
 import { helper } from '../../../helpers/helper';
 import { getUserContextData } from '../../../context/userContext';
-import { query } from 'express';
 
 export default class Repository {
   public list(data: any) {
@@ -23,7 +22,13 @@ export default class Repository {
         {
           model: OrganizationUnit,
           as: 'organizationUnit',
-          attributes: ['id_orgunit', 'nama_orgunit'],
+          attributes: [
+            'id_orgunit',
+            'nama_orgunit',
+            'id_cabang',
+            'id_lembaga',
+            'lembaga_type',
+          ],
           required: false,
         },
         {

@@ -150,15 +150,18 @@ export default class Controller {
 
       const data: Object = helper.only(variable.fillable(), req?.body);
 
-      let checkFile = helper.checkExtentionBase64(foto_path);
-      if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+      let fotoPath = foto_path || null;
+      if (foto_path && helper.isBase64(foto_path)) {
+        let checkFile = helper.checkExtentionBase64(foto_path);
+        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
 
-      let fotoPath = await helper.uploadBase64(
-        foto_path,
-        'temuan',
-        req?.user?.username,
-        appConfig?.assetType
-      );
+        fotoPath = await helper.uploadBase64(
+          foto_path,
+          'temuan',
+          req?.user?.username,
+          appConfig?.assetType
+        );
+      }
 
       const result = await repository.create({
         payload: {
@@ -188,44 +191,64 @@ export default class Controller {
       if (!check) return response.success(NOT_FOUND, null, res, false);
 
       const data: Object = helper.only(variable.fillable(), req?.body, true);
+      delete (data as any).foto_path;
+      delete (data as any).foto_path_tindakan;
 
-      let fotoPath = null;
-      let checkFile = helper.checkExtentionBase64(foto_path);
-      if (checkFile == 'allowed') {
-        fotoPath = await helper.uploadBase64(
-          foto_path,
-          'temuan',
-          req?.user?.username,
-          appConfig?.assetType
-        );
+      let fotoPath = check?.getDataValue('foto_path');
+      if (foto_path) {
+        if (helper.isBase64(foto_path)) {
+          let checkFile = helper.checkExtentionBase64(foto_path);
+          if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+
+          fotoPath = await helper.uploadBase64(
+            foto_path,
+            'temuan',
+            req?.user?.username,
+            appConfig?.assetType
+          );
+        } else {
+          fotoPath = foto_path;
+        }
       }
 
-      let fotoPathTindakan = null;
-      let checkFileTindakan = helper.checkExtentionBase64(foto_path_tindakan);
-      if (checkFileTindakan == 'allowed') {
-        fotoPathTindakan = await helper.uploadBase64(
-          foto_path_tindakan,
-          'tindakan',
-          req?.user?.username,
-          appConfig?.assetType
-        );
+      let fotoPathTindakan = check?.getDataValue('foto_path_tindakan');
+      if (foto_path_tindakan) {
+        if (helper.isBase64(foto_path_tindakan)) {
+          let checkFileTindakan = helper.checkExtentionBase64(
+            foto_path_tindakan
+          );
+          if (checkFileTindakan != 'allowed')
+            return response.failed(checkFileTindakan, 422, res);
+
+          fotoPathTindakan = await helper.uploadBase64(
+            foto_path_tindakan,
+            'tindakan',
+            req?.user?.username,
+            appConfig?.assetType
+          );
+        } else {
+          fotoPathTindakan = foto_path_tindakan;
+        }
       }
 
       await repository.update({
         payload: {
           ...data,
           id_inspeksi: idInspeksi || check?.getDataValue('id_inspeksi'),
-          foto_path: fotoPath || check?.getDataValue('foto_path'),
-          foto_path_tindakan:
-            fotoPathTindakan || check?.getDataValue('foto_path_tindakan'),
+          foto_path: fotoPath,
+          foto_path_tindakan: fotoPathTindakan,
         },
         condition: { id_temuan: id },
       });
 
-
-      const receiver = await helper.receiverByRole(['administrator', 'pendidikan_kebersihan']);
+      const receiver = await helper.receiverByRole([
+        'administrator',
+        'pendidikan_kebersihan',
+      ]);
       const oldStatus = Number(
-        check?.getDataValue ? check.getDataValue('status') : check?.status ?? 0
+        check?.getDataValue
+          ? check.getDataValue('status')
+          : (check?.status ?? 0)
       );
       const rawStatus =
         typeof req?.body?.status === 'object'

@@ -6,6 +6,7 @@ import AppResource from '../resource/resource.model';
 import Pegawai from '../pegawai/pegawai.model';
 import moment from 'moment';
 import { getUserContextData } from '../../../context/userContext';
+import { ALLOWED_ACTIVITY_LOG_TABLES } from '../../../utils/constant';
 
 export default class Repository {
   private buildQuery(data: any) {
@@ -16,13 +17,7 @@ export default class Repository {
       order: [['created_at', 'DESC']],
       where: {
         table_name: {
-          [Op.in]: [
-            'perizinan_santri',
-            'absen_kelas_santri',
-            'absen_harian_santri',
-            'kebersihan_temuan',
-            'kebersihan_inspeksi',
-          ],
+          [Op.in]: ALLOWED_ACTIVITY_LOG_TABLES,
         },
       },
     };

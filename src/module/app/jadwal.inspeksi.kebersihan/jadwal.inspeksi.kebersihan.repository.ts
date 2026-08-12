@@ -304,8 +304,8 @@ export default class Repository {
           required: true,
           attributes: ['kode_slot', 'jam_mulai', 'jam_selesai'],
           where: {
-            jam_mulai: jam
-          }
+            jam_mulai: jam,
+          },
         },
       ],
     });

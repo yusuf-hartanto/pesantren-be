@@ -180,8 +180,20 @@ export default class Controller {
       } = req?.body;
 
       for (const temuan of temuans) {
-        let checkFile = helper.checkExtentionBase64(temuan.foto_path);
-        if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+        if (temuan.foto_path && helper.isBase64(temuan.foto_path)) {
+          let checkFile = helper.checkExtentionBase64(temuan.foto_path);
+          if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+        }
+        if (
+          temuan.foto_path_tindakan &&
+          helper.isBase64(temuan.foto_path_tindakan)
+        ) {
+          let checkFileTindakan = helper.checkExtentionBase64(
+            temuan.foto_path_tindakan
+          );
+          if (checkFileTindakan != 'allowed')
+            return response.failed(checkFileTindakan, 422, res);
+        }
       }
 
       const idLokasi = id_lokasi?.value || null;
@@ -207,15 +219,30 @@ export default class Controller {
         },
       });
 
-      let foto_path: any = null;
       let insert = [];
       for (const temuan of temuans) {
-        foto_path = await helper.uploadBase64(
-          temuan.foto_path,
-          'temuan',
-          req?.user?.username,
-          appConfig?.assetType
-        );
+        let foto_path: any = temuan.foto_path || null;
+        if (temuan.foto_path && helper.isBase64(temuan.foto_path)) {
+          foto_path = await helper.uploadBase64(
+            temuan.foto_path,
+            'temuan',
+            req?.user?.username,
+            appConfig?.assetType
+          );
+        }
+
+        let foto_path_tindakan: any = temuan.foto_path_tindakan || null;
+        if (
+          temuan.foto_path_tindakan &&
+          helper.isBase64(temuan.foto_path_tindakan)
+        ) {
+          foto_path_tindakan = await helper.uploadBase64(
+            temuan.foto_path_tindakan,
+            'tindakan',
+            req?.user?.username,
+            appConfig?.assetType
+          );
+        }
 
         insert.push({
           id_inspeksi: result.id_inspeksi,
@@ -224,6 +251,7 @@ export default class Controller {
           tingkat: temuan.tingkat,
           perlu_tindak_lanjut: temuan.perlu_tindak_lanjut,
           foto_path,
+          foto_path_tindakan,
         });
       }
 
@@ -231,7 +259,10 @@ export default class Controller {
 
       // Send notification
       if (result && result.status_kondisi === 'RUSAK') {
-        const receiver = await helper.receiverByRole(['administrator', 'pendidikan_kebersihan']);
+        const receiver = await helper.receiverByRole([
+          'administrator',
+          'pendidikan_kebersihan',
+        ]);
 
         const dataMessage = {
           title: 'Inspeksi',
@@ -309,34 +340,46 @@ export default class Controller {
         condition: { id_inspeksi: id },
       });
 
-      let foto_path: any = null;
-      let foto_path_tindakan: any = null;
+      for (const temuan of temuans) {
+        if (temuan.foto_path && helper.isBase64(temuan.foto_path)) {
+          let checkFile = helper.checkExtentionBase64(temuan.foto_path);
+          if (checkFile != 'allowed') return response.failed(checkFile, 422, res);
+        }
+        if (
+          temuan.foto_path_tindakan &&
+          helper.isBase64(temuan.foto_path_tindakan)
+        ) {
+          let checkFileTindakan = helper.checkExtentionBase64(
+            temuan.foto_path_tindakan
+          );
+          if (checkFileTindakan != 'allowed')
+            return response.failed(checkFileTindakan, 422, res);
+        }
+      }
+
       let insert = [];
       for (const temuan of temuans) {
-        let checkFile = helper.checkExtentionBase64(temuan.foto_path);
-        if (checkFile == 'allowed') {
+        let foto_path: any = temuan.foto_path || null;
+        if (temuan.foto_path && helper.isBase64(temuan.foto_path)) {
           foto_path = await helper.uploadBase64(
             temuan.foto_path,
             'temuan',
             req?.user?.username,
             appConfig?.assetType
           );
-        } else {
-          foto_path = temuan.foto_path;
         }
 
-        let checkFileTindakan = helper.checkExtentionBase64(
-          temuan.foto_path_tindakan
-        );
-        if (checkFileTindakan == 'allowed') {
+        let foto_path_tindakan: any = temuan.foto_path_tindakan || null;
+        if (
+          temuan.foto_path_tindakan &&
+          helper.isBase64(temuan.foto_path_tindakan)
+        ) {
           foto_path_tindakan = await helper.uploadBase64(
             temuan.foto_path_tindakan,
-            'temuan',
+            'tindakan',
             req?.user?.username,
             appConfig?.assetType
           );
-        } else {
-          foto_path_tindakan = temuan.foto_path_tindakan;
         }
 
         insert.push({

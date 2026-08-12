@@ -82,11 +82,15 @@ export default class Controller {
     try {
       const { role_name } = req?.user;
       const id: string = req?.params?.id || '';
+      const roles: any = req?.query?.roles || '';
       const admin: string = role_name == ROLE_ADMIN ? '' : ROLE_ADMIN;
-      const result: Object | any = await repository.detail(
-        { resource_id: id },
-        admin
-      );
+
+      let result: any;
+      if (roles && roles == '1') {
+        result = await repository.detailResourceRoles({ resource_id: id });
+      } else {
+        result = await repository.detail({ resource_id: id }, admin);
+      }
       if (!result) return response.success(NOT_FOUND, null, res, false);
       const getUser: Object = await transformer.detail(result, false);
       return response.success(SUCCESS_RETRIEVED, getUser, res);
@@ -165,18 +169,30 @@ export default class Controller {
         }
       }
 
-      const resourceId = createdUser?.getDataValue('resource_id') || createdUser?.resource_id;
+      const resourceId =
+        createdUser?.getDataValue('resource_id') || createdUser?.resource_id;
 
       if (Array.isArray(userRolesInput) && userRolesInput.length > 0) {
         const rolesToCreate = userRolesInput.map((ur: any, idx: number) => ({
           resource_id: resourceId,
           role_id: ur.role_id?.value || ur.role_id,
-          id_pegawai: ur.id_pegawai?.value || ur.id_pegawai || req.body.id_eksternal || null,
+          id_pegawai:
+            ur.id_pegawai?.value ||
+            ur.id_pegawai ||
+            req.body.id_eksternal ||
+            null,
           id_cabang: ur.id_cabang?.value || ur.id_cabang || null,
           id_orgunit: ur.id_orgunit?.value || ur.id_orgunit || null,
           id_lembaga: ur.id_lembaga?.value || ur.id_lembaga || null,
           lembaga_type: ur.lembaga_type?.value || ur.lembaga_type || null,
-          is_default: ur.is_default !== undefined ? (ur.is_default ? 1 : 0) : (idx === 0 ? 1 : 0),
+          is_default:
+            ur.is_default !== undefined
+              ? ur.is_default
+                ? 1
+                : 0
+              : idx === 0
+                ? 1
+                : 0,
           created_by: req?.user?.id || null,
         }));
         await repoResourceRole.bulkCreate(rolesToCreate);
@@ -310,7 +326,14 @@ export default class Controller {
           id_orgunit: ur.id_orgunit?.value || ur.id_orgunit || null,
           id_lembaga: ur.id_lembaga?.value || ur.id_lembaga || null,
           lembaga_type: ur.lembaga_type?.value || ur.lembaga_type || null,
-          is_default: ur.is_default !== undefined ? (ur.is_default ? 1 : 0) : (idx === 0 ? 1 : 0),
+          is_default:
+            ur.is_default !== undefined
+              ? ur.is_default
+                ? 1
+                : 0
+              : idx === 0
+                ? 1
+                : 0,
           created_by: req?.user?.id || null,
         }));
         await repoResourceRole.bulkCreate(rolesToCreate);
@@ -318,15 +341,22 @@ export default class Controller {
         const defaultRole = rolesToCreate.find((r: any) => r.is_default === 1);
         if (defaultRole?.role_id) {
           await repository.update({
-            payload: { role_id: defaultRole.role_id, modified_by: req?.user?.id },
-            condition: { resource_id: id }
+            payload: {
+              role_id: defaultRole.role_id,
+              modified_by: req?.user?.id,
+            },
+            condition: { resource_id: id },
           });
         }
       }
 
       return response.success(SUCCESS_UPDATED, null, res);
     } catch (err: any) {
-      return helper.catchError(`resource updateRoles: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `resource updateRoles: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 
@@ -501,7 +531,11 @@ export default class Controller {
         res
       );
     } catch (err: any) {
-      return helper.catchError(`resource migrateRoles: ${err?.message}`, 500, res);
+      return helper.catchError(
+        `resource migrateRoles: ${err?.message}`,
+        500,
+        res
+      );
     }
   }
 }

@@ -569,12 +569,12 @@ export default class Repository {
 
     const formal = await KelasFormal.findAll({
       where: where,
-      attributes: ['id_kelas', 'nama_kelas'],
+      attributes: ['id_kelas', 'nama_kelas', 'id_lembaga'],
     });
 
     const mda = await KelasMda.findAll({
       where: where,
-      attributes: ['id_kelas_mda', 'nama_kelas_mda'],
+      attributes: ['id_kelas_mda', 'nama_kelas_mda', 'id_lembaga'],
     });
 
     const list: any[] = [];
@@ -583,6 +583,7 @@ export default class Repository {
         id_kelas: c.getDataValue('id_kelas'),
         nama_kelas: c.getDataValue('nama_kelas'),
         type: 'Formal',
+        id_lembaga: c.getDataValue('id_lembaga'),
       });
     });
 
@@ -591,6 +592,7 @@ export default class Repository {
         id_kelas: c.getDataValue('id_kelas_mda'),
         nama_kelas: c.getDataValue('nama_kelas_mda'),
         type: 'MDA',
+        id_lembaga: c.getDataValue('id_lembaga'),
       });
     });
 

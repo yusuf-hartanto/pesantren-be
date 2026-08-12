@@ -13,7 +13,7 @@ import { xss } from 'express-xss-sanitizer';
 import routes from './routes';
 import Config from './config/parameter';
 import { helper } from './helpers/helper';
-require('express-async-errors');
+import 'express-async-errors';
 
 import { runWithUser } from './context/userContext';
 import { initializeJWT } from './config/config.jwt';
@@ -96,6 +96,17 @@ async function bootstrap() {
     '* * * * *',
     async () => {
       await helper.reminderInspeksi();
+    },
+    {
+      scheduled: true,
+      timezone: TIMEZONE,
+    }
+  );
+
+  cron.schedule(
+    '0 1 * * *',
+    async () => {
+      await helper.deleteOldActivityLogs();
     },
     {
       scheduled: true,
