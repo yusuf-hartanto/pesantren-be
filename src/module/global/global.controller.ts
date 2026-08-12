@@ -528,6 +528,48 @@ export default class Controller {
       return helper.catchError(`mapSantriRelations: ${err?.message}`, 500, res);
     }
   }
+
+  public async summaryKepesantrenan(req: Request, res: Response) {
+    try {
+      const tanggal: any = req?.query?.tanggal || '';
+      const tanggal_mulai: any = req?.query?.tanggal_mulai || '';
+      const tanggal_selesai: any = req?.query?.tanggal_selesai || '';
+      const id_cabang: any = req?.query?.id_cabang || '';
+      const id_lokasi: any = req?.query?.id_lokasi || '';
+      const data = await service.getSummaryKepesantrenan(
+        tanggal,
+        tanggal_mulai,
+        tanggal_selesai,
+        id_cabang,
+        id_lokasi
+      );
+      return response.success(SUCCESS_RETRIEVED, data, res);
+    } catch (err: any) {
+      return helper.catchError(`summary kepesantrenan: ${err?.message}`, 500, res);
+    }
+  }
+
+  public async summaryLembagaFormal(req: Request, res: Response) {
+    try {
+      const tanggal: any = req?.query?.tanggal || '';
+      const tanggal_mulai: any = req?.query?.tanggal_mulai || '';
+      const tanggal_selesai: any = req?.query?.tanggal_selesai || '';
+      const id_cabang: any = req?.query?.id_cabang || '';
+      const id_lokasi: any = req?.query?.id_lokasi || '';
+      const id_lembaga: any = req?.query?.id_lembaga || '';
+      const data = await service.getSummaryLembagaFormal(
+        tanggal,
+        tanggal_mulai,
+        tanggal_selesai,
+        id_cabang,
+        id_lokasi,
+        id_lembaga
+      );
+      return response.success(SUCCESS_RETRIEVED, data, res);
+    } catch (err: any) {
+      return helper.catchError(`summary lembaga formal: ${err?.message}`, 500, res);
+    }
+  }
 }
 
 export const global = new Controller();
