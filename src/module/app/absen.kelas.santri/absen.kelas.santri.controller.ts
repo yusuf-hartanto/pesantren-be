@@ -211,6 +211,7 @@ export default class Controller {
           where: {
             id_santri: { [Op.in]: studentIds },
             is_deleted: false,
+            progres_status: { [Op.in]: ['Dirawat', 'Dirujuk'] },
           },
           order: [
             ['tanggal_event', 'DESC'],
@@ -332,7 +333,7 @@ export default class Controller {
           );
         }
 
-        const isDirawat = await kesehatanRepo.isSantriDirawat(item.id_santri);
+        const isDirawat = await kesehatanRepo.isSantriDirawat(item.id_santri, targetTanggal);
         let finalStatus = item.status_kehadiran;
         let finalKeterangan = item.keterangan || null;
         if (isDirawat) {
@@ -562,7 +563,8 @@ export default class Controller {
       }
 
       const isDirawat = await kesehatanRepo.isSantriDirawat(
-        santri.getDataValue('id_santri')
+        santri.getDataValue('id_santri'),
+        targetTanggal
       );
       if (isDirawat) {
         return response.failed(

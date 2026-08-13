@@ -406,11 +406,13 @@ export class KesehatanSantriRepository {
 
   public async getLatestMedicalEvent(
     id_santri: string | null,
+    tanggal_event: string | null,
     id_pegawai: string | null = null
   ) {
     const whereClause: any = { is_deleted: false };
     if (id_santri) whereClause.id_santri = id_santri;
     if (id_pegawai) whereClause.id_pegawai = id_pegawai;
+    if (tanggal_event) whereClause.tanggal_event = tanggal_event;
 
     return await KesehatanSantri.findOne({
       where: whereClause,
@@ -423,9 +425,14 @@ export class KesehatanSantriRepository {
 
   public async isSantriDirawat(
     id_santri: string | null,
+    tanggal_event: string | null,
     id_pegawai: string | null = null
   ): Promise<boolean> {
-    const latestEvent = await this.getLatestMedicalEvent(id_santri, id_pegawai);
+    const latestEvent = await this.getLatestMedicalEvent(
+      id_santri,
+      tanggal_event,
+      id_pegawai
+    );
     return latestEvent ? latestEvent.progres_status == 'Dirawat' : false;
   }
 
