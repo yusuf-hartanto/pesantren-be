@@ -6,12 +6,15 @@ import Santri from '../santri/santri.model';
 import Lokasi from '../location/location.model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import TahunAjaran from '../tahun.ajaran/tahun.ajaran.model';
+import Pegawai from '../pegawai/pegawai.model';
+import { AbsenHarianSantri } from '../absen.harian.santri/absen.harian.santri.model';
 
 export class PenempatanKamarSantri extends Model {
   declare id_penempatan: string;
   declare id_santri: string;
   declare id_lokasi: string;
   declare id_tahunajaran: string;
+  declare id_waliasuh: string;
   declare tanggal_masuk: Date;
   declare tanggal_keluar: Date;
   declare status: string;
@@ -47,6 +50,10 @@ export function initPenempatanKamarSantri(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      id_waliasuh: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       tanggal_masuk: {
         type: DataTypes.DATEONLY,
         allowNull: true,
@@ -62,7 +69,7 @@ export function initPenempatanKamarSantri(sequelize: Sequelize) {
       keterangan: {
         type: DataTypes.TEXT,
         allowNull: true,
-        defaultValue: false,
+        defaultValue: null,
       },
       is_deleted: {
         type: DataTypes.BOOLEAN,
@@ -123,6 +130,19 @@ export function associatePenempatanKamarSantri() {
     as: 'tahunAjaran',
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
+  });
+
+  PenempatanKamarSantri.belongsTo(Pegawai, {
+    foreignKey: 'id_waliasuh',
+    as: 'waliasuh',
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  });
+  
+  PenempatanKamarSantri.hasMany(AbsenHarianSantri, {
+    foreignKey: 'id_santri',
+    sourceKey: 'id_santri',
+    as: 'absenHarian',
   });
 }
 

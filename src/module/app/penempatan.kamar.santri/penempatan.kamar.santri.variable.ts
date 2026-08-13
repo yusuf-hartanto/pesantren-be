@@ -8,6 +8,7 @@ export default class Variable {
       'id_tahunajaran',
       'tanggal_masuk',
       'tanggal_keluar',
+      'id_waliasuh',
       'status',
       'keterangan',
     ];
