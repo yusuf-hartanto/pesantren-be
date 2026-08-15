@@ -97,7 +97,7 @@ export default class LaporanPresensiRepository {
             
         FROM penempatan_kamar_santri pks
         INNER JOIN santri s ON pks.id_santri = s.id_santri
-        LEFT JOIN location l ON pks.id_lokasi = l.id_lokasi
+        LEFT JOIN lokasi l ON pks.id_lokasi = l.id_lokasi
         LEFT JOIN pegawai peg ON pks.id_waliasuh = peg.id_pegawai
         
         INNER JOIN shift_presensi sp ON sp.id_shift = :targetShiftId
@@ -446,7 +446,7 @@ export default class LaporanPresensiRepository {
           
           LEFT JOIN orgunit ou ON peg.id_orgunit = ou.id_orgunit
           
-          LEFT JOIN location l ON jkp.id_lokasi = l.id_lokasi
+          LEFT JOIN lokasi l ON jkp.id_lokasi = l.id_lokasi
           
           LEFT JOIN absen_harian_pegawai ahp 
             ON jkp.id_jamkerja = ahp.id_jamkerja
@@ -456,6 +456,14 @@ export default class LaporanPresensiRepository {
     
           LEFT JOIN jenis_guru jg 
             ON peg.id_pegawai = jg.id_guru
+        
+          LEFT JOIN perizinan_santri ps
+            ON peg.id_pegawai = ps.id_pegawai
+            AND ps.status_approval = 'Disetujui'
+            AND ps.is_canceled = false
+            AND ps.deleted_at IS NULL
+            AND DATE(ps.tanggal_mulai) <= :tanggal
+            AND DATE(ps.tanggal_selesai) >= :tanggal
             
           WHERE 
             jkp.is_active = true
@@ -466,9 +474,10 @@ export default class LaporanPresensiRepository {
             AND ahp.id_absen IS NULL
             
             AND jg.id_jenisguru IS NULL
+
+            AND ps.id_izin IS NULL
             
             AND (:id_lokasi IS NULL OR jkp.id_lokasi = :id_lokasi)
-            
             AND (:id_cabang IS NULL OR ou.id_cabang = :id_cabang)
             AND (:id_lembaga IS NULL OR ou.id_lembaga = :id_lembaga)
             
@@ -487,7 +496,41 @@ export default class LaporanPresensiRepository {
         }
       );
     
-      return rawData;
+
+      const groupedData = rawData.reduce((acc: any[], item: any) => {
+   
+        let lokasiGroup = acc.find((loc) => loc.id_lokasi === item.id_lokasi);
+
+        if (!lokasiGroup) {
+          lokasiGroup = {
+            id_lokasi: item.id_lokasi || 'UNKNOWN',
+            nama_lokasi: item.nama_lokasi || 'Tanpa Lokasi',
+            total_pegawai_lokasi: 0, 
+            total_pegawai_belum_absen: 0,
+            pegawai_belum_absen: [],
+          };
+          acc.push(lokasiGroup);
+        }
+
+     
+        lokasiGroup.pegawai_belum_absen.push({
+          id_pegawai: item.id_pegawai,
+          nama_pegawai: item.nama_pegawai,
+          nip: item.nip,
+          no_hp: item.no_hp,
+          id_jamkerja: item.id_jamkerja,
+          waktu_mulai: item.waktu_mulai,
+          waktu_selesai: item.waktu_selesai,
+          status_presensi: item.status_presensi,
+        });
+
+        lokasiGroup.total_pegawai_belum_absen += 1;
+        lokasiGroup.total_pegawai_lokasi += 1; 
+
+        return acc;
+      }, []);
+    
+      return groupedData;
     }
 
 
@@ -535,6 +578,15 @@ export default class LaporanPresensiRepository {
             AND jad.id_kelas = jnk.id_lokasi
             AND jnk.tanggal = :tanggal
             AND jnk.deleted_at IS NULL
+
+        LEFT JOIN perizinan_santri ps
+            ON peg.id_pegawai = ps.id_pegawai
+            AND ps.status_approval = 'Disetujui'
+            AND ps.is_canceled = false
+            AND ps.deleted_at IS NULL
+            -- Mengecek apakah tanggal pencarian masuk dalam rentang izin guru
+            AND DATE(ps.tanggal_mulai) <= :tanggal
+            AND DATE(ps.tanggal_selesai) >= :tanggal
             
           WHERE 
             jad.hari = :hari
@@ -544,6 +596,8 @@ export default class LaporanPresensiRepository {
             AND peg.deleted_at IS NULL
             
             AND jnk.id_jurnal IS NULL
+
+            AND ps.id_izin IS NULL
             
             AND (:idCabang IS NULL OR ou.id_cabang = :idCabang)
             AND (:idLembaga IS NULL OR ou.id_lembaga = :idLembaga)
@@ -632,6 +686,15 @@ export default class LaporanPresensiRepository {
           LEFT JOIN kebersihan_inspeksi ki 
             ON jik.id_jadwal = ki.id_jadwal 
             AND ki.tanggal = :tanggal
+
+        LEFT JOIN perizinan_santri ps
+            ON peg.id_pegawai = ps.id_pegawai
+            AND ps.status_approval = 'Disetujui'
+            AND ps.is_canceled = false
+            AND ps.deleted_at IS NULL
+            -- Mengecek apakah tanggal pencarian masuk dalam rentang izin petugas
+            AND DATE(ps.tanggal_mulai) <= :tanggal
+            AND DATE(ps.tanggal_selesai) >= :tanggal
             
           WHERE 
             jik.is_active = true
@@ -642,6 +705,8 @@ export default class LaporanPresensiRepository {
             AND (:id_cabang IS NULL OR jik.id_cabang = :id_cabang)
             
             AND ki.id_inspeksi IS NULL
+
+            AND ps.id_izin IS NULL
             
           ORDER BY 
             peg.nama_lengkap ASC, 

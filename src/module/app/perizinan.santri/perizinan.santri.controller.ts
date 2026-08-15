@@ -12,6 +12,7 @@ import { repository as paramRepository } from '../param.global/param.global.repo
 import { repository as santriRepository } from '../santri/santri.repository';
 import { repository as pegawaiRepository } from '../pegawai/pegawai.repository';
 import { repository as roleMenuRepository } from '../role.menu/role.menu.repository';
+import { repository as jenisGuruRepository } from '../jenis.guru/jenis.guru.repository';
 import { variable } from './perizinan.santri.variable';
 import {
   pengajuanIzinSchema,
@@ -605,7 +606,13 @@ export default class Controller {
           const jamKerjaMaster = await JamKerjaPegawaiRepository.detail({
             id_pegawai: check.id_pegawai,
           });
-          if (!jamKerjaMaster)
+
+          const jamKerjaGuru = await jenisGuruRepository.detail({
+            id_guru: check.id_pegawai,
+          });
+          
+          console.log(jamKerjaGuru, jamKerjaMaster, 'LOG JAM KERJA')
+          if (!jamKerjaMaster && !jamKerjaGuru)
             throw new Error('Jam kerja pegawai tidak ditemukan');
 
           const existingSurat = await suratIzinRepository.detail({
@@ -642,44 +649,46 @@ export default class Controller {
           //  Loop & Insert Otomatis ke Absen Harian sesuai rentang tanggal izin
           const start = moment(check.tanggal_mulai);
           const end = moment(check.tanggal_selesai);
-          const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja || 1;
+          const idJamKerja = jamKerjaMaster?.dataValues?.id_jamkerja;
 
-          while (start.isSameOrBefore(end)) {
-            const tanggalTarget = start.format('YYYY-MM-DD');
+          if (jamKerjaMaster) {
+            while (start.isSameOrBefore(end)) {
+              const tanggalTarget = start.format('YYYY-MM-DD');
 
-            // Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada
-            const existingAbsen = await AbsenHarianPegawaiRepository.detail({
-              id_pegawai: check.id_pegawai,
-              tanggal: tanggalTarget,
-              id_jamkerja: idJamKerja,
-            });
+              // Cari tahu apakah record absen dengan kombinasi 3 kolom ini sudah ada
+              const existingAbsen = await AbsenHarianPegawaiRepository.detail({
+                id_pegawai: check.id_pegawai,
+                tanggal: tanggalTarget,
+                id_jamkerja: idJamKerja,
+              });
 
-            const dataPayload = {
-              id_jamkerja: idJamKerja,
-              id_pegawai: check.id_pegawai,
-              tanggal: tanggalTarget,
-              keterangan_masuk: `Izin: ${check.alasan || 'Disetujui oleh sistem'}`,
-              status_kehadiran: check.jenis_izin,
-              created_by: activeUser,
-            };
+              const dataPayload = {
+                id_jamkerja: idJamKerja,
+                id_pegawai: check.id_pegawai,
+                tanggal: tanggalTarget,
+                keterangan_masuk: `Izin: ${check.alasan || 'Disetujui oleh sistem'}`,
+                status_kehadiran: check.jenis_izin,
+                created_by: activeUser,
+              };
 
-            if (!existingAbsen) {
-              await AbsenHarianPegawaiRepository.create(
-                [
-                  {
-                    ...dataPayload,
-                  },
-                ],
-                trx
-              );
-            } else {
-              // await AbsenHarianPegawaiRepository.update({ payload: dataPayload,
-              //   condition: { id_absen: existingAbsen.id_absen }},
-              //   trx
-              // );
+              if (!existingAbsen) {
+                await AbsenHarianPegawaiRepository.create(
+                  [
+                    {
+                      ...dataPayload,
+                    },
+                  ],
+                  trx
+                );
+              } else {
+                // await AbsenHarianPegawaiRepository.update({ payload: dataPayload,
+                //   condition: { id_absen: existingAbsen.id_absen }},
+                //   trx
+                // );
+              }
+
+              start.add(1, 'days');
             }
-
-            start.add(1, 'days');
           }
         } else {
           // --- LOGIKA UTAMA APPROVAL SANTRI ---
