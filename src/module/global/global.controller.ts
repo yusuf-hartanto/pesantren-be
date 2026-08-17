@@ -592,6 +592,26 @@ export default class Controller {
       return helper.catchError(`summary lembaga non formal: ${err?.message}`, 500, res);
     }
   }
+
+  public async summaryRumahTangga(req: Request, res: Response) {
+    try {
+      const tanggal: any = req?.query?.tanggal || '';
+      const tanggal_mulai: any = req?.query?.tanggal_mulai || '';
+      const tanggal_selesai: any = req?.query?.tanggal_selesai || '';
+      const id_cabang: any = req?.query?.id_cabang || '';
+      const id_lokasi: any = req?.query?.id_lokasi || '';
+      const id_lembaga: any = req?.query?.id_lembaga || '';
+      const data = await service.getSummaryRumahTangga(
+        tanggal,
+        tanggal_mulai,
+        tanggal_selesai,
+        id_cabang,
+      );
+      return response.success(SUCCESS_RETRIEVED, data, res);
+    } catch (err: any) {
+      return helper.catchError(`summary rumah tangga: ${err?.message}`, 500, res);
+    }
+  }
 }
 
 export const global = new Controller();
