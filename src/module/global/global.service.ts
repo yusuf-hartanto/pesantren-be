@@ -1052,6 +1052,7 @@ export default class Service {
       santriStats,
       absensiStats,
       perizinanStats,
+      pegawaiStats,
     ] = (await Promise.all([
       AppSantri.findAll({
         attributes: [
@@ -1113,6 +1114,41 @@ export default class Service {
           },
         ],
         group: ['status_approval', 'kondisi'],
+        raw: true,
+      }),
+      Pegawai.findAll({
+        attributes: [
+          [
+            Sequelize.literal(`
+              CASE 
+                WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) 
+                THEN 'GURU' 
+                ELSE 'PEGAWAI' END
+              `),
+            'role',
+          ],
+          [Sequelize.fn('COUNT', Sequelize.col('id_pegawai')), 'count'],
+        ],
+        where: {
+          status_pegawai: 'Aktif',
+          ...({ '$organizationUnit.id_cabang$': id_cabang }),
+        },
+        include: [
+          {
+            model: OrganizationUnit,
+            as: 'organizationUnit',
+            attributes: [],
+            required: true,
+          },
+        ],
+        group: [
+          Sequelize.literal(`
+          CASE 
+            WHEN id_pegawai IN (SELECT DISTINCT id_guru FROM jenis_guru WHERE id_guru IS NOT NULL) THEN 'GURU' 
+            ELSE 'PEGAWAI' 
+          END
+        `) as any,
+        ],
         raw: true,
       }),
     ])) as any;
@@ -1200,7 +1236,22 @@ export default class Service {
       }
     }
 
+    let totalGuruAktif = 0;
+    let totalPegawaiAktif = 0;
+    for (const item of pegawaiStats) {
+      const countVal = parseInt(item.count, 10) || 0;
+      if (item.role === 'GURU') totalGuruAktif = countVal;
+      else if (item.role === 'PEGAWAI') totalPegawaiAktif = countVal;
+    }
+
     return {
+      total_santri: {
+        aktif: activeSantri,
+        keseluruhan: totalSantri,
+        persentase: persentaseActive,
+      },
+      total_guru_aktif: totalGuruAktif,
+      total_pegawai_aktif: totalPegawaiAktif,
       total_absensi: {
         hadir: totalHadir,
         persentase: persentaseAbsensi,
