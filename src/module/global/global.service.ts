@@ -2947,6 +2947,7 @@ export default class Service {
       {
         title: 'Kepesantrenan',
         icon: 'tabler-home',
+        url: '/dashboards/khodimul/kepesantrenan',
         data: [
           {
             title: 'Total Santri',
@@ -2965,6 +2966,7 @@ export default class Service {
       {
         title: 'Pendidikan Formal',
         icon: 'tabler-school',
+        url: '/dashboards/khodimul/formal',
         data: [
           {
             title: 'Total Santri',
@@ -2983,6 +2985,7 @@ export default class Service {
       {
         title: 'Pendidikan Non-Formal',
         icon: 'tabler-book',
+        url: '/dashboards/khodimul/non-formal',
         data: [
           {
             title: 'Total Santri',
@@ -3001,6 +3004,7 @@ export default class Service {
       {
         title: 'Kerumahtanggaan',
         icon: 'tabler-building',
+        url: '/dashboards/khodimul/rumah-tangga',
         data: [
           {
             title: 'Total Petugas Inspeksi',
