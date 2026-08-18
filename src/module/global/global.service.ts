@@ -1244,10 +1244,20 @@ export default class Service {
             required: true,
             where: { 
               id_cabang: id_cabang,
-              jenis_lokasi: {
-                [Op.in]: ['Asrama', 'Kamar']
-              } 
             },
+            include: [
+              {
+                model: Lokasi,
+                as: 'lokasi',
+                attributes: [],
+                required: true,
+                where: {
+                  jenis_lokasi: {
+                    [Op.in]: ['Asrama', 'Kamar']
+                    }
+                },
+              }
+            ],
           },
         ],
         attributes: [
@@ -1273,10 +1283,20 @@ export default class Service {
             required: true,
             where: { 
               id_cabang: id_cabang,
-              jenis_lokasi: {
-                [Op.in]: ['Asrama', 'Kamar']
-              } 
             },
+            include: [
+              {
+                model: Lokasi,
+                as: 'lokasi',
+                attributes: [],
+                required: true,
+                where: {
+                  jenis_lokasi: {
+                    [Op.in]: ['Asrama', 'Kamar']
+                    }
+                },
+              }
+            ],
           },
         ],
         attributes: [
@@ -2298,10 +2318,20 @@ export default class Service {
             required: true,
             where: { 
               id_cabang: id_cabang,
-              jenis_lokasi: {
-                [Op.notIn]: ['Asrama', 'Kamar']
-              } 
             },
+            include: [
+              {
+                model: Lokasi,
+                as: 'lokasi',
+                attributes: [],
+                required: true,
+                where: {
+                  jenis_lokasi: {
+                    [Op.notIn]: ['Asrama', 'Kamar']
+                  }
+                },
+              }
+            ],
           },
         ],
         attributes: [
@@ -2379,10 +2409,20 @@ export default class Service {
             required: true,
             where: { 
               id_cabang: id_cabang,
-              jenis_lokasi: {
-                [Op.notIn]: ['Asrama', 'Kamar']
-              } 
             },
+            include: [
+              {
+                model: Lokasi,
+                as: 'lokasi',
+                attributes: [],
+                required: true,
+                where: {
+                  jenis_lokasi: {
+                    [Op.notIn]: ['Asrama', 'Kamar']
+                  }
+                },
+              }
+            ],
           },
         ],
         attributes: [
