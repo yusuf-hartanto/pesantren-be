@@ -114,6 +114,17 @@ async function bootstrap() {
     }
   );
 
+  cron.schedule(
+    '30 0 * * *',
+    async () => {
+      await helper.updateStatusKesehatanSantri();
+    },
+    {
+      scheduled: true,
+      timezone: TIMEZONE,
+    }
+  );
+
   app.listen(dataConfig?.port, () => {
     console.log(`⚡️[server]: Server is running on port: ${dataConfig?.port}`);
   });

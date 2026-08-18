@@ -17,6 +17,7 @@ import { parse as ParseCSV } from 'csv-parse/sync';
 import { teleConfig } from '../config/config.telegram';
 import { APP_NAME, MYSQL, POSTGRES, TIMEZONE } from '../utils/constant';
 import AppResource from '../module/app/resource/resource.model';
+import KesehatanSantri from '../module/app/kesehatan.santri/kesehatan.santri.model';
 import ActivityLog from '../module/global/activity.log.model';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { service } from '../module/global/global.service';
@@ -430,6 +431,55 @@ export default class Helper {
     } catch (err: any) {
       await this.sendNotif(
         `[cron] failed delete activity_logs: ${err?.message}`
+      );
+    }
+  }
+
+  public async updateStatusKesehatanSantri() {
+    try {
+      let result: any;
+      let affectedRows = 0;
+
+      if (process.env.DB_DIALECT == POSTGRES) {
+        result = await KesehatanSantri.sequelize?.query(
+          `
+          UPDATE kesehatan_santri
+          SET progres_status = 'Selesai'
+          WHERE is_deleted = false
+            AND progres_status IN ('Dirawat', 'Dirujuk')
+            AND estimasi_hari IS NOT NULL
+            AND tanggal_event IS NOT NULL
+            AND (tanggal_event + (estimasi_hari || ' days')::interval) < NOW()
+          `,
+          { type: QueryTypes.UPDATE }
+        );
+        affectedRows = result?.[1] ?? 0;
+      }
+
+      if (process.env.DB_DIALECT == MYSQL) {
+        result = await KesehatanSantri.sequelize?.query(
+          `
+          UPDATE kesehatan_santri
+          SET progres_status = 'Selesai'
+          WHERE is_deleted = false
+            AND progres_status IN ('Dirawat', 'Dirujuk')
+            AND estimasi_hari IS NOT NULL
+            AND tanggal_event IS NOT NULL
+            AND DATE_ADD(tanggal_event, INTERVAL estimasi_hari DAY) < NOW()
+          `,
+          { type: QueryTypes.UPDATE }
+        );
+        affectedRows = result?.[0]?.affectedRows ?? 0;
+      }
+
+      if (affectedRows > 0) {
+        await this.sendNotif(
+          `[cron] success update status kesehatan santri: ${affectedRows} baris`
+        );
+      }
+    } catch (err: any) {
+      await this.sendNotif(
+        `[cron] failed update status kesehatan santri: ${err?.message}`
       );
     }
   }
