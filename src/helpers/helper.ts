@@ -449,7 +449,7 @@ export default class Helper {
             AND progres_status IN ('Dirawat', 'Dirujuk')
             AND estimasi_hari IS NOT NULL
             AND tanggal_event IS NOT NULL
-            AND (tanggal_event + (estimasi_hari || ' days')::interval) < NOW()
+            AND (tanggal_event + (COALESCE(estimasi_hari, 0) * INTERVAL '1 day')) < NOW()
           `,
           { type: QueryTypes.UPDATE }
         );
@@ -465,7 +465,7 @@ export default class Helper {
             AND progres_status IN ('Dirawat', 'Dirujuk')
             AND estimasi_hari IS NOT NULL
             AND tanggal_event IS NOT NULL
-            AND DATE_ADD(tanggal_event, INTERVAL estimasi_hari DAY) < NOW()
+            AND DATE_ADD(tanggal_event, INTERVAL COALESCE(estimasi_hari, 0) DAY) < NOW()
           `,
           { type: QueryTypes.UPDATE }
         );
