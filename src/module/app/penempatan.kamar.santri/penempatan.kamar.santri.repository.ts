@@ -44,16 +44,6 @@ export default class Repository {
         ...query,
         where: {
           is_deleted: false,
-          nama_kamar: Sequelize.where(
-            Sequelize.fn(
-              'LOWER',
-              Sequelize.cast(
-                Sequelize.col('PenempatanKamarSantri.nama_kamar'),
-                'TEXT'
-              )
-            ),
-            { [Op.like]: keyword }
-          ),
           [Op.or]: [
             Sequelize.where(
               Sequelize.fn(
@@ -87,6 +77,12 @@ export default class Repository {
                 'LOWER',
                 Sequelize.cast(Sequelize.col('santri.nik'), 'TEXT')
               ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+            Sequelize.where(
+              Sequelize.fn('LOWER', Sequelize.col('lokasi.nama_lokasi')),
               {
                 [Op.like]: keyword,
               }

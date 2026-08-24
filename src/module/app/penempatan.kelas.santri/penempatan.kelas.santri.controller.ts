@@ -273,56 +273,13 @@ export default class Controller {
         status_santri,
       } = req?.body;
       const isTemplate: boolean = template && template == '1';
-      if (q) {
-        const keyword = `%${q.toLowerCase()}%`;
-        condition = {
-          ...condition,
-          [Op.or]: [
-            Sequelize.where(
-              Sequelize.fn(
-                'LOWER',
-                Sequelize.cast(
-                  Sequelize.col('PenempatanKelasSantri.status'),
-                  'TEXT'
-                )
-              ),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-            Sequelize.where(
-              Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
-              {
-                [Op.like]: keyword,
-              }
-            ),
-          ],
-        };
-      }
 
       if (id_tahun_ajaran) condition.id_tahun_ajaran = id_tahun_ajaran;
       if (id_kelas_formal) condition.id_kelas_formal = id_kelas_formal;
       if (id_kelas_mda) condition.id_kelas_mda = id_kelas_mda;
       if (status) condition.status = status;
       if (status_santri) condition.status_santri = status_santri;
+      if (q) condition.q = q;
 
       let result: any = [];
       if (!isTemplate) {

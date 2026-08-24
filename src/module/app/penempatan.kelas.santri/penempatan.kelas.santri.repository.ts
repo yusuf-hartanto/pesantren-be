@@ -71,15 +71,64 @@ export default class Repository {
       };
     }
 
+    const andConditions: any[] = [];
+
+    if (data?.q) {
+      const keyword = `%${data.q.toLowerCase()}%`;
+      andConditions.push({
+        [Op.or]: [
+          Sequelize.where(
+            Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.col('PenempatanKelasSantri.status'),
+                  'TEXT'
+                )
+              ),
+              {
+                [Op.like]: keyword,
+              }
+            ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('santri.fullname')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('kelasMda.nama_kelas_mda')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('kelasFormal.nama_kelas')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('tahunAjaran.tahun_ajaran')),
+            {
+              [Op.like]: keyword,
+            }
+          ),
+        ]
+      })
+    }
+
     const userContext = getUserContextData();
     if (userContext && userContext?.id_lembaga) {
-      query.where = {
-        ...query.where,
+      andConditions.push({
         [Op.or]: [
           { '$kelasMda.id_lembaga$': userContext?.id_lembaga },
           { '$kelasFormal.id_lembaga$': userContext?.id_lembaga },
-        ],
-      };
+        ]
+      });
+    }
+
+    if (andConditions.length > 0) {
+      query.where[Op.and] = andConditions;
     }
 
     return Model.findAll(query);
