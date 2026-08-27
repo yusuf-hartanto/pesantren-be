@@ -24,7 +24,7 @@ export class PerizinanSantri extends Model {
   declare tanggal_mulai: string;
   declare tanggal_selesai: string;
   declare alasan: string;
-  declare status_approval: 'Menunggu' | 'Disetujui' | 'Ditolak';
+  declare status_approval: 'Menunggu' | 'Disetujui' | 'Ditolak' | 'Dibatalkan';
   declare id_approver: string | null;
   declare tanggal_approval: Date | null;
   declare catatan_approval: string | null;
@@ -138,7 +138,7 @@ export function initPerizinanSantri(sequelize: Sequelize) {
         allowNull: false,
       },
       status_approval: {
-        type: DataTypes.ENUM('Menunggu', 'Disetujui', 'Ditolak'),
+        type: DataTypes.ENUM('Menunggu', 'Disetujui', 'Ditolak', 'Dibatalkan'),
         allowNull: false,
         defaultValue: 'Menunggu',
       },

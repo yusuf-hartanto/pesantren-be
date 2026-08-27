@@ -806,6 +806,7 @@ export default class Controller {
           canceled_at: new Date(),
           canceled_by: activeUser,
           kondisi: 'Arsip',
+          status_approval: 'Dibatalkan',
           alasan_penutupan:
             req.body.alasan_penutupan ||
             `Dibatalkan oleh ${allowedRoles ? 'Petugas' : 'Pengguna'}`,

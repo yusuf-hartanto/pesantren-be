@@ -543,6 +543,9 @@ export class PerizinanSantriRepository {
           case 'Ditolak':
             whereClause.is_canceled = true;
             break;
+          case 'Dibatalkan':
+            whereClause.is_canceled = true;
+            break;
           default:
             break;
         }
