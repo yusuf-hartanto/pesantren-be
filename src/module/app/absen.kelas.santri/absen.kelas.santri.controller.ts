@@ -273,7 +273,9 @@ export default class Controller {
 
   public async findKelasList(req: Request, res: Response) {
     try {
-      const result = await repository.findAllClasses();
+      const result = await repository.findAllClasses(
+        req.query.id_lembaga as string
+      );
       return response.success('Berhasil menemukan kelas', result, res);
     } catch (error: any) {
       console.error('Error pada findKelasList:', error);

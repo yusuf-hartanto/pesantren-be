@@ -6,6 +6,8 @@ import AppResource from '../resource/resource.model';
 import KelasFormal from '../kelas.formal/kelas.formal.model';
 import KelasMda from '../kelas.mda/kelas.mda.model';
 import JamPelajaran from '../jam.pelajaran/jam.pelajaran.model';
+import LembagaPendidikanFormal from '../lembaga.pendidikan.formal/lembaga.pendidikan.formal.model';
+import LembagaPendidikanKepesantrenan from '../lembaga.pendidikan.kepesantrenan/lembaga.pendidikan.kepesantrenan.model';
 import { getUserContextData } from '../../../context/userContext';
 
 export default class Repository {
@@ -90,7 +92,7 @@ export default class Repository {
 
   public async index(data: any) {
     const userContext = getUserContextData();
-    const idLembaga = userContext?.id_lembaga;
+    const idLembaga = data?.id_lembaga || userContext?.id_lembaga;
 
     const query: any = {
       order: [
@@ -105,8 +107,30 @@ export default class Repository {
           as: 'petugas',
           attributes: ['resource_id', 'full_name', 'username'],
         },
-        { model: KelasFormal, as: 'kelasFormal', attributes: ['nama_kelas'] },
-        { model: KelasMda, as: 'kelasMda', attributes: ['nama_kelas_mda'] },
+        {
+          model: KelasFormal,
+          as: 'kelasFormal',
+          attributes: ['nama_kelas', 'id_lembaga'],
+          include: [
+            {
+              model: LembagaPendidikanFormal,
+              as: 'lembaga',
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+          ],
+        },
+        {
+          model: KelasMda,
+          as: 'kelasMda',
+          attributes: ['nama_kelas_mda', 'id_lembaga'],
+          include: [
+            {
+              model: LembagaPendidikanKepesantrenan,
+              as: 'lembaga',
+              attributes: ['id_lembaga', 'nama_lembaga'],
+            },
+          ],
+        },
         {
           model: JamPelajaran,
           as: 'jamPelajaran',

@@ -38,6 +38,7 @@ const generateDataExcel = (sheet: any, details: any) => {
   sheet.addRow([
     'No',
     'Tanggal',
+    'Lembaga',
     'Jam Pelajaran',
     'Kelas / Lokasi',
     'Guru / Petugas',
@@ -48,7 +49,7 @@ const generateDataExcel = (sheet: any, details: any) => {
     'Catatan',
   ]);
 
-  const columnWidths = [5, 15, 20, 25, 30, 15, 15, 25, 40, 40];
+  const columnWidths = [5, 15, 25, 20, 25, 30, 15, 15, 25, 40, 40];
   columnWidths.forEach((width, index) => {
     sheet.getColumn(index + 1).width = width;
   });
@@ -70,10 +71,15 @@ const generateDataExcel = (sheet: any, details: any) => {
       dataRow.jam_mulai,
       dataRow.jam_selesai
     );
+    const namaLembaga =
+      dataRow.kelasFormal?.lembaga?.nama_lembaga ||
+      dataRow.kelasMda?.lembaga?.nama_lembaga ||
+      '-';
 
     sheet.addRow([
       parseInt(i) + 1,
       dataRow.tanggal ? moment(dataRow.tanggal).format('YYYY-MM-DD') : '',
+      namaLembaga,
       dataRow.jamPelajaran?.nama_jampel || '',
       dataRow.lokasi?.nama_lokasi || '',
       dataRow.petugas?.full_name || '',
@@ -182,6 +188,7 @@ export default class Controller {
         id_petugas: req.query.id_petugas,
         tanggal_awal: req.query.tanggal_awal,
         tanggal_akhir: req.query.tanggal_akhir,
+        id_lembaga: req.query.id_lembaga,
       };
 
       const { count, rows } = await repository.index(filterData);
@@ -213,6 +220,7 @@ export default class Controller {
         id_petugas,
         tanggal_awal,
         tanggal_akhir,
+        id_lembaga,
       } = req.body;
 
       const filterData = {
@@ -222,6 +230,7 @@ export default class Controller {
         id_petugas,
         tanggal_awal,
         tanggal_akhir,
+        id_lembaga,
       };
 
       const { rows } = await repository.index(filterData);

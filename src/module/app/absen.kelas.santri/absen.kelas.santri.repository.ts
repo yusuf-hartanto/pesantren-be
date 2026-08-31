@@ -557,14 +557,15 @@ export default class Repository {
     return !!placement;
   }
 
-  public async findAllClasses() {
+  public async findAllClasses(idLembaga?: string) {
     const userContext = getUserContextData();
     let where: any = {
       status: 'Aktif',
     };
 
-    if (userContext && userContext?.id_lembaga) {
-      where.id_lembaga = userContext.id_lembaga;
+    const targetLembaga = idLembaga || userContext?.id_lembaga;
+    if (targetLembaga) {
+      where.id_lembaga = targetLembaga;
     }
 
     const formal = await KelasFormal.findAll({
